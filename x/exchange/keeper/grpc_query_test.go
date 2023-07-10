@@ -6,19 +6,120 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	utils "github.com/crescent-network/crescent/v5/types"
-	"github.com/crescent-network/crescent/v5/x/exchange/keeper"
 	"github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
+// SetupSampleScenario creates markets and orders for query tests.
+func (s *KeeperTestSuite) SetupSampleScenario() {
+	s.T().Helper()
+
+	market1 := s.CreateMarket("ucre", "uusd")
+	market2 := s.CreateMarket("uatom", "uusd")
+
+	aliceAddr := s.FundedAccount(1, enoughCoins)
+	bobAddr := s.FundedAccount(2, enoughCoins)
+
+	s.PlaceLimitOrder(market1.Id, aliceAddr, true, utils.ParseDec("4.9999"), sdk.NewInt(10_000000), time.Hour)
+	s.PlaceLimitOrder(market1.Id, aliceAddr, true, utils.ParseDec("4.9998"), sdk.NewInt(10_000000), time.Hour)
+	s.PlaceLimitOrder(market1.Id, aliceAddr, false, utils.ParseDec("5.0001"), sdk.NewInt(10_000000), time.Hour)
+	s.PlaceLimitOrder(market1.Id, aliceAddr, false, utils.ParseDec("5.0002"), sdk.NewInt(10_000000), time.Hour)
+
+	s.PlaceLimitOrder(market1.Id, bobAddr, true, utils.ParseDec("4.99"), sdk.NewInt(100_000000), time.Hour)
+	s.PlaceLimitOrder(market1.Id, bobAddr, true, utils.ParseDec("4.98"), sdk.NewInt(100_000000), time.Hour)
+	s.PlaceLimitOrder(market1.Id, bobAddr, false, utils.ParseDec("5.01"), sdk.NewInt(100_000000), time.Hour)
+	s.PlaceLimitOrder(market1.Id, bobAddr, false, utils.ParseDec("5.02"), sdk.NewInt(100_000000), time.Hour)
+
+	s.PlaceLimitOrder(market2.Id, aliceAddr, true, utils.ParseDec("9.9999"), sdk.NewInt(10_000000), time.Hour)
+	s.PlaceLimitOrder(market2.Id, aliceAddr, true, utils.ParseDec("9.9998"), sdk.NewInt(10_000000), time.Hour)
+	s.PlaceLimitOrder(market2.Id, aliceAddr, false, utils.ParseDec("10.001"), sdk.NewInt(10_000000), time.Hour)
+	s.PlaceLimitOrder(market2.Id, aliceAddr, false, utils.ParseDec("10.002"), sdk.NewInt(10_000000), time.Hour)
+
+	s.PlaceLimitOrder(market2.Id, bobAddr, true, utils.ParseDec("9.99"), sdk.NewInt(100_000000), time.Hour)
+	s.PlaceLimitOrder(market2.Id, bobAddr, true, utils.ParseDec("9.98"), sdk.NewInt(100_000000), time.Hour)
+	s.PlaceLimitOrder(market2.Id, bobAddr, false, utils.ParseDec("10.01"), sdk.NewInt(100_000000), time.Hour)
+	s.PlaceLimitOrder(market2.Id, bobAddr, false, utils.ParseDec("10.02"), sdk.NewInt(100_000000), time.Hour)
+}
+
+func (s *KeeperTestSuite) TestQueryParams() {
+	resp, err := s.querier.Params(sdk.WrapSDKContext(s.Ctx), &types.QueryParamsRequest{})
+	s.Require().NoError(err)
+	s.Require().Equal(s.keeper.GetParams(s.Ctx), resp.Params)
+}
+
+func (s *KeeperTestSuite) TestQueryAllMarkets() {
+	s.SetupSampleScenario()
+
+	for _, tc := range []struct {
+		name        string
+		req         *types.QueryAllMarketsRequest
+		expectedErr string
+		postRun     func(resp *types.QueryAllMarketsResponse)
+	}{
+		{
+			"happy case",
+			&types.QueryAllMarketsRequest{},
+			"",
+			func(resp *types.QueryAllMarketsResponse) {
+				s.Require().Len(resp.Markets, 2)
+				s.Require().EqualValues(1, resp.Markets[0].Id)
+				s.Require().EqualValues(2, resp.Markets[1].Id)
+			},
+		},
+	} {
+		s.Run(tc.name, func() {
+			resp, err := s.querier.AllMarkets(sdk.WrapSDKContext(s.Ctx), tc.req)
+			if tc.expectedErr == "" {
+				s.Require().NoError(err)
+				tc.postRun(resp)
+			} else {
+				s.Require().EqualError(err, tc.expectedErr)
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestQueryMarket() {
+	s.SetupSampleScenario()
+
+	for _, tc := range []struct {
+		name        string
+		req         *types.QueryMarketRequest
+		expectedErr string
+		postRun     func(resp *types.QueryMarketResponse)
+	}{
+		{
+			"happy case",
+			&types.QueryMarketRequest{
+				MarketId: 2,
+			},
+			"",
+			func(resp *types.QueryMarketResponse) {
+				s.Require().EqualValues(2, resp.Market.Id)
+			},
+		},
+		{
+			"market not found",
+			&types.QueryMarketRequest{
+				MarketId: 3,
+			},
+			"rpc error: code = NotFound desc = market not found",
+			nil,
+		},
+	} {
+		s.Run(tc.name, func() {
+			resp, err := s.querier.Market(sdk.WrapSDKContext(s.Ctx), tc.req)
+			if tc.expectedErr == "" {
+				s.Require().NoError(err)
+				tc.postRun(resp)
+			} else {
+				s.Require().EqualError(err, tc.expectedErr)
+			}
+		})
+	}
+}
+
 func (s *KeeperTestSuite) TestQueryAllOrders() {
-	market1 := s.CreateMarket(utils.TestAddress(0), "ucre", "uusd", true)
-	ordererAddr1 := s.FundedAccount(1, enoughCoins)
-	ordererAddr2 := s.FundedAccount(2, enoughCoins)
-	s.PlaceLimitOrder(market1.Id, ordererAddr1, true, utils.ParseDec("4.99"), sdk.NewInt(1000000), time.Hour)
-	s.PlaceLimitOrder(market1.Id, ordererAddr2, false, utils.ParseDec("5.01"), sdk.NewInt(2000000), time.Hour)
-	market2 := s.CreateMarket(utils.TestAddress(0), "uatom", "ucre", true)
-	s.PlaceLimitOrder(market2.Id, ordererAddr1, false, utils.ParseDec("3"), sdk.NewInt(1500000), time.Hour)
-	s.PlaceLimitOrder(market2.Id, ordererAddr2, true, utils.ParseDec("2.9"), sdk.NewInt(2500000), time.Hour)
+	s.SetupSampleScenario()
 
 	for _, tc := range []struct {
 		name        string
@@ -27,18 +128,81 @@ func (s *KeeperTestSuite) TestQueryAllOrders() {
 		postRun     func(resp *types.QueryAllOrdersResponse)
 	}{
 		{
-			"empty request",
-			nil,
-			"rpc error: code = InvalidArgument desc = empty request",
-			nil,
-		},
-		{
 			"happy case",
 			&types.QueryAllOrdersRequest{},
 			"",
 			func(resp *types.QueryAllOrdersResponse) {
-				s.Require().Len(resp.Orders, 4)
+				s.Require().Len(resp.Orders, 16)
+				for i, order := range resp.Orders {
+					s.Require().EqualValues(i+1, order.Id)
+				}
 			},
+		},
+		{
+			"with orderer",
+			&types.QueryAllOrdersRequest{
+				Orderer: utils.TestAddress(1).String(), // Alice
+			},
+			"",
+			func(resp *types.QueryAllOrdersResponse) {
+				s.Require().Len(resp.Orders, 8)
+				for _, order := range resp.Orders {
+					s.Require().Equal(utils.TestAddress(1).String(), order.Orderer)
+				}
+			},
+		},
+		{
+			"with market",
+			&types.QueryAllOrdersRequest{
+				MarketId: 2,
+			},
+			"",
+			func(resp *types.QueryAllOrdersResponse) {
+				s.Require().Len(resp.Orders, 8)
+				for _, order := range resp.Orders {
+					s.Require().EqualValues(2, order.MarketId)
+				}
+			},
+		},
+		{
+			"with orderer and market",
+			&types.QueryAllOrdersRequest{
+				Orderer:  utils.TestAddress(2).String(), // Bob
+				MarketId: 2,
+			},
+			"",
+			func(resp *types.QueryAllOrdersResponse) {
+				s.Require().Len(resp.Orders, 4)
+				for _, order := range resp.Orders {
+					s.Require().Equal(utils.TestAddress(2).String(), order.Orderer)
+					s.Require().EqualValues(2, order.MarketId)
+				}
+			},
+		},
+		{
+			"invalid orderer",
+			&types.QueryAllOrdersRequest{
+				Orderer: "invalid",
+			},
+			"rpc error: code = InvalidArgument desc = invalid orderer: decoding bech32 failed: invalid bech32 string length 7",
+			nil,
+		},
+		{
+			"market not found",
+			&types.QueryAllOrdersRequest{
+				MarketId: 3,
+			},
+			"rpc error: code = NotFound desc = market not found",
+			nil,
+		},
+		{
+			"market not found 2",
+			&types.QueryAllOrdersRequest{
+				Orderer:  utils.TestAddress(2).String(), // Bob
+				MarketId: 3,
+			},
+			"rpc error: code = NotFound desc = market not found",
+			nil,
 		},
 	} {
 		s.Run(tc.name, func() {
@@ -53,40 +217,163 @@ func (s *KeeperTestSuite) TestQueryAllOrders() {
 	}
 }
 
+func (s *KeeperTestSuite) TestQueryOrder() {
+	s.SetupSampleScenario()
+
+	for _, tc := range []struct {
+		name        string
+		req         *types.QueryOrderRequest
+		expectedErr string
+		postRun     func(resp *types.QueryOrderResponse)
+	}{
+		{
+			"happy case",
+			&types.QueryOrderRequest{
+				OrderId: 2,
+			},
+			"",
+			func(resp *types.QueryOrderResponse) {
+				s.Require().EqualValues(2, resp.Order.Id)
+			},
+		},
+		{
+			"order not found",
+			&types.QueryOrderRequest{
+				OrderId: 100,
+			},
+			"rpc error: code = NotFound desc = order not found",
+			nil,
+		},
+	} {
+		s.Run(tc.name, func() {
+			resp, err := s.querier.Order(sdk.WrapSDKContext(s.Ctx), tc.req)
+			if tc.expectedErr == "" {
+				s.Require().NoError(err)
+				tc.postRun(resp)
+			} else {
+				s.Require().EqualError(err, tc.expectedErr)
+			}
+		})
+	}
+}
+
 func (s *KeeperTestSuite) TestQueryBestSwapExactAmountInRoutes() {
-	creatorAddr := utils.TestAddress(1)
-	s.FundAccount(creatorAddr, utils.ParseCoins("100000_000000ucre,100000_000000uatom,100000_000000uusd"))
+	s.SetupSampleScenario()
 
-	market1 := s.CreateMarket(utils.TestAddress(0), "ucre", "uusd", true)
-	market2 := s.CreateMarket(utils.TestAddress(0), "uatom", "ucre", true)
-	market3 := s.CreateMarket(utils.TestAddress(0), "uatom", "uusd", true)
+	for _, tc := range []struct {
+		name        string
+		req         *types.QueryBestSwapExactAmountInRoutesRequest
+		expectedErr string
+		postRun     func(resp *types.QueryBestSwapExactAmountInRoutesResponse)
+	}{
+		{
+			"happy case",
+			&types.QueryBestSwapExactAmountInRoutesRequest{
+				Input:       "5000000uatom",
+				OutputDenom: "ucre",
+			},
+			"",
+			func(resp *types.QueryBestSwapExactAmountInRoutesResponse) {
+				s.Require().Equal([]uint64{2, 1}, resp.Routes)
+				s.Assert().Equal("9969722ucre", resp.Output.String())
+				s.Assert().EqualValues(2, resp.Results[0].MarketId)
+				s.Assert().Equal("5000000uatom", resp.Results[0].Input.String())
+				s.Assert().Equal("49924500uusd", resp.Results[0].Output.String())
+				s.Assert().Equal("75000uusd", resp.Results[0].Fee.String())
+				s.Assert().EqualValues(1, resp.Results[1].MarketId)
+				s.Assert().Equal("49924500uusd", resp.Results[1].Input.String())
+				s.Assert().Equal("9969722ucre", resp.Results[1].Output.String())
+				s.Assert().Equal("14978ucre", resp.Results[1].Fee.String())
+			},
+		},
+	} {
+		s.Run(tc.name, func() {
+			resp, err := s.querier.BestSwapExactAmountInRoutes(sdk.WrapSDKContext(s.Ctx), tc.req)
+			if tc.expectedErr == "" {
+				s.Require().NoError(err)
+				tc.postRun(resp)
+			} else {
+				s.Require().EqualError(err, tc.expectedErr)
+			}
+		})
+	}
+}
 
-	pool1 := s.CreatePool(creatorAddr, market1.Id, utils.ParseDec("9.7"), true)
-	s.AddLiquidity(creatorAddr, creatorAddr, pool1.Id, utils.ParseDec("9.5"), utils.ParseDec("10"),
-		utils.ParseCoins("1000_000000ucre,10000_000000uusd"))
-	pool2 := s.CreatePool(creatorAddr, market2.Id, utils.ParseDec("1.04"), true)
-	s.AddLiquidity(creatorAddr, creatorAddr, pool2.Id, utils.ParseDec("1"), utils.ParseDec("1.2"),
-		utils.ParseCoins("1000_000000uatom,1000_000000ucre"))
-	pool3 := s.CreatePool(creatorAddr, market3.Id, utils.ParseDec("10.3"), true)
-	s.AddLiquidity(creatorAddr, creatorAddr, pool3.Id, utils.ParseDec("9.7"), utils.ParseDec("11"),
-		utils.ParseCoins("1000_000000uatom,10000_000000uusd"))
+func (s *KeeperTestSuite) TestQueryOrderBook() {
+	s.SetupSampleScenario()
 
-	querier := keeper.Querier{Keeper: s.App.ExchangeKeeper}
-	resp, err := querier.BestSwapExactAmountInRoutes(sdk.WrapSDKContext(s.Ctx), &types.QueryBestSwapExactAmountInRoutesRequest{
-		Input:       "100000000ucre",
-		OutputDenom: "uusd",
-	})
-	s.Require().NoError(err)
+	for _, tc := range []struct {
+		name        string
+		req         *types.QueryOrderBookRequest
+		expectedErr string
+		postRun     func(resp *types.QueryOrderBookResponse)
+	}{
+		{
+			"happy case",
+			&types.QueryOrderBookRequest{
+				MarketId: 1,
+			},
+			"",
+			func(resp *types.QueryOrderBookResponse) {
+				s.Require().Len(resp.OrderBooks, 3)
+				s.Require().Equal(utils.ParseDec("0.0001"), resp.OrderBooks[0].PriceInterval)
+				s.Require().Len(resp.OrderBooks[0].Sells, 4)
+				s.Require().Equal(utils.ParseDec("5.0001"), resp.OrderBooks[0].Sells[0].P)
+				s.Require().Equal(sdk.NewInt(10000000), resp.OrderBooks[0].Sells[0].Q)
+				s.Require().Equal(utils.ParseDec("5.0002"), resp.OrderBooks[0].Sells[1].P)
+				s.Require().Equal(sdk.NewInt(10000000), resp.OrderBooks[0].Sells[1].Q)
+				s.Require().Equal(utils.ParseDec("5.01"), resp.OrderBooks[0].Sells[2].P)
+				s.Require().Equal(sdk.NewInt(100000000), resp.OrderBooks[0].Sells[2].Q)
+				s.Require().Equal(utils.ParseDec("5.02"), resp.OrderBooks[0].Sells[3].P)
+				s.Require().Equal(sdk.NewInt(100000000), resp.OrderBooks[0].Sells[3].Q)
+				s.Require().Len(resp.OrderBooks[0].Buys, 4)
+				s.Require().Equal(utils.ParseDec("4.9999"), resp.OrderBooks[0].Buys[0].P)
+				s.Require().Equal(sdk.NewInt(10000000), resp.OrderBooks[0].Buys[0].Q)
+				s.Require().Equal(utils.ParseDec("4.9998"), resp.OrderBooks[0].Buys[1].P)
+				s.Require().Equal(sdk.NewInt(10000000), resp.OrderBooks[0].Buys[1].Q)
+				s.Require().Equal(utils.ParseDec("4.99"), resp.OrderBooks[0].Buys[2].P)
+				s.Require().Equal(sdk.NewInt(100000000), resp.OrderBooks[0].Buys[2].Q)
+				s.Require().Equal(utils.ParseDec("4.98"), resp.OrderBooks[0].Buys[3].P)
+				s.Require().Equal(sdk.NewInt(100000000), resp.OrderBooks[0].Buys[3].Q)
 
-	s.Require().EqualValues([]uint64{2, 3}, resp.Routes)
-	s.Require().Equal("972699534uusd", resp.Output.String())
-	s.Require().Len(resp.Results, 2)
-	s.Require().EqualValues(2, resp.Results[0].MarketId)
-	s.Require().Equal("100000000ucre", resp.Results[0].Input.String())
-	s.Require().Equal("95135825uatom", resp.Results[0].Output.String())
-	s.Require().Equal("142919uatom", resp.Results[0].Fee.String())
-	s.Require().EqualValues(3, resp.Results[1].MarketId)
-	s.Require().Equal("95135825uatom", resp.Results[1].Input.String())
-	s.Require().Equal("972699534uusd", resp.Results[1].Output.String())
-	s.Require().Equal("1461242uusd", resp.Results[1].Fee.String())
+				s.Require().Equal(utils.ParseDec("0.001"), resp.OrderBooks[1].PriceInterval)
+				s.Require().Len(resp.OrderBooks[1].Sells, 3)
+				s.Require().Equal(utils.ParseDec("5.001"), resp.OrderBooks[1].Sells[0].P)
+				s.Require().Equal(sdk.NewInt(20000000), resp.OrderBooks[1].Sells[0].Q)
+				s.Require().Equal(utils.ParseDec("5.01"), resp.OrderBooks[1].Sells[1].P)
+				s.Require().Equal(sdk.NewInt(100000000), resp.OrderBooks[1].Sells[1].Q)
+				s.Require().Equal(utils.ParseDec("5.02"), resp.OrderBooks[1].Sells[2].P)
+				s.Require().Equal(sdk.NewInt(100000000), resp.OrderBooks[1].Sells[2].Q)
+				s.Require().Len(resp.OrderBooks[1].Buys, 3)
+				s.Require().Equal(utils.ParseDec("4.999"), resp.OrderBooks[1].Buys[0].P)
+				s.Require().Equal(sdk.NewInt(20000000), resp.OrderBooks[1].Buys[0].Q)
+				s.Require().Equal(utils.ParseDec("4.99"), resp.OrderBooks[1].Buys[1].P)
+				s.Require().Equal(sdk.NewInt(100000000), resp.OrderBooks[1].Buys[1].Q)
+				s.Require().Equal(utils.ParseDec("4.98"), resp.OrderBooks[1].Buys[2].P)
+				s.Require().Equal(sdk.NewInt(100000000), resp.OrderBooks[1].Buys[2].Q)
+
+				s.Require().Equal(utils.ParseDec("0.01"), resp.OrderBooks[2].PriceInterval)
+				s.Require().Len(resp.OrderBooks[2].Sells, 2)
+				s.Require().Equal(utils.ParseDec("5.01"), resp.OrderBooks[2].Sells[0].P)
+				s.Require().Equal(sdk.NewInt(120000000), resp.OrderBooks[2].Sells[0].Q)
+				s.Require().Equal(utils.ParseDec("5.02"), resp.OrderBooks[2].Sells[1].P)
+				s.Require().Equal(sdk.NewInt(100000000), resp.OrderBooks[2].Sells[1].Q)
+				s.Require().Len(resp.OrderBooks[2].Buys, 2)
+				s.Require().Equal(utils.ParseDec("4.99"), resp.OrderBooks[2].Buys[0].P)
+				s.Require().Equal(sdk.NewInt(120000000), resp.OrderBooks[2].Buys[0].Q)
+				s.Require().Equal(utils.ParseDec("4.98"), resp.OrderBooks[2].Buys[1].P)
+				s.Require().Equal(sdk.NewInt(100000000), resp.OrderBooks[2].Buys[1].Q)
+			},
+		},
+	} {
+		s.Run(tc.name, func() {
+			resp, err := s.querier.OrderBook(sdk.WrapSDKContext(s.Ctx), tc.req)
+			if tc.expectedErr == "" {
+				s.Require().NoError(err)
+				tc.postRun(resp)
+			} else {
+				s.Require().EqualError(err, tc.expectedErr)
+			}
+		})
+	}
 }

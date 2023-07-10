@@ -5,7 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/exchange/simulation"
 )
 
@@ -22,7 +21,7 @@ func (s *SimTestSuite) TestProposalContents() {
 	for _, denomA := range denoms {
 		for _, denomB := range denoms {
 			if denomA != denomB {
-				s.CreateMarket(utils.TestAddress(0), denomA, denomB, true)
+				s.CreateMarket(denomA, denomB)
 			}
 		}
 	}

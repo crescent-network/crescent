@@ -37,8 +37,7 @@ func (s *KeeperTestSuite) SetupTest() {
 }
 
 func (s *KeeperTestSuite) CreateMarketAndPool(baseDenom, quoteDenom string, price sdk.Dec) (market exchangetypes.Market, pool types.Pool) {
-	creatorAddr := utils.TestAddress(0)
-	market = s.CreateMarket(creatorAddr, baseDenom, quoteDenom, true)
-	pool = s.CreatePool(creatorAddr, market.Id, price, true)
+	market = s.CreateMarket(baseDenom, quoteDenom)
+	pool = s.CreatePool(market.Id, price)
 	return market, pool
 }

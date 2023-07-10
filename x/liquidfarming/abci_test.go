@@ -33,8 +33,8 @@ func (s *ModuleTestSuite) SetupTest() {
 
 func (s *ModuleTestSuite) TestRewardsAuctionEndTime() {
 	s.keeper.SetRewardsAuctionDuration(s.Ctx, 8*time.Hour)
-	market := s.CreateMarket(utils.TestAddress(0), "ucre", "uusd", true)
-	pool := s.CreatePool(utils.TestAddress(0), market.Id, utils.ParseDec("5"), true)
+	market := s.CreateMarket("ucre", "uusd")
+	pool := s.CreatePool(market.Id, utils.ParseDec("5"))
 	s.CreateLiquidFarm(
 		pool.Id, utils.ParseDec("4.5"), utils.ParseDec("5.5"),
 		sdk.NewInt(10000), utils.ParseDec("0.003"))
@@ -72,8 +72,8 @@ func (s *ModuleTestSuite) TestRewardsAuctionEndTime() {
 // TestChainHaltedForShortTime covers a case when chain is halted less than one duration.
 func (s *ModuleTestSuite) TestChainHaltedForShortTime() {
 	s.keeper.SetRewardsAuctionDuration(s.Ctx, 8*time.Hour)
-	market := s.CreateMarket(utils.TestAddress(0), "ucre", "uusd", true)
-	pool := s.CreatePool(utils.TestAddress(0), market.Id, utils.ParseDec("5"), true)
+	market := s.CreateMarket("ucre", "uusd")
+	pool := s.CreatePool(market.Id, utils.ParseDec("5"))
 	s.CreateLiquidFarm(
 		pool.Id, utils.ParseDec("4.5"), utils.ParseDec("5.5"),
 		sdk.NewInt(10000), utils.ParseDec("0.003"))

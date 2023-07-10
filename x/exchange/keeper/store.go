@@ -315,7 +315,7 @@ func (k Keeper) GetTransientBalance(ctx sdk.Context, addr sdk.AccAddress, denom 
 	return sdk.Coin{Denom: denom, Amount: balance.Int}
 }
 
-func (k Keeper) SetTransientBalance(ctx sdk.Context, addr sdk.AccAddress, coin sdk.Coin) error {
+func (k Keeper) SetTransientBalance(ctx sdk.Context, addr sdk.AccAddress, coin sdk.Coin) {
 	store := ctx.TransientStore(k.tsKey)
 	if coin.IsZero() {
 		k.DeleteTransientBalance(ctx, addr, coin.Denom)
@@ -323,7 +323,6 @@ func (k Keeper) SetTransientBalance(ctx sdk.Context, addr sdk.AccAddress, coin s
 		bz := k.cdc.MustMarshal(&sdk.IntProto{Int: coin.Amount})
 		store.Set(types.GetTransientBalanceKey(addr, coin.Denom), bz)
 	}
-	return nil
 }
 
 func (k Keeper) IterateAllTransientBalances(ctx sdk.Context, cb func(addr sdk.AccAddress, coin sdk.Coin) (stop bool)) {

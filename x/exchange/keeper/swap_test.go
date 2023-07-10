@@ -13,14 +13,14 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 	creatorAddr := utils.TestAddress(0)
 	s.FundAccount(creatorAddr, utils.ParseCoins("10000_000000ucre,10000_000000uatom,10000_000000uusd"))
 
-	market1 := s.CreateMarket(creatorAddr, "ucre", "uusd", true)
-	market2 := s.CreateMarket(creatorAddr, "uatom", "ucre", true)
+	market1 := s.CreateMarket("ucre", "uusd")
+	market2 := s.CreateMarket("uatom", "ucre")
 
-	pool1 := s.CreatePool(creatorAddr, market1.Id, utils.ParseDec("5"), true)
+	pool1 := s.CreatePool(market1.Id, utils.ParseDec("5"))
 	s.AddLiquidity(
 		creatorAddr, creatorAddr, pool1.Id, utils.ParseDec("4.5"), utils.ParseDec("5.5"),
 		utils.ParseCoins("1000_000000ucre,1000_000000uusd"))
-	pool2 := s.CreatePool(creatorAddr, market2.Id, utils.ParseDec("2"), true)
+	pool2 := s.CreatePool(market2.Id, utils.ParseDec("2"))
 	s.AddLiquidity(
 		creatorAddr, creatorAddr, pool2.Id, utils.ParseDec("1.5"), utils.ParseDec("3"),
 		utils.ParseCoins("1000_000000uatom,1000_000000ucre"))
@@ -36,8 +36,8 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 }
 
 func (s *KeeperTestSuite) TestSwapInsufficientLiquidity() {
-	market1 := s.CreateMarket(utils.TestAddress(0), "ucre", "uusd", true)
-	market2 := s.CreateMarket(utils.TestAddress(0), "uatom", "ucre", true)
+	market1 := s.CreateMarket("ucre", "uusd")
+	market2 := s.CreateMarket("uatom", "ucre")
 
 	mmAddr := s.FundedAccount(1, enoughCoins)
 	// Place 10 buy orders in market1 starting from price 4.999

@@ -11,11 +11,11 @@ import (
 func (s *KeeperTestSuite) SetupSampleScenario() {
 	s.T().Helper()
 
-	creUsdMarket := s.CreateMarket(utils.TestAddress(0), "ucre", "uusd", true)
-	atomUsdMarket := s.CreateMarket(utils.TestAddress(0), "uatom", "uusd", true)
+	creUsdMarket := s.CreateMarket("ucre", "uusd")
+	atomUsdMarket := s.CreateMarket("uatom", "uusd")
 	// pool id != market id
-	atomUsdPool := s.CreatePool(utils.TestAddress(0), atomUsdMarket.Id, utils.ParseDec("10"), true)
-	creUsdPool := s.CreatePool(utils.TestAddress(0), creUsdMarket.Id, utils.ParseDec("5"), true)
+	atomUsdPool := s.CreatePool(atomUsdMarket.Id, utils.ParseDec("10"))
+	creUsdPool := s.CreatePool(creUsdMarket.Id, utils.ParseDec("5"))
 
 	aliceAddr := s.FundedAccount(1, enoughCoins)
 	bobAddr := s.FundedAccount(2, enoughCoins)

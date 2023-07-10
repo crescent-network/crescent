@@ -53,6 +53,7 @@ func TestPoolParameterChangeProposal_ValidateBasic(t *testing.T) {
 					types.NewPoolParameterChange(1, 5),
 					types.NewPoolParameterChange(2, 10),
 				})
+			require.Equal(t, types.ProposalTypePoolParameterChange, p.ProposalType())
 			tc.malleate(p)
 			err := p.ValidateBasic()
 			if tc.expectedErr == "" {
@@ -107,6 +108,7 @@ func TestPublicFarmingPlanProposal_ValidateBasic(t *testing.T) {
 				}, []types.TerminateFarmingPlanRequest{
 					types.NewTerminateFarmingPlanRequest(1),
 				})
+			require.Equal(t, types.ProposalTypePublicFarmingPlan, p.ProposalType())
 			tc.malleate(p)
 			err := p.ValidateBasic()
 			if tc.expectedErr == "" {

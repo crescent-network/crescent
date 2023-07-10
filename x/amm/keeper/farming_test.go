@@ -231,8 +231,8 @@ func (s *KeeperTestSuite) TestFarming() {
 }
 
 func (s *KeeperTestSuite) TestTerminatePrivateFarmingPlan() {
-	market := s.CreateMarket(utils.TestAddress(0), "ucre", "uusd", true)
-	pool := s.CreatePool(utils.TestAddress(0), market.Id, utils.ParseDec("5"), true)
+	market := s.CreateMarket("ucre", "uusd")
+	pool := s.CreatePool(market.Id, utils.ParseDec("5"))
 	lpAddr := s.FundedAccount(1, enoughCoins)
 	s.AddLiquidity(
 		lpAddr, lpAddr, pool.Id, utils.ParseDec("4.5"), utils.ParseDec("5.5"),
@@ -266,8 +266,8 @@ func (s *KeeperTestSuite) TestTerminatePrivateFarmingPlan() {
 }
 
 func (s *KeeperTestSuite) TestTerminatePrivatePlan_Unauthorized() {
-	market := s.CreateMarket(utils.TestAddress(0), "ucre", "uusd", true)
-	pool := s.CreatePool(utils.TestAddress(0), market.Id, utils.ParseDec("5"), true)
+	market := s.CreateMarket("ucre", "uusd")
+	pool := s.CreatePool(market.Id, utils.ParseDec("5"))
 	lpAddr := s.FundedAccount(1, enoughCoins)
 	s.AddLiquidity(
 		lpAddr, lpAddr, pool.Id, utils.ParseDec("4.5"), utils.ParseDec("5.5"),

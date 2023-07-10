@@ -146,7 +146,3 @@ func isBuyToBytes(isBuy bool) []byte {
 	}
 	return sellBytes
 }
-
-func bytesToIsBuy(bz []byte) bool {
-	return bz[0] == buyBytes[0]
-}

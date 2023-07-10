@@ -111,6 +111,13 @@ func TestMsgPlaceLimitOrder(t *testing.T) {
 			"price is lower than the min price; -12.345000000000000000 < 0.000000000000010000: invalid request",
 		},
 		{
+			"too high price",
+			func(msg *types.MsgPlaceLimitOrder) {
+				msg.Price = utils.ParseDec("50000000000000000000000000000000000000000")
+			},
+			"price is higher than the max price; 50000000000000000000000000000000000000000.000000000000000000 > 10000000000000000000000000000000000000000.000000000000000000: invalid request",
+		},
+		{
 			"invalid price tick",
 			func(msg *types.MsgPlaceLimitOrder) {
 				msg.Price = utils.ParseDec("12.34567")
@@ -203,6 +210,13 @@ func TestMsgPlaceBatchLimitOrder(t *testing.T) {
 				msg.Price = utils.ParseDec("-12.345")
 			},
 			"price is lower than the min price; -12.345000000000000000 < 0.000000000000010000: invalid request",
+		},
+		{
+			"too high price",
+			func(msg *types.MsgPlaceBatchLimitOrder) {
+				msg.Price = utils.ParseDec("50000000000000000000000000000000000000000")
+			},
+			"price is higher than the max price; 50000000000000000000000000000000000000000.000000000000000000 > 10000000000000000000000000000000000000000.000000000000000000: invalid request",
 		},
 		{
 			"invalid price tick",
@@ -299,6 +313,13 @@ func TestMsgPlaceMMLimitOrder(t *testing.T) {
 			"price is lower than the min price; -12.345000000000000000 < 0.000000000000010000: invalid request",
 		},
 		{
+			"too high price",
+			func(msg *types.MsgPlaceMMLimitOrder) {
+				msg.Price = utils.ParseDec("50000000000000000000000000000000000000000")
+			},
+			"price is higher than the max price; 50000000000000000000000000000000000000000.000000000000000000 > 10000000000000000000000000000000000000000.000000000000000000: invalid request",
+		},
+		{
 			"invalid price tick",
 			func(msg *types.MsgPlaceMMLimitOrder) {
 				msg.Price = utils.ParseDec("12.34567")
@@ -391,6 +412,13 @@ func TestMsgPlaceMMBatchLimitOrder(t *testing.T) {
 				msg.Price = utils.ParseDec("-12.345")
 			},
 			"price is lower than the min price; -12.345000000000000000 < 0.000000000000010000: invalid request",
+		},
+		{
+			"too high price",
+			func(msg *types.MsgPlaceMMBatchLimitOrder) {
+				msg.Price = utils.ParseDec("50000000000000000000000000000000000000000")
+			},
+			"price is higher than the max price; 50000000000000000000000000000000000000000.000000000000000000 > 10000000000000000000000000000000000000000.000000000000000000: invalid request",
 		},
 		{
 			"invalid price tick",

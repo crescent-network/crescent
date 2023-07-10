@@ -22,9 +22,9 @@ func (s *SimTestSuite) TestProposalContents() {
 	for _, denomA := range denoms {
 		for _, denomB := range denoms {
 			if denomA != denomB {
-				market := s.CreateMarket(utils.TestAddress(0), denomA, denomB, true)
+				market := s.CreateMarket(denomA, denomB)
 				price := utils.RandomDec(r, utils.ParseDec("0.05"), utils.ParseDec("500"))
-				s.CreatePool(utils.TestAddress(0), market.Id, price, true)
+				s.CreatePool(market.Id, price)
 			}
 		}
 	}

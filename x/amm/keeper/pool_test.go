@@ -22,7 +22,7 @@ func (s *KeeperTestSuite) TestCreatePool_MultiplePoolsPerMarket() {
 
 func (s *KeeperTestSuite) TestCreatePool_InsufficientFee() {
 	s.keeper.SetPoolCreationFee(s.Ctx, utils.ParseCoins("100_000000ucre"))
-	market := s.CreateMarket(utils.TestAddress(0), "ucre", "uusd", true)
+	market := s.CreateMarket("ucre", "uusd")
 	creatorAddr := utils.TestAddress(1)
 	_, err := s.keeper.CreatePool(s.Ctx, creatorAddr, market.Id, utils.ParseDec("5"))
 	s.Require().EqualError(err, "0ucre is smaller than 100000000ucre: insufficient funds")

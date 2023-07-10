@@ -65,6 +65,7 @@ func TestMarketParameterChangeProposal_ValidateBasic(t *testing.T) {
 					types.NewMarketParameterChange(
 						1, utils.ParseDec("0.001"), utils.ParseDec("0.003")),
 				})
+			require.Equal(t, types.ProposalTypeMarketParameterChange, p.ProposalType())
 			tc.malleate(p)
 			err := p.ValidateBasic()
 			if tc.expectedErr == "" {

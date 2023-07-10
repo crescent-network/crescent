@@ -111,7 +111,7 @@ func (msg MsgPlaceLimitOrder) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "price is lower than the min price; %s < %s", msg.Price, MinPrice)
 	}
 	if msg.Price.GT(MaxPrice) {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "price is higher than the max price; %s < %s", msg.Price, MaxPrice)
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "price is higher than the max price; %s > %s", msg.Price, MaxPrice)
 	}
 	if _, valid := ValidateTickPrice(msg.Price); !valid {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid price tick: %s", msg.Price)
@@ -164,7 +164,7 @@ func (msg MsgPlaceBatchLimitOrder) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "price is lower than the min price; %s < %s", msg.Price, MinPrice)
 	}
 	if msg.Price.GT(MaxPrice) {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "price is higher than the max price; %s < %s", msg.Price, MaxPrice)
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "price is higher than the max price; %s > %s", msg.Price, MaxPrice)
 	}
 	if _, valid := ValidateTickPrice(msg.Price); !valid {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid price tick: %s", msg.Price)
@@ -217,7 +217,7 @@ func (msg MsgPlaceMMLimitOrder) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "price is lower than the min price; %s < %s", msg.Price, MinPrice)
 	}
 	if msg.Price.GT(MaxPrice) {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "price is higher than the max price; %s < %s", msg.Price, MaxPrice)
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "price is higher than the max price; %s > %s", msg.Price, MaxPrice)
 	}
 	if _, valid := ValidateTickPrice(msg.Price); !valid {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid price tick: %s", msg.Price)
@@ -270,7 +270,7 @@ func (msg MsgPlaceMMBatchLimitOrder) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "price is lower than the min price; %s < %s", msg.Price, MinPrice)
 	}
 	if msg.Price.GT(MaxPrice) {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "price is higher than the max price; %s < %s", msg.Price, MaxPrice)
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "price is higher than the max price; %s > %s", msg.Price, MaxPrice)
 	}
 	if _, valid := ValidateTickPrice(msg.Price); !valid {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid price tick: %s", msg.Price)

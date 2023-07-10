@@ -5,13 +5,16 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	utils "github.com/crescent-network/crescent/v5/types"
 	ammtypes "github.com/crescent-network/crescent/v5/x/amm/types"
 )
 
-func (s *TestSuite) CreatePool(creatorAddr sdk.AccAddress, marketId uint64, price sdk.Dec, fundFee bool) ammtypes.Pool {
+func (s *TestSuite) CreatePool(marketId uint64, price sdk.Dec) ammtypes.Pool {
 	s.T().Helper()
-	if fundFee {
-		s.FundAccount(creatorAddr, s.App.AMMKeeper.GetPoolCreationFee(s.Ctx))
+	creatorAddr := utils.TestAddress(1000001)
+	creationFee := s.App.ExchangeKeeper.GetFees(s.Ctx).MarketCreationFee
+	if !s.GetAllBalances(creatorAddr).IsAllGTE(creationFee) {
+		s.FundAccount(creatorAddr, creationFee)
 	}
 	pool, err := s.App.AMMKeeper.CreatePool(s.Ctx, creatorAddr, marketId, price)
 	s.Require().NoError(err)

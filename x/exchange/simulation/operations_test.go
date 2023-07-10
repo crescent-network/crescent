@@ -12,7 +12,6 @@ import (
 
 	chain "github.com/crescent-network/crescent/v5/app"
 	"github.com/crescent-network/crescent/v5/app/testutil"
-	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/exchange/keeper"
 	"github.com/crescent-network/crescent/v5/x/exchange/simulation"
 	"github.com/crescent-network/crescent/v5/x/exchange/types"
@@ -77,7 +76,7 @@ func (s *SimTestSuite) TestSimulateMsgPlaceLimitOrder() {
 	r := rand.New(rand.NewSource(0))
 	accs := s.getTestingAccounts(r, 50)
 
-	s.CreateMarket(utils.TestAddress(0), "denom1", "denom2", true)
+	s.CreateMarket("denom1", "denom2")
 
 	op := simulation.SimulateMsgPlaceLimitOrder(
 		s.App.AccountKeeper, s.App.BankKeeper, s.keeper)
@@ -103,7 +102,7 @@ func (s *SimTestSuite) TestSimulateMsgPlaceMarketOrder() {
 	r := rand.New(rand.NewSource(0))
 	accs := s.getTestingAccounts(r, 50)
 
-	s.CreateMarket(utils.TestAddress(0), "denom1", "denom2", true)
+	s.CreateMarket("denom1", "denom2")
 
 	op := simulation.SimulateMsgPlaceMarketOrder(
 		s.App.AccountKeeper, s.App.BankKeeper, s.keeper)

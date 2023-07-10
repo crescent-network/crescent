@@ -582,7 +582,7 @@ func NewApp(
 		AddRoute(farmingtypes.RouterKey, farming.NewPublicPlanProposalHandler(app.FarmingKeeper)).
 		AddRoute(marketmakertypes.RouterKey, marketmaker.NewMarketMakerProposalHandler(app.MarketMakerKeeper)).
 		AddRoute(lpfarmtypes.RouterKey, lpfarm.NewFarmingPlanProposalHandler(app.LPFarmKeeper)).
-		AddRoute(exchangetypes.RouterKey, exchange.NewMarketParameterChangeProposalHandler(app.ExchangeKeeper)).
+		AddRoute(exchangetypes.RouterKey, exchange.NewProposalHandler(app.ExchangeKeeper)).
 		AddRoute(ammtypes.RouterKey, amm.NewProposalHandler(app.AMMKeeper)).
 		AddRoute(liquidfarmingtypes.RouterKey, liquidfarming.NewProposalHandler(app.LiquidFarmingKeeper))
 
