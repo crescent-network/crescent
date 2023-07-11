@@ -63,10 +63,14 @@ func TestOrdersByOrdererIndexKey(t *testing.T) {
 
 func TestNumMMOrdersKey(t *testing.T) {
 	ordererAddr := utils.TestAddress(1000000)
+	key := types.GetNumMMOrdersKey(ordererAddr, 1000000)
 	require.Equal(t, []byte{
 		0x68, 0x14, 0x80, 0x89, 0x7a, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
 		0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf, 0x42, 0x40,
-	}, types.GetNumMMOrdersKey(ordererAddr, 1000000))
+	}, key)
+	ordererAddr2, marketId := types.ParseNumMMOrdersKey(key)
+	require.Equal(t, ordererAddr, ordererAddr2)
+	require.EqualValues(t, 1000000, marketId)
 }
 
 func TestTransientBalanceKey(t *testing.T) {

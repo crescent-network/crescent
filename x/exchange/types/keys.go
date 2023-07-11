@@ -128,6 +128,13 @@ func ParseOrderIdFromOrdersByOrdererIndexKey(key []byte) (orderId uint64) {
 	return
 }
 
+func ParseNumMMOrdersKey(key []byte) (ordererAddr sdk.AccAddress, marketId uint64) {
+	addrLen := key[1]
+	ordererAddr = key[2 : 2+addrLen]
+	marketId = sdk.BigEndianToUint64(key[2+addrLen:])
+	return
+}
+
 func ParseTransientBalanceKey(key []byte) (addr sdk.AccAddress, denom string) {
 	addrLen := key[1]
 	addr = key[2 : 2+addrLen]

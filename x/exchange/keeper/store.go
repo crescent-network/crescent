@@ -228,15 +228,17 @@ func (k Keeper) LookupOrderBookOrderIndex(ctx sdk.Context, marketId uint64, isBu
 	return store.Has(types.GetOrderBookOrderIndexKey(marketId, isBuy, price, orderId))
 }
 
-//func (k Keeper) IterateAllOrderBookOrderIds(ctx sdk.Context, cb func(orderId uint64) (stop bool)) {
-//	store := ctx.KVStore(k.storeKey)
-//	iter := sdk.KVStorePrefixIterator(store, types.OrderBookOrderIndexKeyPrefix)
-//	defer iter.Close()
-//	for ; iter.Valid(); iter.Next() {
-//		types.ParseOrderBookOrderKey(iter.Key())
-//		orderId := sdk.BigEndianToUint64(iter.Value())
-//	}
-//}
+func (k Keeper) IterateAllOrderBookOrderIds(ctx sdk.Context, cb func(orderId uint64) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, types.OrderBookOrderIndexKeyPrefix)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		orderId := types.ParseOrderIdFromOrderBookOrderIndexKey(iter.Key())
+		if cb(orderId) {
+			break
+		}
+	}
+}
 
 func (k Keeper) IterateOrderBookByMarket(ctx sdk.Context, marketId uint64, cb func(order types.Order) (stop bool)) {
 	k.IterateOrderBookSideByMarket(ctx, marketId, false, true, cb)
@@ -297,6 +299,19 @@ func (k Keeper) GetNumMMOrders(ctx sdk.Context, ordererAddr sdk.AccAddress, mark
 func (k Keeper) SetNumMMOrders(ctx sdk.Context, ordererAddr sdk.AccAddress, marketId uint64, num uint32) {
 	store := ctx.KVStore(k.storeKey)
 	store.Set(types.GetNumMMOrdersKey(ordererAddr, marketId), utils.Uint32ToBigEndian(num))
+}
+
+func (k Keeper) IterateAllNumMMOrders(ctx sdk.Context, cb func(ordererAddr sdk.AccAddress, marketId uint64, numMMOrders uint32) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, types.NumMMOrdersKeyPrefix)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		ordererAddr, marketId := types.ParseNumMMOrdersKey(iter.Key())
+		numMMOrders := utils.BigEndianToUint32(iter.Value())
+		if cb(ordererAddr, marketId, numMMOrders) {
+			break
+		}
+	}
 }
 
 func (k Keeper) DeleteNumMMOrders(ctx sdk.Context, ordererAddr sdk.AccAddress, marketId uint64) {

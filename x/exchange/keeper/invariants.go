@@ -13,6 +13,7 @@ func RegisterInvariants(ir sdk.InvariantRegistry, k Keeper) {
 	ir.RegisterRoute(types.ModuleName, "order-state", OrderStateInvariant(k))
 	ir.RegisterRoute(types.ModuleName, "order-book", OrderBookInvariant(k))
 	ir.RegisterRoute(types.ModuleName, "order-book-order", OrderBookOrderInvariant(k))
+	ir.RegisterRoute(types.ModuleName, "num-mm-orders", NumMMOrdersInvariant(k))
 }
 
 func AllInvariants(k Keeper) sdk.Invariant {
@@ -29,7 +30,11 @@ func AllInvariants(k Keeper) sdk.Invariant {
 		if broken {
 			return
 		}
-		return OrderBookOrderInvariant(k)(ctx)
+		res, broken = OrderBookOrderInvariant(k)(ctx)
+		if broken {
+			return
+		}
+		return NumMMOrdersInvariant(k)(ctx)
 	}
 }
 
@@ -126,9 +131,43 @@ func OrderBookOrderInvariant(k Keeper) sdk.Invariant {
 			}
 			return false
 		})
+		k.IterateAllOrderBookOrderIds(ctx, func(orderId uint64) (stop bool) {
+			if found := k.LookupOrder(ctx, orderId); !found {
+				msg += fmt.Sprintf("\torder %d not found\n", orderId)
+				cnt++
+			}
+			return false
+		})
 		broken := cnt != 0
 		return sdk.FormatInvariant(
 			types.ModuleName, "order book order",
 			fmt.Sprintf("found %d order(s) that are not found in order book\n%s", cnt, msg)), broken
+	}
+}
+
+func NumMMOrdersInvariant(k Keeper) sdk.Invariant {
+	return func(ctx sdk.Context) (string, bool) {
+		msg := ""
+		cnt := 0
+		k.IterateAllNumMMOrders(ctx, func(ordererAddr sdk.AccAddress, marketId uint64, numMMOrders uint32) (stop bool) {
+			num := uint32(0)
+			k.IterateOrdersByOrdererAndMarket(ctx, ordererAddr, marketId, func(order types.Order) (stop bool) {
+				if order.Type == types.OrderTypeMM {
+					num++
+				}
+				return false
+			})
+			if num != numMMOrders {
+				msg += fmt.Sprintf(
+					"\torderer %s should have %d MM orders, but found %d\n",
+					ordererAddr.String(), numMMOrders, num)
+				cnt++
+			}
+			return false
+		})
+		broken := cnt != 0
+		return sdk.FormatInvariant(
+			types.ModuleName, "num mm orders",
+			fmt.Sprintf("found %d wrong num MM orders state(s)\n%s", cnt, msg)), broken
 	}
 }
