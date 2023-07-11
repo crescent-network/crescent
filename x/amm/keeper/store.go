@@ -269,6 +269,19 @@ func (k Keeper) IteratePositionsByOwner(ctx sdk.Context, ownerAddr sdk.AccAddres
 	}
 }
 
+func (k Keeper) IteratePositionsByOwnerAndPool(ctx sdk.Context, ownerAddr sdk.AccAddress, poolId uint64, cb func(position types.Position) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, types.GetPositionsByOwnerAndPoolIteratorPrefix(ownerAddr, poolId))
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		positionId := sdk.BigEndianToUint64(iter.Value())
+		position := k.MustGetPosition(ctx, positionId)
+		if cb(position) {
+			break
+		}
+	}
+}
+
 func (k Keeper) DeletePosition(ctx sdk.Context, position types.Position) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.GetPositionKey(position.Id))

@@ -115,7 +115,7 @@ func (k Querier) AllPositions(c context.Context, req *types.QueryAllPositionsReq
 		return k.MustGetPosition(ctx, sdk.BigEndianToUint64(value))
 	}
 	if req.PoolId > 0 && req.Owner != "" {
-		keyPrefix = types.GetPositionsByPoolAndOwnerIteratorPrefix(ownerAddr, req.PoolId)
+		keyPrefix = types.GetPositionsByOwnerAndPoolIteratorPrefix(ownerAddr, req.PoolId)
 		positionGetter = getPositionFromPositionByParamsIndexKey
 	} else if req.PoolId > 0 {
 		keyPrefix = types.GetPositionsByPoolIteratorPrefix(req.PoolId)

@@ -43,7 +43,7 @@ func TestPositionByParamsIndexKey(t *testing.T) {
 	}, key)
 	prefix := types.GetPositionsByOwnerIteratorPrefix(ownerAddr)
 	require.True(t, bytes.HasPrefix(key, prefix))
-	prefix = types.GetPositionsByPoolAndOwnerIteratorPrefix(ownerAddr, 1000000)
+	prefix = types.GetPositionsByOwnerAndPoolIteratorPrefix(ownerAddr, 1000000)
 	require.True(t, bytes.HasPrefix(key, prefix))
 }
 
