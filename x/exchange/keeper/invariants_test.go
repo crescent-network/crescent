@@ -50,7 +50,7 @@ func (s *KeeperTestSuite) TestOrderStateInvariant() {
 	order.Deadline = origDeadline
 	s.keeper.SetOrder(s.Ctx, order)
 
-	order.RemainingDeposit = order.RemainingDeposit.Sub(sdk.NewInt(100))
+	order.RemainingDeposit = sdk.ZeroInt()
 	s.keeper.SetOrder(s.Ctx, order)
 	_, broken = keeper.OrderStateInvariant(s.keeper)(s.Ctx)
 	s.Require().True(broken)
