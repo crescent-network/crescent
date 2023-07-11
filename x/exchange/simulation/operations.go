@@ -137,7 +137,7 @@ func SimulateMsgPlaceMarketOrder(
 		simAccount, msg, found := findMsgPlaceMarketOrderParams(r, accs, bk, k, ctx)
 		if !found {
 			return simtypes.NoOpMsg(
-				types.ModuleName, types.TypeMsgPlaceLimitOrder, "unable to place market order"), nil, nil
+				types.ModuleName, types.TypeMsgPlaceMarketOrder, "unable to place market order"), nil, nil
 		}
 		txCtx := simulation.OperationInput{
 			R:               r,
@@ -251,9 +251,14 @@ func findMsgPlaceMarketOrderParams(
 			if marketState.LastPrice == nil {
 				continue
 			}
-			estBuyPrice := marketState.LastPrice.Mul(utils.ParseDec("1.5")) // 150%
-			if balance := spendable.AmountOf(market.QuoteDenom); balance.GT(estBuyPrice.MulInt64(1_000000).TruncateInt()) {
-				qty := utils.RandomInt(r, sdk.NewInt(100), sdk.NewInt(1_000000))
+			qty := utils.RandomInt(r, sdk.NewInt(100), sdk.NewInt(1_000000))
+			cacheCtx, _ := ctx.CacheContext()
+			obs := k.ConstructTempOrderBookSide(cacheCtx, market, true, nil, &qty, nil, 0)
+			if len(obs.Levels) == 0 {
+				continue
+			}
+			price := obs.Levels[len(obs.Levels)-1].Price
+			if balance := spendable.AmountOf(market.QuoteDenom); balance.GT(types.QuoteAmount(true, price, qty)) {
 				msg = types.NewMsgPlaceMarketOrder(
 					acc.Address, market.Id, true, qty)
 				return acc, msg, true

@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"sort"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -224,8 +225,8 @@ func NewTempOrder(order Order, market Market, source OrderSource) *TempOrder {
 }
 
 func (order *TempOrder) HasPriorityOver(other *TempOrder) bool {
-	if order.Price != other.Price { // sanity check
-		panic("two orders with different price")
+	if !order.Price.Equal(other.Price) { // sanity check
+		panic(fmt.Sprintf("orders with different price: %s != %s", order.Price, other.Price))
 	}
 	if !order.Quantity.Equal(other.Quantity) {
 		return order.Quantity.GT(other.Quantity)

@@ -78,7 +78,7 @@ func PoolCurrentLiquidityInvariant(k Keeper) sdk.Invariant {
 			if !poolState.CurrentLiquidity.Equal(currentLiquidity) {
 				msg += fmt.Sprintf(
 					"\tpool %d has wrong current liquidity: %s != %s\n",
-					pool.Id, poolState.CurrentPrice, currentLiquidity)
+					pool.Id, poolState.CurrentLiquidity, currentLiquidity)
 				cnt++
 			}
 		}
