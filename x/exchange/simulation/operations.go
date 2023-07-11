@@ -1,6 +1,7 @@
 package simulation
 
 import (
+	"fmt"
 	"math/rand"
 	"time"
 
@@ -253,14 +254,13 @@ func findMsgPlaceMarketOrderParams(
 			}
 			qty := utils.RandomInt(r, sdk.NewInt(100), sdk.NewInt(1_000000))
 			cacheCtx, _ := ctx.CacheContext()
-			obs := k.ConstructTempOrderBookSide(cacheCtx, market, true, nil, &qty, nil, 0)
+			obs := k.ConstructTempOrderBookSide(cacheCtx, market, false, nil, &qty, nil, 0)
 			if len(obs.Levels) == 0 {
 				continue
 			}
 			price := obs.Levels[len(obs.Levels)-1].Price
 			if balance := spendable.AmountOf(market.QuoteDenom); balance.GT(types.QuoteAmount(true, price, qty)) {
-				msg = types.NewMsgPlaceMarketOrder(
-					acc.Address, market.Id, true, qty)
+				msg = types.NewMsgPlaceMarketOrder(acc.Address, market.Id, true, qty)
 				return acc, msg, true
 			}
 		}

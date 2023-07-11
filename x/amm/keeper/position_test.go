@@ -65,7 +65,7 @@ func (s *KeeperTestSuite) TestNegativeFarmingRewardsGrowthInside() {
 	_, pool := s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("1.1366"))
 	lpAddr := s.FundedAccount(1, enoughCoins)
 	s.AddLiquidity(
-		lpAddr, lpAddr, pool.Id, utils.ParseDec("1.1"), utils.ParseDec("1.2"),
+		lpAddr, pool.Id, utils.ParseDec("1.1"), utils.ParseDec("1.2"),
 		utils.ParseCoins("1000_000000ucre,1000_000000uusd"))
 	creatorAddr := s.FundedAccount(2, enoughCoins)
 	s.CreatePrivateFarmingPlan(
@@ -78,7 +78,7 @@ func (s *KeeperTestSuite) TestNegativeFarmingRewardsGrowthInside() {
 	_, farmingRewards := s.CollectibleCoins(1)
 	s.Require().Equal("11573ucre", farmingRewards.String())
 	s.AddLiquidity(
-		lpAddr, lpAddr, pool.Id, utils.ParseDec("0.9"), utils.ParseDec("1.1"),
+		lpAddr, pool.Id, utils.ParseDec("0.9"), utils.ParseDec("1.1"),
 		utils.ParseCoins("1000_000000uusd"))
 	_, farmingRewards = s.CollectibleCoins(1)
 	s.Require().Equal("11573ucre", farmingRewards.String())

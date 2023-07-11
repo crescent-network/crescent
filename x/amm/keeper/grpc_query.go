@@ -219,7 +219,7 @@ func (k Querier) RemoveLiquiditySimulation(c context.Context, req *types.QueryRe
 	if !found {
 		return nil, status.Error(codes.NotFound, "position not found")
 	}
-	ownerAddr := sdk.MustAccAddressFromBech32(position.Owner)
+	ownerAddr := position.MustGetOwnerAddress()
 	if err := types.NewMsgRemoveLiquidity(
 		ownerAddr, req.PositionId, liquidity).ValidateBasic(); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())

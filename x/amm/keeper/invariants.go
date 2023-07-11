@@ -11,12 +11,17 @@ import (
 
 func RegisterInvariants(ir sdk.InvariantRegistry, k Keeper) {
 	ir.RegisterRoute(types.ModuleName, "rewards-growth", RewardsGrowthInvariant(k))
+	ir.RegisterRoute(types.ModuleName, "can-collect", CanCollectInvariant(k))
 	ir.RegisterRoute(types.ModuleName, "pool-current-liquidity", PoolCurrentLiquidityInvariant(k))
 }
 
 func AllInvariants(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (res string, broken bool) {
 		res, broken = RewardsGrowthInvariant(k)(ctx)
+		if broken {
+			return
+		}
+		res, broken = CanCollectInvariant(k)(ctx)
 		if broken {
 			return
 		}
@@ -53,6 +58,41 @@ func RewardsGrowthInvariant(k Keeper) sdk.Invariant {
 			fmt.Sprintf(
 				"found %d tick info(s) with wrong fee growth or farming rewards growth\n%s",
 				cnt, msg)), broken
+	}
+}
+
+func CanCollectInvariant(k Keeper) sdk.Invariant {
+	return func(ctx sdk.Context) (string, bool) {
+		msg := ""
+		cnt := 0
+		k.IterateAllPositions(ctx, func(position types.Position) (stop bool) {
+			defer func() {
+				if r := recover(); r != nil {
+					msg += fmt.Sprintf(
+						"\tcannot collect rewards from position %d: %v\n", position.Id, r)
+					cnt++
+				}
+			}()
+			ownerAddr := position.MustGetOwnerAddress()
+			fee, farmingRewards, err := k.CollectibleCoins(ctx, position.Id)
+			if err != nil {
+				msg += fmt.Sprintf(
+					"\tcannot calculate collectible coins for position %d\n", position.Id)
+				cnt++
+				return false
+			}
+			if err := k.Collect(ctx, ownerAddr, ownerAddr, position.Id, fee.Add(farmingRewards...)); err != nil {
+				msg += fmt.Sprintf(
+					"\tcannot collect rewards from position %d\n", position.Id)
+				cnt++
+				return false
+			}
+			return false
+		})
+		broken := cnt != 0
+		return sdk.FormatInvariant(
+			types.ModuleName, "can collect",
+			fmt.Sprintf("found %d invalid position state(s)\n%s", cnt, msg)), broken
 	}
 }
 

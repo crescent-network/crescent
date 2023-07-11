@@ -220,7 +220,7 @@ func (k Keeper) SetPosition(ctx sdk.Context, position types.Position) {
 func (k Keeper) SetPositionByParamsIndex(ctx sdk.Context, position types.Position) {
 	store := ctx.KVStore(k.storeKey)
 	store.Set(types.GetPositionByParamsIndexKey(
-		sdk.MustAccAddressFromBech32(position.Owner), position.PoolId,
+		position.MustGetOwnerAddress(), position.PoolId,
 		position.LowerTick, position.UpperTick),
 		sdk.Uint64ToBigEndian(position.Id))
 }
