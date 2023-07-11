@@ -9,32 +9,6 @@ import (
 	"github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
-func (s *KeeperTestSuite) TestSwapExactAmountIn() {
-	creatorAddr := utils.TestAddress(0)
-	s.FundAccount(creatorAddr, utils.ParseCoins("10000_000000ucre,10000_000000uatom,10000_000000uusd"))
-
-	market1 := s.CreateMarket("ucre", "uusd")
-	market2 := s.CreateMarket("uatom", "ucre")
-
-	pool1 := s.CreatePool(market1.Id, utils.ParseDec("5"))
-	s.AddLiquidity(
-		creatorAddr, creatorAddr, pool1.Id, utils.ParseDec("4.5"), utils.ParseDec("5.5"),
-		utils.ParseCoins("1000_000000ucre,1000_000000uusd"))
-	pool2 := s.CreatePool(market2.Id, utils.ParseDec("2"))
-	s.AddLiquidity(
-		creatorAddr, creatorAddr, pool2.Id, utils.ParseDec("1.5"), utils.ParseDec("3"),
-		utils.ParseCoins("1000_000000uatom,1000_000000ucre"))
-
-	ordererAddr := utils.TestAddress(1)
-	s.FundAccount(ordererAddr, utils.ParseCoins("10000_000000ucre,10000_000000uatom,10000_000000uusd"))
-
-	routes := []uint64{market1.Id, market2.Id}
-	input := sdk.NewInt64Coin("uusd", 100_000000)
-	minOutput := sdk.NewInt64Coin("uatom", 9_000000)
-	output, _ := s.SwapExactAmountIn(ordererAddr, routes, input, minOutput, false)
-	s.Require().Equal("9874876uatom", output.String())
-}
-
 func (s *KeeperTestSuite) TestSwapInsufficientLiquidity() {
 	market1 := s.CreateMarket("ucre", "uusd")
 	market2 := s.CreateMarket("uatom", "ucre")

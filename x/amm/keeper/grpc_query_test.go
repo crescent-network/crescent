@@ -20,16 +20,16 @@ func (s *KeeperTestSuite) SetupSampleScenario() {
 	aliceAddr := s.FundedAccount(1, enoughCoins)
 	bobAddr := s.FundedAccount(2, enoughCoins)
 	s.AddLiquidity(
-		aliceAddr, aliceAddr, creUsdPool.Id, utils.ParseDec("4"), utils.ParseDec("6"),
+		aliceAddr, creUsdPool.Id, utils.ParseDec("4"), utils.ParseDec("6"),
 		utils.ParseCoins("100_000000ucre,500_000000uusd"))
 	s.AddLiquidity(
-		aliceAddr, aliceAddr, atomUsdPool.Id, utils.ParseDec("9"), utils.ParseDec("11"),
+		aliceAddr, atomUsdPool.Id, utils.ParseDec("9"), utils.ParseDec("11"),
 		utils.ParseCoins("100_000000uatom,1000_000000uusd"))
 	s.AddLiquidity(
-		bobAddr, bobAddr, atomUsdPool.Id, utils.ParseDec("9.9"), utils.ParseDec("10.1"),
+		bobAddr, atomUsdPool.Id, utils.ParseDec("9.9"), utils.ParseDec("10.1"),
 		utils.ParseCoins("10_000000uatom,100_000000uusd"))
 	s.AddLiquidity(
-		bobAddr, bobAddr, creUsdPool.Id, utils.ParseDec("4.9"), utils.ParseDec("5.1"),
+		bobAddr, creUsdPool.Id, utils.ParseDec("4.9"), utils.ParseDec("5.1"),
 		utils.ParseCoins("10_000000ucre,50_000000uusd"))
 
 	creatorAddr := s.FundedAccount(3, enoughCoins)

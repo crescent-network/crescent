@@ -165,7 +165,7 @@ func (s *KeeperTestSuite) TestAllocateFarmingRewards() {
 
 	lpAddr := s.FundedAccount(2, enoughCoins)
 	s.AddLiquidity(
-		lpAddr, lpAddr, pool.Id, utils.ParseDec("4"), utils.ParseDec("6"),
+		lpAddr, pool.Id, utils.ParseDec("4"), utils.ParseDec("6"),
 		utils.ParseCoins("100_000000ucre,500_000000uusd"))
 
 	s.EndBlock()
@@ -197,10 +197,10 @@ func (s *KeeperTestSuite) TestFarming() {
 	lpAddr1 := s.FundedAccount(1, utils.ParseCoins("10000_000000ucre,10000_000000uusd"))
 	lpAddr2 := s.FundedAccount(2, utils.ParseCoins("10000_000000ucre,10000_000000uusd"))
 	position1, liquidity1, _ := s.AddLiquidity(
-		lpAddr1, lpAddr1, pool.Id, utils.ParseDec("4"), utils.ParseDec("6"),
+		lpAddr1, pool.Id, utils.ParseDec("4"), utils.ParseDec("6"),
 		utils.ParseCoins("100_000000ucre,500_000000uusd"))
 	position2, liquidity2, _ := s.AddLiquidity(
-		lpAddr2, lpAddr2, pool.Id, utils.ParseDec("4.8"), utils.ParseDec("5.2"),
+		lpAddr2, pool.Id, utils.ParseDec("4.8"), utils.ParseDec("5.2"),
 		utils.ParseCoins("100_000000ucre,500_000000uusd"))
 	fmt.Println(liquidity1)
 	fmt.Println(liquidity2)
@@ -215,8 +215,8 @@ func (s *KeeperTestSuite) TestFarming() {
 
 	s.NextBlock()
 
-	s.Collect(lpAddr1, lpAddr1, position1.Id, utils.ParseCoins("9uatom"))
-	s.Collect(lpAddr2, lpAddr2, position2.Id, utils.ParseCoins("47uatom"))
+	s.Collect(lpAddr1, position1.Id, utils.ParseCoins("9uatom"))
+	s.Collect(lpAddr2, position2.Id, utils.ParseCoins("47uatom"))
 
 	ordererAddr := s.FundedAccount(3, utils.ParseCoins("10000_000000uusd"))
 	s.PlaceMarketOrder(pool.MarketId, ordererAddr, true, sdk.NewInt(120_000000))
@@ -226,8 +226,8 @@ func (s *KeeperTestSuite) TestFarming() {
 
 	s.NextBlock()
 
-	s.Collect(lpAddr1, lpAddr1, position1.Id, utils.ParseCoins("56uatom"))
-	s.Collect(lpAddr2, lpAddr2, position2.Id, utils.ParseCoins(""))
+	s.Collect(lpAddr1, position1.Id, utils.ParseCoins("56uatom"))
+	s.Collect(lpAddr2, position2.Id, utils.ParseCoins(""))
 }
 
 func (s *KeeperTestSuite) TestTerminatePrivateFarmingPlan() {
@@ -235,7 +235,7 @@ func (s *KeeperTestSuite) TestTerminatePrivateFarmingPlan() {
 	pool := s.CreatePool(market.Id, utils.ParseDec("5"))
 	lpAddr := s.FundedAccount(1, enoughCoins)
 	s.AddLiquidity(
-		lpAddr, lpAddr, pool.Id, utils.ParseDec("4.5"), utils.ParseDec("5.5"),
+		lpAddr, pool.Id, utils.ParseDec("4.5"), utils.ParseDec("5.5"),
 		utils.ParseCoins("100_000000ucre,500_000000uusd"))
 
 	creatorAddr := s.FundedAccount(2, enoughCoins)
@@ -270,7 +270,7 @@ func (s *KeeperTestSuite) TestTerminatePrivatePlan_Unauthorized() {
 	pool := s.CreatePool(market.Id, utils.ParseDec("5"))
 	lpAddr := s.FundedAccount(1, enoughCoins)
 	s.AddLiquidity(
-		lpAddr, lpAddr, pool.Id, utils.ParseDec("4.5"), utils.ParseDec("5.5"),
+		lpAddr, pool.Id, utils.ParseDec("4.5"), utils.ParseDec("5.5"),
 		utils.ParseCoins("100_000000ucre,500_000000uusd"))
 
 	creatorAddr := s.FundedAccount(2, enoughCoins)
@@ -293,7 +293,7 @@ func (s *KeeperTestSuite) TestFarmingTooMuchLiquidity() {
 	s.keeper.SetPool(s.Ctx, pool)
 	lpAddr := s.FundedAccount(1, enoughCoins)
 	position, _, _ := s.AddLiquidity(
-		lpAddr, lpAddr, pool.Id, utils.ParseDec("4.9999"), utils.ParseDec("5.0001"),
+		lpAddr, pool.Id, utils.ParseDec("4.9999"), utils.ParseDec("5.0001"),
 		utils.ParseCoins("10000_000000000000000000ucre,50000_000000000000000000uusd"))
 	s.CreatePrivateFarmingPlan(
 		utils.TestAddress(2), "Farming plan", utils.TestAddress(2), []types.FarmingRewardAllocation{
@@ -312,7 +312,7 @@ func (s *KeeperTestSuite) TestFarmingTooSmallLiquidity() {
 	s.keeper.SetPool(s.Ctx, pool)
 	lpAddr := s.FundedAccount(1, enoughCoins)
 	position, _, _ := s.AddLiquidity(
-		lpAddr, lpAddr, pool.Id, utils.ParseDec("0.0000001"), utils.ParseDec("10000000"),
+		lpAddr, pool.Id, utils.ParseDec("0.0000001"), utils.ParseDec("10000000"),
 		utils.ParseCoins("10ucre,50uusd"))
 	creatorAddr := s.FundedAccount(100, utils.ParseCoins("1uibc1")) // Create supply.
 	s.CreatePrivateFarmingPlan(

@@ -9,7 +9,7 @@ func (s *KeeperTestSuite) TestImportExportGenesis() {
 	s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("0.005"))
 	lpAddr := s.FundedAccount(1, enoughCoins)
 	s.AddLiquidity(
-		lpAddr, lpAddr, 1, utils.ParseDec("0.003"), utils.ParseDec("0.007"),
+		lpAddr, 1, utils.ParseDec("0.003"), utils.ParseDec("0.007"),
 		utils.ParseCoins("1000_000000ucre,1000_000000uusd"))
 	s.CreatePrivateFarmingPlan(
 		utils.TestAddress(1), "Farming plan", utils.TestAddress(2), []types.FarmingRewardAllocation{

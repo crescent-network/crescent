@@ -53,7 +53,7 @@ func (s *KeeperTestSuite) SetupSampleScenario() {
 	enoughCoins := utils.ParseCoins("10000_000000ucre,10000_000000uusd")
 	lpAddr := s.FundedAccount(1, enoughCoins)
 	s.AddLiquidity(
-		lpAddr, lpAddr, pool.Id, utils.ParseDec("4"), utils.ParseDec("6"), utils.ParseCoins("1000_000000ucre,5000_000000uusd"))
+		lpAddr, pool.Id, utils.ParseDec("4"), utils.ParseDec("6"), utils.ParseCoins("1000_000000ucre,5000_000000uusd"))
 	s.NextBlock()
 	s.NextBlock()
 

@@ -137,7 +137,7 @@ func (s *SimTestSuite) TestSimulateMsgRemoveLiquidity() {
 	market := s.CreateMarket(denoms[0], denoms[1])
 	pool := s.CreatePool(market.Id, utils.ParseDec("12.345"))
 	s.AddLiquidity(
-		accs[0].Address, accs[0].Address, pool.Id,
+		accs[0].Address, pool.Id,
 		utils.ParseDec("10"), utils.ParseDec("15"),
 		sdk.NewCoins(sdk.NewInt64Coin(denoms[0], 100_000000), sdk.NewInt64Coin(denoms[1], 100_000000)))
 
