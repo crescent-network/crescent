@@ -13,6 +13,7 @@ func RegisterInvariants(ir sdk.InvariantRegistry, k Keeper) {
 	ir.RegisterRoute(types.ModuleName, "order-state", OrderStateInvariant(k))
 	ir.RegisterRoute(types.ModuleName, "order-book", OrderBookInvariant(k))
 	ir.RegisterRoute(types.ModuleName, "order-book-order", OrderBookOrderInvariant(k))
+	ir.RegisterRoute(types.ModuleName, "num-mm-orders", NumMMOrdersInvariant(k))
 }
 
 func AllInvariants(k Keeper) sdk.Invariant {
@@ -29,7 +30,11 @@ func AllInvariants(k Keeper) sdk.Invariant {
 		if broken {
 			return
 		}
-		return OrderBookOrderInvariant(k)(ctx)
+		res, broken = OrderBookOrderInvariant(k)(ctx)
+		if broken {
+			return
+		}
+		return NumMMOrdersInvariant(k)(ctx)
 	}
 }
 
@@ -66,12 +71,8 @@ func OrderStateInvariant(k Keeper) sdk.Invariant {
 				msg += fmt.Sprintf("\torder %d should have been expired at %s\n", order.Id, order.Deadline)
 				cnt++
 			}
-			if order.OpenQuantity.IsZero() {
-				msg += fmt.Sprintf("\torder %d should have been deleted since it's fulfilled\n", order.Id)
-				cnt++
-			}
-			if order.RemainingDeposit.IsZero() {
-				msg += fmt.Sprintf("\torder %d should have been deleted since it has no remaining deposit\n", order.Id)
+			if order.ExecutableQuantity(order.Price).IsZero() {
+				msg += fmt.Sprintf("\torder %d should have been deleted since it has no executable quantity\n", order.Id)
 				cnt++
 			}
 			return false
@@ -88,35 +89,25 @@ func OrderBookInvariant(k Keeper) sdk.Invariant {
 		msg := ""
 		cnt := 0
 		k.IterateAllMarkets(ctx, func(market types.Market) (stop bool) {
-			var bestBuyPrice, bestSellPrice sdk.Dec
-			k.IterateOrderBookSide(ctx, market.Id, false, false, func(order types.Order) (stop bool) {
-				bestSellPrice = order.Price
+			var (
+				bestBuyOrder, bestSellOrder           types.Order
+				foundBestBuyOrder, foundBestSellOrder bool
+			)
+			k.IterateOrderBookSideByMarket(ctx, market.Id, false, false, func(order types.Order) (stop bool) {
+				bestSellOrder = order
+				foundBestSellOrder = true
 				return true
 			})
-			k.IterateOrderBookSide(ctx, market.Id, true, false, func(order types.Order) (stop bool) {
-				bestBuyPrice = order.Price
+			k.IterateOrderBookSideByMarket(ctx, market.Id, true, false, func(order types.Order) (stop bool) {
+				bestBuyOrder = order
+				foundBestBuyOrder = true
 				return true
 			})
-			if !bestSellPrice.IsNil() && !bestBuyPrice.IsNil() {
-				if bestSellPrice.LTE(bestBuyPrice) {
+			if foundBestSellOrder && foundBestBuyOrder {
+				if bestSellOrder.Price.LTE(bestBuyOrder.Price) {
 					msg += fmt.Sprintf(
 						"\tmarket %d has crossed order book: sell price %s <= buy price %s\n",
-						market.Id, bestSellPrice, bestBuyPrice)
-					cnt++
-				}
-			}
-			marketState := k.MustGetMarketState(ctx, market.Id)
-			if marketState.LastPrice != nil && !bestSellPrice.IsNil() && !bestBuyPrice.IsNil() {
-				if bestSellPrice.LT(*marketState.LastPrice) && bestBuyPrice.GTE(bestSellPrice) {
-					msg += fmt.Sprintf(
-						"\tmarket %d has sell order under the last price: %s < %s\n",
-						market.Id, bestSellPrice, marketState.LastPrice)
-					cnt++
-				}
-				if bestBuyPrice.GT(*marketState.LastPrice) && bestSellPrice.LTE(bestBuyPrice) {
-					msg += fmt.Sprintf(
-						"\tmarket %d has buy order above the last price: %s > %s\n",
-						market.Id, bestBuyPrice, marketState.LastPrice)
+						market.Id, bestSellOrder.Price, bestBuyOrder.Price)
 					cnt++
 				}
 			}
@@ -134,8 +125,15 @@ func OrderBookOrderInvariant(k Keeper) sdk.Invariant {
 		msg := ""
 		cnt := 0
 		k.IterateAllOrders(ctx, func(order types.Order) (stop bool) {
-			if found := k.LookupOrderBookOrder(ctx, order.MarketId, order.IsBuy, order.Price, order.Id); !found {
+			if found := k.LookupOrderBookOrderIndex(ctx, order.MarketId, order.IsBuy, order.Price, order.Id); !found {
 				msg += fmt.Sprintf("\torder %d not found in order book\n", order.Id)
+				cnt++
+			}
+			return false
+		})
+		k.IterateAllOrderBookOrderIds(ctx, func(orderId uint64) (stop bool) {
+			if found := k.LookupOrder(ctx, orderId); !found {
+				msg += fmt.Sprintf("\torder %d not found\n", orderId)
 				cnt++
 			}
 			return false
@@ -144,5 +142,32 @@ func OrderBookOrderInvariant(k Keeper) sdk.Invariant {
 		return sdk.FormatInvariant(
 			types.ModuleName, "order book order",
 			fmt.Sprintf("found %d order(s) that are not found in order book\n%s", cnt, msg)), broken
+	}
+}
+
+func NumMMOrdersInvariant(k Keeper) sdk.Invariant {
+	return func(ctx sdk.Context) (string, bool) {
+		msg := ""
+		cnt := 0
+		k.IterateAllNumMMOrders(ctx, func(ordererAddr sdk.AccAddress, marketId uint64, numMMOrders uint32) (stop bool) {
+			num := uint32(0)
+			k.IterateOrdersByOrdererAndMarket(ctx, ordererAddr, marketId, func(order types.Order) (stop bool) {
+				if order.Type == types.OrderTypeMM {
+					num++
+				}
+				return false
+			})
+			if num != numMMOrders {
+				msg += fmt.Sprintf(
+					"\torderer %s should have %d MM orders, but found %d\n",
+					ordererAddr.String(), numMMOrders, num)
+				cnt++
+			}
+			return false
+		})
+		broken := cnt != 0
+		return sdk.FormatInvariant(
+			types.ModuleName, "num mm orders",
+			fmt.Sprintf("found %d wrong num MM orders state(s)\n%s", cnt, msg)), broken
 	}
 }

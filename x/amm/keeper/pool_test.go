@@ -20,6 +20,14 @@ func (s *KeeperTestSuite) TestCreatePool_MultiplePoolsPerMarket() {
 	s.Require().EqualError(err, "cannot create more than one pool per market: invalid request")
 }
 
+func (s *KeeperTestSuite) TestCreatePool_InsufficientFee() {
+	s.keeper.SetPoolCreationFee(s.Ctx, utils.ParseCoins("100_000000ucre"))
+	market := s.CreateMarket("ucre", "uusd")
+	creatorAddr := utils.TestAddress(1)
+	_, err := s.keeper.CreatePool(s.Ctx, creatorAddr, market.Id, utils.ParseDec("5"))
+	s.Require().EqualError(err, "0ucre is smaller than 100000000ucre: insufficient funds")
+}
+
 func (s *KeeperTestSuite) TestCreatePool() {
 	market, pool := s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("5"))
 	pool2, found := s.keeper.GetPoolByMarket(s.Ctx, market.Id)
@@ -53,7 +61,7 @@ func (s *KeeperTestSuite) TestPoolOrders() {
 			"simple liquidity",
 			func(pool types.Pool, lpAddr sdk.AccAddress) {
 				s.AddLiquidity(
-					lpAddr, lpAddr, pool.Id, utils.ParseDec("4.98"), utils.ParseDec("5.02"),
+					lpAddr, pool.Id, utils.ParseDec("4.98"), utils.ParseDec("5.02"),
 					utils.ParseCoins("100_000000ucre,500_000000uusd"))
 			},
 			[]order{
@@ -73,10 +81,10 @@ func (s *KeeperTestSuite) TestPoolOrders() {
 			"valley",
 			func(pool types.Pool, lpAddr sdk.AccAddress) {
 				s.AddLiquidity(
-					lpAddr, lpAddr, pool.Id, utils.ParseDec("4.96"), utils.ParseDec("4.98"),
+					lpAddr, pool.Id, utils.ParseDec("4.96"), utils.ParseDec("4.98"),
 					utils.ParseCoins("100_000000ucre,500_000000uusd"))
 				s.AddLiquidity(
-					lpAddr, lpAddr, pool.Id, utils.ParseDec("5.02"), utils.ParseDec("5.04"),
+					lpAddr, pool.Id, utils.ParseDec("5.02"), utils.ParseDec("5.04"),
 					utils.ParseCoins("100_000000ucre,500_000000uusd"))
 			},
 			[]order{
@@ -96,13 +104,13 @@ func (s *KeeperTestSuite) TestPoolOrders() {
 			"high valley",
 			func(pool types.Pool, lpAddr sdk.AccAddress) {
 				s.AddLiquidity(
-					lpAddr, lpAddr, pool.Id, utils.ParseDec("4.97"), utils.ParseDec("5.03"),
+					lpAddr, pool.Id, utils.ParseDec("4.97"), utils.ParseDec("5.03"),
 					utils.ParseCoins("100_000000ucre,500_000000uusd"))
 				s.AddLiquidity(
-					lpAddr, lpAddr, pool.Id, utils.ParseDec("4.98"), utils.ParseDec("4.99"),
+					lpAddr, pool.Id, utils.ParseDec("4.98"), utils.ParseDec("4.99"),
 					utils.ParseCoins("100_000000ucre,500_000000uusd"))
 				s.AddLiquidity(
-					lpAddr, lpAddr, pool.Id, utils.ParseDec("5.01"), utils.ParseDec("5.02"),
+					lpAddr, pool.Id, utils.ParseDec("5.01"), utils.ParseDec("5.02"),
 					utils.ParseCoins("100_000000ucre,500_000000uusd"))
 			},
 			[]order{

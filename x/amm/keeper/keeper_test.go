@@ -14,11 +14,14 @@ import (
 	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
-var enoughCoins = utils.ParseCoins("1000000_000000000000000000ucre,1000000_000000000000000000uusd,1000000_000000000000000000uatom")
+var enoughCoins = utils.ParseCoins(
+	"1000000_000000000000000000ucre,1000000_000000000000000000uusd,1000000_000000000000000000uatom,1000000_000000000000000000stake")
 
 type KeeperTestSuite struct {
 	testutil.TestSuite
-	keeper keeper.Keeper
+	keeper    keeper.Keeper
+	msgServer types.MsgServer
+	querier   keeper.Querier
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -28,12 +31,13 @@ func TestKeeperTestSuite(t *testing.T) {
 func (s *KeeperTestSuite) SetupTest() {
 	s.TestSuite.SetupTest()
 	s.keeper = s.App.AMMKeeper
+	s.msgServer = keeper.NewMsgServerImpl(s.keeper)
+	s.querier = keeper.Querier{Keeper: s.keeper}
 	s.FundAccount(utils.TestAddress(0), utils.ParseCoins("1ucre,1uusd,1uatom")) // make positive supplies
 }
 
 func (s *KeeperTestSuite) CreateMarketAndPool(baseDenom, quoteDenom string, price sdk.Dec) (market exchangetypes.Market, pool types.Pool) {
-	creatorAddr := utils.TestAddress(0)
-	market = s.CreateMarket(creatorAddr, baseDenom, quoteDenom, true)
-	pool = s.CreatePool(creatorAddr, market.Id, price, true)
+	market = s.CreateMarket(baseDenom, quoteDenom)
+	pool = s.CreatePool(market.Id, price)
 	return market, pool
 }

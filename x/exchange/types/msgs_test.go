@@ -54,8 +54,11 @@ func TestMsgCreateMarket(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			msg := types.NewMsgCreateMarket(utils.TestAddress(1), "ucre", "uusd")
+			senderAddr := utils.TestAddress(1)
+			msg := types.NewMsgCreateMarket(senderAddr, "ucre", "uusd")
 			require.NoError(t, msg.ValidateBasic())
+			require.Equal(t, types.RouterKey, msg.Route())
+			require.Equal(t, []sdk.AccAddress{senderAddr}, msg.GetSigners())
 			require.Equal(t, types.TypeMsgCreateMarket, msg.Type())
 			tc.malleate(msg)
 			err := msg.ValidateBasic()
@@ -108,6 +111,13 @@ func TestMsgPlaceLimitOrder(t *testing.T) {
 			"price is lower than the min price; -12.345000000000000000 < 0.000000000000010000: invalid request",
 		},
 		{
+			"too high price",
+			func(msg *types.MsgPlaceLimitOrder) {
+				msg.Price = utils.ParseDec("50000000000000000000000000000000000000000")
+			},
+			"price is higher than the max price; 50000000000000000000000000000000000000000.000000000000000000 > 10000000000000000000000000000000000000000.000000000000000000: invalid request",
+		},
+		{
 			"invalid price tick",
 			func(msg *types.MsgPlaceLimitOrder) {
 				msg.Price = utils.ParseDec("12.34567")
@@ -144,9 +154,12 @@ func TestMsgPlaceLimitOrder(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
+			senderAddr := utils.TestAddress(1)
 			msg := types.NewMsgPlaceLimitOrder(
-				utils.TestAddress(1), 1, true, utils.ParseDec("12.345"), sdk.NewInt(1000000), time.Hour)
+				senderAddr, 1, true, utils.ParseDec("12.345"), sdk.NewInt(1000000), time.Hour)
 			require.NoError(t, msg.ValidateBasic())
+			require.Equal(t, types.RouterKey, msg.Route())
+			require.Equal(t, []sdk.AccAddress{senderAddr}, msg.GetSigners())
 			require.Equal(t, types.TypeMsgPlaceLimitOrder, msg.Type())
 			tc.malleate(msg)
 			err := msg.ValidateBasic()
@@ -199,6 +212,13 @@ func TestMsgPlaceBatchLimitOrder(t *testing.T) {
 			"price is lower than the min price; -12.345000000000000000 < 0.000000000000010000: invalid request",
 		},
 		{
+			"too high price",
+			func(msg *types.MsgPlaceBatchLimitOrder) {
+				msg.Price = utils.ParseDec("50000000000000000000000000000000000000000")
+			},
+			"price is higher than the max price; 50000000000000000000000000000000000000000.000000000000000000 > 10000000000000000000000000000000000000000.000000000000000000: invalid request",
+		},
+		{
 			"invalid price tick",
 			func(msg *types.MsgPlaceBatchLimitOrder) {
 				msg.Price = utils.ParseDec("12.34567")
@@ -235,9 +255,12 @@ func TestMsgPlaceBatchLimitOrder(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
+			senderAddr := utils.TestAddress(1)
 			msg := types.NewMsgPlaceBatchLimitOrder(
-				utils.TestAddress(1), 1, true, utils.ParseDec("12.345"), sdk.NewInt(1000000), time.Hour)
+				senderAddr, 1, true, utils.ParseDec("12.345"), sdk.NewInt(1000000), time.Hour)
 			require.NoError(t, msg.ValidateBasic())
+			require.Equal(t, types.RouterKey, msg.Route())
+			require.Equal(t, []sdk.AccAddress{senderAddr}, msg.GetSigners())
 			require.Equal(t, types.TypeMsgPlaceBatchLimitOrder, msg.Type())
 			tc.malleate(msg)
 			err := msg.ValidateBasic()
@@ -290,6 +313,13 @@ func TestMsgPlaceMMLimitOrder(t *testing.T) {
 			"price is lower than the min price; -12.345000000000000000 < 0.000000000000010000: invalid request",
 		},
 		{
+			"too high price",
+			func(msg *types.MsgPlaceMMLimitOrder) {
+				msg.Price = utils.ParseDec("50000000000000000000000000000000000000000")
+			},
+			"price is higher than the max price; 50000000000000000000000000000000000000000.000000000000000000 > 10000000000000000000000000000000000000000.000000000000000000: invalid request",
+		},
+		{
 			"invalid price tick",
 			func(msg *types.MsgPlaceMMLimitOrder) {
 				msg.Price = utils.ParseDec("12.34567")
@@ -326,9 +356,12 @@ func TestMsgPlaceMMLimitOrder(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
+			senderAddr := utils.TestAddress(1)
 			msg := types.NewMsgPlaceMMLimitOrder(
-				utils.TestAddress(1), 1, true, utils.ParseDec("12.345"), sdk.NewInt(1000000), time.Hour)
+				senderAddr, 1, true, utils.ParseDec("12.345"), sdk.NewInt(1000000), time.Hour)
 			require.NoError(t, msg.ValidateBasic())
+			require.Equal(t, types.RouterKey, msg.Route())
+			require.Equal(t, []sdk.AccAddress{senderAddr}, msg.GetSigners())
 			require.Equal(t, types.TypeMsgPlaceMMLimitOrder, msg.Type())
 			tc.malleate(msg)
 			err := msg.ValidateBasic()
@@ -381,6 +414,13 @@ func TestMsgPlaceMMBatchLimitOrder(t *testing.T) {
 			"price is lower than the min price; -12.345000000000000000 < 0.000000000000010000: invalid request",
 		},
 		{
+			"too high price",
+			func(msg *types.MsgPlaceMMBatchLimitOrder) {
+				msg.Price = utils.ParseDec("50000000000000000000000000000000000000000")
+			},
+			"price is higher than the max price; 50000000000000000000000000000000000000000.000000000000000000 > 10000000000000000000000000000000000000000.000000000000000000: invalid request",
+		},
+		{
 			"invalid price tick",
 			func(msg *types.MsgPlaceMMBatchLimitOrder) {
 				msg.Price = utils.ParseDec("12.34567")
@@ -417,9 +457,12 @@ func TestMsgPlaceMMBatchLimitOrder(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
+			senderAddr := utils.TestAddress(1)
 			msg := types.NewMsgPlaceMMBatchLimitOrder(
-				utils.TestAddress(1), 1, true, utils.ParseDec("12.345"), sdk.NewInt(1000000), time.Hour)
+				senderAddr, 1, true, utils.ParseDec("12.345"), sdk.NewInt(1000000), time.Hour)
 			require.NoError(t, msg.ValidateBasic())
+			require.Equal(t, types.RouterKey, msg.Route())
+			require.Equal(t, []sdk.AccAddress{senderAddr}, msg.GetSigners())
 			require.Equal(t, types.TypeMsgPlaceMMBatchLimitOrder, msg.Type())
 			tc.malleate(msg)
 			err := msg.ValidateBasic()
@@ -473,9 +516,12 @@ func TestMsgPlaceMarketOrder(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
+			senderAddr := utils.TestAddress(1)
 			msg := types.NewMsgPlaceMarketOrder(
-				utils.TestAddress(1), 1, true, sdk.NewInt(1000000))
+				senderAddr, 1, true, sdk.NewInt(1000000))
 			require.NoError(t, msg.ValidateBasic())
+			require.Equal(t, types.RouterKey, msg.Route())
+			require.Equal(t, []sdk.AccAddress{senderAddr}, msg.GetSigners())
 			require.Equal(t, types.TypeMsgPlaceMarketOrder, msg.Type())
 			tc.malleate(msg)
 			err := msg.ValidateBasic()
@@ -515,8 +561,11 @@ func TestMsgCancelOrder(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			msg := types.NewMsgCancelOrder(utils.TestAddress(1), 1)
+			senderAddr := utils.TestAddress(1)
+			msg := types.NewMsgCancelOrder(senderAddr, 1)
 			require.NoError(t, msg.ValidateBasic())
+			require.Equal(t, types.RouterKey, msg.Route())
+			require.Equal(t, []sdk.AccAddress{senderAddr}, msg.GetSigners())
 			require.Equal(t, types.TypeMsgCancelOrder, msg.Type())
 			tc.malleate(msg)
 			err := msg.ValidateBasic()
@@ -556,8 +605,11 @@ func TestMsgCancelAllOrders(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			msg := types.NewMsgCancelAllOrders(utils.TestAddress(1), 1)
+			senderAddr := utils.TestAddress(1)
+			msg := types.NewMsgCancelAllOrders(senderAddr, 1)
 			require.NoError(t, msg.ValidateBasic())
+			require.Equal(t, types.RouterKey, msg.Route())
+			require.Equal(t, []sdk.AccAddress{senderAddr}, msg.GetSigners())
 			require.Equal(t, types.TypeMsgCancelAllOrders, msg.Type())
 			tc.malleate(msg)
 			err := msg.ValidateBasic()
@@ -632,10 +684,13 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
+			senderAddr := utils.TestAddress(1)
 			msg := types.NewMsgSwapExactAmountIn(
-				utils.TestAddress(1), []uint64{1, 2, 3},
+				senderAddr, []uint64{1, 2, 3},
 				utils.ParseCoin("1000000ucre"), utils.ParseCoin("5000000uusd"))
 			require.NoError(t, msg.ValidateBasic())
+			require.Equal(t, types.RouterKey, msg.Route())
+			require.Equal(t, []sdk.AccAddress{senderAddr}, msg.GetSigners())
 			require.Equal(t, types.TypeMsgSwapExactAmountIn, msg.Type())
 			tc.malleate(msg)
 			err := msg.ValidateBasic()

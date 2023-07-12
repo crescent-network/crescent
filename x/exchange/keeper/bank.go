@@ -5,21 +5,16 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-func (k Keeper) QueueSendCoins(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error {
+func (k Keeper) QueueSendCoins(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) {
 	ctx = ctx.WithGasMeter(sdk.NewInfiniteGasMeter()) // XXX
 	for _, coin := range amt {
 		balance := k.GetTransientBalance(ctx, fromAddr, coin.Denom)
 		newBalance := balance.AddAmount(coin.Amount.Neg())
-		if err := k.SetTransientBalance(ctx, fromAddr, newBalance); err != nil {
-			return err
-		}
+		k.SetTransientBalance(ctx, fromAddr, newBalance)
 		balance = k.GetTransientBalance(ctx, toAddr, coin.Denom)
 		newBalance = balance.AddAmount(coin.Amount)
-		if err := k.SetTransientBalance(ctx, toAddr, newBalance); err != nil {
-			return err
-		}
+		k.SetTransientBalance(ctx, toAddr, newBalance)
 	}
-	return nil
 }
 
 func (k Keeper) ExecuteSendCoins(ctx sdk.Context) error {

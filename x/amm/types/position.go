@@ -23,6 +23,10 @@ func NewPosition(id, poolId uint64, ownerAddr sdk.AccAddress, lowerTick, upperTi
 	}
 }
 
+func (position Position) MustGetOwnerAddress() sdk.AccAddress {
+	return sdk.MustAccAddressFromBech32(position.Owner)
+}
+
 func (position Position) Validate() error {
 	if position.Id == 0 {
 		return fmt.Errorf("id must not be 0")

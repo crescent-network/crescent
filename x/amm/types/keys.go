@@ -74,7 +74,7 @@ func GetPositionsByOwnerIteratorPrefix(ownerAddr sdk.AccAddress) []byte {
 		address.MustLengthPrefix(ownerAddr))
 }
 
-func GetPositionsByPoolAndOwnerIteratorPrefix(ownerAddr sdk.AccAddress, poolId uint64) []byte {
+func GetPositionsByOwnerAndPoolIteratorPrefix(ownerAddr sdk.AccAddress, poolId uint64) []byte {
 	return utils.Key(
 		PositionByParamsIndexKeyPrefix,
 		address.MustLengthPrefix(ownerAddr),

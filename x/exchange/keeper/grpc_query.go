@@ -89,7 +89,7 @@ func (k Querier) AllOrders(c context.Context, req *types.QueryAllOrdersRequest) 
 		orderGetter func(key, value []byte) types.Order
 	)
 	getOrderFromOrdersByOrdererIndexKey := func(key, _ []byte) types.Order {
-		_, _, orderId := types.ParseOrdersByOrdererIndexKey(utils.Key(keyPrefix, key))
+		orderId := types.ParseOrderIdFromOrdersByOrdererIndexKey(utils.Key(keyPrefix, key))
 		return k.MustGetOrder(ctx, orderId)
 	}
 	if req.Orderer != "" && req.MarketId > 0 {
@@ -162,6 +162,7 @@ func (k Querier) BestSwapExactAmountInRoutes(c context.Context, req *types.Query
 		bestOutput  = sdk.NewCoin(req.OutputDenom, utils.ZeroInt)
 		bestResults []types.SwapRouteResult
 	)
+	// TODO: cache (begin, end, input) <-> output
 	for _, routes := range allRoutes {
 		output, results, err := k.SwapExactAmountIn(
 			ctx, sdk.AccAddress{}, routes, input, sdk.NewCoin(req.OutputDenom, utils.ZeroInt), true)

@@ -63,7 +63,7 @@ func (s *KeeperTestSuite) TestSimulation() {
 					} else {
 						desiredAmt = utils.ParseCoins("1000_000000ucre,1000_000000uusd")
 					}
-					s.AddLiquidity(lpAddr, lpAddr, pool.Id, lowerPrice, upperPrice, desiredAmt)
+					s.AddLiquidity(lpAddr, pool.Id, lowerPrice, upperPrice, desiredAmt)
 				}
 			}
 
@@ -80,7 +80,7 @@ func (s *KeeperTestSuite) TestSimulation() {
 					}
 					position := positions[r.Intn(len(positions))]
 					liquidity := utils.RandomInt(r, utils.ZeroInt, position.Liquidity).Add(sdk.NewInt(1))
-					s.RemoveLiquidity(lpAddr, lpAddr, position.Id, liquidity)
+					s.RemoveLiquidity(lpAddr, position.Id, liquidity)
 				}
 			}
 

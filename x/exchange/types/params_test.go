@@ -2,6 +2,7 @@ package types_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -63,6 +64,34 @@ func TestParams_Validate(t *testing.T) {
 				params.Fees.DefaultTakerFeeRate = utils.ParseDec("-0.001")
 			},
 			"taker fee rate must be in range [0, 1]: -0.001000000000000000",
+		},
+		{
+			"negative max order lifespan",
+			func(params *types.Params) {
+				params.MaxOrderLifespan = -time.Hour
+			},
+			"max order lifespan must not be negative: -1h0m0s",
+		},
+		{
+			"too low max order price ratio",
+			func(params *types.Params) {
+				params.MaxOrderPriceRatio = sdk.ZeroDec()
+			},
+			"max order price ratio must be in range (0.0, 1.0): 0.000000000000000000",
+		},
+		{
+			"too high max order price ratio",
+			func(params *types.Params) {
+				params.MaxOrderPriceRatio = sdk.OneDec()
+			},
+			"max order price ratio must be in range (0.0, 1.0): 1.000000000000000000",
+		},
+		{
+			"zero max swap routes len",
+			func(params *types.Params) {
+				params.MaxSwapRoutesLen = 0
+			},
+			"max swap routes len must not be 0",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

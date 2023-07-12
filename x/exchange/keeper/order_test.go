@@ -11,7 +11,7 @@ import (
 )
 
 func (s *KeeperTestSuite) TestPlaceLimitOrder() {
-	market := s.CreateMarket(utils.TestAddress(0), "ucre", "uusd", true)
+	market := s.CreateMarket("ucre", "uusd")
 
 	ordererAddr1 := s.FundedAccount(1, enoughCoins)
 	ordererAddr2 := s.FundedAccount(2, enoughCoins)
@@ -50,7 +50,7 @@ func (s *KeeperTestSuite) TestPlaceLimitOrder() {
 }
 
 func (s *KeeperTestSuite) TestPlaceBatchLimitOrder() {
-	market := s.CreateMarket(utils.TestAddress(0), "ucre", "uusd", true)
+	market := s.CreateMarket("ucre", "uusd")
 
 	ordererAddr1 := s.FundedAccount(1, enoughCoins)
 	ordererAddr2 := s.FundedAccount(2, enoughCoins)
@@ -96,11 +96,56 @@ func (s *KeeperTestSuite) TestPlaceBatchLimitOrder() {
 	s.Require().Equal("-9985000ucre,50700000uusd", ordererBalances2Diff.String())
 }
 
+func (s *KeeperTestSuite) TestPlaceMMLimitOrder() {
+	market := s.CreateMarket("ucre", "uusd")
+	maxNumMMOrders := s.keeper.GetMaxNumMMOrders(s.Ctx)
+	ordererAddr1 := s.FundedAccount(1, enoughCoins)
+	ordererAddr2 := s.FundedAccount(2, enoughCoins)
+	s.PlaceLimitOrder(market.Id, ordererAddr2, false, utils.ParseDec("5.1"), sdk.NewInt(100_000000), time.Hour)
+
+	for i := uint32(0); i < maxNumMMOrders; i++ {
+		price := utils.ParseDec("5").Sub(utils.ParseDec("0.001").MulInt64(int64(i)))
+		s.PlaceMMLimitOrder(
+			market.Id, ordererAddr1, true, price, sdk.NewInt(10_000000), time.Hour)
+	}
+	_, _, _, err := s.keeper.PlaceMMLimitOrder(
+		s.Ctx, market.Id, ordererAddr1, true, utils.ParseDec("5.1"), sdk.NewInt(10_00000), time.Hour)
+	s.Require().EqualError(err, "16 > 15: number of MM orders exceeded the limit")
+
+	s.PlaceMarketOrder(market.Id, ordererAddr2, false, sdk.NewInt(30_000000))
+
+	s.PlaceMMLimitOrder(
+		market.Id, ordererAddr1, true, utils.ParseDec("4.9"), sdk.NewInt(10_00000), time.Hour)
+}
+
+func (s *KeeperTestSuite) TestPlaceMMBatchLimitOrder() {
+	market := s.CreateMarket("ucre", "uusd")
+	maxNumMMOrders := s.keeper.GetMaxNumMMOrders(s.Ctx)
+	ordererAddr1 := s.FundedAccount(1, enoughCoins)
+	ordererAddr2 := s.FundedAccount(2, enoughCoins)
+	s.PlaceLimitOrder(market.Id, ordererAddr2, false, utils.ParseDec("5.1"), sdk.NewInt(100_000000), time.Hour)
+
+	for i := uint32(0); i < maxNumMMOrders; i++ {
+		price := utils.ParseDec("5").Sub(utils.ParseDec("0.001").MulInt64(int64(i)))
+		s.PlaceMMBatchLimitOrder(
+			market.Id, ordererAddr1, true, price, sdk.NewInt(10_000000), time.Hour)
+	}
+	_, err := s.keeper.PlaceMMBatchLimitOrder(
+		s.Ctx, market.Id, ordererAddr1, true, utils.ParseDec("5.1"), sdk.NewInt(10_00000), time.Hour)
+	s.Require().EqualError(err, "16 > 15: number of MM orders exceeded the limit")
+
+	s.PlaceMarketOrder(market.Id, ordererAddr2, false, sdk.NewInt(30_000000))
+	s.NextBlock()
+
+	s.PlaceMMBatchLimitOrder(
+		market.Id, ordererAddr1, true, utils.ParseDec("4.9"), sdk.NewInt(10_00000), time.Hour)
+}
+
 func (s *KeeperTestSuite) TestOrderMatching() {
 	aliceAddr := s.FundedAccount(1, utils.ParseCoins("1000000ucre,1000000uusd"))
 	bobAddr := s.FundedAccount(2, utils.ParseCoins("1000000ucre,1000000uusd"))
 
-	market := s.CreateMarket(utils.TestAddress(3), "ucre", "uusd", true)
+	market := s.CreateMarket("ucre", "uusd")
 
 	s.PlaceLimitOrder(market.Id, aliceAddr, true, utils.ParseDec("100"), sdk.NewInt(1000), time.Hour)
 	s.PlaceLimitOrder(market.Id, aliceAddr, true, utils.ParseDec("99"), sdk.NewInt(1000), time.Hour)
@@ -119,4 +164,72 @@ func (s *KeeperTestSuite) TestOrderMatching() {
 	s.Require().Equal("1003000ucre,704443uusd", s.App.BankKeeper.GetAllBalances(s.Ctx, aliceAddr).String())
 	s.Require().Equal("997000ucre,1295111uusd", s.App.BankKeeper.GetAllBalances(s.Ctx, bobAddr).String())
 	s.Require().Equal("446uusd", s.App.BankKeeper.GetAllBalances(s.Ctx, market.MustGetEscrowAddress()).String())
+}
+
+func (s *KeeperTestSuite) TestMinMaxPrice() {
+	market := s.CreateMarket("ucre", "uusd")
+	ordererAddr := s.FundedAccount(1, enoughCoins)
+	maxPrice := types.MaxPrice
+	for price := types.MinPrice; price.LT(maxPrice); price = price.MulInt64(10) {
+		s.PlaceLimitOrder(
+			market.Id, ordererAddr, false, price, sdk.NewInt(1000000), time.Hour)
+	}
+}
+
+func (s *KeeperTestSuite) TestCancelOrder() {
+	market := s.CreateMarket("ucre", "uusd")
+	ordererAddr := s.FundedAccount(1, enoughCoins)
+
+	_, err := s.keeper.CancelOrder(s.Ctx, ordererAddr, 1)
+	s.Require().EqualError(err, "order not found: not found")
+
+	balancesBefore := s.GetAllBalances(ordererAddr)
+	_, order, _ := s.PlaceLimitOrder(
+		market.Id, ordererAddr, true, utils.ParseDec("5"), sdk.NewInt(10_000000), time.Hour)
+	s.Require().EqualValues(1, order.Id)
+	_, err = s.keeper.CancelOrder(s.Ctx, ordererAddr, order.Id)
+	s.Require().EqualError(err, "cannot cancel order placed in the same block: invalid request")
+
+	s.NextBlock()
+	s.CancelOrder(ordererAddr, order.Id)
+	balancesAfter := s.GetAllBalances(ordererAddr)
+
+	s.Require().Equal(balancesBefore, balancesAfter)
+}
+
+func (s *KeeperTestSuite) TestCancelAllOrders() {
+	market1 := s.CreateMarket("ucre", "uusd")
+	market2 := s.CreateMarket("uatom", "uusd")
+	ordererAddr1 := s.FundedAccount(1, enoughCoins)
+	ordererAddr2 := s.FundedAccount(2, enoughCoins)
+
+	s.PlaceLimitOrder(market1.Id, ordererAddr1, true, utils.ParseDec("5"), sdk.NewInt(10_000000), time.Hour)
+	s.PlaceLimitOrder(market1.Id, ordererAddr1, true, utils.ParseDec("4.999"), sdk.NewInt(10_000000), time.Hour)
+	s.PlaceLimitOrder(market1.Id, ordererAddr1, true, utils.ParseDec("4.998"), sdk.NewInt(10_000000), time.Hour)
+	s.PlaceLimitOrder(market1.Id, ordererAddr1, false, utils.ParseDec("5.1"), sdk.NewInt(10_000000), time.Hour)
+	s.PlaceLimitOrder(market1.Id, ordererAddr1, false, utils.ParseDec("5.101"), sdk.NewInt(10_000000), time.Hour)
+	s.PlaceLimitOrder(market1.Id, ordererAddr1, false, utils.ParseDec("5.102"), sdk.NewInt(10_000000), time.Hour)
+
+	s.PlaceLimitOrder(market2.Id, ordererAddr1, true, utils.ParseDec("10.1"), sdk.NewInt(10_00000), time.Hour)
+	s.PlaceLimitOrder(market2.Id, ordererAddr1, true, utils.ParseDec("10.09"), sdk.NewInt(10_00000), time.Hour)
+	s.PlaceLimitOrder(market2.Id, ordererAddr1, true, utils.ParseDec("10.08"), sdk.NewInt(10_00000), time.Hour)
+
+	s.PlaceLimitOrder(market1.Id, ordererAddr2, true, utils.ParseDec("5"), sdk.NewInt(10_000000), time.Hour)
+	s.PlaceLimitOrder(market1.Id, ordererAddr2, true, utils.ParseDec("4.999"), sdk.NewInt(10_000000), time.Hour)
+	s.PlaceLimitOrder(market1.Id, ordererAddr2, true, utils.ParseDec("4.998"), sdk.NewInt(10_000000), time.Hour)
+
+	s.NextBlock()
+
+	s.PlaceLimitOrder(market1.Id, ordererAddr1, false, utils.ParseDec("5.2"), sdk.NewInt(10_00000), time.Hour)
+	s.PlaceLimitOrder(market1.Id, ordererAddr1, false, utils.ParseDec("5.21"), sdk.NewInt(10_00000), time.Hour)
+	s.PlaceLimitOrder(market1.Id, ordererAddr1, false, utils.ParseDec("5.22"), sdk.NewInt(10_00000), time.Hour)
+
+	cancelledOrders := s.CancelAllOrders(ordererAddr1, market1.Id)
+	s.Require().Len(cancelledOrders, 6)
+	s.Require().EqualValues(1, cancelledOrders[0].Id)
+	s.Require().EqualValues(2, cancelledOrders[1].Id)
+	s.Require().EqualValues(3, cancelledOrders[2].Id)
+	s.Require().EqualValues(4, cancelledOrders[3].Id)
+	s.Require().EqualValues(5, cancelledOrders[4].Id)
+	s.Require().EqualValues(6, cancelledOrders[5].Id)
 }

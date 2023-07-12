@@ -220,7 +220,7 @@ func (k Keeper) SetPosition(ctx sdk.Context, position types.Position) {
 func (k Keeper) SetPositionByParamsIndex(ctx sdk.Context, position types.Position) {
 	store := ctx.KVStore(k.storeKey)
 	store.Set(types.GetPositionByParamsIndexKey(
-		sdk.MustAccAddressFromBech32(position.Owner), position.PoolId,
+		position.MustGetOwnerAddress(), position.PoolId,
 		position.LowerTick, position.UpperTick),
 		sdk.Uint64ToBigEndian(position.Id))
 }
@@ -259,6 +259,19 @@ func (k Keeper) IteratePositionsByPool(ctx sdk.Context, poolId uint64, cb func(p
 func (k Keeper) IteratePositionsByOwner(ctx sdk.Context, ownerAddr sdk.AccAddress, cb func(position types.Position) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	iter := sdk.KVStorePrefixIterator(store, types.GetPositionsByOwnerIteratorPrefix(ownerAddr))
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		positionId := sdk.BigEndianToUint64(iter.Value())
+		position := k.MustGetPosition(ctx, positionId)
+		if cb(position) {
+			break
+		}
+	}
+}
+
+func (k Keeper) IteratePositionsByOwnerAndPool(ctx sdk.Context, ownerAddr sdk.AccAddress, poolId uint64, cb func(position types.Position) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, types.GetPositionsByOwnerAndPoolIteratorPrefix(ownerAddr, poolId))
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		positionId := sdk.BigEndianToUint64(iter.Value())

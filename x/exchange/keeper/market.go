@@ -54,7 +54,8 @@ func (k Keeper) EscrowCoins(
 	if amt.IsAllPositive() {
 		escrowAddr := market.MustGetEscrowAddress()
 		if queue {
-			return k.QueueSendCoins(ctx, addr, escrowAddr, amt)
+			k.QueueSendCoins(ctx, addr, escrowAddr, amt)
+			return nil
 		}
 		return k.bankKeeper.SendCoins(ctx, addr, escrowAddr, amt)
 	}
@@ -71,7 +72,8 @@ func (k Keeper) ReleaseCoins(
 	if amt.IsAllPositive() {
 		escrowAddr := market.MustGetEscrowAddress()
 		if queue {
-			return k.QueueSendCoins(ctx, escrowAddr, addr, amt)
+			k.QueueSendCoins(ctx, escrowAddr, addr, amt)
+			return nil
 		}
 		return k.bankKeeper.SendCoins(ctx, escrowAddr, addr, amt)
 	}

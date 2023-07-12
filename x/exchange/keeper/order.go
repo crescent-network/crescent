@@ -121,15 +121,16 @@ func (k Keeper) placeLimitOrder(
 		return
 	}
 
+	var (
+		maxNumMMOrders, numMMOrders uint32
+	)
 	if typ == types.OrderTypeMM {
-		numMMOrders, found := k.GetNumMMOrders(ctx, ordererAddr, marketId)
-		if found {
-			if maxNum := k.GetMaxNumMMOrders(ctx); numMMOrders >= maxNum {
-				err = sdkerrors.Wrapf(types.ErrMaxNumMMOrdersExceeded, "%d", maxNum)
-				return
-			}
+		numMMOrders, _ = k.GetNumMMOrders(ctx, ordererAddr, marketId)
+		maxNumMMOrders = k.GetMaxNumMMOrders(ctx)
+		if numMMOrders+1 > maxNumMMOrders {
+			err = sdkerrors.Wrapf(types.ErrMaxNumMMOrdersExceeded, "%d > %d", numMMOrders+1, maxNumMMOrders)
+			return
 		}
-		k.SetNumMMOrders(ctx, ordererAddr, marketId, numMMOrders+1)
 	}
 
 	marketState := k.MustGetMarketState(ctx, market.Id)
@@ -168,8 +169,12 @@ func (k Keeper) placeLimitOrder(
 			return
 		}
 		k.SetOrder(ctx, order)
-		k.SetOrderBookOrder(ctx, order)
+		k.SetOrderBookOrderIndex(ctx, order)
 		k.SetOrdersByOrdererIndex(ctx, order)
+
+		if typ == types.OrderTypeMM {
+			k.SetNumMMOrders(ctx, ordererAddr, marketId, numMMOrders+1)
+		}
 	}
 	return
 }
@@ -302,7 +307,7 @@ func (k Keeper) cancelOrder(ctx sdk.Context, market types.Market, order types.Or
 		}
 	}
 	k.DeleteOrder(ctx, order)
-	k.DeleteOrderBookOrder(ctx, order)
+	k.DeleteOrderBookOrderIndex(ctx, order)
 	k.DeleteOrdersByOrdererIndex(ctx, order)
 	return nil
 }

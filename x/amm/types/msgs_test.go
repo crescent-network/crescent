@@ -66,8 +66,11 @@ func TestMsgCreatePool_ValidateBasic(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			msg := types.NewMsgCreatePool(utils.TestAddress(1), 1, utils.ParseDec("12.3456789"))
+			senderAddr := utils.TestAddress(1)
+			msg := types.NewMsgCreatePool(senderAddr, 1, utils.ParseDec("12.3456789"))
 			require.NoError(t, msg.ValidateBasic())
+			require.Equal(t, types.RouterKey, msg.Route())
+			require.Equal(t, []sdk.AccAddress{senderAddr}, msg.GetSigners())
 			require.Equal(t, types.TypeMsgCreatePool, msg.Type())
 			tc.malleate(msg)
 			err := msg.ValidateBasic()
@@ -177,11 +180,14 @@ func TestMsgAddLiquidity_ValidateBasic(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
+			senderAddr := utils.TestAddress(1)
 			msg := types.NewMsgAddLiquidity(
-				utils.TestAddress(1), 1,
+				senderAddr, 1,
 				utils.ParseDec("4.5"), utils.ParseDec("5.5"),
 				utils.ParseCoins("100_000000ucre,500_000000uusd"))
 			require.NoError(t, msg.ValidateBasic())
+			require.Equal(t, types.RouterKey, msg.Route())
+			require.Equal(t, []sdk.AccAddress{senderAddr}, msg.GetSigners())
 			require.Equal(t, types.TypeMsgAddLiquidity, msg.Type())
 			tc.malleate(msg)
 			err := msg.ValidateBasic()
@@ -235,9 +241,11 @@ func TestMsgRemoveLiquidity_ValidateBasic(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			msg := types.NewMsgRemoveLiquidity(
-				utils.TestAddress(1), 1, sdk.NewInt(1000_000000))
+			senderAddr := utils.TestAddress(1)
+			msg := types.NewMsgRemoveLiquidity(senderAddr, 1, sdk.NewInt(1000_000000))
 			require.NoError(t, msg.ValidateBasic())
+			require.Equal(t, types.RouterKey, msg.Route())
+			require.Equal(t, []sdk.AccAddress{senderAddr}, msg.GetSigners())
 			require.Equal(t, types.TypeMsgRemoveLiquidity, msg.Type())
 			tc.malleate(msg)
 			err := msg.ValidateBasic()
@@ -291,9 +299,11 @@ func TestMsgCollect_ValidateBasic(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			msg := types.NewMsgCollect(
-				utils.TestAddress(1), 1, utils.ParseCoins("1_000000ucre,10_000000uatom"))
+			senderAddr := utils.TestAddress(1)
+			msg := types.NewMsgCollect(senderAddr, 1, utils.ParseCoins("1_000000ucre,10_000000uatom"))
 			require.NoError(t, msg.ValidateBasic())
+			require.Equal(t, types.RouterKey, msg.Route())
+			require.Equal(t, []sdk.AccAddress{senderAddr}, msg.GetSigners())
 			require.Equal(t, types.TypeMsgCollect, msg.Type())
 			tc.malleate(msg)
 			err := msg.ValidateBasic()
@@ -327,13 +337,16 @@ func TestMsgCreatePrivateFarmingPlan_ValidateBasic(t *testing.T) {
 		// the rest of the checks done performed in TestFarmingPlan_Validate
 	} {
 		t.Run(tc.name, func(t *testing.T) {
+			senderAddr := utils.TestAddress(1)
 			msg := types.NewMsgCreatePrivateFarmingPlan(
-				utils.TestAddress(1), "Farming plan", utils.TestAddress(100),
+				senderAddr, "Farming plan", utils.TestAddress(100),
 				[]types.FarmingRewardAllocation{
 					types.NewFarmingRewardAllocation(1, utils.ParseCoins("100_000000ucre")),
 				},
 				utils.ParseTime("2023-01-01T00:00:00Z"), utils.ParseTime("2023-07-01T00:00:00Z"))
 			require.NoError(t, msg.ValidateBasic())
+			require.Equal(t, types.RouterKey, msg.Route())
+			require.Equal(t, []sdk.AccAddress{senderAddr}, msg.GetSigners())
 			require.Equal(t, types.TypeMsgCreatePrivateFarmingPlan, msg.Type())
 			tc.malleate(msg)
 			err := msg.ValidateBasic()
@@ -373,9 +386,11 @@ func TestMsgTerminatePrivateFarmingPlan_ValidateBasic(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			msg := types.NewMsgTerminatePrivateFarmingPlan(
-				utils.TestAddress(1), 1)
+			senderAddr := utils.TestAddress(1)
+			msg := types.NewMsgTerminatePrivateFarmingPlan(senderAddr, 1)
 			require.NoError(t, msg.ValidateBasic())
+			require.Equal(t, types.RouterKey, msg.Route())
+			require.Equal(t, []sdk.AccAddress{senderAddr}, msg.GetSigners())
 			require.Equal(t, types.TypeMsgTerminatePrivateFarmingPlan, msg.Type())
 			tc.malleate(msg)
 			err := msg.ValidateBasic()

@@ -60,11 +60,6 @@ func TickAtPrice(price sdk.Dec) int32 {
 func PriceIntervalAtTick(tick int32) sdk.Dec {
 	q, _ := utils.DivMod(int(tick), 9*p)
 	return sdk.NewDecFromIntWithPrec(sdk.NewIntWithDecimal(1, sdk.Precision+q-TickPrecision), sdk.Precision)
-
-	//price := PriceAtTick(tick)
-	//b := price.BigInt()
-	//c := char(b)
-	//return sdk.NewDecFromBigIntWithPrec(pow10(c-4), sdk.Precision)
 }
 
 // RoundTick returns rounded tick using banker's rounding.

@@ -32,8 +32,8 @@ func (s *KeeperTestSuite) SetupTest() {
 }
 
 func (s *KeeperTestSuite) CreateSampleLiquidFarm() types.LiquidFarm {
-	market := s.CreateMarket(utils.TestAddress(0), "ucre", "uusd", true)
-	pool := s.CreatePool(utils.TestAddress(0), market.Id, utils.ParseDec("5"), true)
+	market := s.CreateMarket("ucre", "uusd")
+	pool := s.CreatePool(market.Id, utils.ParseDec("5"))
 	s.CreatePrivateFarmingPlan(utils.TestAddress(0), "", utils.TestAddress(0), []ammtypes.FarmingRewardAllocation{
 		ammtypes.NewFarmingRewardAllocation(1, utils.ParseCoins("100_000000uatom")),
 	}, utils.ParseTime("0001-01-01T00:00:00Z"), utils.ParseTime("9999-12-31T00:00:00Z"),
@@ -44,8 +44,8 @@ func (s *KeeperTestSuite) CreateSampleLiquidFarm() types.LiquidFarm {
 }
 
 func (s *KeeperTestSuite) SetupSampleScenario() {
-	market := s.CreateMarket(utils.TestAddress(0), "ucre", "uusd", true)
-	pool := s.CreatePool(utils.TestAddress(0), market.Id, utils.ParseDec("5"), true)
+	market := s.CreateMarket("ucre", "uusd")
+	pool := s.CreatePool(market.Id, utils.ParseDec("5"))
 	s.CreatePrivateFarmingPlan(utils.TestAddress(0), "", utils.TestAddress(0), []ammtypes.FarmingRewardAllocation{
 		ammtypes.NewFarmingRewardAllocation(1, utils.ParseCoins("100_000000uatom")),
 	}, utils.ParseTime("0001-01-01T00:00:00Z"), utils.ParseTime("9999-12-31T00:00:00Z"),
@@ -53,7 +53,7 @@ func (s *KeeperTestSuite) SetupSampleScenario() {
 	enoughCoins := utils.ParseCoins("10000_000000ucre,10000_000000uusd")
 	lpAddr := s.FundedAccount(1, enoughCoins)
 	s.AddLiquidity(
-		lpAddr, lpAddr, pool.Id, utils.ParseDec("4"), utils.ParseDec("6"), utils.ParseCoins("1000_000000ucre,5000_000000uusd"))
+		lpAddr, pool.Id, utils.ParseDec("4"), utils.ParseDec("6"), utils.ParseCoins("1000_000000ucre,5000_000000uusd"))
 	s.NextBlock()
 	s.NextBlock()
 

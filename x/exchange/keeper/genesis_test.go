@@ -10,7 +10,7 @@ import (
 )
 
 func (s *KeeperTestSuite) TestImportExportGenesis() {
-	s.CreateMarket(utils.TestAddress(0), "ucre", "uusd", true)
+	s.CreateMarket("ucre", "uusd")
 	ordererAddr1 := s.FundedAccount(1, enoughCoins)
 	ordererAddr2 := s.FundedAccount(1, enoughCoins)
 	s.PlaceLimitOrder(1, ordererAddr1, true, utils.ParseDec("4.9"), sdk.NewInt(10_000000), time.Hour)

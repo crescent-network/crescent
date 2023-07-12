@@ -64,7 +64,7 @@ func (s *SimTestSuite) TestSimulateMsgCreatePool() {
 	for _, denomA := range denoms {
 		for _, denomB := range denoms {
 			if denomA != denomB {
-				s.CreateMarket(utils.TestAddress(0), denomA, denomB, true)
+				s.CreateMarket(denomA, denomB)
 			}
 		}
 	}
@@ -99,9 +99,9 @@ func (s *SimTestSuite) TestSimulateMsgAddLiquidity() {
 	for _, denomA := range denoms {
 		for _, denomB := range denoms {
 			if denomA != denomB {
-				market := s.CreateMarket(utils.TestAddress(0), denomA, denomB, true)
+				market := s.CreateMarket(denomA, denomB)
 				price := utils.RandomDec(r, utils.ParseDec("0.05"), utils.ParseDec("500"))
-				s.CreatePool(utils.TestAddress(0), market.Id, price, true)
+				s.CreatePool(market.Id, price)
 			}
 		}
 	}
@@ -134,10 +134,10 @@ func (s *SimTestSuite) TestSimulateMsgRemoveLiquidity() {
 		denoms = append(denoms, coin.Denom)
 		return false
 	})
-	market := s.CreateMarket(utils.TestAddress(0), denoms[0], denoms[1], true)
-	pool := s.CreatePool(utils.TestAddress(0), market.Id, utils.ParseDec("12.345"), true)
+	market := s.CreateMarket(denoms[0], denoms[1])
+	pool := s.CreatePool(market.Id, utils.ParseDec("12.345"))
 	s.AddLiquidity(
-		accs[0].Address, accs[0].Address, pool.Id,
+		accs[0].Address, pool.Id,
 		utils.ParseDec("10"), utils.ParseDec("15"),
 		sdk.NewCoins(sdk.NewInt64Coin(denoms[0], 100_000000), sdk.NewInt64Coin(denoms[1], 100_000000)))
 

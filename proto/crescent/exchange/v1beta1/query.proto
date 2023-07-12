@@ -100,9 +100,10 @@ message QueryOrderBookResponse {
 }
 
 message MarketResponse {
-  uint64 id             = 1;
-  string base_denom     = 2;
-  string quote_denom    = 3;
-  string escrow_address = 4;
-  string last_price     = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+  uint64 id                   = 1;
+  string base_denom           = 2;
+  string quote_denom          = 3;
+  string escrow_address       = 4;
+  string last_price           = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+  int64  last_matching_height = 6;
 }

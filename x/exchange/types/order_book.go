@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"sort"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -25,8 +26,7 @@ func (market Market) FillTempOrderBookLevel(
 	executableQty := TotalExecutableQuantity(level.Orders, price)
 	if executableQty.LT(qty) { // sanity check
 		panic("executable quantity is less than quantity")
-	}
-	if executableQty.LTE(qty) { // full matches
+	} else if executableQty.Equal(qty) { // full matches
 		market.FillTempOrders(level.Orders, qty, price, isMaker, halveFees)
 	} else {
 		groups := GroupTempOrdersByMsgHeight(level.Orders)
@@ -76,6 +76,7 @@ func (market Market) FillTempOrders(orders []*TempOrder, qty sdk.Int, price sdk.
 		}
 	}
 	// Then, distribute remaining quantity based on priority.
+	// TODO: sort?
 	for _, order := range orders {
 		remainingQty := qty.Sub(totalExecQty)
 		if remainingQty.IsZero() {
@@ -90,6 +91,7 @@ func (market Market) FillTempOrders(orders []*TempOrder, qty sdk.Int, price sdk.
 }
 
 func (market Market) FillTempOrder(order *TempOrder, qty sdk.Int, price sdk.Dec, isMaker, halveFees bool) {
+	// TODO: refactor code
 	if qty.GT(order.OpenQuantity) { // sanity check
 		panic("open quantity is less than quantity")
 	}
@@ -223,8 +225,8 @@ func NewTempOrder(order Order, market Market, source OrderSource) *TempOrder {
 }
 
 func (order *TempOrder) HasPriorityOver(other *TempOrder) bool {
-	if order.Price != other.Price { // sanity check
-		panic("two orders with different price")
+	if !order.Price.Equal(other.Price) { // sanity check
+		panic(fmt.Sprintf("orders with different price: %s != %s", order.Price, other.Price))
 	}
 	if !order.Quantity.Equal(other.Quantity) {
 		return order.Quantity.GT(other.Quantity)

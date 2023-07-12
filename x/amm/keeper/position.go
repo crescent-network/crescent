@@ -185,7 +185,7 @@ func (k Keeper) CollectibleCoins(ctx sdk.Context, positionId uint64) (fee, farmi
 		return nil, nil, sdkerrors.Wrap(sdkerrors.ErrNotFound, "position not found")
 	}
 	ctx, _ = ctx.CacheContext()
-	ownerAddr := sdk.MustAccAddressFromBech32(position.Owner)
+	ownerAddr := position.MustGetOwnerAddress()
 	if position.Liquidity.IsPositive() {
 		position, _, err = k.RemoveLiquidity(ctx, ownerAddr, ownerAddr, positionId, utils.ZeroInt)
 		if err != nil {
@@ -230,16 +230,19 @@ func (k Keeper) modifyPosition(
 		ctx, pool.Id, lowerTick, upperTick, poolState.CurrentTick,
 		poolState.FarmingRewardsGrowthGlobal)
 
-	feeGrowthDiff, _ := feeGrowthInside.SafeSub(position.LastFeeGrowthInside)
-	owedFee, _ := feeGrowthDiff.
-		MulDecTruncate(position.Liquidity.ToDec()).
-		QuoDecTruncate(types.DecMulFactor).
-		TruncateDecimal()
-	farmingRewardsDiff, _ := farmingRewardsGrowthInside.SafeSub(position.LastFarmingRewardsGrowthInside)
-	owedFarmingRewards, _ := farmingRewardsDiff.
-		MulDecTruncate(position.Liquidity.ToDec()).
-		QuoDecTruncate(types.DecMulFactor).
-		TruncateDecimal()
+	var owedFee, owedFarmingRewards sdk.Coins
+	if position.Liquidity.IsPositive() {
+		feeGrowthDiff := feeGrowthInside.Sub(position.LastFeeGrowthInside)
+		owedFee, _ = feeGrowthDiff.
+			MulDecTruncate(position.Liquidity.ToDec()).
+			QuoDecTruncate(types.DecMulFactor).
+			TruncateDecimal()
+		farmingRewardsDiff := farmingRewardsGrowthInside.Sub(position.LastFarmingRewardsGrowthInside)
+		owedFarmingRewards, _ = farmingRewardsDiff.
+			MulDecTruncate(position.Liquidity.ToDec()).
+			QuoDecTruncate(types.DecMulFactor).
+			TruncateDecimal()
+	}
 
 	position.Liquidity = position.Liquidity.Add(liquidityDelta)
 	position.LastFeeGrowthInside = feeGrowthInside

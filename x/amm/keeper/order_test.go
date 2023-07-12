@@ -13,6 +13,7 @@ import (
 
 	chain "github.com/crescent-network/crescent/v5/app"
 	utils "github.com/crescent-network/crescent/v5/types"
+	"github.com/crescent-network/crescent/v5/x/amm/keeper"
 	"github.com/crescent-network/crescent/v5/x/amm/types"
 	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 )
@@ -112,10 +113,29 @@ func (s *KeeperTestSuite) TestOrderGas() {
 		}
 		desiredAmt := sdk.NewCoins(sdk.NewCoin(pool.Denom0, amt0), sdk.NewCoin(pool.Denom1, amt1))
 		s.AddLiquidity(
-			lpAddr, lpAddr, pool.Id, info.lowerPrice, info.upperPrice, desiredAmt)
+			lpAddr, pool.Id, info.lowerPrice, info.upperPrice, desiredAmt)
 	}
 	ordererAddr := s.FundedAccount(2, enoughCoins)
 	gasConsumedBefore := s.Ctx.GasMeter().GasConsumed()
 	s.PlaceMarketOrder(market.Id, ordererAddr, true, sdk.NewInt(50_000000))
 	fmt.Println(s.Ctx.GasMeter().GasConsumed() - gasConsumedBefore)
+}
+
+func (s *KeeperTestSuite) TestCurrentLiquidityEdgecase() {
+	market, pool := s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("5"))
+
+	lpAddr := s.FundedAccount(1, enoughCoins)
+	s.AddLiquidity(
+		lpAddr, pool.Id, utils.ParseDec("4.5"), utils.ParseDec("5.5"),
+		utils.ParseCoins("100_000000ucre,500_000000uusd"))
+	s.AddLiquidity(
+		lpAddr, pool.Id, utils.ParseDec("4.99"), utils.ParseDec("5.01"),
+		utils.ParseCoins("10_000000ucre,50_000000uusd"))
+
+	ordererAddr := s.FundedAccount(2, enoughCoins)
+	s.PlaceLimitOrder(market.Id, ordererAddr, true, utils.ParseDec("4.99"), sdk.NewInt(5988301+1), time.Hour)
+
+	s.PlaceMarketOrder(market.Id, ordererAddr, false, sdk.NewInt(5979313+5988301*2+1000))
+	_, broken := keeper.PoolCurrentLiquidityInvariant(s.keeper)(s.Ctx)
+	s.Require().False(broken)
 }

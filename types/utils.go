@@ -55,6 +55,15 @@ func DateRangeIncludes(startTime, endTime, targetTime time.Time) bool {
 	return endTime.After(targetTime) && !startTime.After(targetTime)
 }
 
+// ParseInt parses and returns sdk.Int from string.
+func ParseInt(s string) sdk.Int {
+	i, ok := sdk.NewIntFromString(strings.ReplaceAll(s, "_", ""))
+	if !ok {
+		panic(fmt.Sprintf("invalid integer: %s", s))
+	}
+	return i
+}
+
 // ParseDec is a shortcut for sdk.MustNewDecFromStr.
 func ParseDec(s string) sdk.Dec {
 	return sdk.MustNewDecFromStr(strings.ReplaceAll(s, "_", ""))

@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -11,15 +12,195 @@ import (
 	"github.com/crescent-network/crescent/v5/x/amm/types"
 )
 
+func (s *KeeperTestSuite) TestMaxNumPrivateFarmingPlans() {
+	_, pool := s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("5"))
+
+	s.keeper.SetMaxNumPrivateFarmingPlans(s.Ctx, 1)
+
+	creatorAddr := s.FundedAccount(1, enoughCoins)
+	s.CreatePublicFarmingPlan(
+		"Farming plan", creatorAddr, creatorAddr, []types.FarmingRewardAllocation{
+			types.NewFarmingRewardAllocation(pool.Id, utils.ParseCoins("100_000000ucre")),
+		}, utils.ParseTime("2023-01-01T00:00:00Z"), utils.ParseTime("2024-01-01T00:00:00Z"))
+	s.Require().EqualValues(0, s.keeper.GetNumPrivateFarmingPlans(s.Ctx))
+
+	s.Require().True(s.keeper.CanCreatePrivateFarmingPlan(s.Ctx))
+	plan := s.CreatePrivateFarmingPlan(
+		creatorAddr, "Farming plan 1", creatorAddr, []types.FarmingRewardAllocation{
+			types.NewFarmingRewardAllocation(pool.Id, utils.ParseCoins("100_000000ucre")),
+		},
+		utils.ParseTime("2023-01-01T00:00:00Z"), utils.ParseTime("2024-01-01T00:00:00Z"),
+		utils.ParseCoins("10000_000000ucre"), true)
+	s.Require().EqualValues(1, s.keeper.GetNumPrivateFarmingPlans(s.Ctx))
+	s.Require().False(s.keeper.CanCreatePrivateFarmingPlan(s.Ctx))
+
+	_, err := s.keeper.CreatePrivateFarmingPlan(
+		s.Ctx, creatorAddr, "Farming plan 2", creatorAddr, []types.FarmingRewardAllocation{
+			types.NewFarmingRewardAllocation(pool.Id, utils.ParseCoins("50_000000ucre")),
+		}, utils.ParseTime("2023-01-01T00:00:00Z"), utils.ParseTime("2024-01-01T00:00:00Z"))
+	s.Require().EqualError(err, "maximum number of active private farming plans reached: invalid request")
+
+	s.Require().NoError(s.keeper.TerminateFarmingPlan(s.Ctx, plan))
+
+	s.Require().EqualValues(0, s.keeper.GetNumPrivateFarmingPlans(s.Ctx))
+	s.Require().True(s.keeper.CanCreatePrivateFarmingPlan(s.Ctx))
+
+	_, err = s.keeper.CreatePrivateFarmingPlan(
+		s.Ctx, creatorAddr, "Farming plan 2", creatorAddr, []types.FarmingRewardAllocation{
+			types.NewFarmingRewardAllocation(pool.Id, utils.ParseCoins("50_000000ucre")),
+		}, utils.ParseTime("2023-01-01T00:00:00Z"), utils.ParseTime("2024-01-01T00:00:00Z"))
+	s.Require().NoError(err)
+}
+
+func (s *KeeperTestSuite) TestCreatePrivateFarmingPlan() {
+	creatorAddr := utils.TestAddress(1)
+	_, pool := s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("5"))
+
+	for _, tc := range []struct {
+		name        string
+		preRun      func()
+		msg         *types.MsgCreatePrivateFarmingPlan
+		expectedErr string
+	}{
+		{
+			"happy case",
+			func() {
+				s.FundAccount(creatorAddr, enoughCoins)
+			},
+			types.NewMsgCreatePrivateFarmingPlan(
+				creatorAddr, "Farming plan", creatorAddr, []types.FarmingRewardAllocation{
+					types.NewFarmingRewardAllocation(pool.Id, utils.ParseCoins("100_000000ucre")),
+				}, utils.ParseTime("2023-01-01T00:00:00Z"), utils.ParseTime("2024-01-01T00:00:00Z")),
+			"",
+		},
+		{
+			"not enough fee",
+			func() {},
+			types.NewMsgCreatePrivateFarmingPlan(
+				creatorAddr, "Farming plan", creatorAddr, []types.FarmingRewardAllocation{
+					types.NewFarmingRewardAllocation(pool.Id, utils.ParseCoins("100_000000ucre")),
+				}, utils.ParseTime("2023-01-01T00:00:00Z"), utils.ParseTime("2024-01-01T00:00:00Z")),
+			"0stake is smaller than 1000000stake: insufficient funds",
+		},
+		{
+			"past end time",
+			func() {
+				s.FundAccount(creatorAddr, enoughCoins)
+			},
+			types.NewMsgCreatePrivateFarmingPlan(
+				creatorAddr, "Farming plan", creatorAddr, []types.FarmingRewardAllocation{
+					types.NewFarmingRewardAllocation(pool.Id, utils.ParseCoins("100_000000ucre")),
+				}, utils.ParseTime("2021-01-01T00:00:00Z"), utils.ParseTime("2022-01-01T00:00:00Z")),
+			"end time is past: invalid request",
+		},
+		{
+			"pool not found",
+			func() {
+				s.FundAccount(creatorAddr, enoughCoins)
+			},
+			types.NewMsgCreatePrivateFarmingPlan(
+				creatorAddr, "Farming plan", creatorAddr, []types.FarmingRewardAllocation{
+					types.NewFarmingRewardAllocation(2, utils.ParseCoins("100_000000ucre")),
+				}, utils.ParseTime("2023-01-01T00:00:00Z"), utils.ParseTime("2024-01-01T00:00:00Z")),
+			"pool 2 not found: not found",
+		},
+		{
+			"rewards has no supply",
+			func() {
+				s.FundAccount(creatorAddr, enoughCoins)
+			},
+			types.NewMsgCreatePrivateFarmingPlan(
+				creatorAddr, "Farming plan", creatorAddr, []types.FarmingRewardAllocation{
+					types.NewFarmingRewardAllocation(1, utils.ParseCoins("100_000000ueur")),
+				}, utils.ParseTime("2023-01-01T00:00:00Z"), utils.ParseTime("2024-01-01T00:00:00Z")),
+			"denom ueur has no supply: invalid request",
+		},
+	} {
+		s.Run(tc.name, func() {
+			oldCtx := s.Ctx
+			s.Ctx, _ = s.Ctx.CacheContext()
+			tc.preRun()
+			_, err := keeper.NewMsgServerImpl(s.keeper).CreatePrivateFarmingPlan(sdk.WrapSDKContext(s.Ctx), tc.msg)
+			if tc.expectedErr == "" {
+				s.Require().NoError(err)
+			} else {
+				s.Require().EqualError(err, tc.expectedErr)
+			}
+			s.Ctx = oldCtx
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestTerminateFarmingPlan() {
+	_, pool := s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("5"))
+	creatorAddr := s.FundedAccount(1, enoughCoins)
+	balancesBefore := s.GetAllBalances(creatorAddr)
+	plan := s.CreatePrivateFarmingPlan(
+		creatorAddr, "Farming plan 1", creatorAddr, []types.FarmingRewardAllocation{
+			types.NewFarmingRewardAllocation(pool.Id, utils.ParseCoins("100_000000ucre")),
+		},
+		utils.ParseTime("2023-01-01T00:00:00Z"), utils.ParseTime("2024-01-01T00:00:00Z"),
+		utils.ParseCoins("10000_000000ucre"), true)
+	s.Require().NoError(s.keeper.TerminateFarmingPlan(s.Ctx, plan))
+	balancesAfter := s.GetAllBalances(creatorAddr)
+	s.Require().Equal("10000000000ucre", balancesAfter.Sub(balancesBefore).String())
+	plan, _ = s.keeper.GetFarmingPlan(s.Ctx, plan.Id)
+	err := s.keeper.TerminateFarmingPlan(s.Ctx, plan)
+	s.Require().EqualError(err, "plan is already terminated: invalid request")
+}
+
+func (s *KeeperTestSuite) TestAllocateFarmingRewards() {
+	_, pool := s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("5"))
+	creatorAddr := s.FundedAccount(1, enoughCoins)
+	s.CreatePrivateFarmingPlan(
+		creatorAddr, "Farming plan 1", creatorAddr, []types.FarmingRewardAllocation{
+			types.NewFarmingRewardAllocation(pool.Id, utils.ParseCoins("100_000000ucre")),
+		},
+		utils.ParseTime("2023-01-01T00:00:00Z"), utils.ParseTime("2024-01-01T00:00:00Z"),
+		utils.ParseCoins("10000_000000ucre"), true)
+	s.NextBlock()
+	s.NextBlock()
+	poolState := s.keeper.MustGetPoolState(s.Ctx, pool.Id)
+	s.Require().Equal("", poolState.FarmingRewardsGrowthGlobal.String())
+
+	lpAddr := s.FundedAccount(2, enoughCoins)
+	s.AddLiquidity(
+		lpAddr, pool.Id, utils.ParseDec("4"), utils.ParseDec("6"),
+		utils.ParseCoins("100_000000ucre,500_000000uusd"))
+
+	s.EndBlock()
+	s.BeginBlock(0)
+	// Elapsed 0.
+	poolState = s.keeper.MustGetPoolState(s.Ctx, pool.Id)
+	s.Require().Equal("", poolState.FarmingRewardsGrowthGlobal.String())
+
+	s.NextBlock()
+	poolState = s.keeper.MustGetPoolState(s.Ctx, pool.Id)
+	rewardsGrowthGlobalBefore := poolState.FarmingRewardsGrowthGlobal
+
+	s.EndBlock()
+	s.BeginBlock(s.keeper.GetMaxFarmingBlockTime(s.Ctx))
+	poolState = s.keeper.MustGetPoolState(s.Ctx, pool.Id)
+	rewardsGrowthGlobalDiff1 := poolState.FarmingRewardsGrowthGlobal.Sub(rewardsGrowthGlobalBefore)
+	rewardsGrowthGlobalBefore = poolState.FarmingRewardsGrowthGlobal
+
+	// Block time is clipped to the maximum.
+	s.EndBlock()
+	s.BeginBlock(s.keeper.GetMaxFarmingBlockTime(s.Ctx) + 10*time.Second)
+	poolState = s.keeper.MustGetPoolState(s.Ctx, pool.Id)
+	rewardsGrowthGlobalDiff2 := poolState.FarmingRewardsGrowthGlobal.Sub(rewardsGrowthGlobalBefore)
+	s.Require().Equal(rewardsGrowthGlobalDiff1, rewardsGrowthGlobalDiff2)
+}
+
 func (s *KeeperTestSuite) TestFarming() {
 	_, pool := s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("5"))
 	lpAddr1 := s.FundedAccount(1, utils.ParseCoins("10000_000000ucre,10000_000000uusd"))
 	lpAddr2 := s.FundedAccount(2, utils.ParseCoins("10000_000000ucre,10000_000000uusd"))
 	position1, liquidity1, _ := s.AddLiquidity(
-		lpAddr1, lpAddr1, pool.Id, utils.ParseDec("4"), utils.ParseDec("6"),
+		lpAddr1, pool.Id, utils.ParseDec("4"), utils.ParseDec("6"),
 		utils.ParseCoins("100_000000ucre,500_000000uusd"))
 	position2, liquidity2, _ := s.AddLiquidity(
-		lpAddr2, lpAddr2, pool.Id, utils.ParseDec("4.8"), utils.ParseDec("5.2"),
+		lpAddr2, pool.Id, utils.ParseDec("4.8"), utils.ParseDec("5.2"),
 		utils.ParseCoins("100_000000ucre,500_000000uusd"))
 	fmt.Println(liquidity1)
 	fmt.Println(liquidity2)
@@ -34,8 +215,8 @@ func (s *KeeperTestSuite) TestFarming() {
 
 	s.NextBlock()
 
-	s.Collect(lpAddr1, lpAddr1, position1.Id, utils.ParseCoins("9uatom"))
-	s.Collect(lpAddr2, lpAddr2, position2.Id, utils.ParseCoins("47uatom"))
+	s.Collect(lpAddr1, position1.Id, utils.ParseCoins("9uatom"))
+	s.Collect(lpAddr2, position2.Id, utils.ParseCoins("47uatom"))
 
 	ordererAddr := s.FundedAccount(3, utils.ParseCoins("10000_000000uusd"))
 	s.PlaceMarketOrder(pool.MarketId, ordererAddr, true, sdk.NewInt(120_000000))
@@ -45,16 +226,16 @@ func (s *KeeperTestSuite) TestFarming() {
 
 	s.NextBlock()
 
-	s.Collect(lpAddr1, lpAddr1, position1.Id, utils.ParseCoins("56uatom"))
-	s.Collect(lpAddr2, lpAddr2, position2.Id, utils.ParseCoins(""))
+	s.Collect(lpAddr1, position1.Id, utils.ParseCoins("56uatom"))
+	s.Collect(lpAddr2, position2.Id, utils.ParseCoins(""))
 }
 
 func (s *KeeperTestSuite) TestTerminatePrivateFarmingPlan() {
-	market := s.CreateMarket(utils.TestAddress(0), "ucre", "uusd", true)
-	pool := s.CreatePool(utils.TestAddress(0), market.Id, utils.ParseDec("5"), true)
+	market := s.CreateMarket("ucre", "uusd")
+	pool := s.CreatePool(market.Id, utils.ParseDec("5"))
 	lpAddr := s.FundedAccount(1, enoughCoins)
 	s.AddLiquidity(
-		lpAddr, lpAddr, pool.Id, utils.ParseDec("4.5"), utils.ParseDec("5.5"),
+		lpAddr, pool.Id, utils.ParseDec("4.5"), utils.ParseDec("5.5"),
 		utils.ParseCoins("100_000000ucre,500_000000uusd"))
 
 	creatorAddr := s.FundedAccount(2, enoughCoins)
@@ -85,11 +266,11 @@ func (s *KeeperTestSuite) TestTerminatePrivateFarmingPlan() {
 }
 
 func (s *KeeperTestSuite) TestTerminatePrivatePlan_Unauthorized() {
-	market := s.CreateMarket(utils.TestAddress(0), "ucre", "uusd", true)
-	pool := s.CreatePool(utils.TestAddress(0), market.Id, utils.ParseDec("5"), true)
+	market := s.CreateMarket("ucre", "uusd")
+	pool := s.CreatePool(market.Id, utils.ParseDec("5"))
 	lpAddr := s.FundedAccount(1, enoughCoins)
 	s.AddLiquidity(
-		lpAddr, lpAddr, pool.Id, utils.ParseDec("4.5"), utils.ParseDec("5.5"),
+		lpAddr, pool.Id, utils.ParseDec("4.5"), utils.ParseDec("5.5"),
 		utils.ParseCoins("100_000000ucre,500_000000uusd"))
 
 	creatorAddr := s.FundedAccount(2, enoughCoins)
@@ -112,7 +293,7 @@ func (s *KeeperTestSuite) TestFarmingTooMuchLiquidity() {
 	s.keeper.SetPool(s.Ctx, pool)
 	lpAddr := s.FundedAccount(1, enoughCoins)
 	position, _, _ := s.AddLiquidity(
-		lpAddr, lpAddr, pool.Id, utils.ParseDec("4.9999"), utils.ParseDec("5.0001"),
+		lpAddr, pool.Id, utils.ParseDec("4.9999"), utils.ParseDec("5.0001"),
 		utils.ParseCoins("10000_000000000000000000ucre,50000_000000000000000000uusd"))
 	s.CreatePrivateFarmingPlan(
 		utils.TestAddress(2), "Farming plan", utils.TestAddress(2), []types.FarmingRewardAllocation{
@@ -131,7 +312,7 @@ func (s *KeeperTestSuite) TestFarmingTooSmallLiquidity() {
 	s.keeper.SetPool(s.Ctx, pool)
 	lpAddr := s.FundedAccount(1, enoughCoins)
 	position, _, _ := s.AddLiquidity(
-		lpAddr, lpAddr, pool.Id, utils.ParseDec("0.0000001"), utils.ParseDec("10000000"),
+		lpAddr, pool.Id, utils.ParseDec("0.0000001"), utils.ParseDec("10000000"),
 		utils.ParseCoins("10ucre,50uusd"))
 	creatorAddr := s.FundedAccount(100, utils.ParseCoins("1uibc1")) // Create supply.
 	s.CreatePrivateFarmingPlan(

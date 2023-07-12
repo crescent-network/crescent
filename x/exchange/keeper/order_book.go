@@ -94,6 +94,7 @@ func (k Keeper) executeOrder(
 		if !lastPrice.IsNil() {
 			state := k.MustGetMarketState(ctx, market.Id)
 			state.LastPrice = &lastPrice
+			state.LastMatchingHeight = ctx.BlockHeight()
 			k.SetMarketState(ctx, market.Id, state)
 		}
 	}
@@ -108,7 +109,7 @@ func (k Keeper) ConstructTempOrderBookSide(
 	// TODO: adjust price limit
 	obs := types.NewTempOrderBookSide(isBuy)
 	numPriceLevels := 0
-	k.IterateOrderBookSide(ctx, market.Id, isBuy, false, func(order types.Order) (stop bool) {
+	k.IterateOrderBookSideByMarket(ctx, market.Id, isBuy, false, func(order types.Order) (stop bool) {
 		if priceLimit != nil &&
 			((isBuy && order.Price.LT(*priceLimit)) ||
 				(!isBuy && order.Price.GT(*priceLimit))) {

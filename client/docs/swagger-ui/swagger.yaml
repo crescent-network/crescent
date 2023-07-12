@@ -10657,6 +10657,9 @@ paths:
                       type: string
                     last_price:
                       type: string
+                    last_matching_height:
+                      type: string
+                      format: int64
               pagination:
                 type: object
                 properties:
@@ -10789,6 +10792,9 @@ paths:
                     type: string
                   last_price:
                     type: string
+                  last_matching_height:
+                    type: string
+                    format: int64
         default:
           description: An unexpected error response
           schema:
@@ -18455,6 +18461,9 @@ definitions:
         type: string
       last_price:
         type: string
+      last_matching_height:
+        type: string
+        format: int64
   crescent.exchange.v1beta1.Order:
     type: object
     properties:
@@ -18592,6 +18601,9 @@ definitions:
               type: string
             last_price:
               type: string
+            last_matching_height:
+              type: string
+              format: int64
       pagination:
         type: object
         properties:
@@ -18772,6 +18784,9 @@ definitions:
             type: string
           last_price:
             type: string
+          last_matching_height:
+            type: string
+            format: int64
   crescent.exchange.v1beta1.QueryOrderBookResponse:
     type: object
     properties:
