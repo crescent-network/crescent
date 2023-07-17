@@ -23,7 +23,6 @@ import (
 	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/cosmos/cosmos-sdk/x/simulation"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
@@ -45,6 +44,8 @@ import (
 	lpfarmtypes "github.com/crescent-network/crescent/v5/x/lpfarm/types"
 	marketmakertypes "github.com/crescent-network/crescent/v5/x/marketmaker/types"
 	minttypes "github.com/crescent-network/crescent/v5/x/mint/types"
+
+	simulationcre "github.com/crescent-network/crescent/v5/app/simulation"
 )
 
 // Get flags every time the simulator is run
@@ -88,7 +89,7 @@ func TestFullAppSimulation(t *testing.T) {
 	require.Equal(t, AppName, app.Name())
 
 	// run randomized simulation
-	_, simParams, simErr := simulation.SimulateFromSeed(
+	_, simParams, simErr := simulationcre.SimulateFromSeed(
 		t,
 		os.Stdout,
 		app.BaseApp,
@@ -101,7 +102,7 @@ func TestFullAppSimulation(t *testing.T) {
 	)
 
 	// export state and simParams before the simulation error is checked
-	err = simapp.CheckExportSimulation(app, config, simParams)
+	err = simulationcre.CheckExportSimulation(app, config, simParams)
 	require.NoError(t, err)
 	require.NoError(t, simErr)
 
@@ -127,7 +128,7 @@ func TestAppImportExport(t *testing.T) {
 	require.Equal(t, AppName, app.Name())
 
 	// run randomized simulation
-	_, simParams, simErr := simulation.SimulateFromSeed(
+	_, simParams, simErr := simulationcre.SimulateFromSeed(
 		t,
 		os.Stdout,
 		app.BaseApp,
@@ -140,7 +141,7 @@ func TestAppImportExport(t *testing.T) {
 	)
 
 	// export state and simParams before the simulation error is checked
-	err = simapp.CheckExportSimulation(app, config, simParams)
+	err = simulationcre.CheckExportSimulation(app, config, simParams)
 	require.NoError(t, err)
 	require.NoError(t, simErr)
 
@@ -237,7 +238,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	require.Equal(t, AppName, app.Name())
 
 	// run randomized simulation
-	stopEarly, simParams, simErr := simulation.SimulateFromSeed(
+	stopEarly, simParams, simErr := simulationcre.SimulateFromSeed(
 		t,
 		os.Stdout,
 		app.BaseApp,
@@ -250,7 +251,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	)
 
 	// export state and simParams before the simulation error is checked
-	err = simapp.CheckExportSimulation(app, config, simParams)
+	err = simulationcre.CheckExportSimulation(app, config, simParams)
 	require.NoError(t, err)
 	require.NoError(t, simErr)
 
@@ -286,7 +287,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		AppStateBytes: exported.AppState,
 	})
 
-	_, _, err = simulation.SimulateFromSeed(
+	_, _, err = simulationcre.SimulateFromSeed(
 		t,
 		os.Stdout,
 		newApp.BaseApp,
@@ -336,7 +337,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				config.Seed, i+1, numSeeds, j+1, numTimesToRunPerSeed,
 			)
 
-			_, _, err := simulation.SimulateFromSeed(
+			_, _, err := simulationcre.SimulateFromSeed(
 				t,
 				os.Stdout,
 				app.BaseApp,
