@@ -22,20 +22,20 @@ func (k OrderSource) Name() string {
 	return types.ModuleName
 }
 
-func (k OrderSource) GenerateOrders(
+func (k OrderSource) ConstructMemOrderBook(
 	ctx sdk.Context, market exchangetypes.Market,
 	createOrder exchangetypes.CreateOrderFunc,
-	opts exchangetypes.GenerateOrdersOptions) {
+	opts exchangetypes.ConstructMemOrderBookOptions) {
 	pool, found := k.GetPoolByMarket(ctx, market.Id)
 	if !found {
 		return // no pool found
 	}
 
 	reserveAddr := pool.MustGetReserveAddress()
-	accQty := utils.ZeroInt
-	accQuote := utils.ZeroInt
+	accQty := utils.ZeroDec
+	accQuote := utils.ZeroDec
 	numPriceLevels := 0
-	k.IteratePoolOrders(ctx, pool, opts.IsBuy, func(price sdk.Dec, qty sdk.Int) (stop bool) {
+	k.IteratePoolOrders(ctx, pool, opts.IsBuy, func(price, qty sdk.Dec) (stop bool) {
 		if opts.PriceLimit != nil &&
 			((opts.IsBuy && price.LT(*opts.PriceLimit)) ||
 				(!opts.IsBuy && price.GT(*opts.PriceLimit))) {
@@ -168,7 +168,7 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 			nextPrice = nextSqrtPrice.Power(2)
 		}
 
-		var expectedAmtIn sdk.Int
+		var expectedAmtIn sdk.Dec
 		if result.Order.IsBuy {
 			expectedAmtIn = types.Amount0Delta(
 				currentSqrtPrice, nextSqrtPrice, poolState.CurrentLiquidity)

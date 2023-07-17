@@ -40,7 +40,7 @@ func (m mockOrderSource) Name() string {
 	return m.name
 }
 
-func (mockOrderSource) GenerateOrders(ctx sdk.Context, market types.Market, createOrder types.CreateOrderFunc, opts types.GenerateOrdersOptions) {
+func (mockOrderSource) ConstructOrderBookSide(ctx sdk.Context, market types.Market, createOrder types.CreateOrderFunc, opts types.GenerateOrdersOptions) {
 }
 
 func (mockOrderSource) AfterOrdersExecuted(ctx sdk.Context, market types.Market, results []types.TempOrder) {

@@ -75,50 +75,50 @@ func TestOrder_Validate(t *testing.T) {
 		{
 			"zero quantity",
 			func(order *types.Order) {
-				order.Quantity = sdk.ZeroInt()
+				order.Quantity = sdk.ZeroDec()
 			},
 			"quantity must be positive: 0",
 		},
 		{
 			"negative quantity",
 			func(order *types.Order) {
-				order.Quantity = sdk.NewInt(-100_000000)
+				order.Quantity = sdk.NewDec(-100_000000)
 			},
 			"quantity must be positive: -100000000",
 		},
 		{
 			"zero open quantity",
 			func(order *types.Order) {
-				order.OpenQuantity = sdk.ZeroInt()
+				order.OpenQuantity = sdk.ZeroDec()
 			},
 			"",
 		},
 		{
 			"negative open quantity",
 			func(order *types.Order) {
-				order.OpenQuantity = sdk.NewInt(-100_000000)
+				order.OpenQuantity = sdk.NewDec(-100_000000)
 			},
 			"open quantity must not be negative: -100000000",
 		},
 		{
 			"open quantity > quantity",
 			func(order *types.Order) {
-				order.Quantity = sdk.NewInt(100_000000)
-				order.OpenQuantity = sdk.NewInt(200_000000)
+				order.Quantity = sdk.NewDec(100_000000)
+				order.OpenQuantity = sdk.NewDec(200_000000)
 			},
 			"open quantity must be smaller than quantity: 200000000 > 100000000",
 		},
 		{
 			"zero remaining deposit",
 			func(order *types.Order) {
-				order.RemainingDeposit = sdk.ZeroInt()
+				order.RemainingDeposit = sdk.ZeroDec()
 			},
 			"remaining deposit must be positive: 0",
 		},
 		{
 			"negative remaining deposit",
 			func(order *types.Order) {
-				order.RemainingDeposit = sdk.NewInt(-50_000000)
+				order.RemainingDeposit = sdk.NewDec(-50_000000)
 			},
 			"remaining deposit must be positive: -50000000",
 		},
@@ -126,8 +126,8 @@ func TestOrder_Validate(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			order := types.NewOrder(
 				1, types.OrderTypeLimit, utils.TestAddress(1), 1, false,
-				utils.ParseDec("2"), sdk.NewInt(100_000000), 100,
-				sdk.NewInt(50_000000), sdk.NewInt(50_000000),
+				utils.ParseDec("2"), sdk.NewDec(100_000000), 100,
+				sdk.NewDec(50_000000), sdk.NewDec(50_000000),
 				utils.ParseTime("2023-06-01T00:00:00Z"))
 			tc.malleate(&order)
 			err := order.Validate()
@@ -143,45 +143,45 @@ func TestOrder_Validate(t *testing.T) {
 func TestOrder_ExecutableQuantity(t *testing.T) {
 	for i, tc := range []struct {
 		isBuy            bool
-		openQty          sdk.Int
-		remainingDeposit sdk.Int
+		openQty          sdk.Dec
+		remainingDeposit sdk.Dec
 		price            sdk.Dec
-		executableQty    sdk.Int
+		executableQty    sdk.Dec
 	}{
 		{
 			isBuy:            true,
-			openQty:          sdk.NewInt(100_000000),
-			remainingDeposit: sdk.NewInt(123_450000),
+			openQty:          sdk.NewDec(100_000000),
+			remainingDeposit: sdk.NewDec(123_450000),
 			price:            utils.ParseDec("1.2345"),
-			executableQty:    sdk.NewInt(100_000000),
+			executableQty:    sdk.NewDec(100_000000),
 		},
 		{
 			isBuy:            true,
-			openQty:          sdk.NewInt(100_000000),
-			remainingDeposit: sdk.NewInt(100_000000),
+			openQty:          sdk.NewDec(100_000000),
+			remainingDeposit: sdk.NewDec(100_000000),
 			price:            utils.ParseDec("1.2345"),
-			executableQty:    sdk.NewInt(81_004455),
+			executableQty:    sdk.NewDec(81_004455),
 		},
 		{
 			isBuy:            true,
-			openQty:          sdk.NewInt(50_000000),
-			remainingDeposit: sdk.NewInt(100_000000),
+			openQty:          sdk.NewDec(50_000000),
+			remainingDeposit: sdk.NewDec(100_000000),
 			price:            utils.ParseDec("1.2345"),
-			executableQty:    sdk.NewInt(50_000000),
+			executableQty:    sdk.NewDec(50_000000),
 		},
 		{
 			isBuy:            false,
-			openQty:          sdk.NewInt(100_000000),
-			remainingDeposit: sdk.NewInt(100_000000),
+			openQty:          sdk.NewDec(100_000000),
+			remainingDeposit: sdk.NewDec(100_000000),
 			price:            utils.ParseDec("1.2345"),
-			executableQty:    sdk.NewInt(100_000000),
+			executableQty:    sdk.NewDec(100_000000),
 		},
 		{
 			isBuy:            false,
-			openQty:          sdk.NewInt(90_000000),
-			remainingDeposit: sdk.NewInt(100_000000),
+			openQty:          sdk.NewDec(90_000000),
+			remainingDeposit: sdk.NewDec(100_000000),
 			price:            utils.ParseDec("1.2345"),
-			executableQty:    sdk.NewInt(90_000000),
+			executableQty:    sdk.NewDec(90_000000),
 		},
 	} {
 		t.Run(fmt.Sprint(i), func(t *testing.T) {

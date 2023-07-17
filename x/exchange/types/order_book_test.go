@@ -18,14 +18,14 @@ type mockOrderSource struct{ sourceName string }
 
 func (os mockOrderSource) Name() string { return os.sourceName }
 
-func (mockOrderSource) GenerateOrders(sdk.Context, types.Market, types.CreateOrderFunc, types.GenerateOrdersOptions) {
+func (mockOrderSource) ConstructOrderBookSide(sdk.Context, types.Market, types.CreateOrderFunc, types.GenerateOrdersOptions) {
 }
 
 func (mockOrderSource) AfterOrdersExecuted(sdk.Context, types.Market, []types.TempOrder) {}
 
 func newTempOrder(
 	orderId uint64, market types.Market, isBuy bool,
-	price sdk.Dec, qty, openQty sdk.Int, source types.OrderSource) *types.TempOrder {
+	price, qty, openQty sdk.Dec, source types.OrderSource) *types.TempOrder {
 	return types.NewTempOrder(
 		types.NewOrder(orderId, types.OrderTypeLimit, utils.TestAddress(1), market.Id, isBuy,
 			price, qty, 1, openQty, types.DepositAmount(isBuy, price, openQty),
@@ -41,14 +41,14 @@ func TestTempOrderBookSide_AddOrder(t *testing.T) {
 	obs := types.NewTempOrderBookSide(true)
 	require.Panics(t, func() {
 		obs.AddOrder(newTempOrder(
-			1, market, false, utils.ParseDec("12.3"), sdk.NewInt(100_000000), sdk.NewInt(80_000000), nil))
+			1, market, false, utils.ParseDec("12.3"), sdk.NewDec(100_000000), sdk.NewDec(80_000000), nil))
 	})
 	r := rand.New(rand.NewSource(1))
 	for i := 0; i < 100; i++ {
 		tick := 9000 + r.Int31n(30)
 		obs.AddOrder(newTempOrder(
 			uint64(i+1), market, true, types.PriceAtTick(tick),
-			sdk.NewInt(100_000000), sdk.NewInt(90_000000), nil))
+			sdk.NewDec(100_000000), sdk.NewDec(90_000000), nil))
 	}
 	for i, level := range obs.Levels {
 		if i+1 < len(obs.Levels) {
@@ -63,13 +63,13 @@ func TestTempOrderBookSide_AddOrder(t *testing.T) {
 	obs = types.NewTempOrderBookSide(false)
 	require.Panics(t, func() {
 		obs.AddOrder(newTempOrder(
-			1, market, true, utils.ParseDec("12.3"), sdk.NewInt(100_000000), sdk.NewInt(80_000000), nil))
+			1, market, true, utils.ParseDec("12.3"), sdk.NewDec(100_000000), sdk.NewDec(80_000000), nil))
 	})
 	for i := 0; i < 100; i++ {
 		tick := 9000 + r.Int31n(30)
 		obs.AddOrder(newTempOrder(
 			uint64(i+1), market, false, types.PriceAtTick(tick),
-			sdk.NewInt(100_000000), sdk.NewInt(90_000000), nil))
+			sdk.NewDec(100_000000), sdk.NewDec(90_000000), nil))
 	}
 	for i, level := range obs.Levels {
 		if i+1 < len(obs.Levels) {
@@ -84,10 +84,10 @@ func TestTempOrderBookSide_AddOrder(t *testing.T) {
 func TestNewTempOrder(t *testing.T) {
 	market := types.NewMarket(
 		1, "ucre", "uusd", types.DefaultFees.DefaultMakerFeeRate, types.DefaultFees.DefaultTakerFeeRate)
-	order := newTempOrder(1, market, true, utils.ParseDec("5.2"), sdk.NewInt(100_000000), sdk.NewInt(90_000000), nil)
+	order := newTempOrder(1, market, true, utils.ParseDec("5.2"), sdk.NewDec(100_000000), sdk.NewDec(90_000000), nil)
 	require.Equal(t, "0uusd", order.Paid.String())
 	require.Nil(t, order.Received)
-	order = newTempOrder(1, market, false, utils.ParseDec("5.2"), sdk.NewInt(100_000000), sdk.NewInt(90_000000), nil)
+	order = newTempOrder(1, market, false, utils.ParseDec("5.2"), sdk.NewDec(100_000000), sdk.NewDec(90_000000), nil)
 	require.Equal(t, "0ucre", order.Paid.String())
 	require.Nil(t, order.Received)
 }
@@ -99,28 +99,28 @@ func TestTempOrder_HasPriorityOver(t *testing.T) {
 	source2 := mockOrderSource{"source2"}
 	price := utils.ParseDec("12.345")
 
-	order1 := newTempOrder(1, market, false, price, sdk.NewInt(100_000000), sdk.NewInt(90_000000), nil)
-	order2 := newTempOrder(2, market, false, price, sdk.NewInt(110_000000), sdk.NewInt(80_000000), nil)
+	order1 := newTempOrder(1, market, false, price, sdk.NewDec(100_000000), sdk.NewDec(90_000000), nil)
+	order2 := newTempOrder(2, market, false, price, sdk.NewDec(110_000000), sdk.NewDec(80_000000), nil)
 	// order2 quantity > order1 quantity
 	require.True(t, order2.HasPriorityOver(order1))
 
-	order1 = newTempOrder(1, market, false, price, sdk.NewInt(100_000000), sdk.NewInt(80_000000), nil)
-	order2 = newTempOrder(2, market, false, price, sdk.NewInt(100_000000), sdk.NewInt(90_000000), nil)
+	order1 = newTempOrder(1, market, false, price, sdk.NewDec(100_000000), sdk.NewDec(80_000000), nil)
+	order2 = newTempOrder(2, market, false, price, sdk.NewDec(100_000000), sdk.NewDec(90_000000), nil)
 	// lower order id has priority
 	require.True(t, order1.HasPriorityOver(order2))
 
-	order1 = newTempOrder(1, market, false, price, sdk.NewInt(100_000000), sdk.NewInt(90_000000), nil)
-	order2 = newTempOrder(2, market, false, price, sdk.NewInt(100_000000), sdk.NewInt(80_000000), source1)
+	order1 = newTempOrder(1, market, false, price, sdk.NewDec(100_000000), sdk.NewDec(90_000000), nil)
+	order2 = newTempOrder(2, market, false, price, sdk.NewDec(100_000000), sdk.NewDec(80_000000), source1)
 	// user orders has priority over orders from OrderSource
 	require.True(t, order1.HasPriorityOver(order2))
 
-	order1 = newTempOrder(1, market, false, price, sdk.NewInt(100_000000), sdk.NewInt(90_000000), nil)
-	order2 = newTempOrder(2, market, false, price, sdk.NewInt(110_000000), sdk.NewInt(80_000000), source1)
+	order1 = newTempOrder(1, market, false, price, sdk.NewDec(100_000000), sdk.NewDec(90_000000), nil)
+	order2 = newTempOrder(2, market, false, price, sdk.NewDec(110_000000), sdk.NewDec(80_000000), source1)
 	// but if the quantity of the order from OrderSource is higher, it takes priority
 	require.True(t, order2.HasPriorityOver(order1))
 
-	order1 = newTempOrder(1, market, false, price, sdk.NewInt(100_000000), sdk.NewInt(80_000000), source1)
-	order2 = newTempOrder(2, market, false, price, sdk.NewInt(100_000000), sdk.NewInt(90_000000), source2)
+	order1 = newTempOrder(1, market, false, price, sdk.NewDec(100_000000), sdk.NewDec(80_000000), source1)
+	order2 = newTempOrder(2, market, false, price, sdk.NewDec(100_000000), sdk.NewDec(90_000000), source2)
 	// lexicographical source name priority
 	require.True(t, order1.HasPriorityOver(order2))
 }
@@ -135,7 +135,7 @@ func TestGroupTempOrdersByMsgHeight(t *testing.T) {
 		hasZeroHeight := false
 		for j := 0; j < 100; j++ {
 			price := utils.RandomDec(r, utils.ParseDec("9"), utils.ParseDec("11"))
-			qty := utils.RandomInt(r, sdk.NewInt(100_000000), sdk.NewInt(1000_000000))
+			qty := utils.RandomDec(r, sdk.NewDec(100_000000), sdk.NewDec(1000_000000))
 			deposit := types.DepositAmount(true, price, qty)
 			var msgHeight int64
 			if r.Float64() <= 0.3 { // 30% chance

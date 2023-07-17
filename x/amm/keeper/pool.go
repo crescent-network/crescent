@@ -49,10 +49,11 @@ func (k Keeper) CreatePool(ctx sdk.Context, creatorAddr sdk.AccAddress, marketId
 	return pool, nil
 }
 
-func (k Keeper) IteratePoolOrders(ctx sdk.Context, pool types.Pool, isBuy bool, cb func(price sdk.Dec, qty sdk.Int) (stop bool)) {
+func (k Keeper) IteratePoolOrders(ctx sdk.Context, pool types.Pool, isBuy bool, cb func(price, qty sdk.Dec) (stop bool)) {
 	ts := int32(pool.TickSpacing)
 	poolState := k.MustGetPoolState(ctx, pool.Id)
-	reserveBalance := k.bankKeeper.SpendableCoins(ctx, pool.MustGetReserveAddress()).AmountOf(pool.DenomOut(isBuy))
+	reserveBalance := k.bankKeeper.SpendableCoins(
+		ctx, pool.MustGetReserveAddress()).AmountOf(pool.DenomOut(isBuy)).ToDec()
 	k.IteratePoolOrderTicks(ctx, pool, poolState, isBuy, func(tick int32, liquidity sdk.Int) (stop bool) {
 		if !reserveBalance.IsPositive() {
 			return true
@@ -60,27 +61,31 @@ func (k Keeper) IteratePoolOrders(ctx sdk.Context, pool types.Pool, isBuy bool, 
 		// TODO: check out of tick range
 		price := exchangetypes.PriceAtTick(tick)
 		sqrtPrice := utils.DecApproxSqrt(price)
-		var qty sdk.Int
+		var qty sdk.Dec
 		if isBuy {
 			prevSqrtPrice := sdk.MinDec(
 				types.SqrtPriceAtTick(tick+ts),
 				utils.DecApproxSqrt(poolState.CurrentPrice))
-			qty = utils.MinInt(
-				reserveBalance.ToDec().QuoTruncate(price).TruncateInt(),
-				types.Amount1DeltaRounding(prevSqrtPrice, sqrtPrice, liquidity, false).ToDec().QuoTruncate(price).TruncateInt())
+			qty = sdk.MinDec(
+				reserveBalance.QuoTruncate(price),
+				types.Amount1DeltaRounding(prevSqrtPrice, sqrtPrice, liquidity, false).ToDec().QuoTruncate(price))
 		} else {
 			prevSqrtPrice := sdk.MaxDec(
 				types.SqrtPriceAtTick(tick-ts),
 				utils.DecApproxSqrt(poolState.CurrentPrice))
-			qty = utils.MinInt(
+			qty = sdk.MinDec(
 				reserveBalance,
-				types.Amount0DeltaRounding(prevSqrtPrice, sqrtPrice, liquidity, false))
+				types.Amount0DeltaRounding(prevSqrtPrice, sqrtPrice, liquidity, false).ToDec())
 		}
 		if qty.IsPositive() {
 			if cb(price, qty) {
 				return true
 			}
-			reserveBalance = reserveBalance.Sub(exchangetypes.DepositAmount(isBuy, price, qty))
+			if isBuy {
+				reserveBalance = reserveBalance.Sub(price.Mul(qty))
+			} else {
+				reserveBalance = reserveBalance.Sub(qty)
+			}
 		}
 		return false
 	})

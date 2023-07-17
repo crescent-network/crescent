@@ -32,12 +32,12 @@ message Order {
   uint64    market_id = 4;
   bool      is_buy    = 5;
   string    price = 6 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
-  string quantity = 7 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string quantity = 7 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
   int64  msg_height    = 8;
   string open_quantity = 9
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
   string remaining_deposit = 10
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
   google.protobuf.Timestamp deadline = 11 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
 }
 
@@ -49,8 +49,8 @@ enum OrderType {
 }
 
 message SwapRouteResult {
-  uint64                   market_id = 1;
-  cosmos.base.v1beta1.Coin input     = 2 [(gogoproto.nullable) = false];
-  cosmos.base.v1beta1.Coin output    = 3 [(gogoproto.nullable) = false];
-  cosmos.base.v1beta1.Coin fee       = 4 [(gogoproto.nullable) = false];
+  uint64                      market_id = 1;
+  cosmos.base.v1beta1.DecCoin input     = 2 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.DecCoin output    = 3 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.DecCoin fee       = 4 [(gogoproto.nullable) = false];
 }

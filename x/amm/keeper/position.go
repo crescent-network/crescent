@@ -267,7 +267,12 @@ func (k Keeper) modifyPosition(
 		sqrtPriceA := types.SqrtPriceAtTick(lowerTick)
 		sqrtPriceB := types.SqrtPriceAtTick(upperTick)
 		if poolState.CurrentTick < lowerTick {
-			amt0 = types.Amount0Delta(sqrtPriceA, sqrtPriceB, liquidityDelta)
+			amt0Delta := types.Amount0Delta(sqrtPriceA, sqrtPriceB, liquidityDelta)
+			if liquidityDelta.IsPositive() {
+				amt0 = amt0Delta.TruncateInt()
+			} else {
+				amt0 = amt0Delta.Ceil().TruncateInt()
+			}
 		} else if poolState.CurrentTick < upperTick {
 			currentSqrtPrice := utils.DecApproxSqrt(poolState.CurrentPrice)
 			amt0 = types.Amount0Delta(currentSqrtPrice, sqrtPriceB, liquidityDelta)

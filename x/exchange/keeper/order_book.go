@@ -9,7 +9,7 @@ import (
 
 func (k Keeper) executeOrder(
 	ctx sdk.Context, market types.Market, ordererAddr sdk.AccAddress,
-	isBuy bool, priceLimit *sdk.Dec, qtyLimit, quoteLimit *sdk.Int, halveFees, simulate bool) (res types.ExecuteOrderResult, err error) {
+	isBuy bool, priceLimit, qtyLimit, quoteLimit *sdk.Dec, halveFees, simulate bool) (res types.ExecuteOrderResult, err error) {
 	if qtyLimit == nil && quoteLimit == nil { // sanity check
 		panic("quantity limit and quote limit cannot be set to nil at the same time")
 	}
@@ -102,31 +102,30 @@ func (k Keeper) executeOrder(
 }
 
 func (k Keeper) ConstructTempOrderBookSide(
-	ctx sdk.Context, market types.Market, isBuy bool,
-	priceLimit *sdk.Dec, qtyLimit, quoteLimit *sdk.Int, maxNumPriceLevels int) *types.TempOrderBookSide {
-	accQty := utils.ZeroInt
-	accQuote := utils.ZeroInt
+	ctx sdk.Context, market types.Market, opts types.ConstructMemOrderBookOptions) *types.TempOrderBookSide {
+	accQty := utils.ZeroDec
+	accQuote := utils.ZeroDec
 	// TODO: adjust price limit
-	obs := types.NewTempOrderBookSide(isBuy)
+	obs := types.NewTempOrderBookSide(opts.IsBuy)
 	numPriceLevels := 0
-	k.IterateOrderBookSideByMarket(ctx, market.Id, isBuy, false, func(order types.Order) (stop bool) {
-		if priceLimit != nil &&
-			((isBuy && order.Price.LT(*priceLimit)) ||
-				(!isBuy && order.Price.GT(*priceLimit))) {
+	k.IterateOrderBookSideByMarket(ctx, market.Id, opts.IsBuy, false, func(order types.Order) (stop bool) {
+		if opts.PriceLimit != nil &&
+			((opts.IsBuy && order.Price.LT(*opts.PriceLimit)) ||
+				(!opts.IsBuy && order.Price.GT(*opts.PriceLimit))) {
 			return true
 		}
-		if qtyLimit != nil && !qtyLimit.Sub(accQty).IsPositive() {
+		if opts.QuantityLimit != nil && !opts.QuantityLimit.Sub(accQty).IsPositive() {
 			return true
 		}
-		if quoteLimit != nil && !quoteLimit.Sub(accQuote).IsPositive() {
+		if opts.QuoteLimit != nil && !opts.QuoteLimit.Sub(accQuote).IsPositive() {
 			return true
 		}
 		obs.AddOrder(types.NewTempOrder(order, market, nil))
 		accQty = accQty.Add(order.OpenQuantity)
-		accQuote = accQuote.Add(types.QuoteAmount(!isBuy, order.Price, order.OpenQuantity))
-		if maxNumPriceLevels > 0 {
+		accQuote = accQuote.Add(types.QuoteAmount(!opts.IsBuy, order.Price, order.OpenQuantity))
+		if opts.MaxNumPriceLevels > 0 {
 			numPriceLevels++
-			if numPriceLevels >= maxNumPriceLevels {
+			if numPriceLevels >= opts.MaxNumPriceLevels {
 				return true
 			}
 		}
@@ -134,7 +133,7 @@ func (k Keeper) ConstructTempOrderBookSide(
 	})
 	for _, name := range k.sourceNames {
 		source := k.sources[name]
-		source.GenerateOrders(ctx, market, func(ordererAddr sdk.AccAddress, price sdk.Dec, qty sdk.Int) error {
+		source.ConstructMemOrderBook(ctx, market, func(ordererAddr sdk.AccAddress, price, qty sdk.Dec) error {
 			// orders from OrderSource don't have id - priority among them will
 			// be determined the source's name.
 			order, err := k.newOrder(
@@ -145,13 +144,7 @@ func (k Keeper) ConstructTempOrderBookSide(
 			}
 			obs.AddOrder(types.NewTempOrder(order, market, source))
 			return nil
-		}, types.GenerateOrdersOptions{
-			IsBuy:             isBuy,
-			PriceLimit:        priceLimit,
-			QuantityLimit:     qtyLimit,
-			QuoteLimit:        quoteLimit,
-			MaxNumPriceLevels: maxNumPriceLevels,
-		})
+		}, opts)
 	}
 	if maxNumPriceLevels > 0 {
 		bound := len(obs.Levels)
