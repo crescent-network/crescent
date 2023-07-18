@@ -207,14 +207,14 @@ func findMsgPlaceLimitOrderParams(
 			}
 			if r.Float64() <= 0.5 { // 50% chance to sell
 				if balance := spendable.AmountOf(market.BaseDenom); balance.GT(sdk.NewInt(100_000000)) {
-					qty := utils.RandomInt(r, sdk.NewInt(100), sdk.NewInt(100_000000))
+					qty := utils.RandomDec(r, sdk.NewDec(100), sdk.NewDec(100_000000)).TruncateDec()
 					msg = types.NewMsgPlaceLimitOrder(
 						acc.Address, market.Id, false, price, qty, lifespan)
 					return acc, msg, true
 				}
 			}
 			if balance := spendable.AmountOf(market.QuoteDenom); balance.GT(price.MulInt64(100_000000).TruncateInt()) {
-				qty := utils.RandomInt(r, sdk.NewInt(100), sdk.NewInt(100_000000))
+				qty := utils.RandomDec(r, sdk.NewDec(100), sdk.NewDec(100_000000)).TruncateDec()
 				msg = types.NewMsgPlaceLimitOrder(
 					acc.Address, market.Id, true, price, qty, lifespan)
 				return acc, msg, true
@@ -241,7 +241,7 @@ func findMsgPlaceMarketOrderParams(
 		for _, market := range markets {
 			if r.Float64() <= 0.5 { // 50% chance to sell
 				if balance := spendable.AmountOf(market.BaseDenom); balance.GT(sdk.NewInt(1_000000)) {
-					qty := utils.RandomInt(r, sdk.NewInt(100), sdk.NewInt(1_000000))
+					qty := utils.RandomDec(r, sdk.NewDec(100), sdk.NewDec(1_000000)).TruncateDec()
 					msg = types.NewMsgPlaceMarketOrder(
 						acc.Address, market.Id, false, qty)
 					return acc, msg, true
@@ -251,14 +251,14 @@ func findMsgPlaceMarketOrderParams(
 			if marketState.LastPrice == nil {
 				continue
 			}
-			qty := utils.RandomInt(r, sdk.NewInt(100), sdk.NewInt(1_000000))
+			qty := utils.RandomDec(r, sdk.NewDec(100), sdk.NewDec(1_000000)).TruncateDec()
 			cacheCtx, _ := ctx.CacheContext()
-			obs := k.ConstructTempOrderBookSide(cacheCtx, market, false, nil, &qty, nil, 0)
+			obs := k.ConstructTempOrderBookSide(cacheCtx, market, false, nil, &qty, nil, 0, nil)
 			if len(obs.Levels) == 0 {
 				continue
 			}
 			price := obs.Levels[len(obs.Levels)-1].Price
-			if balance := spendable.AmountOf(market.QuoteDenom); balance.GT(types.QuoteAmount(true, price, qty)) {
+			if balance := spendable.AmountOf(market.QuoteDenom).ToDec(); balance.GT(types.QuoteAmount(true, price, qty)) {
 				msg = types.NewMsgPlaceMarketOrder(acc.Address, market.Id, true, qty)
 				return acc, msg, true
 			}

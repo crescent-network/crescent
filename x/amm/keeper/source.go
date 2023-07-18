@@ -32,10 +32,10 @@ func (k OrderSource) GenerateOrders(
 	}
 
 	reserveAddr := pool.MustGetReserveAddress()
-	accQty := utils.ZeroInt
-	accQuote := utils.ZeroInt
+	accQty := utils.ZeroDec
+	accQuote := utils.ZeroDec
 	numPriceLevels := 0
-	k.IteratePoolOrders(ctx, pool, opts.IsBuy, func(price sdk.Dec, qty sdk.Int) (stop bool) {
+	k.IteratePoolOrders(ctx, pool, opts.IsBuy, func(price, qty sdk.Dec) (stop bool) {
 		if opts.PriceLimit != nil &&
 			((opts.IsBuy && price.LT(*opts.PriceLimit)) ||
 				(!opts.IsBuy && price.GT(*opts.PriceLimit))) {
@@ -157,7 +157,8 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 		currentSqrtPrice := utils.DecApproxSqrt(poolState.CurrentPrice)
 		var nextSqrtPrice, nextPrice sdk.Dec
 		max = false
-		if result.Order.ExecutableQuantity(result.Order.Price).IsZero() { // Fully executed
+		// TODO: compare open quantity with zero directly (need changes in x/exchange)
+		if result.Order.ExecutableQuantity(result.Order.Price).TruncateInt().IsZero() { // Fully executed
 			nextSqrtPrice = utils.DecApproxSqrt(result.Order.Price)
 			nextPrice = result.Order.Price
 			max = true
@@ -168,22 +169,23 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 			nextPrice = nextSqrtPrice.Power(2)
 		}
 
-		var expectedAmtIn sdk.Int
+		var expectedAmtIn sdk.Dec
 		if result.Order.IsBuy {
-			expectedAmtIn = types.Amount0Delta(
-				currentSqrtPrice, nextSqrtPrice, poolState.CurrentLiquidity)
+			expectedAmtIn = types.Amount0DeltaRoundingDec(
+				currentSqrtPrice, nextSqrtPrice, poolState.CurrentLiquidity, true)
 		} else {
-			expectedAmtIn = types.Amount1Delta(
+			expectedAmtIn = types.Amount1DeltaDec(
 				currentSqrtPrice, nextSqrtPrice, poolState.CurrentLiquidity)
 		}
 		denomIn := pool.DenomIn(isBuy)
 		amtInDiff := result.Received.AmountOf(denomIn).Sub(expectedAmtIn)
 		if amtInDiff.IsPositive() {
-			fee := sdk.NewCoin(denomIn, amtInDiff)
+			fee, _ := sdk.NewDecCoinFromDec(denomIn, amtInDiff).TruncateDecimal()
 			accruedRewards = accruedRewards.Add(fee)
-			feeGrowth := sdk.NewDecCoinFromDec(fee.Denom, fee.Amount.ToDec().
-				MulTruncate(types.DecMulFactor).
-				QuoTruncate(poolState.CurrentLiquidity.ToDec()))
+			feeGrowth := sdk.NewDecCoinFromDec(
+				fee.Denom, fee.Amount.ToDec().
+					MulTruncate(types.DecMulFactor).
+					QuoTruncate(poolState.CurrentLiquidity.ToDec()))
 			poolState.FeeGrowthGlobal = poolState.FeeGrowthGlobal.Add(feeGrowth)
 		} else if amtInDiff.IsNegative() { // sanity check
 			//panic(amtInDiff)
@@ -192,11 +194,12 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 		// TODO: simplify code
 		if len(result.Received) > 1 { // extra fees
 			denomOut := pool.DenomOut(isBuy)
-			fee := sdk.NewCoin(denomOut, result.Received.AmountOf(denomOut))
+			fee, _ := sdk.NewDecCoinFromDec(denomOut, result.Received.AmountOf(denomOut)).TruncateDecimal()
 			accruedRewards = accruedRewards.Add(fee)
-			feeGrowth := sdk.NewDecCoinFromDec(fee.Denom, fee.Amount.ToDec().
-				MulTruncate(types.DecMulFactor).
-				QuoTruncate(poolState.CurrentLiquidity.ToDec()))
+			feeGrowth := sdk.NewDecCoinFromDec(
+				fee.Denom, fee.Amount.ToDec().
+					MulTruncate(types.DecMulFactor).
+					QuoTruncate(poolState.CurrentLiquidity.ToDec()))
 			poolState.FeeGrowthGlobal = poolState.FeeGrowthGlobal.Add(feeGrowth)
 		}
 

@@ -146,7 +146,7 @@ func (k Querier) BestSwapExactAmountInRoutes(c context.Context, req *types.Query
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 	maxRoutesLen := int(k.GetMaxSwapRoutesLen(ctx))
-	input, err := sdk.ParseCoinNormalized(req.Input)
+	input, err := sdk.ParseDecCoin(req.Input)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid input: %v", err)
 	}
@@ -159,13 +159,13 @@ func (k Querier) BestSwapExactAmountInRoutes(c context.Context, req *types.Query
 	}
 	var (
 		bestRoutes  []uint64
-		bestOutput  = sdk.NewCoin(req.OutputDenom, utils.ZeroInt)
+		bestOutput  = sdk.NewDecCoin(req.OutputDenom, utils.ZeroInt)
 		bestResults []types.SwapRouteResult
 	)
 	// TODO: cache (begin, end, input) <-> output
 	for _, routes := range allRoutes {
 		output, results, err := k.SwapExactAmountIn(
-			ctx, sdk.AccAddress{}, routes, input, sdk.NewCoin(req.OutputDenom, utils.ZeroInt), true)
+			ctx, sdk.AccAddress{}, routes, input, sdk.NewDecCoin(req.OutputDenom, utils.ZeroInt), true)
 		if err != nil && !errors.Is(err, types.ErrSwapNotEnoughInput) && !errors.Is(err, types.ErrSwapNotEnoughLiquidity) { // sanity check
 			panic(err)
 		}
@@ -218,9 +218,9 @@ func (k Querier) MakeOrderBooks(ctx sdk.Context, market types.Market, maxNumPric
 	// Because of this, we read N sell price levels to find out the highest
 	// price in the order book and use the price interval at that price as
 	// the smallest possible price interval.
-	sellObs := k.ConstructTempOrderBookSide(cacheCtx, market, false, nil, nil, nil, maxNumPriceLevels)
+	sellObs := k.ConstructTempOrderBookSide(cacheCtx, market, false, nil, nil, nil, maxNumPriceLevels, nil)
 	// Read at most one level to check if any buy order exists.
-	buyObs := k.ConstructTempOrderBookSide(cacheCtx, market, true, nil, nil, nil, 1)
+	buyObs := k.ConstructTempOrderBookSide(cacheCtx, market, true, nil, nil, nil, 1, nil)
 	var highestPrice sdk.Dec
 	if len(sellObs.Levels) > 0 {
 		highestPrice = sellObs.Levels[len(sellObs.Levels)-1].Price
@@ -237,13 +237,13 @@ func (k Querier) MakeOrderBooks(ctx sdk.Context, market types.Market, maxNumPric
 		p := sellObs.Levels[0].Price.Add(smallestPriceInterval.MulInt64(int64(100 * maxNumPriceLevels)))
 		priceLimit = &p
 	}
-	sellObs = k.ConstructTempOrderBookSide(cacheCtx, market, false, priceLimit, nil, nil, 0)
+	sellObs = k.ConstructTempOrderBookSide(cacheCtx, market, false, priceLimit, nil, nil, 0, nil)
 	priceLimit = nil
 	if len(buyObs.Levels) > 0 {
 		p := buyObs.Levels[0].Price.Sub(smallestPriceInterval.MulInt64(int64(100 * maxNumPriceLevels)))
 		priceLimit = &p
 	}
-	buyObs = k.ConstructTempOrderBookSide(cacheCtx, market, true, priceLimit, nil, nil, 0)
+	buyObs = k.ConstructTempOrderBookSide(cacheCtx, market, true, priceLimit, nil, nil, 0, nil)
 
 	var orderBooks []types.OrderBook
 	for _, p := range []int{1, 10, 100} {
@@ -257,7 +257,7 @@ func (k Querier) MakeOrderBooks(ctx sdk.Context, market types.Market, maxNumPric
 			levelIdx := 0
 			currentPrice := FitPriceToPriceInterval(sellObs.Levels[levelIdx].Price, priceInterval, false)
 			for i := 0; i < maxNumPriceLevels && levelIdx < len(sellObs.Levels); {
-				qty := utils.ZeroInt
+				qty := utils.ZeroDec
 				for levelIdx < len(sellObs.Levels) && sellObs.Levels[levelIdx].Price.LTE(currentPrice) {
 					qty = qty.Add(
 						types.TotalExecutableQuantity(
@@ -278,7 +278,7 @@ func (k Querier) MakeOrderBooks(ctx sdk.Context, market types.Market, maxNumPric
 			levelIdx := 0
 			currentPrice := FitPriceToPriceInterval(buyObs.Levels[levelIdx].Price, priceInterval, true)
 			for i := 0; i < maxNumPriceLevels && levelIdx < len(buyObs.Levels); {
-				qty := utils.ZeroInt
+				qty := utils.ZeroDec
 				for levelIdx < len(buyObs.Levels) && buyObs.Levels[levelIdx].Price.GTE(currentPrice) {
 					qty = qty.Add(
 						types.TotalExecutableQuantity(

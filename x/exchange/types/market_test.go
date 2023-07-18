@@ -8,6 +8,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/crescent-network/crescent/v5/app/testutil"
 	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/exchange/types"
 )
@@ -112,24 +113,24 @@ func TestMarket_Validate(t *testing.T) {
 func TestMarket(t *testing.T) {
 	// Test DepositCoin
 	market := types.NewMarket(1, "ucre", "uusd", utils.ParseDec("-0.0015"), utils.ParseDec("0.003"))
-	require.Equal(t, "1000000uusd", market.DepositCoin(true, sdk.NewInt(1000000)).String())
-	require.Equal(t, "1000000ucre", market.DepositCoin(false, sdk.NewInt(1000000)).String())
+	testutil.AssertEqual(t, utils.ParseDecCoin("1000000uusd"), market.DepositCoin(true, sdk.NewDec(1000000)))
+	testutil.AssertEqual(t, utils.ParseDecCoin("1000000ucre"), market.DepositCoin(false, sdk.NewDec(1000000)))
 
 	// Test DeductTakerFee
-	deducted, fee := market.DeductTakerFee(sdk.NewInt(123456789), false)
-	require.Equal(t, "123086418", deducted.String())
-	require.Equal(t, "370371", fee.String())
-	deducted, fee = market.DeductTakerFee(sdk.NewInt(123456789), true)
-	require.Equal(t, "123271603", deducted.String())
-	require.Equal(t, "185186", fee.String())
+	deducted, fee := market.DeductTakerFee(sdk.NewDec(123456789), false)
+	testutil.AssertEqual(t, utils.ParseDec("123086418.633"), deducted)
+	testutil.AssertEqual(t, utils.ParseDec("370370.367"), fee)
+	deducted, fee = market.DeductTakerFee(sdk.NewDec(123456789), true)
+	testutil.AssertEqual(t, utils.ParseDec("123271603.8165"), deducted)
+	testutil.AssertEqual(t, utils.ParseDec("185185.1835"), fee)
 
 	r := rand.New(rand.NewSource(1))
 	for i := 0; i < 50; i++ {
-		amt := utils.RandomInt(r, sdk.NewInt(10), sdk.NewInt(100000000))
+		amt := utils.RandomDec(r, sdk.NewDec(10), sdk.NewDec(100000000))
 		deducted, fee = market.DeductTakerFee(amt, false)
-		require.Equal(t, amt.String(), deducted.Add(fee).String())
+		testutil.AssertEqual(t, amt, deducted.Add(fee))
 		deducted, fee = market.DeductTakerFee(amt, true)
-		require.Equal(t, amt.String(), deducted.Add(fee).String())
+		testutil.AssertEqual(t, amt, deducted.Add(fee))
 	}
 
 	payDenom, receiveDenom := market.PayReceiveDenoms(true)

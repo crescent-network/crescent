@@ -32,8 +32,8 @@ func (s *KeeperTestSuite) TestReinitializePosition() {
 		ownerAddr, pool.Id, lowerPrice, upperPrice, desiredAmt)
 
 	ordererAddr := s.FundedAccount(2, enoughCoins)
-	s.PlaceMarketOrder(market.Id, ordererAddr, true, sdk.NewInt(1000000))
-	s.PlaceMarketOrder(market.Id, ordererAddr, false, sdk.NewInt(1000000))
+	s.PlaceMarketOrder(market.Id, ordererAddr, true, sdk.NewDec(1000000))
+	s.PlaceMarketOrder(market.Id, ordererAddr, false, sdk.NewDec(1000000))
 
 	s.RemoveLiquidity(ownerAddr, position.Id, liquidity)
 	position, _ = s.keeper.GetPosition(s.Ctx, position.Id)
@@ -51,8 +51,8 @@ func (s *KeeperTestSuite) TestRemoveAllAndCollect() {
 
 	// Accrue fees.
 	ordererAddr := s.FundedAccount(2, enoughCoins)
-	s.PlaceMarketOrder(market.Id, ordererAddr, true, sdk.NewInt(10_000000))
-	s.PlaceMarketOrder(market.Id, ordererAddr, false, sdk.NewInt(10_000000))
+	s.PlaceMarketOrder(market.Id, ordererAddr, true, sdk.NewDec(10_000000))
+	s.PlaceMarketOrder(market.Id, ordererAddr, false, sdk.NewDec(10_000000))
 
 	s.RemoveLiquidity(lpAddr, position.Id, position.Liquidity)
 

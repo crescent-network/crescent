@@ -12,6 +12,7 @@ import (
 
 	chain "github.com/crescent-network/crescent/v5/app"
 	"github.com/crescent-network/crescent/v5/app/testutil"
+	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/exchange/keeper"
 	"github.com/crescent-network/crescent/v5/x/exchange/simulation"
 	"github.com/crescent-network/crescent/v5/x/exchange/types"
@@ -93,8 +94,8 @@ func (s *SimTestSuite) TestSimulateMsgPlaceLimitOrder() {
 	s.Require().Equal("cosmos1r6vgn9cwpvja7448fg0fgglj63rcs6y84p8egu", msg.Sender)
 	s.Require().EqualValues(1, msg.MarketId)
 	s.Require().Equal(false, msg.IsBuy)
-	s.Require().Equal("157.110000000000000000", msg.Price.String())
-	s.Require().Equal(sdk.NewInt(6027904), msg.Quantity)
+	s.AssertEqual(utils.ParseDec("157.11"), msg.Price)
+	s.AssertEqual(utils.ParseDec("75503769"), msg.Quantity)
 	s.Require().Equal(2*time.Hour, msg.Lifespan)
 }
 
@@ -119,5 +120,5 @@ func (s *SimTestSuite) TestSimulateMsgPlaceMarketOrder() {
 	s.Require().Equal("cosmos1r6vgn9cwpvja7448fg0fgglj63rcs6y84p8egu", msg.Sender)
 	s.Require().EqualValues(1, msg.MarketId)
 	s.Require().Equal(false, msg.IsBuy)
-	s.Require().Equal(sdk.NewInt(103992), msg.Quantity)
+	s.AssertEqual(utils.ParseDec("118906"), msg.Quantity)
 }

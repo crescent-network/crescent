@@ -127,16 +127,16 @@ func TestMsgPlaceLimitOrder(t *testing.T) {
 		{
 			"zero quantity",
 			func(msg *types.MsgPlaceLimitOrder) {
-				msg.Quantity = sdk.NewInt(0)
+				msg.Quantity = sdk.NewDec(0)
 			},
-			"quantity must be positive: 0: invalid request",
+			"quantity must be positive: 0.000000000000000000: invalid request",
 		},
 		{
 			"negative quantity",
 			func(msg *types.MsgPlaceLimitOrder) {
-				msg.Quantity = sdk.NewInt(-1000000)
+				msg.Quantity = sdk.NewDec(-1000000)
 			},
-			"quantity must be positive: -1000000: invalid request",
+			"quantity must be positive: -1000000.000000000000000000: invalid request",
 		},
 		{
 			"zero lifespan",
@@ -156,7 +156,7 @@ func TestMsgPlaceLimitOrder(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			senderAddr := utils.TestAddress(1)
 			msg := types.NewMsgPlaceLimitOrder(
-				senderAddr, 1, true, utils.ParseDec("12.345"), sdk.NewInt(1000000), time.Hour)
+				senderAddr, 1, true, utils.ParseDec("12.345"), sdk.NewDec(1000000), time.Hour)
 			require.NoError(t, msg.ValidateBasic())
 			require.Equal(t, types.RouterKey, msg.Route())
 			require.Equal(t, []sdk.AccAddress{senderAddr}, msg.GetSigners())
@@ -228,16 +228,16 @@ func TestMsgPlaceBatchLimitOrder(t *testing.T) {
 		{
 			"zero quantity",
 			func(msg *types.MsgPlaceBatchLimitOrder) {
-				msg.Quantity = sdk.NewInt(0)
+				msg.Quantity = sdk.NewDec(0)
 			},
-			"quantity must be positive: 0: invalid request",
+			"quantity must be positive: 0.000000000000000000: invalid request",
 		},
 		{
 			"negative quantity",
 			func(msg *types.MsgPlaceBatchLimitOrder) {
-				msg.Quantity = sdk.NewInt(-1000000)
+				msg.Quantity = sdk.NewDec(-1000000)
 			},
-			"quantity must be positive: -1000000: invalid request",
+			"quantity must be positive: -1000000.000000000000000000: invalid request",
 		},
 		{
 			"zero lifespan",
@@ -257,7 +257,7 @@ func TestMsgPlaceBatchLimitOrder(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			senderAddr := utils.TestAddress(1)
 			msg := types.NewMsgPlaceBatchLimitOrder(
-				senderAddr, 1, true, utils.ParseDec("12.345"), sdk.NewInt(1000000), time.Hour)
+				senderAddr, 1, true, utils.ParseDec("12.345"), sdk.NewDec(1000000), time.Hour)
 			require.NoError(t, msg.ValidateBasic())
 			require.Equal(t, types.RouterKey, msg.Route())
 			require.Equal(t, []sdk.AccAddress{senderAddr}, msg.GetSigners())
@@ -329,16 +329,16 @@ func TestMsgPlaceMMLimitOrder(t *testing.T) {
 		{
 			"zero quantity",
 			func(msg *types.MsgPlaceMMLimitOrder) {
-				msg.Quantity = sdk.NewInt(0)
+				msg.Quantity = sdk.NewDec(0)
 			},
-			"quantity must be positive: 0: invalid request",
+			"quantity must be positive: 0.000000000000000000: invalid request",
 		},
 		{
 			"negative quantity",
 			func(msg *types.MsgPlaceMMLimitOrder) {
-				msg.Quantity = sdk.NewInt(-1000000)
+				msg.Quantity = sdk.NewDec(-1000000)
 			},
-			"quantity must be positive: -1000000: invalid request",
+			"quantity must be positive: -1000000.000000000000000000: invalid request",
 		},
 		{
 			"zero lifespan",
@@ -358,7 +358,7 @@ func TestMsgPlaceMMLimitOrder(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			senderAddr := utils.TestAddress(1)
 			msg := types.NewMsgPlaceMMLimitOrder(
-				senderAddr, 1, true, utils.ParseDec("12.345"), sdk.NewInt(1000000), time.Hour)
+				senderAddr, 1, true, utils.ParseDec("12.345"), sdk.NewDec(1000000), time.Hour)
 			require.NoError(t, msg.ValidateBasic())
 			require.Equal(t, types.RouterKey, msg.Route())
 			require.Equal(t, []sdk.AccAddress{senderAddr}, msg.GetSigners())
@@ -430,16 +430,16 @@ func TestMsgPlaceMMBatchLimitOrder(t *testing.T) {
 		{
 			"zero quantity",
 			func(msg *types.MsgPlaceMMBatchLimitOrder) {
-				msg.Quantity = sdk.NewInt(0)
+				msg.Quantity = sdk.NewDec(0)
 			},
-			"quantity must be positive: 0: invalid request",
+			"quantity must be positive: 0.000000000000000000: invalid request",
 		},
 		{
 			"negative quantity",
 			func(msg *types.MsgPlaceMMBatchLimitOrder) {
-				msg.Quantity = sdk.NewInt(-1000000)
+				msg.Quantity = sdk.NewDec(-1000000)
 			},
-			"quantity must be positive: -1000000: invalid request",
+			"quantity must be positive: -1000000.000000000000000000: invalid request",
 		},
 		{
 			"zero lifespan",
@@ -459,7 +459,7 @@ func TestMsgPlaceMMBatchLimitOrder(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			senderAddr := utils.TestAddress(1)
 			msg := types.NewMsgPlaceMMBatchLimitOrder(
-				senderAddr, 1, true, utils.ParseDec("12.345"), sdk.NewInt(1000000), time.Hour)
+				senderAddr, 1, true, utils.ParseDec("12.345"), sdk.NewDec(1000000), time.Hour)
 			require.NoError(t, msg.ValidateBasic())
 			require.Equal(t, types.RouterKey, msg.Route())
 			require.Equal(t, []sdk.AccAddress{senderAddr}, msg.GetSigners())
@@ -503,22 +503,22 @@ func TestMsgPlaceMarketOrder(t *testing.T) {
 		{
 			"zero quantity",
 			func(msg *types.MsgPlaceMarketOrder) {
-				msg.Quantity = sdk.NewInt(0)
+				msg.Quantity = sdk.NewDec(0)
 			},
-			"quantity must be positive: 0: invalid request",
+			"quantity must be positive: 0.000000000000000000: invalid request",
 		},
 		{
 			"negative quantity",
 			func(msg *types.MsgPlaceMarketOrder) {
-				msg.Quantity = sdk.NewInt(-1000000)
+				msg.Quantity = sdk.NewDec(-1000000)
 			},
-			"quantity must be positive: -1000000: invalid request",
+			"quantity must be positive: -1000000.000000000000000000: invalid request",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			senderAddr := utils.TestAddress(1)
 			msg := types.NewMsgPlaceMarketOrder(
-				senderAddr, 1, true, sdk.NewInt(1000000))
+				senderAddr, 1, true, sdk.NewDec(1000000))
 			require.NoError(t, msg.ValidateBasic())
 			require.Equal(t, types.RouterKey, msg.Route())
 			require.Equal(t, []sdk.AccAddress{senderAddr}, msg.GetSigners())
@@ -657,37 +657,37 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 		{
 			"zero input",
 			func(msg *types.MsgSwapExactAmountIn) {
-				msg.Input = utils.ParseCoin("0ucre")
+				msg.Input = utils.ParseDecCoin("0ucre")
 			},
-			"input must be positive: 0ucre: invalid coins",
+			"input must be positive: 0.000000000000000000ucre: invalid coins",
 		},
 		{
 			"negative input",
 			func(msg *types.MsgSwapExactAmountIn) {
-				msg.Input = sdk.Coin{Denom: "ucre", Amount: sdk.NewInt(-1000000)}
+				msg.Input = sdk.DecCoin{Denom: "ucre", Amount: sdk.NewDec(-1000000)}
 			},
-			"invalid input: negative coin amount: -1000000: invalid coins",
+			"invalid input: decimal coin -1000000.000000000000000000ucre amount cannot be negative: invalid coins",
 		},
 		{
 			"zero min output",
 			func(msg *types.MsgSwapExactAmountIn) {
-				msg.MinOutput = utils.ParseCoin("0uusd")
+				msg.MinOutput = utils.ParseDecCoin("0uusd")
 			},
 			"",
 		},
 		{
 			"negative min output",
 			func(msg *types.MsgSwapExactAmountIn) {
-				msg.MinOutput = sdk.Coin{Denom: "uusd", Amount: sdk.NewInt(-5000000)}
+				msg.MinOutput = sdk.DecCoin{Denom: "uusd", Amount: sdk.NewDec(-5000000)}
 			},
-			"invalid min output: negative coin amount: -5000000: invalid coins",
+			"invalid min output: decimal coin -5000000.000000000000000000uusd amount cannot be negative: invalid coins",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			senderAddr := utils.TestAddress(1)
 			msg := types.NewMsgSwapExactAmountIn(
 				senderAddr, []uint64{1, 2, 3},
-				utils.ParseCoin("1000000ucre"), utils.ParseCoin("5000000uusd"))
+				utils.ParseDecCoin("1000000ucre"), utils.ParseDecCoin("5000000uusd"))
 			require.NoError(t, msg.ValidateBasic())
 			require.Equal(t, types.RouterKey, msg.Route())
 			require.Equal(t, []sdk.AccAddress{senderAddr}, msg.GetSigners())

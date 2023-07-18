@@ -1,9 +1,12 @@
 package testutil
 
 import (
+	"fmt"
+	"testing"
 	"time"
 
 	"github.com/gogo/protobuf/proto"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -96,4 +99,48 @@ func (s *TestSuite) CheckEvent(evtType proto.Message, attrs map[string][]byte) {
 		}
 	}
 	s.FailNowf("CheckEvent failed", "event with type %s not found", evtTypeName)
+}
+
+func (s *TestSuite) AssertEqual(exp, got any) {
+	s.T().Helper()
+	var equal bool
+	switch exp := exp.(type) {
+	case sdk.Int:
+		equal = exp.Equal(got.(sdk.Int))
+	case sdk.Dec:
+		equal = exp.Equal(got.(sdk.Dec))
+	case sdk.Coin:
+		equal = exp.IsEqual(got.(sdk.Coin))
+	case sdk.Coins:
+		equal = exp.IsEqual(got.(sdk.Coins))
+	case sdk.DecCoin:
+		equal = exp.IsEqual(got.(sdk.DecCoin))
+	case sdk.DecCoins:
+		equal = exp.IsEqual(got.(sdk.DecCoins))
+	default:
+		panic(fmt.Sprintf("unsupported type: %T", exp))
+	}
+	s.Assert().True(equal, "expected:\t%v\ngot:\t\t%v", exp, got)
+}
+
+func AssertEqual(t *testing.T, exp, got any) {
+	t.Helper()
+	var equal bool
+	switch exp := exp.(type) {
+	case sdk.Int:
+		equal = exp.Equal(got.(sdk.Int))
+	case sdk.Dec:
+		equal = exp.Equal(got.(sdk.Dec))
+	case sdk.Coin:
+		equal = exp.IsEqual(got.(sdk.Coin))
+	case sdk.Coins:
+		equal = exp.IsEqual(got.(sdk.Coins))
+	case sdk.DecCoin:
+		equal = exp.IsEqual(got.(sdk.DecCoin))
+	case sdk.DecCoins:
+		equal = exp.IsEqual(got.(sdk.DecCoins))
+	default:
+		panic(fmt.Sprintf("unsupported type: %T", exp))
+	}
+	assert.True(t, equal, "expected:\t%v\ngot:\t\t%v", exp, got)
 }

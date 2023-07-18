@@ -10,10 +10,10 @@ import (
 )
 
 func (market Market) MatchOrderBookLevels(
-	levelA *TempOrderBookLevel, isMakerA bool, levelB *TempOrderBookLevel, isMakerB bool, price sdk.Dec) (execQty sdk.Int, fullA, fullB bool) {
+	levelA *TempOrderBookLevel, isMakerA bool, levelB *TempOrderBookLevel, isMakerB bool, price sdk.Dec) (execQty sdk.Dec, fullA, fullB bool) {
 	executableQtyA := TotalExecutableQuantity(levelA.Orders, price)
 	executableQtyB := TotalExecutableQuantity(levelB.Orders, price)
-	execQty = utils.MinInt(executableQtyA, executableQtyB)
+	execQty = sdk.MinDec(executableQtyA, executableQtyB)
 	fullA = execQty.Equal(executableQtyA)
 	fullB = execQty.Equal(executableQtyB)
 	market.FillTempOrderBookLevel(levelA, execQty, price, isMakerA, false)
@@ -22,7 +22,7 @@ func (market Market) MatchOrderBookLevels(
 }
 
 func (market Market) FillTempOrderBookLevel(
-	level *TempOrderBookLevel, qty sdk.Int, price sdk.Dec, isMaker, halveFees bool) {
+	level *TempOrderBookLevel, qty, price sdk.Dec, isMaker, halveFees bool) {
 	executableQty := TotalExecutableQuantity(level.Orders, price)
 	if executableQty.LT(qty) { // sanity check
 		panic("executable quantity is less than quantity")
@@ -30,21 +30,21 @@ func (market Market) FillTempOrderBookLevel(
 		market.FillTempOrders(level.Orders, qty, price, isMaker, halveFees)
 	} else {
 		groups := GroupTempOrdersByMsgHeight(level.Orders)
-		totalExecQty := utils.ZeroInt
+		totalExecQty := utils.ZeroDec
 		for _, group := range groups {
 			remainingQty := qty.Sub(totalExecQty)
 			if remainingQty.IsZero() {
 				break
 			}
 			// TODO: optimize duplicate TotalExecutableQuantity calls?
-			execQty := utils.MinInt(remainingQty, TotalExecutableQuantity(group.Orders, price))
+			execQty := sdk.MinDec(remainingQty, TotalExecutableQuantity(group.Orders, price))
 			market.FillTempOrders(group.Orders, execQty, price, isMaker, halveFees)
 			totalExecQty = totalExecQty.Add(execQty)
 		}
 	}
 }
 
-func (market Market) FillTempOrders(orders []*TempOrder, qty sdk.Int, price sdk.Dec, isMaker, halveFees bool) {
+func (market Market) FillTempOrders(orders []*TempOrder, qty, price sdk.Dec, isMaker, halveFees bool) {
 	totalExecutableQty := TotalExecutableQuantity(orders, price)
 	if totalExecutableQty.LT(qty) { // sanity check
 		panic("executable quantity is less than quantity")
@@ -54,8 +54,7 @@ func (market Market) FillTempOrders(orders []*TempOrder, qty sdk.Int, price sdk.
 			return orders[i].HasPriorityOver(orders[j])
 		})
 	}
-	totalExecutableQtyDec := totalExecutableQty.ToDec()
-	totalExecQty := utils.ZeroInt
+	totalExecQty := utils.ZeroDec
 	// First, distribute quantity evenly.
 	for _, order := range orders {
 		remainingQty := qty.Sub(totalExecQty)
@@ -66,10 +65,10 @@ func (market Market) FillTempOrders(orders []*TempOrder, qty sdk.Int, price sdk.
 		if executableQty.IsZero() {
 			continue
 		}
-		ratio := order.Quantity.ToDec().QuoTruncate(totalExecutableQtyDec)
-		execQty := utils.MinInt(
+		ratio := order.Quantity.QuoTruncate(totalExecutableQty)
+		execQty := sdk.MinDec(
 			remainingQty,
-			utils.MinInt(executableQty, ratio.MulInt(order.Quantity).TruncateInt()))
+			sdk.MinDec(executableQty, ratio.MulTruncate(order.Quantity)))
 		if execQty.IsPositive() {
 			market.FillTempOrder(order, execQty, price, isMaker, halveFees)
 			totalExecQty = totalExecQty.Add(execQty)
@@ -82,7 +81,7 @@ func (market Market) FillTempOrders(orders []*TempOrder, qty sdk.Int, price sdk.
 		if remainingQty.IsZero() {
 			break
 		}
-		execQty := utils.MinInt(remainingQty, order.ExecutableQuantity(price))
+		execQty := sdk.MinDec(remainingQty, order.ExecutableQuantity(price))
 		if execQty.IsPositive() {
 			market.FillTempOrder(order, execQty, price, isMaker, halveFees)
 			totalExecQty = totalExecQty.Add(execQty)
@@ -90,9 +89,9 @@ func (market Market) FillTempOrders(orders []*TempOrder, qty sdk.Int, price sdk.
 	}
 }
 
-func (market Market) FillTempOrder(order *TempOrder, qty sdk.Int, price sdk.Dec, isMaker, halveFees bool) {
+func (market Market) FillTempOrder(order *TempOrder, qty, price sdk.Dec, isMaker, halveFees bool) {
 	// TODO: refactor code
-	if qty.GT(order.OpenQuantity) { // sanity check
+	if qty.GT(order.ExecutableQuantity(price)) { // sanity check
 		panic("open quantity is less than quantity")
 	}
 	makerFeeRate, takerFeeRate := market.MakerFeeRate, market.TakerFeeRate
@@ -105,53 +104,53 @@ func (market Market) FillTempOrder(order *TempOrder, qty sdk.Int, price sdk.Dec,
 	order.OpenQuantity = order.OpenQuantity.Sub(qty)
 	if order.IsBuy {
 		paid := QuoteAmount(true, price, qty)
-		order.Paid = order.Paid.AddAmount(paid)
+		order.Paid.Amount = order.Paid.Amount.Add(paid)
 		order.RemainingDeposit = order.RemainingDeposit.Sub(paid)
 		if order.Source != nil || (isMaker && negativeMakerFeeRate) {
-			order.Received = order.Received.Add(sdk.NewCoin(market.BaseDenom, qty))
+			order.Received = order.Received.Add(sdk.NewDecCoinFromDec(market.BaseDenom, qty))
 		} else {
 			if isMaker {
 				order.Received = order.Received.Add(
-					sdk.NewCoin(
+					sdk.NewDecCoinFromDec(
 						market.BaseDenom,
-						utils.OneDec.Sub(makerFeeRate).MulInt(qty).TruncateInt()))
+						utils.OneDec.Sub(makerFeeRate).MulTruncate(qty)))
 			} else {
 				order.Received = order.Received.Add(
-					sdk.NewCoin(
+					sdk.NewDecCoinFromDec(
 						market.BaseDenom,
-						utils.OneDec.Sub(takerFeeRate).MulInt(qty).TruncateInt()))
+						utils.OneDec.Sub(takerFeeRate).MulTruncate(qty)))
 			}
 		}
 		if isMaker && negativeMakerFeeRate {
 			order.Received = order.Received.Add(
-				sdk.NewCoin(
+				sdk.NewDecCoinFromDec(
 					market.QuoteDenom,
-					makerFeeRate.Neg().MulInt(paid).TruncateInt()))
+					makerFeeRate.Neg().MulTruncate(paid)))
 		}
 	} else {
-		order.Paid = order.Paid.AddAmount(qty)
+		order.Paid.Amount = order.Paid.Amount.Add(qty)
 		order.RemainingDeposit = order.RemainingDeposit.Sub(qty)
 		quote := QuoteAmount(false, price, qty)
 		if order.Source != nil || (isMaker && negativeMakerFeeRate) {
-			order.Received = order.Received.Add(sdk.NewCoin(market.QuoteDenom, quote))
+			order.Received = order.Received.Add(sdk.NewDecCoinFromDec(market.QuoteDenom, quote))
 		} else {
 			if isMaker {
 				order.Received = order.Received.Add(
-					sdk.NewCoin(
+					sdk.NewDecCoinFromDec(
 						market.QuoteDenom,
-						utils.OneDec.Sub(makerFeeRate).MulInt(quote).TruncateInt()))
+						utils.OneDec.Sub(makerFeeRate).MulTruncate(quote)))
 			} else {
 				order.Received = order.Received.Add(
-					sdk.NewCoin(
+					sdk.NewDecCoinFromDec(
 						market.QuoteDenom,
-						utils.OneDec.Sub(takerFeeRate).MulInt(quote).TruncateInt()))
+						utils.OneDec.Sub(takerFeeRate).MulTruncate(quote)))
 			}
 		}
 		if isMaker && negativeMakerFeeRate {
 			order.Received = order.Received.Add(
-				sdk.NewCoin(
+				sdk.NewDecCoinFromDec(
 					market.BaseDenom,
-					makerFeeRate.Neg().MulInt(qty).TruncateInt()))
+					makerFeeRate.Neg().MulTruncate(qty)))
 		}
 	}
 	order.IsUpdated = true
@@ -202,9 +201,9 @@ type TempOrder struct {
 	Order
 	Source           OrderSource
 	IsUpdated        bool
-	ExecutedQuantity sdk.Int
-	Paid             sdk.Coin
-	Received         sdk.Coins
+	ExecutedQuantity sdk.Dec
+	Paid             sdk.DecCoin
+	Received         sdk.DecCoins
 }
 
 func NewTempOrder(order Order, market Market, source OrderSource) *TempOrder {
@@ -218,8 +217,8 @@ func NewTempOrder(order Order, market Market, source OrderSource) *TempOrder {
 		Order:            order,
 		Source:           source,
 		IsUpdated:        false,
-		ExecutedQuantity: utils.ZeroInt,
-		Paid:             sdk.NewCoin(payDenom, utils.ZeroInt),
+		ExecutedQuantity: utils.ZeroDec,
+		Paid:             sdk.NewDecCoin(payDenom, utils.ZeroInt),
 		Received:         nil,
 	}
 }
@@ -276,8 +275,8 @@ func GroupTempOrdersByMsgHeight(orders []*TempOrder) (groups []*TempOrderGroup) 
 	return
 }
 
-func TotalExecutableQuantity(orders []*TempOrder, price sdk.Dec) sdk.Int {
-	qty := utils.ZeroInt
+func TotalExecutableQuantity(orders []*TempOrder, price sdk.Dec) sdk.Dec {
+	qty := utils.ZeroDec
 	for _, order := range orders {
 		qty = qty.Add(order.ExecutableQuantity(price))
 	}

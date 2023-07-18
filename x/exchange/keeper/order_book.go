@@ -9,7 +9,7 @@ import (
 
 func (k Keeper) executeOrder(
 	ctx sdk.Context, market types.Market, ordererAddr sdk.AccAddress,
-	isBuy bool, priceLimit *sdk.Dec, qtyLimit, quoteLimit *sdk.Int, halveFees, simulate bool) (res types.ExecuteOrderResult, err error) {
+	isBuy bool, priceLimit, qtyLimit, quoteLimit *sdk.Dec, halveFees, simulate bool) (res types.ExecuteOrderResult, err error) {
 	if qtyLimit == nil && quoteLimit == nil { // sanity check
 		panic("quantity limit and quote limit cannot be set to nil at the same time")
 	}
@@ -19,7 +19,8 @@ func (k Keeper) executeOrder(
 	payDenom, receiveDenom := market.PayReceiveDenoms(isBuy)
 	res = types.NewExecuteOrderResult(payDenom, receiveDenom)
 	var lastPrice sdk.Dec
-	obs := k.ConstructTempOrderBookSide(ctx, market, !isBuy, priceLimit, qtyLimit, quoteLimit, 0)
+	escrow := types.NewEscrow(market.MustGetEscrowAddress())
+	obs := k.ConstructTempOrderBookSide(ctx, market, !isBuy, priceLimit, qtyLimit, quoteLimit, 0, escrow)
 	for _, level := range obs.Levels {
 		if priceLimit != nil &&
 			((isBuy && level.Price.GT(*priceLimit)) ||
@@ -34,21 +35,21 @@ func (k Keeper) executeOrder(
 		}
 
 		executableQty := types.TotalExecutableQuantity(level.Orders, level.Price)
-		var remainingQty sdk.Int
+		var remainingQty sdk.Dec
 		if qtyLimit != nil {
 			remainingQty = qtyLimit.Sub(res.ExecutedQuantity)
 		}
 		if quoteLimit != nil {
-			qty := quoteLimit.Sub(res.ExecutedQuote).ToDec().QuoTruncate(level.Price).TruncateInt()
+			qty := quoteLimit.Sub(res.ExecutedQuote).QuoTruncate(level.Price)
 			if remainingQty.IsNil() {
 				remainingQty = qty
 			} else {
-				remainingQty = utils.MinInt(remainingQty, qty)
+				remainingQty = sdk.MinDec(remainingQty, qty)
 			}
 		}
 		execQty := executableQty
 		if !remainingQty.IsNil() {
-			execQty = utils.MinInt(execQty, remainingQty)
+			execQty = sdk.MinDec(execQty, remainingQty)
 			if execQty.Equal(remainingQty) {
 				res.FullyExecuted = true
 			}
@@ -56,25 +57,21 @@ func (k Keeper) executeOrder(
 
 		market.FillTempOrderBookLevel(level, execQty, level.Price, true, halveFees)
 		execQuote := types.QuoteAmount(isBuy, level.Price, execQty)
-		var paid, received, fee sdk.Coin
+		var paid, received, fee sdk.DecCoin
 		if isBuy {
-			paid = sdk.NewCoin(market.QuoteDenom, execQuote)
+			paid = sdk.NewDecCoinFromDec(market.QuoteDenom, execQuote)
 			deductedQty, feeQty := market.DeductTakerFee(execQty, halveFees)
-			received = sdk.NewCoin(market.BaseDenom, deductedQty)
-			fee = sdk.NewCoin(market.BaseDenom, feeQty)
+			received = sdk.NewDecCoinFromDec(market.BaseDenom, deductedQty)
+			fee = sdk.NewDecCoinFromDec(market.BaseDenom, feeQty)
 		} else {
-			paid = sdk.NewCoin(market.BaseDenom, execQty)
+			paid = sdk.NewDecCoinFromDec(market.BaseDenom, execQty)
 			deductedQuote, feeQuote := market.DeductTakerFee(execQuote, halveFees)
-			received = sdk.NewCoin(market.QuoteDenom, deductedQuote)
-			fee = sdk.NewCoin(market.QuoteDenom, feeQuote)
+			received = sdk.NewDecCoinFromDec(market.QuoteDenom, deductedQuote)
+			fee = sdk.NewDecCoinFromDec(market.QuoteDenom, feeQuote)
 		}
 		if !simulate {
-			if err = k.EscrowCoin(ctx, market, ordererAddr, paid, true); err != nil {
-				return
-			}
-			if err = k.ReleaseCoin(ctx, market, ordererAddr, received, true); err != nil {
-				return
-			}
+			escrow.Lock(ordererAddr, paid)
+			escrow.Unlock(ordererAddr, received)
 		}
 		res.ExecutedQuantity = res.ExecutedQuantity.Add(execQty)
 		res.ExecutedQuote = res.ExecutedQuote.Add(execQuote)
@@ -83,12 +80,15 @@ func (k Keeper) executeOrder(
 		res.Fee = res.Fee.Add(fee)
 		lastPrice = level.Price
 	}
+	res.Paid = sdk.NewDecCoinFromDec(res.Paid.Denom, res.Paid.Amount.Ceil())
+	res.Received = sdk.NewDecCoinFromDec(res.Received.Denom, res.Received.Amount.TruncateDec())
+	// TODO: calculate fee correctly
 	if !simulate {
 		var tempOrders []*types.TempOrder
 		for _, level := range obs.Levels {
 			tempOrders = append(tempOrders, level.Orders...)
 		}
-		if err = k.FinalizeMatching(ctx, market, tempOrders); err != nil {
+		if err = k.FinalizeMatching(ctx, market, tempOrders, escrow); err != nil {
 			return
 		}
 		if !lastPrice.IsNil() {
@@ -103,9 +103,10 @@ func (k Keeper) executeOrder(
 
 func (k Keeper) ConstructTempOrderBookSide(
 	ctx sdk.Context, market types.Market, isBuy bool,
-	priceLimit *sdk.Dec, qtyLimit, quoteLimit *sdk.Int, maxNumPriceLevels int) *types.TempOrderBookSide {
-	accQty := utils.ZeroInt
-	accQuote := utils.ZeroInt
+	priceLimit, qtyLimit, quoteLimit *sdk.Dec, maxNumPriceLevels int,
+	escrow *types.Escrow) *types.TempOrderBookSide {
+	accQty := utils.ZeroDec
+	accQuote := utils.ZeroDec
 	// TODO: adjust price limit
 	obs := types.NewTempOrderBookSide(isBuy)
 	numPriceLevels := 0
@@ -134,14 +135,15 @@ func (k Keeper) ConstructTempOrderBookSide(
 	})
 	for _, name := range k.sourceNames {
 		source := k.sources[name]
-		source.GenerateOrders(ctx, market, func(ordererAddr sdk.AccAddress, price sdk.Dec, qty sdk.Int) error {
+		source.GenerateOrders(ctx, market, func(ordererAddr sdk.AccAddress, price, qty sdk.Dec) error {
 			// orders from OrderSource don't have id - priority among them will
 			// be determined the source's name.
-			order, err := k.newOrder(
-				ctx, 0, types.OrderTypeLimit, market, ordererAddr, isBuy, price,
-				qty, qty, ctx.BlockTime(), true)
-			if err != nil {
-				return err
+			deposit := types.DepositAmount(isBuy, price, qty)
+			order := types.NewOrder(
+				0, types.OrderTypeLimit, ordererAddr, market.Id, isBuy, price, qty,
+				0, qty, deposit, ctx.BlockTime())
+			if escrow != nil {
+				escrow.Lock(ordererAddr, sdk.NewDecCoinFromDec(market.DepositDenom(isBuy), deposit))
 			}
 			obs.AddOrder(types.NewTempOrder(order, market, source))
 			return nil
@@ -163,7 +165,10 @@ func (k Keeper) ConstructTempOrderBookSide(
 	return obs
 }
 
-func (k Keeper) FinalizeMatching(ctx sdk.Context, market types.Market, orders []*types.TempOrder) error {
+func (k Keeper) FinalizeMatching(ctx sdk.Context, market types.Market, orders []*types.TempOrder, escrow *types.Escrow) error {
+	if escrow == nil {
+		escrow = types.NewEscrow(market.MustGetEscrowAddress())
+	}
 	var sourceNames []string
 	resultsBySourceName := map[string][]types.TempOrder{}
 	for _, order := range orders {
@@ -178,13 +183,12 @@ func (k Keeper) FinalizeMatching(ctx sdk.Context, market types.Market, orders []
 
 		ordererAddr := order.MustGetOrdererAddress()
 		if order.IsUpdated {
-			if err := k.ReleaseCoins(ctx, market, ordererAddr, order.Received, true); err != nil {
-				return err
-			}
+			escrow.Unlock(ordererAddr, order.Received...)
 			if order.Source == nil {
 				payDenom, receiveDenom := market.PayReceiveDenoms(order.IsBuy)
-				paid := order.Paid.SubAmount(order.Received.AmountOf(payDenom))
-				received := sdk.NewCoin(receiveDenom, order.Received.AmountOf(receiveDenom))
+				paid := sdk.NewDecCoinFromDec(
+					order.Paid.Denom, order.Paid.Amount.Sub(order.Received.AmountOf(payDenom)))
+				received := sdk.NewDecCoinFromDec(receiveDenom, order.Received.AmountOf(receiveDenom))
 				if err := ctx.EventManager().EmitTypedEvent(&types.EventOrderFilled{
 					MarketId:         market.Id,
 					OrderId:          order.Id,
@@ -211,14 +215,13 @@ func (k Keeper) FinalizeMatching(ctx sdk.Context, market types.Market, orders []
 		}
 		// Should refund deposit
 		if order.Source != nil && order.RemainingDeposit.IsPositive() {
-			if err := k.ReleaseCoin(
-				ctx, market, ordererAddr,
-				market.DepositCoin(order.IsBuy, order.RemainingDeposit), true); err != nil {
-				return err
-			}
+			escrow.Unlock(ordererAddr, sdk.NewDecCoinFromDec(market.DepositDenom(order.IsBuy), order.RemainingDeposit))
 		}
 	}
 	if err := k.ExecuteSendCoins(ctx); err != nil {
+		return err
+	}
+	if err := escrow.Transact(ctx, k.bankKeeper); err != nil {
 		return err
 	}
 	for _, sourceName := range sourceNames {
@@ -227,18 +230,18 @@ func (k Keeper) FinalizeMatching(ctx sdk.Context, market types.Market, orders []
 			source := k.sources[sourceName]
 			// TODO: pass grouped results
 			source.AfterOrdersExecuted(ctx, market, results)
-			totalExecQty := utils.ZeroInt
+			totalExecQty := utils.ZeroDec
 			orderers, m := types.GroupTempOrderResultsByOrderer(results) // TODO: bit redundant
 			for _, orderer := range orderers {
 				var (
 					isBuy                  bool
 					payDenom, receiveDenom string
-					totalPaid              sdk.Coin
-					totalReceived          sdk.Coins
+					totalPaid              sdk.DecCoin
+					totalReceived          sdk.DecCoins
 				)
 				for _, res := range m[orderer] {
 					totalExecQty = totalExecQty.Add(res.ExecutedQuantity)
-					if totalPaid.IsNil() {
+					if totalPaid.Amount.IsNil() {
 						isBuy = res.IsBuy
 						totalPaid = res.Paid
 						totalReceived = res.Received
@@ -251,8 +254,8 @@ func (k Keeper) FinalizeMatching(ctx sdk.Context, market types.Market, orders []
 					}
 				}
 				payDenom, receiveDenom = market.PayReceiveDenoms(isBuy)
-				paid := totalPaid.SubAmount(totalReceived.AmountOf(payDenom))
-				received := sdk.NewCoin(receiveDenom, totalReceived.AmountOf(receiveDenom))
+				paid := sdk.NewDecCoinFromDec(totalPaid.Denom, totalPaid.Amount.Sub(totalReceived.AmountOf(payDenom)))
+				received := sdk.NewDecCoinFromDec(receiveDenom, totalReceived.AmountOf(receiveDenom))
 				if err := ctx.EventManager().EmitTypedEvent(&types.EventOrderSourceOrdersFilled{
 					MarketId:         market.Id,
 					SourceName:       sourceName,

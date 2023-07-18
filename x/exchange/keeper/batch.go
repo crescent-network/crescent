@@ -3,7 +3,6 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
@@ -24,12 +23,12 @@ func (k Keeper) RunBatchMatching(ctx sdk.Context, market types.Market) (err erro
 	// Construct TempOrderBookSides with the price limits we obtained previously.
 	var buyObs, sellObs *types.TempOrderBookSide
 	if !bestSellPrice.IsNil() {
-		buyObs = k.ConstructTempOrderBookSide(ctx, market, true, &bestSellPrice, nil, nil, 0)
+		buyObs = k.ConstructTempOrderBookSide(ctx, market, true, &bestSellPrice, nil, nil, 0, nil)
 	} else {
 		buyObs = types.NewTempOrderBookSide(true)
 	}
 	if !bestBuyPrice.IsNil() {
-		sellObs = k.ConstructTempOrderBookSide(ctx, market, false, &bestBuyPrice, nil, nil, 0)
+		sellObs = k.ConstructTempOrderBookSide(ctx, market, false, &bestBuyPrice, nil, nil, 0, nil)
 	} else {
 		sellObs = types.NewTempOrderBookSide(false)
 	}
@@ -54,7 +53,7 @@ func (k Keeper) RunBatchMatching(ctx sdk.Context, market types.Market) (err erro
 		for _, level := range sellObs.Levels {
 			tempOrders = append(tempOrders, level.Orders...)
 		}
-		if err = k.FinalizeMatching(ctx, market, tempOrders); err != nil {
+		if err = k.FinalizeMatching(ctx, market, tempOrders, nil); err != nil {
 			return
 		}
 		marketState.LastPrice = &lastPrice
@@ -75,7 +74,7 @@ func (k Keeper) RunBatchMatching(ctx sdk.Context, market types.Market) (err erro
 			}
 			buyExecutableQty := types.TotalExecutableQuantity(buyLevel.Orders, buyLevel.Price)
 			sellExecutableQty := types.TotalExecutableQuantity(sellLevel.Orders, sellLevel.Price)
-			execQty := utils.MinInt(buyExecutableQty, sellExecutableQty)
+			execQty := sdk.MinDec(buyExecutableQty, sellExecutableQty)
 			buyLastPrice = buyLevel.Price
 			sellLastPrice = sellLevel.Price
 			buyFull := execQty.Equal(buyExecutableQty)

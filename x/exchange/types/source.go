@@ -10,13 +10,13 @@ type OrderSource interface {
 	AfterOrdersExecuted(ctx sdk.Context, market Market, results []TempOrder)
 }
 
-type CreateOrderFunc func(ordererAddr sdk.AccAddress, price sdk.Dec, qty sdk.Int) error
+type CreateOrderFunc func(ordererAddr sdk.AccAddress, price, qty sdk.Dec) error
 
 type GenerateOrdersOptions struct {
 	IsBuy             bool
 	PriceLimit        *sdk.Dec
-	QuantityLimit     *sdk.Int
-	QuoteLimit        *sdk.Int
+	QuantityLimit     *sdk.Dec
+	QuoteLimit        *sdk.Dec
 	MaxNumPriceLevels int
 }
 

@@ -74,7 +74,7 @@ func (msg MsgCreateMarket) ValidateBasic() error {
 
 func NewMsgPlaceLimitOrder(
 	senderAddr sdk.AccAddress, marketId uint64, isBuy bool,
-	price sdk.Dec, qty sdk.Int, lifespan time.Duration) *MsgPlaceLimitOrder {
+	price, qty sdk.Dec, lifespan time.Duration) *MsgPlaceLimitOrder {
 	return &MsgPlaceLimitOrder{
 		Sender:   senderAddr.String(),
 		MarketId: marketId,
@@ -127,7 +127,7 @@ func (msg MsgPlaceLimitOrder) ValidateBasic() error {
 
 func NewMsgPlaceBatchLimitOrder(
 	senderAddr sdk.AccAddress, marketId uint64, isBuy bool,
-	price sdk.Dec, qty sdk.Int, lifespan time.Duration) *MsgPlaceBatchLimitOrder {
+	price, qty sdk.Dec, lifespan time.Duration) *MsgPlaceBatchLimitOrder {
 	return &MsgPlaceBatchLimitOrder{
 		Sender:   senderAddr.String(),
 		MarketId: marketId,
@@ -180,7 +180,7 @@ func (msg MsgPlaceBatchLimitOrder) ValidateBasic() error {
 
 func NewMsgPlaceMMLimitOrder(
 	senderAddr sdk.AccAddress, marketId uint64, isBuy bool,
-	price sdk.Dec, qty sdk.Int, lifespan time.Duration) *MsgPlaceMMLimitOrder {
+	price, qty sdk.Dec, lifespan time.Duration) *MsgPlaceMMLimitOrder {
 	return &MsgPlaceMMLimitOrder{
 		Sender:   senderAddr.String(),
 		MarketId: marketId,
@@ -233,7 +233,7 @@ func (msg MsgPlaceMMLimitOrder) ValidateBasic() error {
 
 func NewMsgPlaceMMBatchLimitOrder(
 	senderAddr sdk.AccAddress, marketId uint64, isBuy bool,
-	price sdk.Dec, qty sdk.Int, lifespan time.Duration) *MsgPlaceMMBatchLimitOrder {
+	price, qty sdk.Dec, lifespan time.Duration) *MsgPlaceMMBatchLimitOrder {
 	return &MsgPlaceMMBatchLimitOrder{
 		Sender:   senderAddr.String(),
 		MarketId: marketId,
@@ -286,7 +286,7 @@ func (msg MsgPlaceMMBatchLimitOrder) ValidateBasic() error {
 
 func NewMsgPlaceMarketOrder(
 	senderAddr sdk.AccAddress, marketId uint64,
-	isBuy bool, qty sdk.Int) *MsgPlaceMarketOrder {
+	isBuy bool, qty sdk.Dec) *MsgPlaceMarketOrder {
 	return &MsgPlaceMarketOrder{
 		Sender:   senderAddr.String(),
 		MarketId: marketId,
@@ -387,7 +387,8 @@ func (msg MsgCancelAllOrders) ValidateBasic() error {
 	return nil
 }
 
-func NewMsgSwapExactAmountIn(senderAddr sdk.AccAddress, routes []uint64, input, minOutput sdk.Coin) *MsgSwapExactAmountIn {
+func NewMsgSwapExactAmountIn(
+	senderAddr sdk.AccAddress, routes []uint64, input, minOutput sdk.DecCoin) *MsgSwapExactAmountIn {
 	return &MsgSwapExactAmountIn{
 		Sender:    senderAddr.String(),
 		Routes:    routes,
