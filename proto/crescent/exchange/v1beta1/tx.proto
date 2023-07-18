@@ -37,16 +37,16 @@ message MsgPlaceLimitOrder {
   uint64 market_id = 2;
   bool   is_buy    = 3;
   string price    = 4 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
-  string quantity = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string quantity = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
   google.protobuf.Duration lifespan = 6 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
 }
 
 message MsgPlaceLimitOrderResponse {
   uint64 order_id          = 1;
   string executed_quantity = 2
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  cosmos.base.v1beta1.Coin paid     = 3 [(gogoproto.nullable) = false];
-  cosmos.base.v1beta1.Coin received = 4 [(gogoproto.nullable) = false];
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  cosmos.base.v1beta1.DecCoin paid     = 3 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.DecCoin received = 4 [(gogoproto.nullable) = false];
 }
 
 message MsgPlaceBatchLimitOrder {
@@ -54,7 +54,7 @@ message MsgPlaceBatchLimitOrder {
   uint64 market_id = 2;
   bool   is_buy    = 3;
   string price    = 4 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
-  string quantity = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string quantity = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
   google.protobuf.Duration lifespan = 6 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
 }
 
@@ -67,16 +67,16 @@ message MsgPlaceMMLimitOrder {
   uint64 market_id = 2;
   bool   is_buy    = 3;
   string price    = 4 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
-  string quantity = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string quantity = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
   google.protobuf.Duration lifespan = 6 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
 }
 
 message MsgPlaceMMLimitOrderResponse {
   uint64 order_id          = 1;
   string executed_quantity = 2
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  cosmos.base.v1beta1.Coin paid     = 3 [(gogoproto.nullable) = false];
-  cosmos.base.v1beta1.Coin received = 4 [(gogoproto.nullable) = false];
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  cosmos.base.v1beta1.DecCoin paid     = 3 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.DecCoin received = 4 [(gogoproto.nullable) = false];
 }
 
 message MsgPlaceMMBatchLimitOrder {
@@ -84,7 +84,7 @@ message MsgPlaceMMBatchLimitOrder {
   uint64 market_id = 2;
   bool   is_buy    = 3;
   string price    = 4 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
-  string quantity = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string quantity = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
   google.protobuf.Duration lifespan = 6 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
 }
 
@@ -96,15 +96,15 @@ message MsgPlaceMarketOrder {
   string sender    = 1;
   uint64 market_id = 2;
   bool   is_buy    = 3;
-  string quantity = 4 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string quantity = 4 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 }
 
 message MsgPlaceMarketOrderResponse {
   uint64 order_id          = 1;
   string executed_quantity = 2
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  cosmos.base.v1beta1.Coin paid     = 3 [(gogoproto.nullable) = false];
-  cosmos.base.v1beta1.Coin received = 4 [(gogoproto.nullable) = false];
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  cosmos.base.v1beta1.DecCoin paid     = 3 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.DecCoin received = 4 [(gogoproto.nullable) = false];
 }
 
 message MsgCancelOrder {
@@ -124,13 +124,13 @@ message MsgCancelAllOrdersResponse {
 }
 
 message MsgSwapExactAmountIn {
-  string                   sender     = 1;
-  repeated uint64          routes     = 2;
-  cosmos.base.v1beta1.Coin input      = 3 [(gogoproto.nullable) = false];
-  cosmos.base.v1beta1.Coin min_output = 4 [(gogoproto.nullable) = false];
+  string                      sender     = 1;
+  repeated uint64             routes     = 2;
+  cosmos.base.v1beta1.DecCoin input      = 3 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.DecCoin min_output = 4 [(gogoproto.nullable) = false];
 }
 
 message MsgSwapExactAmountInResponse {
-  cosmos.base.v1beta1.Coin output  = 1 [(gogoproto.nullable) = false];
-  repeated SwapRouteResult results = 2 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.DecCoin output  = 1 [(gogoproto.nullable) = false];
+  repeated SwapRouteResult    results = 2 [(gogoproto.nullable) = false];
 }
