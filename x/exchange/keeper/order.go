@@ -148,18 +148,16 @@ func (k Keeper) placeLimitOrder(
 	}
 
 	orderId = k.GetNextOrderIdWithUpdate(ctx)
+	openQty := qty
 	if !isBatch {
 		res, err = k.executeOrder(
 			ctx, market, ordererAddr, isBuy, &price, &qty, nil, false, false)
 		if err != nil {
 			return
 		}
-	}
-
-	openQty := qty
-	if !isBatch {
 		openQty = openQty.Sub(res.ExecutedQuantity)
 	}
+
 	if isBatch || openQty.IsPositive() {
 		deadline := ctx.BlockTime().Add(lifespan)
 		deposit := types.DepositAmount(isBuy, price, openQty).Ceil().TruncateInt()
