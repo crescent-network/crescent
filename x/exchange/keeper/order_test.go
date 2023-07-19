@@ -233,3 +233,75 @@ func (s *KeeperTestSuite) TestCancelAllOrders() {
 	s.Require().EqualValues(5, cancelledOrders[4].Id)
 	s.Require().EqualValues(6, cancelledOrders[5].Id)
 }
+
+func (s *KeeperTestSuite) TestFairMatching() {
+	market := s.CreateMarket("ucre", "uusd")
+
+	ordererAddr1 := s.FundedAccount(1, enoughCoins)
+	ordererAddr2 := s.FundedAccount(2, enoughCoins)
+	ordererAddr3 := s.FundedAccount(3, enoughCoins)
+
+	_, order1, _ := s.PlaceLimitOrder(
+		market.Id, ordererAddr1, true, utils.ParseDec("1.2"), sdk.NewDec(10000), 0)
+	_, order2, _ := s.PlaceLimitOrder(
+		market.Id, ordererAddr2, true, utils.ParseDec("1.2"), sdk.NewDec(5000), 0)
+
+	s.PlaceMarketOrder(market.Id, ordererAddr3, false, sdk.NewDec(9000))
+
+	order1, _ = s.keeper.GetOrder(s.Ctx, order1.Id)
+	order2, _ = s.keeper.GetOrder(s.Ctx, order2.Id)
+
+	s.AssertEqual(utils.ParseDec("4000"), order1.OpenQuantity) // 9000*2/3 matched
+	s.AssertEqual(utils.ParseDec("2000"), order2.OpenQuantity) // 9000*1/3 matched
+
+	s.NextBlock()
+
+	_, order1, _ = s.PlaceLimitOrder(
+		market.Id, ordererAddr1, true, utils.ParseDec("0.3"), sdk.NewDec(7000), 0)
+	_, order2, _ = s.PlaceLimitOrder(
+		market.Id, ordererAddr2, true, utils.ParseDec("0.3"), sdk.NewDec(3000), 0)
+
+	s.PlaceMarketOrder(market.Id, ordererAddr3, false, sdk.NewDec(101))
+
+	order1, _ = s.keeper.GetOrder(s.Ctx, order1.Id)
+	order2, _ = s.keeper.GetOrder(s.Ctx, order2.Id)
+
+	s.AssertEqual(utils.ParseDec("6929.3"), order1.OpenQuantity) // 101*7/10 matched
+	s.AssertEqual(utils.ParseDec("2969.7"), order2.OpenQuantity) // 101*3/10 matched
+}
+
+func (s *KeeperTestSuite) TestDecQuantity() {
+	market := s.CreateMarket("ucre", "uusd")
+	// Set the fees to zero for now.
+	market.MakerFeeRate = sdk.ZeroDec()
+	market.TakerFeeRate = sdk.ZeroDec()
+	s.keeper.SetMarket(s.Ctx, market)
+
+	ordererAddr1 := s.FundedAccount(1, enoughCoins)
+	ordererAddr2 := s.FundedAccount(2, enoughCoins)
+	ordererAddr3 := s.FundedAccount(3, enoughCoins)
+
+	_, order1, _ := s.PlaceLimitOrder(
+		market.Id, ordererAddr1, true, utils.ParseDec("0.14076"), sdk.NewDec(7000), time.Hour)
+	_, order2, _ := s.PlaceLimitOrder(
+		market.Id, ordererAddr2, true, utils.ParseDec("0.14076"), sdk.NewDec(3000), time.Hour)
+
+	s.PlaceMarketOrder(market.Id, ordererAddr3, false, sdk.NewDec(1001))
+
+	order1, _ = s.keeper.GetOrder(s.Ctx, order1.Id)
+	order2, _ = s.keeper.GetOrder(s.Ctx, order2.Id)
+	s.AssertEqual(utils.ParseDec("6299.3"), order1.OpenQuantity)
+	s.AssertEqual(utils.ParseDec("2699.7"), order2.OpenQuantity)
+
+	// Cancel the first order.
+	s.NextBlock()
+	s.CancelOrder(ordererAddr1, order1.Id)
+
+	orderer3BalancesBefore := s.GetAllBalances(ordererAddr3)
+	// Fill the rest.
+	s.PlaceMarketOrder(market.Id, ordererAddr3, false, sdk.NewDec(10000))
+	orderer3BalancesAfter := s.GetAllBalances(ordererAddr3)
+
+	diff, _ := orderer3BalancesAfter.SafeSub(orderer3BalancesBefore)
+	s.AssertEqual(sdk.NewInt(380), diff.AmountOf("uusd")) // 2699.7*0.14076=380.009722
+}

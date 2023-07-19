@@ -2,6 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"golang.org/x/exp/slices"
 
 	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/exchange/types"
@@ -240,24 +241,15 @@ func (k Keeper) IterateAllOrderBookOrderIds(ctx sdk.Context, cb func(orderId uin
 	}
 }
 
-func (k Keeper) IterateOrderBookByMarket(ctx sdk.Context, marketId uint64, cb func(order types.Order) (stop bool)) {
-	k.IterateOrderBookSideByMarket(ctx, marketId, false, true, cb)
-	k.IterateOrderBookSideByMarket(ctx, marketId, true, false, cb)
-}
-
-func (k Keeper) IterateOrderBookSideByMarket(ctx sdk.Context, marketId uint64, isBuy, reverse bool, cb func(order types.Order) (stop bool)) {
+func (k Keeper) IterateOrderBookSideByMarket(ctx sdk.Context, marketId uint64, isBuy bool, cb func(order types.Order) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	var iter sdk.Iterator
-	var iterPrefix []byte
 	if isBuy {
-		iterPrefix = types.GetOrderBookSideIteratorPrefix(marketId, true)
+		iter = sdk.KVStoreReversePrefixIterator(
+			store, types.GetOrderBookSideIteratorPrefix(marketId, true))
 	} else {
-		iterPrefix = types.GetOrderBookSideIteratorPrefix(marketId, false)
-	}
-	if isBuy != reverse { // (isBuy && !reverse) || (!isBuy && reverse)
-		iter = sdk.KVStoreReversePrefixIterator(store, iterPrefix)
-	} else { // (isBuy && reverse) || (!isBuy && !reverse)
-		iter = sdk.KVStorePrefixIterator(store, iterPrefix)
+		iter = sdk.KVStorePrefixIterator(
+			store, types.GetOrderBookSideIteratorPrefix(marketId, false))
 	}
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
@@ -266,6 +258,81 @@ func (k Keeper) IterateOrderBookSideByMarket(ctx sdk.Context, marketId uint64, i
 		if cb(order) {
 			break
 		}
+	}
+}
+
+func (k Keeper) GetBestPrice(ctx sdk.Context, marketId uint64, isBuy bool) (price sdk.Dec, found bool) {
+	store := ctx.KVStore(k.storeKey)
+	var iter sdk.Iterator
+	if isBuy {
+		iter = sdk.KVStoreReversePrefixIterator(
+			store, types.GetOrderBookSideIteratorPrefix(marketId, true))
+	} else {
+		iter = sdk.KVStorePrefixIterator(
+			store, types.GetOrderBookSideIteratorPrefix(marketId, false))
+	}
+	defer iter.Close()
+	if iter.Valid() {
+		price = types.ParsePriceFromOrderBookOrderIndexKey(iter.Key())
+		return price, true
+	}
+	return price, false
+}
+
+func (k Keeper) IterateOrderBookSide(
+	ctx sdk.Context, marketId uint64, isBuy bool, priceLimit *sdk.Dec,
+	cb func(price sdk.Dec, orders []types.Order) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	var iter sdk.Iterator
+	if isBuy {
+		if priceLimit == nil {
+			iter = sdk.KVStoreReversePrefixIterator(
+				store, types.GetOrderBookSideIteratorPrefix(marketId, true))
+		} else {
+			iter = store.ReverseIterator(
+				types.GetOrderBookSidePriceLimitIteratorPrefix(marketId, true, *priceLimit),
+				sdk.PrefixEndBytes(
+					types.GetOrderBookSideIteratorPrefix(marketId, true)))
+		}
+	} else {
+		if priceLimit == nil {
+			iter = sdk.KVStorePrefixIterator(
+				store, types.GetOrderBookSideIteratorPrefix(marketId, false))
+		} else {
+			iter = store.Iterator(
+				types.GetOrderBookSideIteratorPrefix(marketId, false),
+				sdk.PrefixEndBytes(types.GetOrderBookSidePriceLimitIteratorPrefix(marketId, false, *priceLimit)))
+		}
+	}
+	defer iter.Close()
+	var (
+		currentPrice sdk.Dec
+		orders       []types.Order
+	)
+	callCb := func(price sdk.Dec, orders []types.Order) (stop bool) {
+		if isBuy {
+			slices.SortFunc(orders, func(a, b types.Order) bool {
+				return a.Id < b.Id
+			})
+		}
+		return cb(price, orders)
+	}
+	for ; iter.Valid(); iter.Next() {
+		orderId := types.ParseOrderIdFromOrderBookOrderIndexKey(iter.Key())
+		order := k.MustGetOrder(ctx, orderId)
+		if !currentPrice.IsNil() && !order.Price.Equal(currentPrice) {
+			if callCb(currentPrice, orders) {
+				break
+			}
+			orders = []types.Order{order}
+		} else {
+			orders = append(orders, order)
+		}
+		currentPrice = order.Price
+	}
+	if len(orders) > 0 {
+		// Ignore the return value since it's the last iteration.
+		_ = callCb(currentPrice, orders)
 	}
 }
 

@@ -62,13 +62,16 @@ func (market Market) FillTempOrders(orders []*TempOrder, qty, price sdk.Dec, isM
 			break
 		}
 		executableQty := order.ExecutableQuantity(price)
+		fmt.Println("executableQty", executableQty)
 		if executableQty.IsZero() {
 			continue
 		}
-		ratio := order.Quantity.QuoTruncate(totalExecutableQty)
 		execQty := sdk.MinDec(
 			remainingQty,
-			sdk.MinDec(executableQty, ratio.MulTruncate(order.Quantity)))
+			sdk.MinDec(
+				executableQty,
+				order.Quantity.MulTruncate(qty).QuoTruncate(totalExecutableQty)))
+		fmt.Println("execQty", execQty)
 		if execQty.IsPositive() {
 			market.FillTempOrder(order, execQty, price, isMaker, halveFees)
 			totalExecQty = totalExecQty.Add(execQty)

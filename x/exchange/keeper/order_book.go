@@ -107,24 +107,20 @@ func (k Keeper) ConstructTempOrderBookSide(
 	escrow *types.Escrow) *types.TempOrderBookSide {
 	accQty := utils.ZeroDec
 	accQuote := utils.ZeroDec
-	// TODO: adjust price limit
 	obs := types.NewTempOrderBookSide(isBuy)
 	numPriceLevels := 0
-	k.IterateOrderBookSideByMarket(ctx, market.Id, isBuy, false, func(order types.Order) (stop bool) {
-		if priceLimit != nil &&
-			((isBuy && order.Price.LT(*priceLimit)) ||
-				(!isBuy && order.Price.GT(*priceLimit))) {
-			return true
-		}
+	k.IterateOrderBookSide(ctx, market.Id, isBuy, priceLimit, func(price sdk.Dec, orders []types.Order) (stop bool) {
 		if qtyLimit != nil && !qtyLimit.Sub(accQty).IsPositive() {
 			return true
 		}
 		if quoteLimit != nil && !quoteLimit.Sub(accQuote).IsPositive() {
 			return true
 		}
-		obs.AddOrder(types.NewTempOrder(order, market, nil))
-		accQty = accQty.Add(order.OpenQuantity)
-		accQuote = accQuote.Add(types.QuoteAmount(!isBuy, order.Price, order.OpenQuantity))
+		for _, order := range orders {
+			obs.AddOrder(types.NewTempOrder(order, market, nil))
+			accQty = accQty.Add(order.OpenQuantity)
+			accQuote = accQuote.Add(types.QuoteAmount(!isBuy, order.Price, order.OpenQuantity))
+		}
 		if maxNumPriceLevels > 0 {
 			numPriceLevels++
 			if numPriceLevels >= maxNumPriceLevels {
@@ -204,7 +200,9 @@ func (k Keeper) FinalizeMatching(ctx sdk.Context, market types.Market, orders []
 					return err
 				}
 				// Update user orders
-				if order.ExecutableQuantity(order.Price).IsZero() {
+				executableQty := order.ExecutableQuantity(order.Price)
+				if order.IsBuy && executableQty.TruncateDec().IsZero() ||
+					!order.IsBuy && executableQty.MulTruncate(order.Price).TruncateDec().IsZero() {
 					if err := k.cancelOrder(ctx, market, order.Order, true); err != nil {
 						return err
 					}

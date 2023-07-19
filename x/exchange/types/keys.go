@@ -71,6 +71,14 @@ func GetOrderBookSideIteratorPrefix(marketId uint64, isBuy bool) []byte {
 		isBuyToBytes(isBuy))
 }
 
+func GetOrderBookSidePriceLimitIteratorPrefix(marketId uint64, isBuy bool, priceLimit sdk.Dec) []byte {
+	return utils.Key(
+		OrderBookOrderIndexKeyPrefix,
+		sdk.Uint64ToBigEndian(marketId),
+		isBuyToBytes(isBuy),
+		PriceToBytes(priceLimit))
+}
+
 func GetOrdersByMarketIteratorPrefix(marketId uint64) []byte {
 	return utils.Key(
 		OrderBookOrderIndexKeyPrefix,
@@ -118,7 +126,12 @@ func ParseMarketByDenomsIndexKey(key []byte) (baseDenom, quoteDenom string) {
 }
 
 func ParseOrderIdFromOrderBookOrderIndexKey(key []byte) (orderId uint64) {
-	orderId = sdk.BigEndianToUint64(key[1+1+32+8:])
+	orderId = sdk.BigEndianToUint64(key[1+8+1+32:])
+	return
+}
+
+func ParsePriceFromOrderBookOrderIndexKey(key []byte) (price sdk.Dec) {
+	price = BytesToPrice(key[1+8+1 : 1+8+1+32])
 	return
 }
 

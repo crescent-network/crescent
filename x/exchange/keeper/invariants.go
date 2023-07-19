@@ -89,25 +89,13 @@ func OrderBookInvariant(k Keeper) sdk.Invariant {
 		msg := ""
 		cnt := 0
 		k.IterateAllMarkets(ctx, func(market types.Market) (stop bool) {
-			var (
-				bestBuyOrder, bestSellOrder           types.Order
-				foundBestBuyOrder, foundBestSellOrder bool
-			)
-			k.IterateOrderBookSideByMarket(ctx, market.Id, false, false, func(order types.Order) (stop bool) {
-				bestSellOrder = order
-				foundBestSellOrder = true
-				return true
-			})
-			k.IterateOrderBookSideByMarket(ctx, market.Id, true, false, func(order types.Order) (stop bool) {
-				bestBuyOrder = order
-				foundBestBuyOrder = true
-				return true
-			})
-			if foundBestSellOrder && foundBestBuyOrder {
-				if bestSellOrder.Price.LTE(bestBuyOrder.Price) {
+			bestBuyPrice, _ := k.GetBestPrice(ctx, market.Id, true)
+			bestSellPrice, _ := k.GetBestPrice(ctx, market.Id, false)
+			if !bestSellPrice.IsNil() && !bestBuyPrice.IsNil() {
+				if bestSellPrice.LTE(bestBuyPrice) {
 					msg += fmt.Sprintf(
 						"\tmarket %d has crossed order book: sell price %s <= buy price %s\n",
-						market.Id, bestSellOrder.Price, bestBuyOrder.Price)
+						market.Id, bestSellPrice, bestBuyPrice)
 					cnt++
 				}
 			}

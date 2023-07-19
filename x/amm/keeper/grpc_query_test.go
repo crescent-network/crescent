@@ -103,8 +103,8 @@ func (s *KeeperTestSuite) TestQueryAllPools() {
 				pool := resp.Pools[0]
 				s.Require().EqualValues(1, pool.MarketId)
 				s.Require().EqualValues(2, pool.Id)
-				s.Require().Equal("153579797ucre", pool.Balance0.String())
-				s.Require().Equal("257373998uusd", pool.Balance1.String())
+				s.AssertEqual(utils.ParseCoin("153579796ucre"), pool.Balance0)
+				s.AssertEqual(utils.ParseCoin("257373998uusd"), pool.Balance1)
 			},
 		},
 		{
