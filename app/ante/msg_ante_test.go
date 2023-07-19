@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
+	utils "github.com/crescent-network/crescent/v5/types"
 	claimtypes "github.com/crescent-network/crescent/v5/x/claim/types"
 	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 	farmingtypes "github.com/crescent-network/crescent/v5/x/farming/types"
@@ -471,7 +472,7 @@ func (suite *AnteTestSuite) TestMixedBatchMsg() {
 	)
 
 	msg := testdata.NewTestMsg(acc)
-	batchMsg := exchangetypes.NewMsgPlaceBatchLimitOrder(acc, 1, true, sdk.ZeroDec(), sdk.ZeroInt(), 0)
+	batchMsg := exchangetypes.NewMsgPlaceBatchLimitOrder(acc, 1, true, utils.ParseDec("1.2"), utils.ParseDec("1000000"), 0)
 	authzMsg := authz.NewMsgExec(acc, []sdk.Msg{batchMsg, msg})
 	authzMsg2 := authz.NewMsgExec(acc, []sdk.Msg{batchMsg})
 	authzMsg3 := authz.NewMsgExec(acc, []sdk.Msg{batchMsg, batchMsg})
