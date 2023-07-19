@@ -188,7 +188,7 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 					QuoTruncate(poolState.CurrentLiquidity.ToDec()))
 			poolState.FeeGrowthGlobal = poolState.FeeGrowthGlobal.Add(feeGrowth)
 		} else if amtInDiff.IsNegative() { // sanity check
-			//panic(amtInDiff)
+			panic(amtInDiff)
 		}
 
 		// TODO: simplify code
