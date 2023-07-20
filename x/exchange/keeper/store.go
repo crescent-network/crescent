@@ -2,7 +2,6 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"golang.org/x/exp/slices"
 
 	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/exchange/types"
@@ -309,19 +308,11 @@ func (k Keeper) IterateOrderBookSide(
 		currentPrice sdk.Dec
 		orders       []types.Order
 	)
-	callCb := func(price sdk.Dec, orders []types.Order) (stop bool) {
-		if isBuy {
-			slices.SortFunc(orders, func(a, b types.Order) bool {
-				return a.Id < b.Id
-			})
-		}
-		return cb(price, orders)
-	}
 	for ; iter.Valid(); iter.Next() {
 		orderId := types.ParseOrderIdFromOrderBookOrderIndexKey(iter.Key())
 		order := k.MustGetOrder(ctx, orderId)
 		if !currentPrice.IsNil() && !order.Price.Equal(currentPrice) {
-			if callCb(currentPrice, orders) {
+			if cb(currentPrice, orders) {
 				break
 			}
 			orders = []types.Order{order}
@@ -332,7 +323,7 @@ func (k Keeper) IterateOrderBookSide(
 	}
 	if len(orders) > 0 {
 		// Ignore the return value since it's the last iteration.
-		_ = callCb(currentPrice, orders)
+		_ = cb(currentPrice, orders)
 	}
 }
 
