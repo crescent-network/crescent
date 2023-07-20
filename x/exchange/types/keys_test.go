@@ -72,15 +72,3 @@ func TestNumMMOrdersKey(t *testing.T) {
 	require.Equal(t, ordererAddr, ordererAddr2)
 	require.EqualValues(t, 1000000, marketId)
 }
-
-func TestTransientBalanceKey(t *testing.T) {
-	addr := utils.TestAddress(1000000)
-	key := types.GetTransientBalanceKey(addr, "ucre")
-	require.Equal(t, []byte{
-		0x69, 0x14, 0x80, 0x89, 0x7a, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
-		0x0, 0x0, 0x0, 0x0, 0x0, 0x75, 0x63, 0x72, 0x65,
-	}, key)
-	addr2, denom := types.ParseTransientBalanceKey(key)
-	require.Equal(t, addr, addr2)
-	require.Equal(t, "ucre", denom)
-}

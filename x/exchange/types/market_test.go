@@ -113,8 +113,8 @@ func TestMarket_Validate(t *testing.T) {
 func TestMarket(t *testing.T) {
 	// Test DepositCoin
 	market := types.NewMarket(1, "ucre", "uusd", utils.ParseDec("-0.0015"), utils.ParseDec("0.003"))
-	testutil.AssertEqual(t, utils.ParseDecCoin("1000000uusd"), market.DepositCoin(true, sdk.NewDec(1000000)))
-	testutil.AssertEqual(t, utils.ParseDecCoin("1000000ucre"), market.DepositCoin(false, sdk.NewDec(1000000)))
+	require.Equal(t, "uusd", market.DepositDenom(true))
+	require.Equal(t, "ucre", market.DepositDenom(false))
 
 	// Test DeductTakerFee
 	deducted, fee := market.DeductTakerFee(sdk.NewDec(123456789), false)

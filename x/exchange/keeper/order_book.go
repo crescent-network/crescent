@@ -203,7 +203,7 @@ func (k Keeper) FinalizeMatching(ctx sdk.Context, market types.Market, orders []
 				executableQty := order.ExecutableQuantity(order.Price)
 				if order.IsBuy && executableQty.TruncateDec().IsZero() ||
 					!order.IsBuy && executableQty.MulTruncate(order.Price).TruncateDec().IsZero() {
-					if err := k.cancelOrder(ctx, market, order.Order, true); err != nil {
+					if err := k.cancelOrder(ctx, market, order.Order); err != nil {
 						return err
 					}
 				} else {
@@ -215,9 +215,6 @@ func (k Keeper) FinalizeMatching(ctx sdk.Context, market types.Market, orders []
 		if order.Source != nil && order.RemainingDeposit.IsPositive() {
 			escrow.Unlock(ordererAddr, sdk.NewDecCoinFromDec(market.DepositDenom(order.IsBuy), order.RemainingDeposit))
 		}
-	}
-	if err := k.ExecuteSendCoins(ctx); err != nil {
-		return err
 	}
 	if err := escrow.Transact(ctx, k.bankKeeper); err != nil {
 		return err

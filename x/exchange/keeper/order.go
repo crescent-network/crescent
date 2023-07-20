@@ -164,7 +164,7 @@ func (k Keeper) placeLimitOrder(
 		order = types.NewOrder(
 			orderId, typ, ordererAddr, market.Id, isBuy, price, qty,
 			ctx.BlockHeight(), openQty, deposit.ToDec(), deadline)
-		if err = k.EscrowCoin(ctx, market, ordererAddr, sdk.NewCoin(market.DepositDenom(isBuy), deposit), false); err != nil {
+		if err = k.EscrowCoins(ctx, market, ordererAddr, sdk.NewCoin(market.DepositDenom(isBuy), deposit)); err != nil {
 			return
 		}
 		k.SetOrder(ctx, order)
@@ -227,7 +227,7 @@ func (k Keeper) CancelOrder(ctx sdk.Context, ordererAddr sdk.AccAddress, orderId
 	if ordererAddr.String() != order.Orderer {
 		return order, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "order is not created by the sender")
 	}
-	if err = k.cancelOrder(ctx, market, order, false); err != nil {
+	if err = k.cancelOrder(ctx, market, order); err != nil {
 		return order, err
 	}
 	if err = ctx.EventManager().EmitTypedEvent(&types.EventCancelOrder{
@@ -249,7 +249,7 @@ func (k Keeper) CancelAllOrders(ctx sdk.Context, ordererAddr sdk.AccAddress, mar
 		if order.MsgHeight == ctx.BlockHeight() {
 			return false
 		}
-		if err = k.cancelOrder(ctx, market, order, true); err != nil {
+		if err = k.cancelOrder(ctx, market, order); err != nil {
 			return true
 		}
 		orders = append(orders, order)
@@ -269,11 +269,10 @@ func (k Keeper) CancelAllOrders(ctx sdk.Context, ordererAddr sdk.AccAddress, mar
 	return orders, nil
 }
 
-func (k Keeper) cancelOrder(ctx sdk.Context, market types.Market, order types.Order, queueSend bool) error {
+func (k Keeper) cancelOrder(ctx sdk.Context, market types.Market, order types.Order) error {
 	ordererAddr := order.MustGetOrdererAddress()
-	deposit, _ := market.DepositCoin(order.IsBuy, order.RemainingDeposit).TruncateDecimal()
-	if err := k.ReleaseCoin(
-		ctx, market, ordererAddr, deposit, queueSend); err != nil {
+	refunded := sdk.NewCoin(market.DepositDenom(order.IsBuy), order.RemainingDeposit.TruncateInt())
+	if err := k.ReleaseCoins(ctx, market, ordererAddr, refunded); err != nil {
 		return err
 	}
 	if order.Type == types.OrderTypeMM {
@@ -299,7 +298,7 @@ func (k Keeper) CancelExpiredOrders(ctx sdk.Context) (err error) {
 		// TODO: optimize by using timestamp queue
 		k.IterateOrdersByMarket(ctx, market.Id, func(order types.Order) (stop bool) {
 			if !blockTime.Before(order.Deadline) {
-				if err = k.cancelOrder(ctx, market, order, true); err != nil {
+				if err = k.cancelOrder(ctx, market, order); err != nil {
 					return true
 				}
 				if err = ctx.EventManager().EmitTypedEvent(&types.EventOrderExpired{
@@ -312,8 +311,5 @@ func (k Keeper) CancelExpiredOrders(ctx sdk.Context) (err error) {
 		})
 		return err != nil
 	})
-	if err != nil {
-		return err
-	}
-	return k.ExecuteSendCoins(ctx)
+	return err
 }
