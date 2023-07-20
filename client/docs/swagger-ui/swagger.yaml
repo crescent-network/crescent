@@ -11682,6 +11682,8 @@ paths:
                       format: int64
                     reserve_address:
                       type: string
+                    rewards_pool:
+                      type: string
                     current_tick:
                       type: integer
                       format: int32
@@ -11891,6 +11893,8 @@ paths:
                     type: integer
                     format: int64
                   reserve_address:
+                    type: string
+                  rewards_pool:
                     type: string
                   current_tick:
                     type: integer
@@ -19088,6 +19092,8 @@ definitions:
         format: int64
       reserve_address:
         type: string
+      rewards_pool:
+        type: string
       current_tick:
         type: integer
         format: int32
@@ -19342,6 +19348,8 @@ definitions:
               type: integer
               format: int64
             reserve_address:
+              type: string
+            rewards_pool:
               type: string
             current_tick:
               type: integer
@@ -19781,6 +19789,8 @@ definitions:
             type: integer
             format: int64
           reserve_address:
+            type: string
+          rewards_pool:
             type: string
           current_tick:
             type: integer

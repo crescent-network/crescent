@@ -179,14 +179,15 @@ message PoolResponse {
   cosmos.base.v1beta1.Coin balance1        = 4 [(gogoproto.nullable) = false];
   uint32                   tick_spacing    = 5;
   string                   reserve_address = 6;
-  int32                    current_tick    = 7;
-  string                   current_price   = 8
+  string                   rewards_pool    = 7;
+  int32                    current_tick    = 8;
+  string                   current_price   = 9
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
-  string current_liquidity = 9
+  string current_liquidity = 10
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  repeated cosmos.base.v1beta1.DecCoin fee_growth_global = 10
+  repeated cosmos.base.v1beta1.DecCoin fee_growth_global = 11
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
-  repeated cosmos.base.v1beta1.DecCoin farming_rewards_growth_global = 11
+  repeated cosmos.base.v1beta1.DecCoin farming_rewards_growth_global = 12
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
 }
 
