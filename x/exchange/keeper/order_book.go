@@ -9,72 +9,62 @@ import (
 
 func (k Keeper) executeOrder(
 	ctx sdk.Context, market types.Market, ordererAddr sdk.AccAddress,
-	isBuy bool, priceLimit, qtyLimit, quoteLimit *sdk.Dec, halveFees, simulate bool) (res types.ExecuteOrderResult, err error) {
-	if qtyLimit == nil && quoteLimit == nil { // sanity check
-		panic("quantity limit and quote limit cannot be set to nil at the same time")
-	}
+	opts types.ConstructMemOrderBookOptions, halveFees, simulate bool) (res types.ExecuteOrderResult, err error) {
 	if simulate {
 		ctx, _ = ctx.CacheContext()
 	}
-	payDenom, receiveDenom := market.PayReceiveDenoms(isBuy)
+	payDenom, receiveDenom := market.PayReceiveDenoms(opts.IsBuy)
 	res = types.NewExecuteOrderResult(payDenom, receiveDenom)
 	var lastPrice sdk.Dec
-	obs := k.ConstructTempOrderBookSide(ctx, market, !isBuy, priceLimit, qtyLimit, quoteLimit, 0)
+	obs := k.ConstructTempOrderBookSide(ctx, market, types.ConstructMemOrderBookOptions{
+		IsBuy:             !opts.IsBuy,
+		PriceLimit:        opts.PriceLimit,
+		QuantityLimit:     opts.QuantityLimit,
+		QuoteLimit:        opts.QuoteLimit,
+		MaxNumPriceLevels: 0,
+	})
 	for _, level := range obs.Levels {
-		if priceLimit != nil &&
-			((isBuy && level.Price.GT(*priceLimit)) ||
-				(!isBuy && level.Price.LT(*priceLimit))) {
+		if opts.QuantityLimit != nil && !opts.QuantityLimit.Sub(res.ExecutedQuantity).IsPositive() {
 			break
 		}
-		if qtyLimit != nil && !qtyLimit.Sub(res.ExecutedQuantity).IsPositive() {
-			break
-		}
-		if quoteLimit != nil && !quoteLimit.Sub(res.ExecutedQuote).IsPositive() {
+		if opts.QuoteLimit != nil && !opts.QuoteLimit.Sub(res.ExecutedQuote).IsPositive() {
 			break
 		}
 
 		executableQty := types.TotalExecutableQuantity(level.Orders, level.Price)
-		var remainingQty sdk.Int
-		if qtyLimit != nil {
-			remainingQty = qtyLimit.Sub(res.ExecutedQuantity)
+		var remainingQty sdk.Dec
+		if opts.QuantityLimit != nil {
+			remainingQty = opts.QuantityLimit.Sub(res.ExecutedQuantity)
 		}
-		if quoteLimit != nil {
-			qty := quoteLimit.Sub(res.ExecutedQuote).ToDec().QuoTruncate(level.Price).TruncateInt()
+		if opts.QuoteLimit != nil {
+			qty := opts.QuoteLimit.Sub(res.ExecutedQuote).QuoTruncate(level.Price)
 			if remainingQty.IsNil() {
 				remainingQty = qty
 			} else {
-				remainingQty = utils.MinInt(remainingQty, qty)
+				remainingQty = sdk.MinDec(remainingQty, qty)
 			}
 		}
 		execQty := executableQty
 		if !remainingQty.IsNil() {
-			execQty = utils.MinInt(execQty, remainingQty)
+			execQty = sdk.MinDec(execQty, remainingQty)
 			if execQty.Equal(remainingQty) {
 				res.FullyExecuted = true
 			}
 		}
 
 		market.FillTempOrderBookLevel(level, execQty, level.Price, true, halveFees)
-		execQuote := types.QuoteAmount(isBuy, level.Price, execQty)
-		var paid, received, fee sdk.Coin
-		if isBuy {
-			paid = sdk.NewCoin(market.QuoteDenom, execQuote)
+		execQuote := types.QuoteAmount(opts.IsBuy, level.Price, execQty)
+		var paid, received, fee sdk.DecCoin
+		if opts.IsBuy {
+			paid = sdk.NewDecCoinFromDec(market.QuoteDenom, execQuote)
 			deductedQty, feeQty := market.DeductTakerFee(execQty, halveFees)
-			received = sdk.NewCoin(market.BaseDenom, deductedQty)
-			fee = sdk.NewCoin(market.BaseDenom, feeQty)
+			received = sdk.NewDecCoinFromDec(market.BaseDenom, deductedQty)
+			fee = sdk.NewDecCoinFromDec(market.BaseDenom, feeQty)
 		} else {
-			paid = sdk.NewCoin(market.BaseDenom, execQty)
+			paid = sdk.NewDecCoinFromDec(market.BaseDenom, execQty)
 			deductedQuote, feeQuote := market.DeductTakerFee(execQuote, halveFees)
-			received = sdk.NewCoin(market.QuoteDenom, deductedQuote)
-			fee = sdk.NewCoin(market.QuoteDenom, feeQuote)
-		}
-		if !simulate {
-			if err = k.EscrowCoin(ctx, market, ordererAddr, paid, true); err != nil {
-				return
-			}
-			if err = k.ReleaseCoin(ctx, market, ordererAddr, received, true); err != nil {
-				return
-			}
+			received = sdk.NewDecCoinFromDec(market.QuoteDenom, deductedQuote)
+			fee = sdk.NewDecCoinFromDec(market.QuoteDenom, feeQuote)
 		}
 		res.ExecutedQuantity = res.ExecutedQuantity.Add(execQty)
 		res.ExecutedQuote = res.ExecutedQuote.Add(execQuote)
@@ -136,6 +126,8 @@ func (k Keeper) ConstructTempOrderBookSide(
 		source.ConstructMemOrderBook(ctx, market, func(ordererAddr sdk.AccAddress, price, qty sdk.Dec) error {
 			// orders from OrderSource don't have id - priority among them will
 			// be determined the source's name.
+			order := types.NewOrder(
+				0, types.OrderTypeLimit, ordererAddr, market.Id, opts.IsBuy, price, qty, 0, qty, deposit.ToDec(), ctx.BlockTime())
 			order, err := k.newOrder(
 				ctx, 0, types.OrderTypeLimit, market, ordererAddr, isBuy, price,
 				qty, qty, ctx.BlockTime(), true)
@@ -146,10 +138,10 @@ func (k Keeper) ConstructTempOrderBookSide(
 			return nil
 		}, opts)
 	}
-	if maxNumPriceLevels > 0 {
+	if opts.MaxNumPriceLevels > 0 {
 		bound := len(obs.Levels)
-		if maxNumPriceLevels < bound {
-			bound = maxNumPriceLevels
+		if opts.MaxNumPriceLevels < bound {
+			bound = opts.MaxNumPriceLevels
 		}
 		obs.Levels = obs.Levels[:bound]
 	}

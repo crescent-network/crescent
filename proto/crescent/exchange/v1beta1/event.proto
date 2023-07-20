@@ -92,11 +92,12 @@ message EventCancelAllOrders {
 }
 
 message EventSwapExactAmountIn {
-  string                      orderer = 1;
-  repeated uint64             routes  = 2;
-  cosmos.base.v1beta1.DecCoin input   = 3 [(gogoproto.nullable) = false];
-  cosmos.base.v1beta1.DecCoin output  = 4 [(gogoproto.nullable) = false];
-  repeated SwapRouteResult    results = 5 [(gogoproto.nullable) = false];
+  string                      orderer    = 1;
+  repeated uint64             routes     = 2;
+  cosmos.base.v1beta1.DecCoin input      = 3 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.DecCoin min_output = 4 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.DecCoin output     = 5 [(gogoproto.nullable) = false];
+  repeated SwapRouteResult    results    = 6 [(gogoproto.nullable) = false];
 }
 
 message EventOrderFilled {

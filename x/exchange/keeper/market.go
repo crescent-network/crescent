@@ -45,37 +45,27 @@ func (k Keeper) CreateMarket(
 }
 
 func (k Keeper) EscrowCoin(
-	ctx sdk.Context, market types.Market, addr sdk.AccAddress, amt sdk.Coin, queue bool) error {
-	return k.EscrowCoins(ctx, market, addr, sdk.NewCoins(amt), queue)
+	ctx sdk.Context, market types.Market, addr sdk.AccAddress, amt sdk.Coin) error {
+	return k.EscrowCoins(ctx, market, addr, sdk.NewCoins(amt))
 }
 
 func (k Keeper) EscrowCoins(
-	ctx sdk.Context, market types.Market, addr sdk.AccAddress, amt sdk.Coins, queue bool) error {
+	ctx sdk.Context, market types.Market, addr sdk.AccAddress, amt sdk.Coins) error {
 	if amt.IsAllPositive() {
-		escrowAddr := market.MustGetEscrowAddress()
-		if queue {
-			k.QueueSendCoins(ctx, addr, escrowAddr, amt)
-			return nil
-		}
-		return k.bankKeeper.SendCoins(ctx, addr, escrowAddr, amt)
+		return k.bankKeeper.SendCoins(ctx, addr, market.MustGetEscrowAddress(), amt)
 	}
 	return nil
 }
 
 func (k Keeper) ReleaseCoin(
-	ctx sdk.Context, market types.Market, addr sdk.AccAddress, amt sdk.Coin, queue bool) error {
-	return k.ReleaseCoins(ctx, market, addr, sdk.NewCoins(amt), queue)
+	ctx sdk.Context, market types.Market, addr sdk.AccAddress, amt sdk.Coin) error {
+	return k.ReleaseCoins(ctx, market, addr, sdk.NewCoins(amt))
 }
 
 func (k Keeper) ReleaseCoins(
-	ctx sdk.Context, market types.Market, addr sdk.AccAddress, amt sdk.Coins, queue bool) error {
+	ctx sdk.Context, market types.Market, addr sdk.AccAddress, amt sdk.Coins) error {
 	if amt.IsAllPositive() {
-		escrowAddr := market.MustGetEscrowAddress()
-		if queue {
-			k.QueueSendCoins(ctx, escrowAddr, addr, amt)
-			return nil
-		}
-		return k.bankKeeper.SendCoins(ctx, escrowAddr, addr, amt)
+		return k.bankKeeper.SendCoins(ctx, market.MustGetEscrowAddress(), addr, amt)
 	}
 	return nil
 }

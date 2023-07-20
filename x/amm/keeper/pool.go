@@ -67,14 +67,14 @@ func (k Keeper) IteratePoolOrders(ctx sdk.Context, pool types.Pool, isBuy bool, 
 				types.SqrtPriceAtTick(tick+ts),
 				utils.DecApproxSqrt(poolState.CurrentPrice))
 			qty = sdk.MinDec(
-				reserveBalance.QuoTruncate(price),
+				reserveBalance.TruncateDec().QuoTruncate(price),
 				types.Amount1DeltaRounding(prevSqrtPrice, sqrtPrice, liquidity, false).ToDec().QuoTruncate(price))
 		} else {
 			prevSqrtPrice := sdk.MaxDec(
 				types.SqrtPriceAtTick(tick-ts),
 				utils.DecApproxSqrt(poolState.CurrentPrice))
 			qty = sdk.MinDec(
-				reserveBalance,
+				reserveBalance.TruncateDec(),
 				types.Amount0DeltaRounding(prevSqrtPrice, sqrtPrice, liquidity, false).ToDec())
 		}
 		if qty.IsPositive() {
@@ -82,7 +82,7 @@ func (k Keeper) IteratePoolOrders(ctx sdk.Context, pool types.Pool, isBuy bool, 
 				return true
 			}
 			if isBuy {
-				reserveBalance = reserveBalance.Sub(price.Mul(qty))
+				reserveBalance = reserveBalance.Sub(exchangetypes.QuoteAmount(true, price, qty))
 			} else {
 				reserveBalance = reserveBalance.Sub(qty)
 			}

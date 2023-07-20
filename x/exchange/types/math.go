@@ -4,11 +4,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func DepositAmount(isBuy bool, price, qty sdk.Dec) sdk.Dec {
+func DepositAmount(isBuy bool, price, qty sdk.Dec) sdk.Int {
 	if isBuy {
-		return price.Mul(qty)
+		return price.Mul(qty).Ceil().TruncateInt()
 	}
-	return qty
+	return qty.Ceil().TruncateInt()
 }
 
 func QuoteAmount(isBuy bool, price, qty sdk.Dec) sdk.Dec {

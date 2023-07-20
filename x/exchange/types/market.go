@@ -25,11 +25,11 @@ func NewMarket(
 	}
 }
 
-func (market Market) DepositCoin(isBuy bool, amt sdk.Int) sdk.Coin {
+func (market Market) DepositDenom(isBuy bool) string {
 	if isBuy {
-		return sdk.NewCoin(market.QuoteDenom, amt)
+		return market.QuoteDenom
 	}
-	return sdk.NewCoin(market.BaseDenom, amt)
+	return market.BaseDenom
 }
 
 func (market Market) Validate() error {
@@ -68,12 +68,12 @@ func (market Market) Validate() error {
 	return nil
 }
 
-func (market Market) DeductTakerFee(amt sdk.Int, halveFee bool) (deducted, fee sdk.Int) {
+func (market Market) DeductTakerFee(amt sdk.Dec, halveFee bool) (deducted, fee sdk.Dec) {
 	takerFeeRate := market.TakerFeeRate
 	if halveFee {
 		takerFeeRate = takerFeeRate.QuoInt64(2)
 	}
-	deducted = utils.OneDec.Sub(takerFeeRate).MulInt(amt).TruncateInt()
+	deducted = utils.OneDec.Sub(takerFeeRate).MulTruncate(amt)
 	fee = amt.Sub(deducted)
 	return
 }

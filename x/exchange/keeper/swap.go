@@ -24,7 +24,7 @@ func (k Keeper) SwapExactAmountIn(
 		}
 		if !simulate {
 			balances := k.bankKeeper.SpendableCoins(ctx, ordererAddr)
-			if balance := balances.AmountOf(currentIn.Denom); balance.LT(currentIn.Amount) {
+			if balance := balances.AmountOf(currentIn.Denom); balance.ToDec().LT(currentIn.Amount) {
 				return output, nil, sdkerrors.Wrapf(
 					sdkerrors.ErrInsufficientFunds, "%s%s < %s", balance, currentIn.Denom, currentIn)
 			}
@@ -35,7 +35,7 @@ func (k Keeper) SwapExactAmountIn(
 		}
 		var (
 			isBuy                bool
-			qtyLimit, quoteLimit *sdk.Int
+			qtyLimit, quoteLimit *sdk.Dec
 		)
 		switch currentIn.Denom {
 		case market.BaseDenom:
@@ -49,7 +49,13 @@ func (k Keeper) SwapExactAmountIn(
 				sdkerrors.ErrInvalidRequest, "denom %s not in market %d", currentIn.Denom, market.Id)
 		}
 		res, err := k.executeOrder(
-			ctx, market, ordererAddr, isBuy, nil, qtyLimit, quoteLimit, halveFees, simulate)
+			ctx, market, ordererAddr, types.ConstructMemOrderBookOptions{
+				IsBuy:             isBuy,
+				PriceLimit:        nil,
+				QuantityLimit:     qtyLimit,
+				QuoteLimit:        quoteLimit,
+				MaxNumPriceLevels: 0,
+			}, halveFees, simulate)
 		if err != nil {
 			return output, nil, err
 		}
@@ -77,11 +83,12 @@ func (k Keeper) SwapExactAmountIn(
 			types.ErrSwapNotEnoughOutput, "output %s < min output %s", output, minOutput)
 	}
 	if err = ctx.EventManager().EmitTypedEvent(&types.EventSwapExactAmountIn{
-		Orderer: ordererAddr.String(),
-		Routes:  routes,
-		Input:   input,
-		Output:  output,
-		Results: results,
+		Orderer:   ordererAddr.String(),
+		Routes:    routes,
+		Input:     input,
+		MinOutput: minOutput,
+		Output:    output,
+		Results:   results,
 	}); err != nil {
 		return output, nil, err
 	}

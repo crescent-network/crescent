@@ -35,7 +35,7 @@ func (market Market) FillTempOrderBookLevel(
 	if executableQty.LT(qty) { // sanity check
 		panic("executable quantity is less than quantity")
 	} else if executableQty.Equal(qty) { // full matches
-		market.FillTempOrders(level.Orders, qty, price, isMaker, halveFees)
+		market.FillMemOrders(level.Orders, qty, price, isMaker, halveFees)
 	} else {
 		groups := GroupTempOrdersByMsgHeight(level.Orders)
 		totalExecQty := utils.ZeroDec
@@ -46,13 +46,13 @@ func (market Market) FillTempOrderBookLevel(
 			}
 			// TODO: optimize duplicate TotalExecutableQuantity calls?
 			execQty := sdk.MinDec(remainingQty, TotalExecutableQuantity(group.Orders, price))
-			market.FillTempOrders(group.Orders, execQty, price, isMaker, halveFees)
+			market.FillMemOrders(group.Orders, execQty, price, isMaker, halveFees)
 			totalExecQty = totalExecQty.Add(execQty)
 		}
 	}
 }
 
-func (market Market) FillTempOrders(orders []*TempOrder, qty, price sdk.Dec, isMaker, halveFees bool) {
+func (market Market) FillMemOrders(orders []MemOrder, qty, price sdk.Dec, isMaker, halveFees bool) {
 	totalExecutableQty := TotalExecutableQuantity(orders, price)
 	if totalExecutableQty.LT(qty) { // sanity check
 		panic("executable quantity is less than quantity")
