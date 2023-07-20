@@ -1,27 +1,9 @@
 package types
 
 import (
-	"context"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
-
-type contextKey string
-
-const EscrowContextKey = contextKey("escrow")
-
-func WithEscrow(ctx context.Context, escrow *Escrow) context.Context {
-	return context.WithValue(ctx, EscrowContextKey, escrow)
-}
-
-func GetEscrow(ctx context.Context) *Escrow {
-	val := ctx.Value(EscrowContextKey)
-	if val == nil {
-		panic("escrow not found in context")
-	}
-	return val.(*Escrow)
-}
 
 type Escrow struct {
 	escrowAddr sdk.AccAddress
