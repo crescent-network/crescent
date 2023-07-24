@@ -71,7 +71,7 @@ func OrderStateInvariant(k Keeper) sdk.Invariant {
 				msg += fmt.Sprintf("\torder %d should have been expired at %s\n", order.Id, order.Deadline)
 				cnt++
 			}
-			if order.ExecutableQuantity(order.Price).IsZero() {
+			if order.ExecutableQuantity().IsZero() {
 				msg += fmt.Sprintf("\torder %d should have been deleted since it has no executable quantity\n", order.Id)
 				cnt++
 			}

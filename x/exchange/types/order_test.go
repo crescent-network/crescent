@@ -145,51 +145,45 @@ func TestOrder_ExecutableQuantity(t *testing.T) {
 		isBuy            bool
 		openQty          sdk.Dec
 		remainingDeposit sdk.Dec
-		price            sdk.Dec
 		executableQty    sdk.Dec
 	}{
 		{
 			isBuy:            true,
 			openQty:          sdk.NewDec(100_000000),
 			remainingDeposit: sdk.NewDec(123_450000),
-			price:            utils.ParseDec("1.2345"),
 			executableQty:    sdk.NewDec(100_000000),
 		},
 		{
 			isBuy:            true,
 			openQty:          sdk.NewDec(100_000000),
 			remainingDeposit: sdk.NewDec(100_000000),
-			price:            utils.ParseDec("1.2345"),
 			executableQty:    utils.ParseDec("81004455.245038477116241393"),
 		},
 		{
 			isBuy:            true,
 			openQty:          sdk.NewDec(50_000000),
 			remainingDeposit: sdk.NewDec(100_000000),
-			price:            utils.ParseDec("1.2345"),
 			executableQty:    sdk.NewDec(50_000000),
 		},
 		{
 			isBuy:            false,
 			openQty:          sdk.NewDec(100_000000),
 			remainingDeposit: sdk.NewDec(100_000000),
-			price:            utils.ParseDec("1.2345"),
 			executableQty:    sdk.NewDec(100_000000),
 		},
 		{
 			isBuy:            false,
 			openQty:          sdk.NewDec(90_000000),
 			remainingDeposit: sdk.NewDec(100_000000),
-			price:            utils.ParseDec("1.2345"),
 			executableQty:    sdk.NewDec(90_000000),
 		},
 	} {
 		t.Run(fmt.Sprint(i), func(t *testing.T) {
 			order := types.NewOrder(
 				1, types.OrderTypeLimit, utils.TestAddress(1), 1, tc.isBuy,
-				utils.ParseDec("2"), tc.openQty, 100,
+				utils.ParseDec("1.2345"), tc.openQty, 100,
 				tc.openQty, tc.remainingDeposit, utils.ParseTime("2023-06-01T00:00:00Z"))
-			executableQty := order.ExecutableQuantity(tc.price)
+			executableQty := order.ExecutableQuantity()
 			require.Equal(t, tc.executableQty, executableQty)
 		})
 	}

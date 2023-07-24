@@ -1,95 +1,86 @@
 package types
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"golang.org/x/exp/slices"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	utils "github.com/crescent-network/crescent/v5/types"
 )
 
-func (market Market) FillMemOrder(order *MemOrder, qty, price sdk.Dec, isMaker, halveFees bool) {
-	// TODO: refactor code
-	if qty.GT(order.ExecutableQuantity(price)) { // sanity check
-		panic("open quantity is less than quantity")
-	}
-	makerFeeRate, takerFeeRate := market.MakerFeeRate, market.TakerFeeRate
+type MatchingContext struct {
+	baseDenom, quoteDenom      string
+	makerFeeRate, takerFeeRate sdk.Dec
+}
+
+func NewMatchingContext(market Market, halveFees bool) *MatchingContext {
+	makerFeeRate := market.MakerFeeRate
+	takerFeeRate := market.TakerFeeRate
 	if halveFees {
 		makerFeeRate = makerFeeRate.QuoInt64(2)
 		takerFeeRate = takerFeeRate.QuoInt64(2)
 	}
-	negativeMakerFeeRate := makerFeeRate.IsNegative()
-	order.ExecutedQuantity = order.ExecutedQuantity.Add(qty)
-	order.OpenQuantity = order.OpenQuantity.Sub(qty)
-	if order.IsBuy {
-		paid := QuoteAmount(true, price, qty)
-		order.Paid.Amount = order.Paid.Amount.Add(paid)
-		order.RemainingDeposit = order.RemainingDeposit.Sub(paid)
-		if order.Source != nil || (isMaker && negativeMakerFeeRate) {
-			order.Received = order.Received.Add(sdk.NewDecCoinFromDec(market.BaseDenom, qty))
-		} else {
-			if isMaker {
-				order.Received = order.Received.Add(
-					sdk.NewDecCoinFromDec(
-						market.BaseDenom,
-						utils.OneDec.Sub(makerFeeRate).MulTruncate(qty)))
-			} else {
-				order.Received = order.Received.Add(
-					sdk.NewDecCoinFromDec(
-						market.BaseDenom,
-						utils.OneDec.Sub(takerFeeRate).MulTruncate(qty)))
-			}
-		}
-		if isMaker && negativeMakerFeeRate {
-			order.Received = order.Received.Add(
-				sdk.NewDecCoinFromDec(
-					market.QuoteDenom,
-					makerFeeRate.Neg().MulTruncate(paid)))
-		}
-	} else {
-		order.Paid.Amount = order.Paid.Amount.Add(qty)
-		order.RemainingDeposit = order.RemainingDeposit.Sub(qty)
-		quote := QuoteAmount(false, price, qty)
-		if order.Source != nil || (isMaker && negativeMakerFeeRate) {
-			order.Received = order.Received.Add(sdk.NewDecCoinFromDec(market.QuoteDenom, quote))
-		} else {
-			if isMaker {
-				order.Received = order.Received.Add(
-					sdk.NewDecCoinFromDec(
-						market.QuoteDenom,
-						utils.OneDec.Sub(makerFeeRate).MulTruncate(quote)))
-			} else {
-				order.Received = order.Received.Add(
-					sdk.NewDecCoinFromDec(
-						market.QuoteDenom,
-						utils.OneDec.Sub(takerFeeRate).MulTruncate(quote)))
-			}
-		}
-		if isMaker && negativeMakerFeeRate {
-			order.Received = order.Received.Add(
-				sdk.NewDecCoinFromDec(
-					market.BaseDenom,
-					makerFeeRate.Neg().MulTruncate(qty)))
-		}
+	return &MatchingContext{
+		baseDenom:    market.BaseDenom,
+		quoteDenom:   market.QuoteDenom,
+		makerFeeRate: makerFeeRate,
+		takerFeeRate: takerFeeRate,
 	}
-	order.IsUpdated = true
 }
 
-func (market Market) FillMemOrders(orders []*MemOrder, qty, price sdk.Dec, isMaker, halveFees bool) {
-	totalExecutableQty := TotalExecutableQuantity(orders, price)
+func (ctx *MatchingContext) FillMemOrder(order *MemOrder, qty, price sdk.Dec, isMaker bool) {
+	executableQty := order.ExecutableQuantity()
+	if qty.GT(executableQty) { // sanity check
+		panic("open quantity is less than quantity")
+	}
+	if order.isMaker != nil && isMaker != *order.isMaker { // sanity check
+		panic("an order's isMaker must be consistent under one matching context")
+	}
+	var pays, receives, fee sdk.Dec
+	if order.isBuy {
+		pays = QuoteAmount(true, price, qty)
+		receives = qty
+	} else {
+		pays = qty
+		receives = QuoteAmount(false, price, qty)
+	}
+	negativeMakerFeeRate := ctx.makerFeeRate.IsNegative()
+	if isMaker && negativeMakerFeeRate {
+		fee = ctx.makerFeeRate.MulTruncate(pays) // is negative
+	} else if order.typ == UserMemOrder {
+		var receivesAfterFee sdk.Dec
+		if isMaker {
+			receivesAfterFee = utils.OneDec.Sub(ctx.makerFeeRate).MulTruncate(receives)
+		} else {
+			receivesAfterFee = utils.OneDec.Sub(ctx.takerFeeRate).MulTruncate(receives)
+		}
+		fee = receives.Sub(receivesAfterFee)
+	}
+	order.paid = order.paid.Add(pays)
+	order.remainingDeposit = order.remainingDeposit.Sub(pays)
+	order.received = order.received.Add(receives)
+	order.fee = order.fee.Add(fee)
+	order.executedQty = order.executedQty.Add(qty)
+	order.isMatched = true
+	order.isMaker = &isMaker
+}
+
+func (ctx *MatchingContext) FillMemOrders(orders []*MemOrder, qty, price sdk.Dec, isMaker bool) {
+	totalExecutableQty := TotalExecutableQuantity(orders)
 	if totalExecutableQty.LT(qty) { // sanity check
 		panic("executable quantity is less than quantity")
 	}
 	// First, distribute quantity evenly.
 	remainingQty := qty
 	for _, order := range orders {
-		executableQty := order.ExecutableQuantity(price)
+		executableQty := order.ExecutableQuantity()
 		if executableQty.IsZero() { // sanity check
 			panic("executable quantity is zero")
 		}
-		executingQty := executableQty.MulTruncate(qty).QuoTruncate(totalExecutableQty)
-		if executingQty.IsPositive() {
-			market.FillMemOrder(order, executingQty, price, isMaker, halveFees)
-			remainingQty = remainingQty.Sub(executingQty)
+		executedQty := executableQty.MulTruncate(qty).QuoTruncate(totalExecutableQty)
+		if executedQty.IsPositive() {
+			ctx.FillMemOrder(order, executedQty, price, isMaker)
+			remainingQty = remainingQty.Sub(executedQty)
 		}
 	}
 	// Then, distribute remaining quantity based on priority.
@@ -101,24 +92,23 @@ func (market Market) FillMemOrders(orders []*MemOrder, qty, price sdk.Dec, isMak
 			if remainingQty.IsZero() {
 				break
 			}
-			executingQty := sdk.MinDec(remainingQty, order.ExecutableQuantity(price))
-			if executingQty.IsPositive() {
-				market.FillMemOrder(order, executingQty, price, isMaker, halveFees)
-				remainingQty = remainingQty.Sub(executingQty)
+			executedQty := sdk.MinDec(remainingQty, order.ExecutableQuantity())
+			if executedQty.IsPositive() {
+				ctx.FillMemOrder(order, executedQty, price, isMaker)
+				remainingQty = remainingQty.Sub(executedQty)
 			}
 		}
 	}
 }
 
-func (market Market) FillMemOrderBookPriceLevel(
-	level *MemOrderBookPriceLevel, qty, price sdk.Dec, isMaker, halveFees bool) {
-	executableQty := TotalExecutableQuantity(level.Orders, price)
+func (ctx *MatchingContext) FillMemOrderBookPriceLevel(level *MemOrderBookPriceLevel, qty, price sdk.Dec, isMaker bool) {
+	executableQty := TotalExecutableQuantity(level.orders)
 	if executableQty.LT(qty) { // sanity check
 		panic("executable quantity is less than quantity")
 	} else if executableQty.Equal(qty) { // full matches
-		market.FillMemOrders(level.Orders, qty, price, isMaker, halveFees)
+		ctx.FillMemOrders(level.orders, qty, price, isMaker)
 	} else {
-		groups := GroupMemOrdersByMsgHeight(level.Orders)
+		groups := GroupMemOrdersByMsgHeight(level.orders)
 		totalExecQty := utils.ZeroDec
 		for _, group := range groups {
 			remainingQty := qty.Sub(totalExecQty)
@@ -126,22 +116,23 @@ func (market Market) FillMemOrderBookPriceLevel(
 				break
 			}
 			// TODO: optimize duplicate TotalExecutableQuantity calls?
-			execQty := sdk.MinDec(remainingQty, TotalExecutableQuantity(group.Orders, price))
-			market.FillMemOrders(group.Orders, execQty, price, isMaker, halveFees)
-			totalExecQty = totalExecQty.Add(execQty)
+			executableQty = TotalExecutableQuantity(group.orders)
+			executedQty := sdk.MinDec(remainingQty, executableQty)
+			ctx.FillMemOrders(group.orders, executedQty, price, isMaker)
+			totalExecQty = totalExecQty.Add(executedQty)
 		}
 	}
 }
 
-func (market Market) MatchMemOrderBookPriceLevels(
+func (ctx *MatchingContext) MatchMemOrderBookPriceLevels(
 	levelA *MemOrderBookPriceLevel, isLevelAMaker bool,
 	levelB *MemOrderBookPriceLevel, isLevelBMaker bool, price sdk.Dec) (executedQty sdk.Dec, fullA, fullB bool) {
-	executableQtyA := TotalExecutableQuantity(levelA.Orders, price)
-	executableQtyB := TotalExecutableQuantity(levelB.Orders, price)
+	executableQtyA := TotalExecutableQuantity(levelA.orders)
+	executableQtyB := TotalExecutableQuantity(levelB.orders)
 	executedQty = sdk.MinDec(executableQtyA, executableQtyB)
 	fullA = executedQty.Equal(executableQtyA)
 	fullB = executedQty.Equal(executableQtyB)
-	market.FillMemOrderBookPriceLevel(levelA, executedQty, price, isLevelAMaker, false)
-	market.FillMemOrderBookPriceLevel(levelB, executedQty, price, isLevelBMaker, false)
+	ctx.FillMemOrderBookPriceLevel(levelA, executedQty, price, isLevelAMaker)
+	ctx.FillMemOrderBookPriceLevel(levelB, executedQty, price, isLevelBMaker)
 	return
 }

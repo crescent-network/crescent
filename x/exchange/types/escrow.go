@@ -7,8 +7,8 @@ import (
 
 type Escrow struct {
 	escrowAddr sdk.AccAddress
-	deltas     map[string]sdk.DecCoins
-	addrs      []sdk.AccAddress
+	deltas     map[string]sdk.DecCoins // string(addr) => delta
+	addrs      []sdk.AccAddress        // for ordered access on deltas
 }
 
 func NewEscrow(escrowAddr sdk.AccAddress) *Escrow {

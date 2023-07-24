@@ -1,0 +1,287 @@
+package types
+
+import (
+	"fmt"
+	"sort"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	utils "github.com/crescent-network/crescent/v5/types"
+)
+
+type MemOrderType int
+
+const (
+	UserMemOrder MemOrderType = iota + 1
+	OrderSourceMemOrder
+)
+
+type MemOrder struct {
+	typ              MemOrderType
+	order            *Order      // nil for OrderSourceMemOrder
+	source           OrderSource // nil for UserMemOrder
+	ordererAddr      sdk.AccAddress
+	isBuy            bool
+	price            sdk.Dec
+	qty              sdk.Dec
+	openQty          sdk.Dec
+	remainingDeposit sdk.Dec
+	executedQty      sdk.Dec
+	paid             sdk.Dec
+	received         sdk.Dec
+	fee              sdk.Dec
+	isMatched        bool
+	isMaker          *bool
+}
+
+func NewUserMemOrder(order Order) *MemOrder {
+	return &MemOrder{
+		typ:              UserMemOrder,
+		order:            &order,
+		ordererAddr:      order.MustGetOrdererAddress(),
+		isBuy:            order.IsBuy,
+		price:            order.Price,
+		qty:              order.Quantity,
+		openQty:          order.OpenQuantity,
+		remainingDeposit: order.RemainingDeposit,
+		executedQty:      utils.ZeroDec,
+		paid:             utils.ZeroDec,
+		received:         utils.ZeroDec,
+		fee:              utils.ZeroDec,
+	}
+}
+
+func NewOrderSourceMemOrder(
+	ordererAddr sdk.AccAddress, isBuy bool, price, qty sdk.Dec, source OrderSource) *MemOrder {
+	return &MemOrder{
+		typ:              OrderSourceMemOrder,
+		ordererAddr:      ordererAddr,
+		isBuy:            isBuy,
+		price:            price,
+		qty:              qty,
+		openQty:          qty,
+		remainingDeposit: DepositAmount(isBuy, price, qty),
+		executedQty:      utils.ZeroDec,
+		paid:             utils.ZeroDec,
+		received:         utils.ZeroDec,
+		fee:              utils.ZeroDec,
+		source:           source,
+	}
+}
+
+func (order *MemOrder) Type() MemOrderType {
+	return order.typ
+}
+
+func (order *MemOrder) Order() Order {
+	return *order.order
+}
+
+func (order *MemOrder) Source() OrderSource {
+	return order.source
+}
+
+func (order *MemOrder) OrdererAddress() sdk.AccAddress {
+	return order.ordererAddr
+}
+
+func (order *MemOrder) IsBuy() bool {
+	return order.isBuy
+}
+
+func (order *MemOrder) Price() sdk.Dec {
+	return order.price
+}
+
+func (order *MemOrder) RemainingDeposit() sdk.Dec {
+	return order.remainingDeposit
+}
+
+func (order *MemOrder) ExecutedQuantity() sdk.Dec {
+	return order.executedQty
+}
+
+func (order *MemOrder) Paid() sdk.Dec {
+	return order.paid
+}
+
+func (order *MemOrder) Received() sdk.Dec {
+	return order.received
+}
+
+func (order *MemOrder) Fee() sdk.Dec {
+	return order.fee
+}
+
+func (order *MemOrder) IsMatched() bool {
+	return order.isMatched
+}
+
+func (order *MemOrder) ExecutableQuantity() sdk.Dec {
+	executableQty := order.openQty.Sub(order.executedQty)
+	if order.isBuy {
+		return sdk.MinDec(executableQty, order.remainingDeposit.QuoTruncate(order.price))
+	}
+	return executableQty
+}
+
+func (order *MemOrder) HasPriorityOver(other *MemOrder) bool {
+	if !order.price.Equal(other.price) { // sanity check
+		panic(fmt.Sprintf("orders with different price: %s != %s", order.price, other.price))
+	}
+	if !order.qty.Equal(other.qty) {
+		return order.qty.GT(other.qty)
+	}
+	switch {
+	case order.typ == UserMemOrder && other.typ == UserMemOrder:
+		return order.order.Id < other.order.Id
+	case order.typ == UserMemOrder && other.typ == OrderSourceMemOrder:
+		return false
+	case order.typ == OrderSourceMemOrder && other.typ == UserMemOrder:
+		return true
+	default:
+		return order.source.Name() < other.source.Name() // lexicographical ordering
+	}
+}
+
+type MemOrderBookPriceLevel struct {
+	isBuy  bool
+	price  sdk.Dec
+	orders []*MemOrder
+}
+
+func NewMemOrderBookPriceLevel(order *MemOrder) *MemOrderBookPriceLevel {
+	return &MemOrderBookPriceLevel{order.isBuy, order.price, []*MemOrder{order}}
+}
+
+func (level *MemOrderBookPriceLevel) Price() sdk.Dec {
+	return level.price
+}
+
+func (level *MemOrderBookPriceLevel) Orders() []*MemOrder {
+	return level.orders
+}
+
+func (level *MemOrderBookPriceLevel) AddOrder(order *MemOrder) {
+	if order.isBuy != level.isBuy { // sanity check
+		panic("wrong order direction")
+	}
+	level.orders = append(level.orders, order)
+}
+
+type MemOrderBookSide struct {
+	isBuy  bool
+	levels []*MemOrderBookPriceLevel
+}
+
+func NewMemOrderBookSide(isBuy bool) *MemOrderBookSide {
+	return &MemOrderBookSide{isBuy: isBuy}
+}
+
+func (obs *MemOrderBookSide) Levels() []*MemOrderBookPriceLevel {
+	return obs.levels
+}
+
+func (obs *MemOrderBookSide) Orders() []*MemOrder {
+	var orders []*MemOrder
+	for _, level := range obs.levels {
+		orders = append(orders, level.orders...)
+	}
+	return orders
+}
+
+func (obs *MemOrderBookSide) Limit(n int) {
+	limit := len(obs.Levels())
+	if n < limit {
+		limit = n
+	}
+	obs.levels = obs.levels[:limit]
+}
+
+func (side *MemOrderBookSide) AddOrder(order *MemOrder) {
+	if order.isBuy != side.isBuy { // sanity check
+		panic("wrong order direction")
+	}
+	i := sort.Search(len(side.levels), func(i int) bool {
+		if side.isBuy {
+			return side.levels[i].price.LTE(order.price)
+		}
+		return side.levels[i].price.GTE(order.price)
+	})
+	if i < len(side.levels) && side.levels[i].price.Equal(order.price) {
+		side.levels[i].AddOrder(order)
+	} else {
+		// Insert a new level.
+		newLevels := make([]*MemOrderBookPriceLevel, len(side.levels)+1)
+		copy(newLevels[:i], side.levels[:i])
+		newLevels[i] = NewMemOrderBookPriceLevel(order)
+		copy(newLevels[i+1:], side.levels[i:])
+		side.levels = newLevels
+	}
+}
+
+type MemOrderGroup struct {
+	msgHeight int64
+	orders    []*MemOrder
+}
+
+func (group *MemOrderGroup) MsgHeight() int64 {
+	return group.msgHeight
+}
+
+func (group *MemOrderGroup) Orders() []*MemOrder {
+	return group.orders
+}
+
+func GroupMemOrdersByMsgHeight(orders []*MemOrder) (groups []*MemOrderGroup) {
+	var orderSourceOrders, userOrders []*MemOrder
+	for _, order := range orders {
+		if order.typ == UserMemOrder {
+			userOrders = append(userOrders, order)
+		} else {
+			orderSourceOrders = append(orderSourceOrders, order)
+		}
+	}
+	if len(orderSourceOrders) > 0 {
+		groups = append(groups, &MemOrderGroup{msgHeight: -1, orders: orderSourceOrders})
+	}
+	groupByMsgHeight := map[int64]*MemOrderGroup{}
+	for _, order := range userOrders {
+		group, ok := groupByMsgHeight[order.order.MsgHeight]
+		if !ok {
+			i := sort.Search(len(groups), func(i int) bool {
+				return groups[i].msgHeight >= order.order.MsgHeight
+			})
+			group = &MemOrderGroup{msgHeight: order.order.MsgHeight}
+			groupByMsgHeight[order.order.MsgHeight] = group
+
+			newGroups := make([]*MemOrderGroup, len(groups)+1)
+			copy(newGroups[:i], groups[:i])
+			newGroups[i] = group
+			copy(newGroups[i+1:], groups[i:])
+			groups = newGroups
+		}
+		group.orders = append(group.orders, order)
+	}
+	return
+}
+
+func GroupMemOrdersByOrderer(results []*MemOrder) (ordererAddrs []sdk.AccAddress, m map[string][]*MemOrder) {
+	m = map[string][]*MemOrder{}
+	for _, result := range results {
+		orderer := result.ordererAddr.String()
+		if _, ok := m[orderer]; !ok {
+			ordererAddrs = append(ordererAddrs, result.ordererAddr)
+		}
+		m[orderer] = append(m[orderer], result)
+	}
+	return
+}
+
+func TotalExecutableQuantity(orders []*MemOrder) sdk.Dec {
+	qty := utils.ZeroDec
+	for _, order := range orders {
+		qty = qty.Add(order.ExecutableQuantity())
+	}
+	return qty
+}

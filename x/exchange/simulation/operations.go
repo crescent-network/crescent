@@ -254,10 +254,10 @@ func findMsgPlaceMarketOrderParams(
 			qty := utils.RandomDec(r, sdk.NewDec(100), sdk.NewDec(1_000000)).TruncateDec()
 			cacheCtx, _ := ctx.CacheContext()
 			obs := k.ConstructMemOrderBookSide(cacheCtx, market, false, nil, &qty, nil, 0, nil)
-			if len(obs.Levels) == 0 {
+			if len(obs.Levels()) == 0 {
 				continue
 			}
-			price := obs.Levels[len(obs.Levels)-1].Price
+			price := obs.Levels()[len(obs.Levels())-1].Price()
 			if balance := spendable.AmountOf(market.QuoteDenom).ToDec(); balance.GT(types.QuoteAmount(true, price, qty)) {
 				msg = types.NewMsgPlaceMarketOrder(acc.Address, market.Id, true, qty)
 				return acc, msg, true

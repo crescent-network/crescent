@@ -20,11 +20,12 @@ func (k Keeper) executeOrder(
 	res = types.NewExecuteOrderResult(payDenom, receiveDenom)
 	var lastPrice sdk.Dec
 	escrow := types.NewEscrow(market.MustGetEscrowAddress())
+	mCtx := types.NewMatchingContext(market, halveFees)
 	obs := k.ConstructMemOrderBookSide(ctx, market, !isBuy, priceLimit, qtyLimit, quoteLimit, 0, escrow)
-	for _, level := range obs.Levels {
+	for _, level := range obs.Levels() {
 		if priceLimit != nil &&
-			((isBuy && level.Price.GT(*priceLimit)) ||
-				(!isBuy && level.Price.LT(*priceLimit))) {
+			((isBuy && level.Price().GT(*priceLimit)) ||
+				(!isBuy && level.Price().LT(*priceLimit))) {
 			break
 		}
 		if qtyLimit != nil && !qtyLimit.Sub(res.ExecutedQuantity).IsPositive() {
@@ -34,13 +35,13 @@ func (k Keeper) executeOrder(
 			break
 		}
 
-		executableQty := types.TotalExecutableQuantity(level.Orders, level.Price)
+		executableQty := types.TotalExecutableQuantity(level.Orders())
 		var remainingQty sdk.Dec
 		if qtyLimit != nil {
 			remainingQty = qtyLimit.Sub(res.ExecutedQuantity)
 		}
 		if quoteLimit != nil {
-			qty := quoteLimit.Sub(res.ExecutedQuote).QuoTruncate(level.Price)
+			qty := quoteLimit.Sub(res.ExecutedQuote).QuoTruncate(level.Price())
 			if remainingQty.IsNil() {
 				remainingQty = qty
 			} else {
@@ -55,8 +56,8 @@ func (k Keeper) executeOrder(
 			}
 		}
 
-		market.FillMemOrderBookPriceLevel(level, execQty, level.Price, true, halveFees)
-		execQuote := types.QuoteAmount(isBuy, level.Price, execQty)
+		mCtx.FillMemOrderBookPriceLevel(level, execQty, level.Price(), true)
+		execQuote := types.QuoteAmount(isBuy, level.Price(), execQty)
 		var paid, received, fee sdk.DecCoin
 		if isBuy {
 			paid = sdk.NewDecCoinFromDec(market.QuoteDenom, execQuote)
@@ -78,17 +79,13 @@ func (k Keeper) executeOrder(
 		res.Paid = res.Paid.Add(paid)
 		res.Received = res.Received.Add(received)
 		res.Fee = res.Fee.Add(fee)
-		lastPrice = level.Price
+		lastPrice = level.Price()
 	}
 	res.Paid = sdk.NewDecCoinFromDec(res.Paid.Denom, res.Paid.Amount.Ceil())
 	res.Received = sdk.NewDecCoinFromDec(res.Received.Denom, res.Received.Amount.TruncateDec())
 	// TODO: calculate fee correctly
 	if !simulate {
-		var memOrders []*types.MemOrder
-		for _, level := range obs.Levels {
-			memOrders = append(memOrders, level.Orders...)
-		}
-		if err = k.FinalizeMatching(ctx, market, memOrders, escrow); err != nil {
+		if err = k.FinalizeMatching(ctx, market, obs.Orders(), escrow); err != nil {
 			return
 		}
 		if !lastPrice.IsNil() {
@@ -117,7 +114,7 @@ func (k Keeper) ConstructMemOrderBookSide(
 			return true
 		}
 		for _, order := range orders {
-			obs.AddOrder(types.NewMemOrder(order, market, nil))
+			obs.AddOrder(types.NewUserMemOrder(order))
 			accQty = accQty.Add(order.OpenQuantity)
 			accQuote = accQuote.Add(types.QuoteAmount(!isBuy, order.Price, order.OpenQuantity))
 		}
@@ -135,13 +132,10 @@ func (k Keeper) ConstructMemOrderBookSide(
 			// orders from OrderSource don't have id - priority among them will
 			// be determined the source's name.
 			deposit := types.DepositAmount(isBuy, price, qty)
-			order := types.NewOrder(
-				0, types.OrderTypeLimit, ordererAddr, market.Id, isBuy, price, qty,
-				0, qty, deposit, ctx.BlockTime())
 			if escrow != nil {
 				escrow.Lock(ordererAddr, sdk.NewDecCoinFromDec(market.DepositDenom(isBuy), deposit))
 			}
-			obs.AddOrder(types.NewMemOrder(order, market, source))
+			obs.AddOrder(types.NewOrderSourceMemOrder(ordererAddr, isBuy, price, qty, source))
 			return nil
 		}, types.GenerateOrdersOptions{
 			IsBuy:             isBuy,
@@ -152,11 +146,7 @@ func (k Keeper) ConstructMemOrderBookSide(
 		})
 	}
 	if maxNumPriceLevels > 0 {
-		bound := len(obs.Levels)
-		if maxNumPriceLevels < bound {
-			bound = maxNumPriceLevels
-		}
-		obs.Levels = obs.Levels[:bound]
+		obs.Limit(maxNumPriceLevels)
 	}
 	return obs
 }
@@ -166,25 +156,33 @@ func (k Keeper) FinalizeMatching(ctx sdk.Context, market types.Market, orders []
 		escrow = types.NewEscrow(market.MustGetEscrowAddress())
 	}
 	var sourceNames []string
-	resultsBySourceName := map[string][]types.MemOrder{}
-	for _, order := range orders {
-		if order.IsUpdated && order.Source != nil {
-			sourceName := order.Source.Name()
-			results, ok := resultsBySourceName[sourceName]
+	ordersBySource := map[string][]*types.MemOrder{}
+	for _, memOrder := range orders {
+		if memOrder.IsMatched() && memOrder.Type() == types.OrderSourceMemOrder {
+			sourceName := memOrder.Source().Name()
+			results, ok := ordersBySource[sourceName]
 			if !ok {
 				sourceNames = append(sourceNames, sourceName)
 			}
-			resultsBySourceName[sourceName] = append(results, *order)
+			ordersBySource[sourceName] = append(results, memOrder)
 		}
 
-		ordererAddr := order.MustGetOrdererAddress()
-		if order.IsUpdated {
-			escrow.Unlock(ordererAddr, order.Received...)
-			if order.Source == nil {
-				payDenom, receiveDenom := market.PayReceiveDenoms(order.IsBuy)
-				paid := sdk.NewDecCoinFromDec(
-					order.Paid.Denom, order.Paid.Amount.Sub(order.Received.AmountOf(payDenom)))
-				received := sdk.NewDecCoinFromDec(receiveDenom, order.Received.AmountOf(receiveDenom))
+		ordererAddr := memOrder.OrdererAddress()
+		if memOrder.IsMatched() {
+			payDenom, receiveDenom := market.PayReceiveDenoms(memOrder.IsBuy())
+			received := sdk.NewDecCoinFromDec(receiveDenom, memOrder.Received())
+			if memOrder.Fee().IsPositive() {
+				received.Amount = received.Amount.Sub(memOrder.Fee())
+			}
+			escrow.Unlock(ordererAddr, received)
+			if memOrder.Fee().IsNegative() {
+				escrow.Unlock(ordererAddr, sdk.NewDecCoinFromDec(payDenom, memOrder.Fee().Neg()))
+			}
+			if memOrder.Type() == types.UserMemOrder {
+				order := memOrder.Order()
+				order.OpenQuantity = order.OpenQuantity.Sub(memOrder.ExecutedQuantity())
+				order.RemainingDeposit = order.RemainingDeposit.Sub(memOrder.Paid())
+				paid := sdk.NewDecCoinFromDec(payDenom, memOrder.Paid())
 				if err := ctx.EventManager().EmitTypedEvent(&types.EventOrderFilled{
 					MarketId:         market.Id,
 					OrderId:          order.Id,
@@ -193,68 +191,76 @@ func (k Keeper) FinalizeMatching(ctx sdk.Context, market types.Market, orders []
 					Price:            order.Price,
 					Quantity:         order.Quantity,
 					OpenQuantity:     order.OpenQuantity,
-					ExecutedQuantity: order.ExecutedQuantity,
+					ExecutedQuantity: memOrder.ExecutedQuantity(),
 					Paid:             paid,
 					Received:         received,
 				}); err != nil {
 					return err
 				}
 				// Update user orders
-				executableQty := order.ExecutableQuantity(order.Price)
+				executableQty := order.ExecutableQuantity()
 				if order.IsBuy && executableQty.TruncateDec().IsZero() ||
 					!order.IsBuy && executableQty.MulTruncate(order.Price).TruncateDec().IsZero() {
-					if err := k.cancelOrder(ctx, market, order.Order); err != nil {
+					if err := k.cancelOrder(ctx, market, order); err != nil {
 						return err
 					}
 				} else {
-					k.SetOrder(ctx, order.Order)
+					k.SetOrder(ctx, order)
 				}
 			}
 		}
 		// Should refund deposit
-		if order.Source != nil && order.RemainingDeposit.IsPositive() {
-			escrow.Unlock(ordererAddr, sdk.NewDecCoinFromDec(market.DepositDenom(order.IsBuy), order.RemainingDeposit))
+		if memOrder.Type() == types.OrderSourceMemOrder && memOrder.RemainingDeposit().IsPositive() {
+			escrow.Unlock(
+				ordererAddr,
+				sdk.NewDecCoinFromDec(market.DepositDenom(memOrder.IsBuy()), memOrder.RemainingDeposit()))
 		}
 	}
 	if err := escrow.Transact(ctx, k.bankKeeper); err != nil {
 		return err
 	}
 	for _, sourceName := range sourceNames {
-		results := resultsBySourceName[sourceName]
+		results := ordersBySource[sourceName]
 		if len(results) > 0 {
 			source := k.sources[sourceName]
 			// TODO: pass grouped results
-			source.AfterOrdersExecuted(ctx, market, results)
 			totalExecQty := utils.ZeroDec
-			orderers, m := types.GroupMemOrdersByOrderer(results) // TODO: bit redundant
-			for _, orderer := range orderers {
+			ordererAddrs, m := types.GroupMemOrdersByOrderer(results) // TODO: bit redundant
+			for _, ordererAddr := range ordererAddrs {
+				source.AfterOrdersExecuted(ctx, market, ordererAddr, results)
 				var (
 					isBuy                  bool
 					payDenom, receiveDenom string
-					totalPaid              sdk.DecCoin
-					totalReceived          sdk.DecCoins
+					totalPaid              sdk.Dec
+					totalReceived          sdk.Dec
+					totalFee               sdk.Dec
 				)
-				for _, res := range m[orderer] {
-					totalExecQty = totalExecQty.Add(res.ExecutedQuantity)
-					if totalPaid.Amount.IsNil() {
-						isBuy = res.IsBuy
-						totalPaid = res.Paid
-						totalReceived = res.Received
+				for _, order := range m[ordererAddr.String()] {
+					totalExecQty = totalExecQty.Add(order.ExecutedQuantity())
+					if totalPaid.IsNil() {
+						isBuy = order.IsBuy()
+						totalPaid = order.Paid()
+						totalReceived = order.Received()
+						totalFee = order.Fee()
 					} else {
-						if res.IsBuy != isBuy { // sanity check
+						if order.IsBuy() != isBuy { // sanity check
 							panic("inconsistent isBuy")
 						}
-						totalPaid = totalPaid.Add(res.Paid)
-						totalReceived = totalReceived.Add(res.Received...)
+						totalPaid = totalPaid.Add(order.Paid())
+						totalReceived = totalReceived.Add(order.Received())
+						totalFee = totalFee.Add(order.Fee())
 					}
 				}
 				payDenom, receiveDenom = market.PayReceiveDenoms(isBuy)
-				paid := sdk.NewDecCoinFromDec(totalPaid.Denom, totalPaid.Amount.Sub(totalReceived.AmountOf(payDenom)))
-				received := sdk.NewDecCoinFromDec(receiveDenom, totalReceived.AmountOf(receiveDenom))
+				paid := sdk.NewDecCoinFromDec(payDenom, totalPaid)
+				if totalFee.IsNegative() {
+					paid.Amount = paid.Amount.Add(totalFee)
+				}
+				received := sdk.NewDecCoinFromDec(receiveDenom, totalReceived)
 				if err := ctx.EventManager().EmitTypedEvent(&types.EventOrderSourceOrdersFilled{
 					MarketId:         market.Id,
 					SourceName:       sourceName,
-					Orderer:          orderer,
+					Orderer:          ordererAddr.String(),
 					IsBuy:            isBuy,
 					ExecutedQuantity: totalExecQty,
 					Paid:             paid,

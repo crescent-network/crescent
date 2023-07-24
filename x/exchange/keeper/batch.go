@@ -39,13 +39,8 @@ func (k Keeper) RunBatchMatching(ctx sdk.Context, market types.Market) (err erro
 		}
 
 		// Apply the match results.
-		var memOrders []*types.MemOrder
-		for _, level := range buyObs.Levels {
-			memOrders = append(memOrders, level.Orders...)
-		}
-		for _, level := range sellObs.Levels {
-			memOrders = append(memOrders, level.Orders...)
-		}
+		memOrders := append(
+			append(([]*types.MemOrder)(nil), buyObs.Orders()...), sellObs.Orders()...)
 		if err = k.FinalizeMatching(ctx, market, memOrders, nil); err != nil {
 			return
 		}
@@ -54,22 +49,24 @@ func (k Keeper) RunBatchMatching(ctx sdk.Context, market types.Market) (err erro
 		k.SetMarketState(ctx, market.Id, marketState)
 	}()
 
+	mCtx := types.NewMatchingContext(market, false)
+
 	if marketState.LastPrice == nil {
 		// If there's no last price, then match orders at a single price.
 		// The price will be the fairest price for each buy and sell orders.
 		buyLevelIdx, sellLevelIdx := 0, 0
 		var buyLastPrice, sellLastPrice sdk.Dec
-		for buyLevelIdx < len(buyObs.Levels) && sellLevelIdx < len(sellObs.Levels) {
-			buyLevel := buyObs.Levels[buyLevelIdx]
-			sellLevel := sellObs.Levels[sellLevelIdx]
-			if buyLevel.Price.LT(sellLevel.Price) {
+		for buyLevelIdx < len(buyObs.Levels()) && sellLevelIdx < len(sellObs.Levels()) {
+			buyLevel := buyObs.Levels()[buyLevelIdx]
+			sellLevel := sellObs.Levels()[sellLevelIdx]
+			if buyLevel.Price().LT(sellLevel.Price()) {
 				break
 			}
-			buyExecutableQty := types.TotalExecutableQuantity(buyLevel.Orders, buyLevel.Price)
-			sellExecutableQty := types.TotalExecutableQuantity(sellLevel.Orders, sellLevel.Price)
+			buyExecutableQty := types.TotalExecutableQuantity(buyLevel.Orders())
+			sellExecutableQty := types.TotalExecutableQuantity(sellLevel.Orders())
 			execQty := sdk.MinDec(buyExecutableQty, sellExecutableQty)
-			buyLastPrice = buyLevel.Price
-			sellLastPrice = sellLevel.Price
+			buyLastPrice = buyLevel.Price()
+			sellLastPrice = sellLevel.Price()
 			buyFull := execQty.Equal(buyExecutableQty)
 			sellFull := execQty.Equal(sellExecutableQty)
 			if buyFull {
@@ -82,14 +79,14 @@ func (k Keeper) RunBatchMatching(ctx sdk.Context, market types.Market) (err erro
 		if !buyLastPrice.IsNil() && !sellLastPrice.IsNil() {
 			matchPrice := types.RoundPrice(buyLastPrice.Add(sellLastPrice).QuoInt64(2))
 			buyLevelIdx, sellLevelIdx = 0, 0
-			for buyLevelIdx < len(buyObs.Levels) && sellLevelIdx < len(sellObs.Levels) {
-				buyLevel := buyObs.Levels[buyLevelIdx]
-				sellLevel := sellObs.Levels[sellLevelIdx]
-				if buyLevel.Price.LT(matchPrice) || sellLevel.Price.GT(matchPrice) {
+			for buyLevelIdx < len(buyObs.Levels()) && sellLevelIdx < len(sellObs.Levels()) {
+				buyLevel := buyObs.Levels()[buyLevelIdx]
+				sellLevel := sellObs.Levels()[sellLevelIdx]
+				if buyLevel.Price().LT(matchPrice) || sellLevel.Price().GT(matchPrice) {
 					break
 				}
 				// Both sides are taker
-				_, sellFull, buyFull := market.MatchMemOrderBookPriceLevels(sellLevel, false, buyLevel, false, matchPrice)
+				_, sellFull, buyFull := mCtx.MatchMemOrderBookPriceLevels(sellLevel, false, buyLevel, false, matchPrice)
 				if buyFull {
 					buyLevelIdx++
 				}
@@ -108,14 +105,14 @@ func (k Keeper) RunBatchMatching(ctx sdk.Context, market types.Market) (err erro
 	// The execution price is the last price.
 	matchPrice := lastPrice
 	buyLevelIdx, sellLevelIdx := 0, 0
-	for buyLevelIdx < len(buyObs.Levels) && sellLevelIdx < len(sellObs.Levels) {
-		buyLevel := buyObs.Levels[buyLevelIdx]
-		sellLevel := sellObs.Levels[sellLevelIdx]
-		if buyLevel.Price.LT(matchPrice) || sellLevel.Price.GT(matchPrice) {
+	for buyLevelIdx < len(buyObs.Levels()) && sellLevelIdx < len(sellObs.Levels()) {
+		buyLevel := buyObs.Levels()[buyLevelIdx]
+		sellLevel := sellObs.Levels()[sellLevelIdx]
+		if buyLevel.Price().LT(matchPrice) || sellLevel.Price().GT(matchPrice) {
 			break
 		}
 		// Both sides are taker
-		_, sellFull, buyFull := market.MatchMemOrderBookPriceLevels(sellLevel, false, buyLevel, false, matchPrice)
+		_, sellFull, buyFull := mCtx.MatchMemOrderBookPriceLevels(sellLevel, false, buyLevel, false, matchPrice)
 		lastPrice = matchPrice
 		if buyFull {
 			buyLevelIdx++
@@ -125,7 +122,7 @@ func (k Keeper) RunBatchMatching(ctx sdk.Context, market types.Market) (err erro
 		}
 	}
 	// If there's no level to match, return earlier.
-	if buyLevelIdx >= len(buyObs.Levels) || sellLevelIdx >= len(sellObs.Levels) {
+	if buyLevelIdx >= len(buyObs.Levels()) || sellLevelIdx >= len(sellObs.Levels()) {
 		return nil
 	}
 
@@ -134,21 +131,20 @@ func (k Keeper) RunBatchMatching(ctx sdk.Context, market types.Market) (err erro
 
 	// No sell orders with price below(or equal to) the last price,
 	// thus the price will increase.
-	isPriceIncreasing := sellObs.Levels[sellLevelIdx].Price.GT(lastPrice)
-	for buyLevelIdx < len(buyObs.Levels) && sellLevelIdx < len(sellObs.Levels) {
-		buyLevel := buyObs.Levels[buyLevelIdx]
-		sellLevel := sellObs.Levels[sellLevelIdx]
-		if buyLevel.Price.LT(sellLevel.Price) {
+	isPriceIncreasing := sellObs.Levels()[sellLevelIdx].Price().GT(lastPrice)
+	for buyLevelIdx < len(buyObs.Levels()) && sellLevelIdx < len(sellObs.Levels()) {
+		buyLevel := buyObs.Levels()[buyLevelIdx]
+		sellLevel := sellObs.Levels()[sellLevelIdx]
+		if buyLevel.Price().LT(sellLevel.Price()) {
 			break
 		}
-		var price sdk.Dec
 		if isPriceIncreasing {
-			price = sellLevel.Price
+			matchPrice = sellLevel.Price()
 		} else {
-			price = buyLevel.Price
+			matchPrice = buyLevel.Price()
 		}
-		_, sellFull, buyFull := market.MatchMemOrderBookPriceLevels(sellLevel, isPriceIncreasing, buyLevel, !isPriceIncreasing, price)
-		lastPrice = price
+		_, sellFull, buyFull := mCtx.MatchMemOrderBookPriceLevels(sellLevel, isPriceIncreasing, buyLevel, !isPriceIncreasing, matchPrice)
+		lastPrice = matchPrice
 		if buyFull {
 			buyLevelIdx++
 		}

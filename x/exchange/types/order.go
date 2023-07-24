@@ -62,11 +62,11 @@ func (order Order) Validate() error {
 	return nil
 }
 
-func (order Order) ExecutableQuantity(price sdk.Dec) sdk.Dec {
+func (order Order) ExecutableQuantity() sdk.Dec {
 	if order.IsBuy {
 		return sdk.MinDec(
 			order.OpenQuantity,
-			order.RemainingDeposit.QuoTruncate(price))
+			order.RemainingDeposit.QuoTruncate(order.Price))
 	}
 	return sdk.MinDec(order.OpenQuantity, order.RemainingDeposit)
 }
