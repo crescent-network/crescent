@@ -43,7 +43,7 @@ func (m mockOrderSource) Name() string {
 func (mockOrderSource) GenerateOrders(ctx sdk.Context, market types.Market, createOrder types.CreateOrderFunc, opts types.GenerateOrdersOptions) {
 }
 
-func (mockOrderSource) AfterOrdersExecuted(ctx sdk.Context, market types.Market, results []types.TempOrder) {
+func (mockOrderSource) AfterOrdersExecuted(ctx sdk.Context, market types.Market, results []types.MemOrder) {
 }
 
 func (s *KeeperTestSuite) TestSetOrderSources() {

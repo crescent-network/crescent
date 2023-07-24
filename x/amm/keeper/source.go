@@ -62,8 +62,8 @@ func (k OrderSource) GenerateOrders(
 	})
 }
 
-func (k OrderSource) AfterOrdersExecuted(ctx sdk.Context, _ exchangetypes.Market, results []exchangetypes.TempOrder) {
-	orderers, m := exchangetypes.GroupTempOrderResultsByOrderer(results)
+func (k OrderSource) AfterOrdersExecuted(ctx sdk.Context, _ exchangetypes.Market, results []exchangetypes.MemOrder) {
+	orderers, m := exchangetypes.GroupMemOrdersByOrderer(results)
 	for _, orderer := range orderers {
 		ordererAddr := sdk.MustAccAddressFromBech32(orderer)
 		pool := k.MustGetPoolByReserveAddress(ctx, ordererAddr)
@@ -71,7 +71,7 @@ func (k OrderSource) AfterOrdersExecuted(ctx sdk.Context, _ exchangetypes.Market
 	}
 }
 
-func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, results []exchangetypes.TempOrder) {
+func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, results []exchangetypes.MemOrder) {
 	reserveAddr := pool.MustGetReserveAddress()
 	poolState := k.MustGetPoolState(ctx, pool.Id)
 	accruedRewards := sdk.NewCoins()

@@ -20,7 +20,7 @@ func (k Keeper) executeOrder(
 	res = types.NewExecuteOrderResult(payDenom, receiveDenom)
 	var lastPrice sdk.Dec
 	escrow := types.NewEscrow(market.MustGetEscrowAddress())
-	obs := k.ConstructTempOrderBookSide(ctx, market, !isBuy, priceLimit, qtyLimit, quoteLimit, 0, escrow)
+	obs := k.ConstructMemOrderBookSide(ctx, market, !isBuy, priceLimit, qtyLimit, quoteLimit, 0, escrow)
 	for _, level := range obs.Levels {
 		if priceLimit != nil &&
 			((isBuy && level.Price.GT(*priceLimit)) ||
@@ -55,7 +55,7 @@ func (k Keeper) executeOrder(
 			}
 		}
 
-		market.FillTempOrderBookLevel(level, execQty, level.Price, true, halveFees)
+		market.FillMemOrderBookPriceLevel(level, execQty, level.Price, true, halveFees)
 		execQuote := types.QuoteAmount(isBuy, level.Price, execQty)
 		var paid, received, fee sdk.DecCoin
 		if isBuy {
@@ -84,11 +84,11 @@ func (k Keeper) executeOrder(
 	res.Received = sdk.NewDecCoinFromDec(res.Received.Denom, res.Received.Amount.TruncateDec())
 	// TODO: calculate fee correctly
 	if !simulate {
-		var tempOrders []*types.TempOrder
+		var memOrders []*types.MemOrder
 		for _, level := range obs.Levels {
-			tempOrders = append(tempOrders, level.Orders...)
+			memOrders = append(memOrders, level.Orders...)
 		}
-		if err = k.FinalizeMatching(ctx, market, tempOrders, escrow); err != nil {
+		if err = k.FinalizeMatching(ctx, market, memOrders, escrow); err != nil {
 			return
 		}
 		if !lastPrice.IsNil() {
@@ -101,13 +101,13 @@ func (k Keeper) executeOrder(
 	return
 }
 
-func (k Keeper) ConstructTempOrderBookSide(
+func (k Keeper) ConstructMemOrderBookSide(
 	ctx sdk.Context, market types.Market, isBuy bool,
 	priceLimit, qtyLimit, quoteLimit *sdk.Dec, maxNumPriceLevels int,
-	escrow *types.Escrow) *types.TempOrderBookSide {
+	escrow *types.Escrow) *types.MemOrderBookSide {
 	accQty := utils.ZeroDec
 	accQuote := utils.ZeroDec
-	obs := types.NewTempOrderBookSide(isBuy)
+	obs := types.NewMemOrderBookSide(isBuy)
 	numPriceLevels := 0
 	k.IterateOrderBookSide(ctx, market.Id, isBuy, priceLimit, func(price sdk.Dec, orders []types.Order) (stop bool) {
 		if qtyLimit != nil && !qtyLimit.Sub(accQty).IsPositive() {
@@ -117,7 +117,7 @@ func (k Keeper) ConstructTempOrderBookSide(
 			return true
 		}
 		for _, order := range orders {
-			obs.AddOrder(types.NewTempOrder(order, market, nil))
+			obs.AddOrder(types.NewMemOrder(order, market, nil))
 			accQty = accQty.Add(order.OpenQuantity)
 			accQuote = accQuote.Add(types.QuoteAmount(!isBuy, order.Price, order.OpenQuantity))
 		}
@@ -141,7 +141,7 @@ func (k Keeper) ConstructTempOrderBookSide(
 			if escrow != nil {
 				escrow.Lock(ordererAddr, sdk.NewDecCoinFromDec(market.DepositDenom(isBuy), deposit))
 			}
-			obs.AddOrder(types.NewTempOrder(order, market, source))
+			obs.AddOrder(types.NewMemOrder(order, market, source))
 			return nil
 		}, types.GenerateOrdersOptions{
 			IsBuy:             isBuy,
@@ -161,12 +161,12 @@ func (k Keeper) ConstructTempOrderBookSide(
 	return obs
 }
 
-func (k Keeper) FinalizeMatching(ctx sdk.Context, market types.Market, orders []*types.TempOrder, escrow *types.Escrow) error {
+func (k Keeper) FinalizeMatching(ctx sdk.Context, market types.Market, orders []*types.MemOrder, escrow *types.Escrow) error {
 	if escrow == nil {
 		escrow = types.NewEscrow(market.MustGetEscrowAddress())
 	}
 	var sourceNames []string
-	resultsBySourceName := map[string][]types.TempOrder{}
+	resultsBySourceName := map[string][]types.MemOrder{}
 	for _, order := range orders {
 		if order.IsUpdated && order.Source != nil {
 			sourceName := order.Source.Name()
@@ -226,7 +226,7 @@ func (k Keeper) FinalizeMatching(ctx sdk.Context, market types.Market, orders []
 			// TODO: pass grouped results
 			source.AfterOrdersExecuted(ctx, market, results)
 			totalExecQty := utils.ZeroDec
-			orderers, m := types.GroupTempOrderResultsByOrderer(results) // TODO: bit redundant
+			orderers, m := types.GroupMemOrdersByOrderer(results) // TODO: bit redundant
 			for _, orderer := range orderers {
 				var (
 					isBuy                  bool

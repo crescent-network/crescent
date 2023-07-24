@@ -22,32 +22,32 @@ func (os mockOrderSource) Name() string { return os.sourceName }
 func (mockOrderSource) GenerateOrders(sdk.Context, types.Market, types.CreateOrderFunc, types.GenerateOrdersOptions) {
 }
 
-func (mockOrderSource) AfterOrdersExecuted(sdk.Context, types.Market, []types.TempOrder) {}
+func (mockOrderSource) AfterOrdersExecuted(sdk.Context, types.Market, []types.MemOrder) {}
 
-func newTempOrder(
+func newMemOrder(
 	orderId uint64, market types.Market, isBuy bool,
-	price, qty, openQty sdk.Dec, source types.OrderSource) *types.TempOrder {
-	return types.NewTempOrder(
+	price, qty, openQty sdk.Dec, source types.OrderSource) *types.MemOrder {
+	return types.NewMemOrder(
 		types.NewOrder(orderId, types.OrderTypeLimit, utils.TestAddress(1), market.Id, isBuy,
 			price, qty, 1, openQty, types.DepositAmount(isBuy, price, openQty),
 			utils.ParseTime("2023-06-01T00:00:00Z")),
 		market, source)
 }
 
-func TestTempOrderBookSide_AddOrder(t *testing.T) {
+func TestMemOrderBookSide_AddOrder(t *testing.T) {
 	market := types.NewMarket(
 		1, "ucre", "uusd", types.DefaultFees.DefaultMakerFeeRate, types.DefaultFees.DefaultTakerFeeRate)
 
 	// Buy order book side
-	obs := types.NewTempOrderBookSide(true)
+	obs := types.NewMemOrderBookSide(true)
 	require.Panics(t, func() {
-		obs.AddOrder(newTempOrder(
+		obs.AddOrder(newMemOrder(
 			1, market, false, utils.ParseDec("12.3"), sdk.NewDec(100_000000), sdk.NewDec(80_000000), nil))
 	})
 	r := rand.New(rand.NewSource(1))
 	for i := 0; i < 100; i++ {
 		tick := 9000 + r.Int31n(30)
-		obs.AddOrder(newTempOrder(
+		obs.AddOrder(newMemOrder(
 			uint64(i+1), market, true, types.PriceAtTick(tick),
 			sdk.NewDec(100_000000), sdk.NewDec(90_000000), nil))
 	}
@@ -61,14 +61,14 @@ func TestTempOrderBookSide_AddOrder(t *testing.T) {
 	}
 
 	// Sell order book side
-	obs = types.NewTempOrderBookSide(false)
+	obs = types.NewMemOrderBookSide(false)
 	require.Panics(t, func() {
-		obs.AddOrder(newTempOrder(
+		obs.AddOrder(newMemOrder(
 			1, market, true, utils.ParseDec("12.3"), sdk.NewDec(100_000000), sdk.NewDec(80_000000), nil))
 	})
 	for i := 0; i < 100; i++ {
 		tick := 9000 + r.Int31n(30)
-		obs.AddOrder(newTempOrder(
+		obs.AddOrder(newMemOrder(
 			uint64(i+1), market, false, types.PriceAtTick(tick),
 			sdk.NewDec(100_000000), sdk.NewDec(90_000000), nil))
 	}
@@ -82,57 +82,57 @@ func TestTempOrderBookSide_AddOrder(t *testing.T) {
 	}
 }
 
-func TestNewTempOrder(t *testing.T) {
+func TestNewMemOrder(t *testing.T) {
 	market := types.NewMarket(
 		1, "ucre", "uusd", types.DefaultFees.DefaultMakerFeeRate, types.DefaultFees.DefaultTakerFeeRate)
-	order := newTempOrder(1, market, true, utils.ParseDec("5.2"), sdk.NewDec(100_000000), sdk.NewDec(90_000000), nil)
+	order := newMemOrder(1, market, true, utils.ParseDec("5.2"), sdk.NewDec(100_000000), sdk.NewDec(90_000000), nil)
 	testutil.AssertEqual(t, utils.ParseDecCoin("0uusd"), order.Paid)
 	require.Nil(t, order.Received)
-	order = newTempOrder(1, market, false, utils.ParseDec("5.2"), sdk.NewDec(100_000000), sdk.NewDec(90_000000), nil)
+	order = newMemOrder(1, market, false, utils.ParseDec("5.2"), sdk.NewDec(100_000000), sdk.NewDec(90_000000), nil)
 	testutil.AssertEqual(t, utils.ParseDecCoin("0ucre"), order.Paid)
 	require.Nil(t, order.Received)
 }
 
-func TestTempOrder_HasPriorityOver(t *testing.T) {
+func TestMemOrder_HasPriorityOver(t *testing.T) {
 	market := types.NewMarket(
 		1, "ucre", "uusd", types.DefaultFees.DefaultMakerFeeRate, types.DefaultFees.DefaultTakerFeeRate)
 	source1 := mockOrderSource{"source1"}
 	source2 := mockOrderSource{"source2"}
 	price := utils.ParseDec("12.345")
 
-	order1 := newTempOrder(1, market, false, price, sdk.NewDec(100_000000), sdk.NewDec(90_000000), nil)
-	order2 := newTempOrder(2, market, false, price, sdk.NewDec(110_000000), sdk.NewDec(80_000000), nil)
+	order1 := newMemOrder(1, market, false, price, sdk.NewDec(100_000000), sdk.NewDec(90_000000), nil)
+	order2 := newMemOrder(2, market, false, price, sdk.NewDec(110_000000), sdk.NewDec(80_000000), nil)
 	// order2 quantity > order1 quantity
 	require.True(t, order2.HasPriorityOver(order1))
 
-	order1 = newTempOrder(1, market, false, price, sdk.NewDec(100_000000), sdk.NewDec(80_000000), nil)
-	order2 = newTempOrder(2, market, false, price, sdk.NewDec(100_000000), sdk.NewDec(90_000000), nil)
+	order1 = newMemOrder(1, market, false, price, sdk.NewDec(100_000000), sdk.NewDec(80_000000), nil)
+	order2 = newMemOrder(2, market, false, price, sdk.NewDec(100_000000), sdk.NewDec(90_000000), nil)
 	// lower order id has priority
 	require.True(t, order1.HasPriorityOver(order2))
 
-	order1 = newTempOrder(1, market, false, price, sdk.NewDec(100_000000), sdk.NewDec(90_000000), nil)
-	order2 = newTempOrder(2, market, false, price, sdk.NewDec(100_000000), sdk.NewDec(80_000000), source1)
+	order1 = newMemOrder(1, market, false, price, sdk.NewDec(100_000000), sdk.NewDec(90_000000), nil)
+	order2 = newMemOrder(2, market, false, price, sdk.NewDec(100_000000), sdk.NewDec(80_000000), source1)
 	// user orders has priority over orders from OrderSource
 	require.True(t, order1.HasPriorityOver(order2))
 
-	order1 = newTempOrder(1, market, false, price, sdk.NewDec(100_000000), sdk.NewDec(90_000000), nil)
-	order2 = newTempOrder(2, market, false, price, sdk.NewDec(110_000000), sdk.NewDec(80_000000), source1)
+	order1 = newMemOrder(1, market, false, price, sdk.NewDec(100_000000), sdk.NewDec(90_000000), nil)
+	order2 = newMemOrder(2, market, false, price, sdk.NewDec(110_000000), sdk.NewDec(80_000000), source1)
 	// but if the quantity of the order from OrderSource is higher, it takes priority
 	require.True(t, order2.HasPriorityOver(order1))
 
-	order1 = newTempOrder(1, market, false, price, sdk.NewDec(100_000000), sdk.NewDec(80_000000), source1)
-	order2 = newTempOrder(2, market, false, price, sdk.NewDec(100_000000), sdk.NewDec(90_000000), source2)
+	order1 = newMemOrder(1, market, false, price, sdk.NewDec(100_000000), sdk.NewDec(80_000000), source1)
+	order2 = newMemOrder(2, market, false, price, sdk.NewDec(100_000000), sdk.NewDec(90_000000), source2)
 	// lexicographical source name priority
 	require.True(t, order1.HasPriorityOver(order2))
 }
 
-func TestGroupTempOrdersByMsgHeight(t *testing.T) {
+func TestGroupMemOrdersByMsgHeight(t *testing.T) {
 	r := rand.New(rand.NewSource(1))
 	market := types.NewMarket(
 		1, "ucre", "uusd", types.DefaultFees.DefaultMakerFeeRate, types.DefaultFees.DefaultTakerFeeRate)
 	deadline := utils.ParseTime("2023-06-01T00:00:00Z")
 	for i := 0; i < 100; i++ {
-		var orders []*types.TempOrder
+		var orders []*types.MemOrder
 		hasZeroHeight := false
 		for j := 0; j < 100; j++ {
 			price := utils.RandomDec(r, utils.ParseDec("9"), utils.ParseDec("11"))
@@ -148,9 +148,9 @@ func TestGroupTempOrdersByMsgHeight(t *testing.T) {
 			order := types.NewOrder(
 				uint64(j+1), types.OrderTypeLimit, utils.TestAddress(1), market.Id,
 				true, price, qty, msgHeight, qty, deposit, deadline)
-			orders = append(orders, types.NewTempOrder(order, market, nil))
+			orders = append(orders, types.NewMemOrder(order, market, nil))
 		}
-		groups := types.GroupTempOrdersByMsgHeight(orders)
+		groups := types.GroupMemOrdersByMsgHeight(orders)
 		require.NotEmpty(t, groups)
 		if hasZeroHeight {
 			require.EqualValues(t, 0, groups[len(groups)-1].MsgHeight)

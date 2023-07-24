@@ -5,191 +5,11 @@ import (
 	"sort"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"golang.org/x/exp/slices"
 
 	utils "github.com/crescent-network/crescent/v5/types"
 )
 
-func (market Market) MatchOrderBookLevels(
-	levelA *TempOrderBookLevel, isMakerA bool, levelB *TempOrderBookLevel, isMakerB bool, price sdk.Dec) (execQty sdk.Dec, fullA, fullB bool) {
-	executableQtyA := TotalExecutableQuantity(levelA.Orders, price)
-	executableQtyB := TotalExecutableQuantity(levelB.Orders, price)
-	execQty = sdk.MinDec(executableQtyA, executableQtyB)
-	fullA = execQty.Equal(executableQtyA)
-	fullB = execQty.Equal(executableQtyB)
-	market.FillTempOrderBookLevel(levelA, execQty, price, isMakerA, false)
-	market.FillTempOrderBookLevel(levelB, execQty, price, isMakerB, false)
-	return
-}
-
-func (market Market) FillTempOrderBookLevel(
-	level *TempOrderBookLevel, qty, price sdk.Dec, isMaker, halveFees bool) {
-	executableQty := TotalExecutableQuantity(level.Orders, price)
-	if executableQty.LT(qty) { // sanity check
-		panic("executable quantity is less than quantity")
-	} else if executableQty.Equal(qty) { // full matches
-		market.FillTempOrders(level.Orders, qty, price, isMaker, halveFees)
-	} else {
-		groups := GroupTempOrdersByMsgHeight(level.Orders)
-		totalExecQty := utils.ZeroDec
-		for _, group := range groups {
-			remainingQty := qty.Sub(totalExecQty)
-			if remainingQty.IsZero() {
-				break
-			}
-			// TODO: optimize duplicate TotalExecutableQuantity calls?
-			execQty := sdk.MinDec(remainingQty, TotalExecutableQuantity(group.Orders, price))
-			market.FillTempOrders(group.Orders, execQty, price, isMaker, halveFees)
-			totalExecQty = totalExecQty.Add(execQty)
-		}
-	}
-}
-
-func (market Market) FillTempOrders(orders []*TempOrder, qty, price sdk.Dec, isMaker, halveFees bool) {
-	totalExecutableQty := TotalExecutableQuantity(orders, price)
-	if totalExecutableQty.LT(qty) { // sanity check
-		panic("executable quantity is less than quantity")
-	}
-	// First, distribute quantity evenly.
-	remainingQty := qty
-	for _, order := range orders {
-		executableQty := order.ExecutableQuantity(price)
-		if executableQty.IsZero() { // sanity check
-			panic("executable quantity is zero")
-		}
-		executingQty := executableQty.MulTruncate(qty).QuoTruncate(totalExecutableQty)
-		if executingQty.IsPositive() {
-			market.FillTempOrder(order, executingQty, price, isMaker, halveFees)
-			remainingQty = remainingQty.Sub(executingQty)
-		}
-	}
-	// Then, distribute remaining quantity based on priority.
-	if remainingQty.IsPositive() {
-		slices.SortFunc(orders, func(a, b *TempOrder) bool {
-			return a.HasPriorityOver(b)
-		})
-		for _, order := range orders {
-			if remainingQty.IsZero() {
-				break
-			}
-			executingQty := sdk.MinDec(remainingQty, order.ExecutableQuantity(price))
-			if executingQty.IsPositive() {
-				market.FillTempOrder(order, executingQty, price, isMaker, halveFees)
-				remainingQty = remainingQty.Sub(executingQty)
-			}
-		}
-	}
-}
-
-func (market Market) FillTempOrder(order *TempOrder, qty, price sdk.Dec, isMaker, halveFees bool) {
-	// TODO: refactor code
-	if qty.GT(order.ExecutableQuantity(price)) { // sanity check
-		panic("open quantity is less than quantity")
-	}
-	makerFeeRate, takerFeeRate := market.MakerFeeRate, market.TakerFeeRate
-	if halveFees {
-		makerFeeRate = makerFeeRate.QuoInt64(2)
-		takerFeeRate = takerFeeRate.QuoInt64(2)
-	}
-	negativeMakerFeeRate := makerFeeRate.IsNegative()
-	order.ExecutedQuantity = order.ExecutedQuantity.Add(qty)
-	order.OpenQuantity = order.OpenQuantity.Sub(qty)
-	if order.IsBuy {
-		paid := QuoteAmount(true, price, qty)
-		order.Paid.Amount = order.Paid.Amount.Add(paid)
-		order.RemainingDeposit = order.RemainingDeposit.Sub(paid)
-		if order.Source != nil || (isMaker && negativeMakerFeeRate) {
-			order.Received = order.Received.Add(sdk.NewDecCoinFromDec(market.BaseDenom, qty))
-		} else {
-			if isMaker {
-				order.Received = order.Received.Add(
-					sdk.NewDecCoinFromDec(
-						market.BaseDenom,
-						utils.OneDec.Sub(makerFeeRate).MulTruncate(qty)))
-			} else {
-				order.Received = order.Received.Add(
-					sdk.NewDecCoinFromDec(
-						market.BaseDenom,
-						utils.OneDec.Sub(takerFeeRate).MulTruncate(qty)))
-			}
-		}
-		if isMaker && negativeMakerFeeRate {
-			order.Received = order.Received.Add(
-				sdk.NewDecCoinFromDec(
-					market.QuoteDenom,
-					makerFeeRate.Neg().MulTruncate(paid)))
-		}
-	} else {
-		order.Paid.Amount = order.Paid.Amount.Add(qty)
-		order.RemainingDeposit = order.RemainingDeposit.Sub(qty)
-		quote := QuoteAmount(false, price, qty)
-		if order.Source != nil || (isMaker && negativeMakerFeeRate) {
-			order.Received = order.Received.Add(sdk.NewDecCoinFromDec(market.QuoteDenom, quote))
-		} else {
-			if isMaker {
-				order.Received = order.Received.Add(
-					sdk.NewDecCoinFromDec(
-						market.QuoteDenom,
-						utils.OneDec.Sub(makerFeeRate).MulTruncate(quote)))
-			} else {
-				order.Received = order.Received.Add(
-					sdk.NewDecCoinFromDec(
-						market.QuoteDenom,
-						utils.OneDec.Sub(takerFeeRate).MulTruncate(quote)))
-			}
-		}
-		if isMaker && negativeMakerFeeRate {
-			order.Received = order.Received.Add(
-				sdk.NewDecCoinFromDec(
-					market.BaseDenom,
-					makerFeeRate.Neg().MulTruncate(qty)))
-		}
-	}
-	order.IsUpdated = true
-}
-
-type TempOrderBookSide struct {
-	IsBuy  bool
-	Levels []*TempOrderBookLevel
-}
-
-func NewTempOrderBookSide(isBuy bool) *TempOrderBookSide {
-	return &TempOrderBookSide{IsBuy: isBuy}
-}
-
-func (side *TempOrderBookSide) AddOrder(order *TempOrder) {
-	if order.IsBuy != side.IsBuy { // sanity check
-		panic("inconsistent order isBuy")
-	}
-	i := sort.Search(len(side.Levels), func(i int) bool {
-		if side.IsBuy {
-			return side.Levels[i].Price.LTE(order.Price)
-		}
-		return side.Levels[i].Price.GTE(order.Price)
-	})
-	if i < len(side.Levels) && side.Levels[i].Price.Equal(order.Price) {
-		side.Levels[i].Orders = append(side.Levels[i].Orders, order)
-	} else {
-		// Insert a new level.
-		newLevels := make([]*TempOrderBookLevel, len(side.Levels)+1)
-		copy(newLevels[:i], side.Levels[:i])
-		newLevels[i] = NewTempOrderBookLevel(order)
-		copy(newLevels[i+1:], side.Levels[i:])
-		side.Levels = newLevels
-	}
-}
-
-type TempOrderBookLevel struct {
-	IsBuy  bool
-	Price  sdk.Dec
-	Orders []*TempOrder
-}
-
-func NewTempOrderBookLevel(order *TempOrder) *TempOrderBookLevel {
-	return &TempOrderBookLevel{order.IsBuy, order.Price, []*TempOrder{order}}
-}
-
-type TempOrder struct {
+type MemOrder struct {
 	Order
 	Source           OrderSource
 	IsUpdated        bool
@@ -198,14 +18,14 @@ type TempOrder struct {
 	Received         sdk.DecCoins
 }
 
-func NewTempOrder(order Order, market Market, source OrderSource) *TempOrder {
+func NewMemOrder(order Order, market Market, source OrderSource) *MemOrder {
 	var payDenom string
 	if order.IsBuy {
 		payDenom = market.QuoteDenom
 	} else {
 		payDenom = market.BaseDenom
 	}
-	return &TempOrder{
+	return &MemOrder{
 		Order:            order,
 		Source:           source,
 		IsUpdated:        false,
@@ -215,7 +35,7 @@ func NewTempOrder(order Order, market Market, source OrderSource) *TempOrder {
 	}
 }
 
-func (order *TempOrder) HasPriorityOver(other *TempOrder) bool {
+func (order *MemOrder) HasPriorityOver(other *MemOrder) bool {
 	if !order.Price.Equal(other.Price) { // sanity check
 		panic(fmt.Sprintf("orders with different price: %s != %s", order.Price, other.Price))
 	}
@@ -234,13 +54,54 @@ func (order *TempOrder) HasPriorityOver(other *TempOrder) bool {
 	}
 }
 
-type TempOrderGroup struct {
-	MsgHeight int64
-	Orders    []*TempOrder
+type MemOrderBookPriceLevel struct {
+	IsBuy  bool
+	Price  sdk.Dec
+	Orders []*MemOrder
 }
 
-func GroupTempOrdersByMsgHeight(orders []*TempOrder) (groups []*TempOrderGroup) {
-	groupByMsgHeight := map[int64]*TempOrderGroup{}
+func NewMemOrderBookPriceLevel(order *MemOrder) *MemOrderBookPriceLevel {
+	return &MemOrderBookPriceLevel{order.IsBuy, order.Price, []*MemOrder{order}}
+}
+
+type MemOrderBookSide struct {
+	IsBuy  bool
+	Levels []*MemOrderBookPriceLevel
+}
+
+func NewMemOrderBookSide(isBuy bool) *MemOrderBookSide {
+	return &MemOrderBookSide{IsBuy: isBuy}
+}
+
+func (side *MemOrderBookSide) AddOrder(order *MemOrder) {
+	if order.IsBuy != side.IsBuy { // sanity check
+		panic("inconsistent order isBuy")
+	}
+	i := sort.Search(len(side.Levels), func(i int) bool {
+		if side.IsBuy {
+			return side.Levels[i].Price.LTE(order.Price)
+		}
+		return side.Levels[i].Price.GTE(order.Price)
+	})
+	if i < len(side.Levels) && side.Levels[i].Price.Equal(order.Price) {
+		side.Levels[i].Orders = append(side.Levels[i].Orders, order)
+	} else {
+		// Insert a new level.
+		newLevels := make([]*MemOrderBookPriceLevel, len(side.Levels)+1)
+		copy(newLevels[:i], side.Levels[:i])
+		newLevels[i] = NewMemOrderBookPriceLevel(order)
+		copy(newLevels[i+1:], side.Levels[i:])
+		side.Levels = newLevels
+	}
+}
+
+type MemOrderGroup struct {
+	MsgHeight int64
+	Orders    []*MemOrder
+}
+
+func GroupMemOrdersByMsgHeight(orders []*MemOrder) (groups []*MemOrderGroup) {
+	groupByMsgHeight := map[int64]*MemOrderGroup{}
 	for _, order := range orders {
 		group, ok := groupByMsgHeight[order.MsgHeight]
 		if !ok {
@@ -253,10 +114,10 @@ func GroupTempOrdersByMsgHeight(orders []*TempOrder) (groups []*TempOrderGroup) 
 				}
 				return order.MsgHeight <= groups[i].MsgHeight
 			})
-			group = &TempOrderGroup{MsgHeight: order.MsgHeight}
+			group = &MemOrderGroup{MsgHeight: order.MsgHeight}
 			groupByMsgHeight[order.MsgHeight] = group
 
-			newGroups := make([]*TempOrderGroup, len(groups)+1)
+			newGroups := make([]*MemOrderGroup, len(groups)+1)
 			copy(newGroups[:i], groups[:i])
 			newGroups[i] = group
 			copy(newGroups[i+1:], groups[i:])
@@ -267,7 +128,7 @@ func GroupTempOrdersByMsgHeight(orders []*TempOrder) (groups []*TempOrderGroup) 
 	return
 }
 
-func TotalExecutableQuantity(orders []*TempOrder, price sdk.Dec) sdk.Dec {
+func TotalExecutableQuantity(orders []*MemOrder, price sdk.Dec) sdk.Dec {
 	qty := utils.ZeroDec
 	for _, order := range orders {
 		qty = qty.Add(order.ExecutableQuantity(price))

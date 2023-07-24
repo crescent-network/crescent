@@ -13,17 +13,17 @@ func (k Keeper) RunBatchMatching(ctx sdk.Context, market types.Market) (err erro
 	bestBuyPrice, _ := k.GetBestPrice(ctx, market.Id, true)
 	bestSellPrice, _ := k.GetBestPrice(ctx, market.Id, false)
 
-	// Construct TempOrderBookSides with the price limits we obtained previously.
-	var buyObs, sellObs *types.TempOrderBookSide
+	// Construct order book sides with the price limits we obtained previously.
+	var buyObs, sellObs *types.MemOrderBookSide
 	if !bestSellPrice.IsNil() {
-		buyObs = k.ConstructTempOrderBookSide(ctx, market, true, &bestSellPrice, nil, nil, 0, nil)
+		buyObs = k.ConstructMemOrderBookSide(ctx, market, true, &bestSellPrice, nil, nil, 0, nil)
 	} else {
-		buyObs = types.NewTempOrderBookSide(true)
+		buyObs = types.NewMemOrderBookSide(true)
 	}
 	if !bestBuyPrice.IsNil() {
-		sellObs = k.ConstructTempOrderBookSide(ctx, market, false, &bestBuyPrice, nil, nil, 0, nil)
+		sellObs = k.ConstructMemOrderBookSide(ctx, market, false, &bestBuyPrice, nil, nil, 0, nil)
 	} else {
-		sellObs = types.NewTempOrderBookSide(false)
+		sellObs = types.NewMemOrderBookSide(false)
 	}
 
 	marketState := k.MustGetMarketState(ctx, market.Id)
@@ -39,14 +39,14 @@ func (k Keeper) RunBatchMatching(ctx sdk.Context, market types.Market) (err erro
 		}
 
 		// Apply the match results.
-		var tempOrders []*types.TempOrder
+		var memOrders []*types.MemOrder
 		for _, level := range buyObs.Levels {
-			tempOrders = append(tempOrders, level.Orders...)
+			memOrders = append(memOrders, level.Orders...)
 		}
 		for _, level := range sellObs.Levels {
-			tempOrders = append(tempOrders, level.Orders...)
+			memOrders = append(memOrders, level.Orders...)
 		}
-		if err = k.FinalizeMatching(ctx, market, tempOrders, nil); err != nil {
+		if err = k.FinalizeMatching(ctx, market, memOrders, nil); err != nil {
 			return
 		}
 		marketState.LastPrice = &lastPrice
@@ -89,7 +89,7 @@ func (k Keeper) RunBatchMatching(ctx sdk.Context, market types.Market) (err erro
 					break
 				}
 				// Both sides are taker
-				_, sellFull, buyFull := market.MatchOrderBookLevels(sellLevel, false, buyLevel, false, matchPrice)
+				_, sellFull, buyFull := market.MatchMemOrderBookPriceLevels(sellLevel, false, buyLevel, false, matchPrice)
 				if buyFull {
 					buyLevelIdx++
 				}
@@ -115,7 +115,7 @@ func (k Keeper) RunBatchMatching(ctx sdk.Context, market types.Market) (err erro
 			break
 		}
 		// Both sides are taker
-		_, sellFull, buyFull := market.MatchOrderBookLevels(sellLevel, false, buyLevel, false, matchPrice)
+		_, sellFull, buyFull := market.MatchMemOrderBookPriceLevels(sellLevel, false, buyLevel, false, matchPrice)
 		lastPrice = matchPrice
 		if buyFull {
 			buyLevelIdx++
@@ -147,7 +147,7 @@ func (k Keeper) RunBatchMatching(ctx sdk.Context, market types.Market) (err erro
 		} else {
 			price = buyLevel.Price
 		}
-		_, sellFull, buyFull := market.MatchOrderBookLevels(sellLevel, isPriceIncreasing, buyLevel, !isPriceIncreasing, price)
+		_, sellFull, buyFull := market.MatchMemOrderBookPriceLevels(sellLevel, isPriceIncreasing, buyLevel, !isPriceIncreasing, price)
 		lastPrice = price
 		if buyFull {
 			buyLevelIdx++
