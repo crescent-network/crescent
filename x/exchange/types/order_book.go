@@ -5,6 +5,7 @@ import (
 	"sort"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"golang.org/x/exp/slices"
 
 	utils "github.com/crescent-network/crescent/v5/types"
 )
@@ -49,43 +50,33 @@ func (market Market) FillTempOrders(orders []*TempOrder, qty, price sdk.Dec, isM
 	if totalExecutableQty.LT(qty) { // sanity check
 		panic("executable quantity is less than quantity")
 	}
-	if qty.LT(totalExecutableQty) { // partial matches
-		sort.Slice(orders, func(i, j int) bool {
-			return orders[i].HasPriorityOver(orders[j])
-		})
-	}
-	totalExecQty := utils.ZeroDec
 	// First, distribute quantity evenly.
+	remainingQty := qty
 	for _, order := range orders {
-		remainingQty := qty.Sub(totalExecQty)
-		if remainingQty.IsZero() {
-			break
-		}
 		executableQty := order.ExecutableQuantity(price)
-		if executableQty.IsZero() {
-			continue
+		if executableQty.IsZero() { // sanity check
+			panic("executable quantity is zero")
 		}
-		execQty := sdk.MinDec(
-			remainingQty,
-			sdk.MinDec(
-				executableQty,
-				order.Quantity.MulTruncate(qty).QuoTruncate(totalExecutableQty)))
-		if execQty.IsPositive() {
-			market.FillTempOrder(order, execQty, price, isMaker, halveFees)
-			totalExecQty = totalExecQty.Add(execQty)
+		executingQty := executableQty.MulTruncate(qty).QuoTruncate(totalExecutableQty)
+		if executingQty.IsPositive() {
+			market.FillTempOrder(order, executingQty, price, isMaker, halveFees)
+			remainingQty = remainingQty.Sub(executingQty)
 		}
 	}
 	// Then, distribute remaining quantity based on priority.
-	// TODO: sort?
-	for _, order := range orders {
-		remainingQty := qty.Sub(totalExecQty)
-		if remainingQty.IsZero() {
-			break
-		}
-		execQty := sdk.MinDec(remainingQty, order.ExecutableQuantity(price))
-		if execQty.IsPositive() {
-			market.FillTempOrder(order, execQty, price, isMaker, halveFees)
-			totalExecQty = totalExecQty.Add(execQty)
+	if remainingQty.IsPositive() {
+		slices.SortFunc(orders, func(a, b *TempOrder) bool {
+			return a.HasPriorityOver(b)
+		})
+		for _, order := range orders {
+			if remainingQty.IsZero() {
+				break
+			}
+			executingQty := sdk.MinDec(remainingQty, order.ExecutableQuantity(price))
+			if executingQty.IsPositive() {
+				market.FillTempOrder(order, executingQty, price, isMaker, halveFees)
+				remainingQty = remainingQty.Sub(executingQty)
+			}
 		}
 	}
 }
