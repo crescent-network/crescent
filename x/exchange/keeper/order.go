@@ -151,7 +151,11 @@ func (k Keeper) placeLimitOrder(
 	openQty := qty
 	if !isBatch {
 		res, err = k.executeOrder(
-			ctx, market, ordererAddr, isBuy, &price, &qty, nil, false, false)
+			ctx, market, ordererAddr, types.MemOrderBookSideOptions{
+				IsBuy:         !isBuy,
+				PriceLimit:    &price,
+				QuantityLimit: &qty,
+			}, false, false)
 		if err != nil {
 			return
 		}
@@ -160,11 +164,12 @@ func (k Keeper) placeLimitOrder(
 
 	if isBatch || openQty.IsPositive() {
 		deadline := ctx.BlockTime().Add(lifespan)
-		deposit := types.DepositAmount(isBuy, price, openQty).Ceil().TruncateInt()
+		depositDenom, _ := types.PayReceiveDenoms(market.BaseDenom, market.QuoteDenom, isBuy)
+		depositCoin := sdk.NewCoin(depositDenom, types.DepositAmount(isBuy, price, openQty).Ceil().TruncateInt())
 		order = types.NewOrder(
 			orderId, typ, ordererAddr, market.Id, isBuy, price, qty,
-			ctx.BlockHeight(), openQty, deposit.ToDec(), deadline)
-		if err = k.EscrowCoins(ctx, market, ordererAddr, sdk.NewCoin(market.DepositDenom(isBuy), deposit)); err != nil {
+			ctx.BlockHeight(), openQty, depositCoin.Amount.ToDec(), deadline)
+		if err = k.EscrowCoins(ctx, market, ordererAddr, depositCoin); err != nil {
 			return
 		}
 		k.SetOrder(ctx, order)
@@ -193,7 +198,10 @@ func (k Keeper) PlaceMarketOrder(
 
 	orderId = k.GetNextOrderIdWithUpdate(ctx)
 	res, err = k.executeOrder(
-		ctx, market, ordererAddr, isBuy, nil, &qty, nil, false, false)
+		ctx, market, ordererAddr, types.MemOrderBookSideOptions{
+			IsBuy:         !isBuy,
+			QuantityLimit: &qty,
+		}, false, false)
 	if err != nil {
 		return
 	}
@@ -271,7 +279,8 @@ func (k Keeper) CancelAllOrders(ctx sdk.Context, ordererAddr sdk.AccAddress, mar
 
 func (k Keeper) cancelOrder(ctx sdk.Context, market types.Market, order types.Order) error {
 	ordererAddr := order.MustGetOrdererAddress()
-	refunded := sdk.NewCoin(market.DepositDenom(order.IsBuy), order.RemainingDeposit.TruncateInt())
+	depositDenom, _ := types.PayReceiveDenoms(market.BaseDenom, market.QuoteDenom, order.IsBuy)
+	refunded := sdk.NewCoin(depositDenom, order.RemainingDeposit.TruncateInt())
 	if err := k.ReleaseCoins(ctx, market, ordererAddr, refunded); err != nil {
 		return err
 	}

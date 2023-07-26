@@ -22,10 +22,10 @@ func (k OrderSource) Name() string {
 	return types.ModuleName
 }
 
-func (k OrderSource) GenerateOrders(
+func (k OrderSource) ConstructMemOrderBookSide(
 	ctx sdk.Context, market exchangetypes.Market,
 	createOrder exchangetypes.CreateOrderFunc,
-	opts exchangetypes.GenerateOrdersOptions) {
+	opts exchangetypes.MemOrderBookSideOptions) {
 	pool, found := k.GetPoolByMarket(ctx, market.Id)
 	if !found {
 		return // no pool found
@@ -36,28 +36,13 @@ func (k OrderSource) GenerateOrders(
 	accQuote := utils.ZeroDec
 	numPriceLevels := 0
 	k.IteratePoolOrders(ctx, pool, opts.IsBuy, func(price, qty sdk.Dec) (stop bool) {
-		if opts.PriceLimit != nil &&
-			((opts.IsBuy && price.LT(*opts.PriceLimit)) ||
-				(!opts.IsBuy && price.GT(*opts.PriceLimit))) {
+		if opts.ReachedLimit(price, accQty, accQuote, numPriceLevels) {
 			return true
 		}
-		if opts.QuantityLimit != nil && !opts.QuantityLimit.Sub(accQty).IsPositive() {
-			return true
-		}
-		if opts.QuoteLimit != nil && !opts.QuoteLimit.Sub(accQuote).IsPositive() {
-			return true
-		}
-		if err := createOrder(reserveAddr, price, qty); err != nil {
-			panic(err)
-		}
+		createOrder(reserveAddr, price, qty)
 		accQty = accQty.Add(qty)
 		accQuote = accQuote.Add(exchangetypes.QuoteAmount(!opts.IsBuy, price, qty))
-		if opts.MaxNumPriceLevels > 0 {
-			numPriceLevels++
-			if numPriceLevels >= opts.MaxNumPriceLevels {
-				return true
-			}
-		}
+		numPriceLevels++
 		return false
 	})
 }
@@ -160,7 +145,7 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 		} else { // Partially executed
 			// TODO: fix nextSqrtPrice?
 			nextSqrtPrice = types.NextSqrtPriceFromOutput(
-				currentSqrtPrice, poolState.CurrentLiquidity, result.Paid(), isBuy)
+				currentSqrtPrice, poolState.CurrentLiquidity, result.PaidWithoutFee(), isBuy)
 			nextPrice = nextSqrtPrice.Power(2)
 		}
 

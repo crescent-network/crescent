@@ -253,7 +253,10 @@ func findMsgPlaceMarketOrderParams(
 			}
 			qty := utils.RandomDec(r, sdk.NewDec(100), sdk.NewDec(1_000000)).TruncateDec()
 			cacheCtx, _ := ctx.CacheContext()
-			obs := k.ConstructMemOrderBookSide(cacheCtx, market, false, nil, &qty, nil, 0, nil)
+			obs := k.ConstructMemOrderBookSide(cacheCtx, market, types.MemOrderBookSideOptions{
+				IsBuy:         false,
+				QuantityLimit: &qty,
+			}, nil)
 			if len(obs.Levels()) == 0 {
 				continue
 			}

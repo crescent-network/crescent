@@ -218,9 +218,15 @@ func (k Querier) MakeOrderBooks(ctx sdk.Context, market types.Market, maxNumPric
 	// Because of this, we read N sell price levels to find out the highest
 	// price in the order book and use the price interval at that price as
 	// the smallest possible price interval.
-	sellObs := k.ConstructMemOrderBookSide(cacheCtx, market, false, nil, nil, nil, maxNumPriceLevels, nil)
+	sellObs := k.ConstructMemOrderBookSide(cacheCtx, market, types.MemOrderBookSideOptions{
+		IsBuy:             false,
+		MaxNumPriceLevels: maxNumPriceLevels,
+	}, nil)
 	// Read at most one level to check if any buy order exists.
-	buyObs := k.ConstructMemOrderBookSide(cacheCtx, market, true, nil, nil, nil, 1, nil)
+	buyObs := k.ConstructMemOrderBookSide(cacheCtx, market, types.MemOrderBookSideOptions{
+		IsBuy:             true,
+		MaxNumPriceLevels: 1,
+	}, nil)
 	var highestPrice sdk.Dec
 	if len(sellObs.Levels()) > 0 {
 		highestPrice = sellObs.Levels()[len(sellObs.Levels())-1].Price()
@@ -237,13 +243,19 @@ func (k Querier) MakeOrderBooks(ctx sdk.Context, market types.Market, maxNumPric
 		p := sellObs.Levels()[0].Price().Add(smallestPriceInterval.MulInt64(int64(100 * maxNumPriceLevels)))
 		priceLimit = &p
 	}
-	sellObs = k.ConstructMemOrderBookSide(cacheCtx, market, false, priceLimit, nil, nil, 0, nil)
+	sellObs = k.ConstructMemOrderBookSide(cacheCtx, market, types.MemOrderBookSideOptions{
+		IsBuy:      false,
+		PriceLimit: priceLimit,
+	}, nil)
 	priceLimit = nil
 	if len(buyObs.Levels()) > 0 {
 		p := buyObs.Levels()[0].Price().Sub(smallestPriceInterval.MulInt64(int64(100 * maxNumPriceLevels)))
 		priceLimit = &p
 	}
-	buyObs = k.ConstructMemOrderBookSide(cacheCtx, market, true, priceLimit, nil, nil, 0, nil)
+	buyObs = k.ConstructMemOrderBookSide(cacheCtx, market, types.MemOrderBookSideOptions{
+		IsBuy:      true,
+		PriceLimit: priceLimit,
+	}, nil)
 
 	var orderBooks []types.OrderBook
 	for _, p := range []int{1, 10, 100} {

@@ -12,18 +12,6 @@ import (
 	"github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
-var _ types.OrderSource = mockOrderSource{}
-
-type mockOrderSource struct{ sourceName string }
-
-func (os mockOrderSource) Name() string { return os.sourceName }
-
-func (mockOrderSource) GenerateOrders(sdk.Context, types.Market, types.CreateOrderFunc, types.GenerateOrdersOptions) {
-}
-
-func (mockOrderSource) AfterOrdersExecuted(sdk.Context, types.Market, sdk.AccAddress, []*types.MemOrder) {
-}
-
 func newUserMemOrder(
 	orderId uint64, isBuy bool, price, qty, openQty sdk.Dec) *types.MemOrder {
 	return types.NewUserMemOrder(
@@ -84,8 +72,8 @@ func TestMemOrderBookSide_AddOrder(t *testing.T) {
 }
 
 func TestMemOrder_HasPriorityOver(t *testing.T) {
-	source1 := mockOrderSource{"source1"}
-	source2 := mockOrderSource{"source2"}
+	source1 := types.NewMockOrderSource("source1")
+	source2 := types.NewMockOrderSource("source2")
 	price := utils.ParseDec("12.345")
 
 	order1 := newUserMemOrder(1, false, price, sdk.NewDec(100_000000), sdk.NewDec(90_000000))
@@ -120,7 +108,7 @@ func TestGroupMemOrdersByMsgHeight(t *testing.T) {
 		1, "ucre", "uusd", types.DefaultFees.DefaultMakerFeeRate, types.DefaultFees.DefaultTakerFeeRate)
 	deadline := utils.ParseTime("2023-06-01T00:00:00Z")
 	orderSourceOrdererAddr := utils.TestAddress(100)
-	source := mockOrderSource{sourceName: "source"}
+	source := types.NewMockOrderSource("source")
 	for i := 0; i < 100; i++ {
 		var orders []*types.MemOrder
 		hasOrderSourceOrders := false

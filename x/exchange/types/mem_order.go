@@ -105,6 +105,13 @@ func (order *MemOrder) Paid() sdk.Dec {
 	return order.paid
 }
 
+func (order *MemOrder) PaidWithoutFee() sdk.Dec {
+	if order.fee.IsNegative() {
+		return order.paid.Sub(order.fee)
+	}
+	return order.paid
+}
+
 func (order *MemOrder) Received() sdk.Dec {
 	return order.received
 }
@@ -167,6 +174,33 @@ func (level *MemOrderBookPriceLevel) AddOrder(order *MemOrder) {
 		panic("wrong order direction")
 	}
 	level.orders = append(level.orders, order)
+}
+
+// MemOrderBookSideOptions is options passed when constructing MemOrderBookSide.
+type MemOrderBookSideOptions struct {
+	IsBuy             bool
+	PriceLimit        *sdk.Dec
+	QuantityLimit     *sdk.Dec
+	QuoteLimit        *sdk.Dec
+	MaxNumPriceLevels int
+}
+
+func (opts MemOrderBookSideOptions) ReachedLimit(price, accQty, accQuote sdk.Dec, numPriceLevels int) (reached bool) {
+	if opts.PriceLimit != nil &&
+		((opts.IsBuy && price.LT(*opts.PriceLimit)) ||
+			(!opts.IsBuy && price.GT(*opts.PriceLimit))) {
+		return true
+	}
+	if opts.QuantityLimit != nil && !opts.QuantityLimit.Sub(accQty).IsPositive() {
+		return true
+	}
+	if opts.QuoteLimit != nil && !opts.QuoteLimit.Sub(accQuote).IsPositive() {
+		return true
+	}
+	if opts.MaxNumPriceLevels > 0 && numPriceLevels >= opts.MaxNumPriceLevels {
+		return true
+	}
+	return false
 }
 
 type MemOrderBookSide struct {

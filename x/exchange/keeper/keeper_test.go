@@ -3,7 +3,6 @@ package keeper_test
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/crescent-network/crescent/v5/app/testutil"
@@ -32,30 +31,16 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.FundAccount(utils.TestAddress(0), utils.ParseCoins("1ucre,1uusd,1uatom")) // make positive supplies
 }
 
-type mockOrderSource struct {
-	name string
-}
-
-func (m mockOrderSource) Name() string {
-	return m.name
-}
-
-func (mockOrderSource) GenerateOrders(ctx sdk.Context, market types.Market, createOrder types.CreateOrderFunc, opts types.GenerateOrdersOptions) {
-}
-
-func (mockOrderSource) AfterOrdersExecuted(ctx sdk.Context, market types.Market, ordererAddr sdk.AccAddress, results []*types.MemOrder) {
-}
-
 func (s *KeeperTestSuite) TestSetOrderSources() {
 	// Same source name
 	s.Require().PanicsWithValue("duplicate order source name: a", func() {
 		k := keeper.Keeper{}
-		k.SetOrderSources(&mockOrderSource{"a"}, &mockOrderSource{"a"})
+		k.SetOrderSources(types.NewMockOrderSource("a"), types.NewMockOrderSource("a"))
 	})
 	k := keeper.Keeper{}
-	k.SetOrderSources(&mockOrderSource{"a"}, &mockOrderSource{"b"})
+	k.SetOrderSources(types.NewMockOrderSource("a"), types.NewMockOrderSource("b"))
 	// Already set
 	s.Require().PanicsWithValue("cannot set order sources twice", func() {
-		s.keeper.SetOrderSources(&mockOrderSource{"b"}, &mockOrderSource{"c"})
+		s.keeper.SetOrderSources(types.NewMockOrderSource("b"), types.NewMockOrderSource("c"))
 	})
 }
