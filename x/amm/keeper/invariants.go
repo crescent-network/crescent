@@ -10,14 +10,19 @@ import (
 )
 
 func RegisterInvariants(ir sdk.InvariantRegistry, k Keeper) {
-	ir.RegisterRoute(types.ModuleName, "rewards-growth", RewardsGrowthInvariant(k))
+	ir.RegisterRoute(types.ModuleName, "rewards-growth-global", RewardsGrowthGlobalInvariant(k))
+	ir.RegisterRoute(types.ModuleName, "rewards-growth-outside", RewardsGrowthOutsideInvariant(k))
 	ir.RegisterRoute(types.ModuleName, "can-collect", CanCollectInvariant(k))
 	ir.RegisterRoute(types.ModuleName, "pool-current-liquidity", PoolCurrentLiquidityInvariant(k))
 }
 
 func AllInvariants(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (res string, broken bool) {
-		res, broken = RewardsGrowthInvariant(k)(ctx)
+		res, broken = RewardsGrowthGlobalInvariant(k)(ctx)
+		if broken {
+			return
+		}
+		res, broken = RewardsGrowthOutsideInvariant(k)(ctx)
 		if broken {
 			return
 		}
@@ -29,7 +34,36 @@ func AllInvariants(k Keeper) sdk.Invariant {
 	}
 }
 
-func RewardsGrowthInvariant(k Keeper) sdk.Invariant {
+func RewardsGrowthGlobalInvariant(k Keeper) sdk.Invariant {
+	return func(ctx sdk.Context) (string, bool) {
+		msg := ""
+		cnt := 0
+		k.IterateAllPools(ctx, func(pool types.Pool) (stop bool) {
+			poolState := k.MustGetPoolState(ctx, pool.Id)
+			if poolState.FeeGrowthGlobal.IsAnyNegative() {
+				msg += fmt.Sprintf(
+					"\tpool %d has negative fee growth global: %s\n",
+					pool.Id, poolState.FeeGrowthGlobal)
+				cnt++
+			}
+			if poolState.FarmingRewardsGrowthGlobal.IsAnyNegative() {
+				msg += fmt.Sprintf(
+					"\tpool %d has negative farming rewards growth global: %s\n",
+					pool.Id, poolState.FarmingRewardsGrowthGlobal)
+				cnt++
+			}
+			return false
+		})
+		broken := cnt != 0
+		return sdk.FormatInvariant(
+			types.ModuleName, "rewards growth global",
+			fmt.Sprintf(
+				"found %d pool(s) with wrong fee growth or farming rewards growth global\n%s",
+				cnt, msg)), broken
+	}
+}
+
+func RewardsGrowthOutsideInvariant(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		msg := ""
 		cnt := 0
@@ -54,9 +88,9 @@ func RewardsGrowthInvariant(k Keeper) sdk.Invariant {
 		})
 		broken := cnt != 0
 		return sdk.FormatInvariant(
-			types.ModuleName, "rewards growth",
+			types.ModuleName, "rewards growth outside",
 			fmt.Sprintf(
-				"found %d tick info(s) with wrong fee growth or farming rewards growth\n%s",
+				"found %d tick info(s) with wrong fee growth or farming rewards growth outside\n%s",
 				cnt, msg)), broken
 	}
 }
