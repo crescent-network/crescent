@@ -86,6 +86,15 @@
       }
     },
     {
+      "url": "./tmp-swagger-gen/crescent/liquidamm/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "LiquidAMMParams",
+          "Rewards": "LiquidAMMRewards"
+        }
+      }
+    },
+    {
       "url": "./tmp-swagger-gen/crescent/marker/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {

@@ -96,15 +96,15 @@ func request_Query_LiquidFarm_0(ctx context.Context, marshaler runtime.Marshaler
 		_   = err
 	)
 
-	val, ok = pathParams["liquid_farm_id"]
+	val, ok = pathParams["pool_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "liquid_farm_id")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "pool_id")
 	}
 
-	protoReq.LiquidFarmId, err = runtime.Uint64(val)
+	protoReq.PoolId, err = runtime.Uint64(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "liquid_farm_id", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "pool_id", err)
 	}
 
 	msg, err := client.LiquidFarm(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -123,15 +123,15 @@ func local_request_Query_LiquidFarm_0(ctx context.Context, marshaler runtime.Mar
 		_   = err
 	)
 
-	val, ok = pathParams["liquid_farm_id"]
+	val, ok = pathParams["pool_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "liquid_farm_id")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "pool_id")
 	}
 
-	protoReq.LiquidFarmId, err = runtime.Uint64(val)
+	protoReq.PoolId, err = runtime.Uint64(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "liquid_farm_id", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "pool_id", err)
 	}
 
 	msg, err := server.LiquidFarm(ctx, &protoReq)
@@ -140,7 +140,7 @@ func local_request_Query_LiquidFarm_0(ctx context.Context, marshaler runtime.Mar
 }
 
 var (
-	filter_Query_RewardsAuctions_0 = &utilities.DoubleArray{Encoding: map[string]int{"liquid_farm_id": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
+	filter_Query_RewardsAuctions_0 = &utilities.DoubleArray{Encoding: map[string]int{"pool_id": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
 )
 
 func request_Query_RewardsAuctions_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
@@ -154,15 +154,15 @@ func request_Query_RewardsAuctions_0(ctx context.Context, marshaler runtime.Mars
 		_   = err
 	)
 
-	val, ok = pathParams["liquid_farm_id"]
+	val, ok = pathParams["pool_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "liquid_farm_id")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "pool_id")
 	}
 
-	protoReq.LiquidFarmId, err = runtime.Uint64(val)
+	protoReq.PoolId, err = runtime.Uint64(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "liquid_farm_id", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "pool_id", err)
 	}
 
 	if err := req.ParseForm(); err != nil {
@@ -188,15 +188,15 @@ func local_request_Query_RewardsAuctions_0(ctx context.Context, marshaler runtim
 		_   = err
 	)
 
-	val, ok = pathParams["liquid_farm_id"]
+	val, ok = pathParams["pool_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "liquid_farm_id")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "pool_id")
 	}
 
-	protoReq.LiquidFarmId, err = runtime.Uint64(val)
+	protoReq.PoolId, err = runtime.Uint64(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "liquid_farm_id", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "pool_id", err)
 	}
 
 	if err := req.ParseForm(); err != nil {
@@ -222,15 +222,15 @@ func request_Query_RewardsAuction_0(ctx context.Context, marshaler runtime.Marsh
 		_   = err
 	)
 
-	val, ok = pathParams["liquid_farm_id"]
+	val, ok = pathParams["pool_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "liquid_farm_id")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "pool_id")
 	}
 
-	protoReq.LiquidFarmId, err = runtime.Uint64(val)
+	protoReq.PoolId, err = runtime.Uint64(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "liquid_farm_id", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "pool_id", err)
 	}
 
 	val, ok = pathParams["auction_id"]
@@ -260,15 +260,15 @@ func local_request_Query_RewardsAuction_0(ctx context.Context, marshaler runtime
 		_   = err
 	)
 
-	val, ok = pathParams["liquid_farm_id"]
+	val, ok = pathParams["pool_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "liquid_farm_id")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "pool_id")
 	}
 
-	protoReq.LiquidFarmId, err = runtime.Uint64(val)
+	protoReq.PoolId, err = runtime.Uint64(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "liquid_farm_id", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "pool_id", err)
 	}
 
 	val, ok = pathParams["auction_id"]
@@ -288,7 +288,7 @@ func local_request_Query_RewardsAuction_0(ctx context.Context, marshaler runtime
 }
 
 var (
-	filter_Query_Bids_0 = &utilities.DoubleArray{Encoding: map[string]int{"liquid_farm_id": 0, "auction_id": 1}, Base: []int{1, 1, 2, 0, 0}, Check: []int{0, 1, 1, 2, 3}}
+	filter_Query_Bids_0 = &utilities.DoubleArray{Encoding: map[string]int{"pool_id": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
 )
 
 func request_Query_Bids_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
@@ -302,26 +302,15 @@ func request_Query_Bids_0(ctx context.Context, marshaler runtime.Marshaler, clie
 		_   = err
 	)
 
-	val, ok = pathParams["liquid_farm_id"]
+	val, ok = pathParams["pool_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "liquid_farm_id")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "pool_id")
 	}
 
-	protoReq.LiquidFarmId, err = runtime.Uint64(val)
+	protoReq.PoolId, err = runtime.Uint64(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "liquid_farm_id", err)
-	}
-
-	val, ok = pathParams["auction_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "auction_id")
-	}
-
-	protoReq.AuctionId, err = runtime.Uint64(val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "auction_id", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "pool_id", err)
 	}
 
 	if err := req.ParseForm(); err != nil {
@@ -347,26 +336,15 @@ func local_request_Query_Bids_0(ctx context.Context, marshaler runtime.Marshaler
 		_   = err
 	)
 
-	val, ok = pathParams["liquid_farm_id"]
+	val, ok = pathParams["pool_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "liquid_farm_id")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "pool_id")
 	}
 
-	protoReq.LiquidFarmId, err = runtime.Uint64(val)
+	protoReq.PoolId, err = runtime.Uint64(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "liquid_farm_id", err)
-	}
-
-	val, ok = pathParams["auction_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "auction_id")
-	}
-
-	protoReq.AuctionId, err = runtime.Uint64(val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "auction_id", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "pool_id", err)
 	}
 
 	if err := req.ParseForm(); err != nil {
@@ -392,15 +370,15 @@ func request_Query_Rewards_0(ctx context.Context, marshaler runtime.Marshaler, c
 		_   = err
 	)
 
-	val, ok = pathParams["liquid_farm_id"]
+	val, ok = pathParams["pool_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "liquid_farm_id")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "pool_id")
 	}
 
-	protoReq.LiquidFarmId, err = runtime.Uint64(val)
+	protoReq.PoolId, err = runtime.Uint64(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "liquid_farm_id", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "pool_id", err)
 	}
 
 	msg, err := client.Rewards(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -419,15 +397,15 @@ func local_request_Query_Rewards_0(ctx context.Context, marshaler runtime.Marsha
 		_   = err
 	)
 
-	val, ok = pathParams["liquid_farm_id"]
+	val, ok = pathParams["pool_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "liquid_farm_id")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "pool_id")
 	}
 
-	protoReq.LiquidFarmId, err = runtime.Uint64(val)
+	protoReq.PoolId, err = runtime.Uint64(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "liquid_farm_id", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "pool_id", err)
 	}
 
 	msg, err := server.Rewards(ctx, &protoReq)
@@ -446,15 +424,15 @@ func request_Query_ExchangeRate_0(ctx context.Context, marshaler runtime.Marshal
 		_   = err
 	)
 
-	val, ok = pathParams["liquid_farm_id"]
+	val, ok = pathParams["pool_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "liquid_farm_id")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "pool_id")
 	}
 
-	protoReq.LiquidFarmId, err = runtime.Uint64(val)
+	protoReq.PoolId, err = runtime.Uint64(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "liquid_farm_id", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "pool_id", err)
 	}
 
 	msg, err := client.ExchangeRate(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -473,15 +451,15 @@ func local_request_Query_ExchangeRate_0(ctx context.Context, marshaler runtime.M
 		_   = err
 	)
 
-	val, ok = pathParams["liquid_farm_id"]
+	val, ok = pathParams["pool_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "liquid_farm_id")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "pool_id")
 	}
 
-	protoReq.LiquidFarmId, err = runtime.Uint64(val)
+	protoReq.PoolId, err = runtime.Uint64(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "liquid_farm_id", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "pool_id", err)
 	}
 
 	msg, err := server.ExchangeRate(ctx, &protoReq)
@@ -864,17 +842,17 @@ var (
 
 	pattern_Query_LiquidFarms_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"crescent", "liquidfarming", "v1beta1", "liquidfarms"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_LiquidFarm_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"crescent", "liquidfarming", "v1beta1", "liquidfarms", "liquid_farm_id"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_LiquidFarm_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"crescent", "liquidfarming", "v1beta1", "liquidfarms", "pool_id"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_RewardsAuctions_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"crescent", "liquidfarming", "v1beta1", "liquidfarms", "liquid_farm_id", "rewards_auctions"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_RewardsAuctions_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"crescent", "liquidfarming", "v1beta1", "liquidfarms", "pool_id", "rewards_auctions"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_RewardsAuction_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"crescent", "liquidfarming", "v1beta1", "liquidfarms", "liquid_farm_id", "rewards_auctions", "auction_id"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_RewardsAuction_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"crescent", "liquidfarming", "v1beta1", "liquidfarms", "pool_id", "rewards_auctions", "auction_id"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_Bids_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7}, []string{"crescent", "liquidfarming", "v1beta1", "liquidfarms", "liquid_farm_id", "rewards_auctions", "auction_id", "bids"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_Bids_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"crescent", "liquidfarming", "v1beta1", "liquidfarms", "pool_id", "bids"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_Rewards_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"crescent", "liquidfarming", "v1beta1", "liquidfarms", "liquid_farm_id", "rewards"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_Rewards_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"crescent", "liquidfarming", "v1beta1", "liquidfarms", "pool_id", "rewards"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_ExchangeRate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"crescent", "liquidfarming", "v1beta1", "liquidfarms", "liquid_farm_id", "exchange_rate"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_ExchangeRate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"crescent", "liquidfarming", "v1beta1", "liquidfarms", "pool_id", "exchange_rate"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (
