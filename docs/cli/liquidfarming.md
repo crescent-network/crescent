@@ -66,7 +66,7 @@ Example
 #
 # 4. Send some coins to the farming pool address that is generated when you create a farming plan
 #   - Farming pool address must have some coins to distribute farming rewards
-crescentd tx liquidfarming liquid-farm 1 500000000000pool1 \
+crescentd tx liquidamm liquid-farm 1 500000000000pool1 \
 --chain-id localnet \
 --from alice \
 --keyring-backend test \
@@ -79,7 +79,7 @@ crescentd tx liquidfarming liquid-farm 1 500000000000pool1 \
 # Tips
 #
 # Query all the registered LiquidFarm objects
-crescentd q liquidfarming liquidfarms -o json | jq
+crescentd q liquidamm liquidfarms -o json | jq
 
 # Query account balances to see if Alice has lfcoin.
 crescentd q bank balances cre1zaavvzxez0elundtn32qnk9lkm8kmcszxclz6p -o json | jq
@@ -103,7 +103,7 @@ liquid-unfarm [pool-id] [amount]
 Example
 
 ```bash
-crescentd tx liquidfarming liquid-unfarm 1 300000000000lf1 \
+crescentd tx liquidamm liquid-unfarm 1 300000000000lf1 \
 --chain-id localnet \
 --from alice \
 --keyring-backend test \
@@ -137,7 +137,7 @@ place-bid [auction-id] [pool-id] [amount]
 Example
 
 ```bash
-crescentd tx liquidfarming place-bid 1 1 1000000000pool1 \
+crescentd tx liquidamm place-bid 1 1 1000000000pool1 \
 --chain-id localnet \
 --from alice \
 --keyring-backend test \
@@ -148,7 +148,7 @@ crescentd tx liquidfarming place-bid 1 1 1000000000pool1 \
 #
 # Tips
 #
-crescentd q liquidfarming bids 1 -o json | jq
+crescentd q liquidamm bids 1 -o json | jq
 ```
 
 ## RefundBid
@@ -169,7 +169,7 @@ refund-bid [auction-id] [pool-id]
 Example
 
 ```bash
-crescentd tx liquidfarming refund-bid 1 1 \
+crescentd tx liquidamm refund-bid 1 1 \
 --chain-id localnet \
 --from alice \
 --keyring-backend test \
@@ -191,7 +191,7 @@ advance-auction
 Example
 
 ```bash
-crescentd tx liquidfarming advance-auction \
+crescentd tx liquidamm advance-auction \
 --chain-id localnet \
 --from alice \
 --keyring-backend test \
@@ -215,7 +215,7 @@ params
 Example
 
 ```bash
-crescentd query liquidfarming params -o json | jq
+crescentd query liquidamm params -o json | jq
 ```
 
 ## LiquidFarms
@@ -231,7 +231,7 @@ liquidfarms
 Example
 
 ```bash
-crescentd query liquidfarming liquidfarms -o json | jq
+crescentd query liquidamm liquidfarms -o json | jq
 ```
 
 ## LiquidFarm
@@ -251,7 +251,7 @@ liquidfarm [pool-id]
 Example
 
 ```bash
-crescentd query liquidfarming liquidfarm 1 -o json | jq
+crescentd query liquidamm liquidfarm 1 -o json | jq
 ```
 
 ## RewardsAuctions
@@ -271,10 +271,10 @@ Example
 # You can adjust the value in config-test.yml file to make it faster or slower.
 # By default, the value is set to 8 hours but for local testing purpose it is set to 120 seconds.
 # If you wait 120 seconds (2 minutes) after starting a local network, the module automatically creates new rewards auction.
-crescentd query liquidfarming rewards-auctions 1 -o json | jq
-crescentd query liquidfarming rewards-auctions 1 --status AUCTION_STATUS_STARTED -o json | jq
-crescentd query liquidfarming rewards-auctions 1 --status AUCTION_STATUS_FINISHED -o json | jq
-crescentd query liquidfarming rewards-auctions 1 --status AUCTION_STATUS_SKIPPED -o json | jq
+crescentd query liquidamm rewards-auctions 1 -o json | jq
+crescentd query liquidamm rewards-auctions 1 --status AUCTION_STATUS_STARTED -o json | jq
+crescentd query liquidamm rewards-auctions 1 --status AUCTION_STATUS_FINISHED -o json | jq
+crescentd query liquidamm rewards-auctions 1 --status AUCTION_STATUS_SKIPPED -o json | jq
 ```
 
 ## RewardsAuction
@@ -295,7 +295,7 @@ rewards-auction [pool-id] [auction-id]
 Example
 
 ```bash
-crescentd query liquidfarming rewards-auction 1 1 -o json | jq
+crescentd query liquidamm rewards-auction 1 1 -o json | jq
 ```
 
 ## Bids
@@ -315,7 +315,7 @@ bids [pool-id]
 Example
 
 ```bash
-crescentd query liquidfarming bids 1 -o json | jq
+crescentd query liquidamm bids 1 -o json | jq
 ```
 
 ## Rewards
@@ -335,7 +335,7 @@ rewards [pool-id]
 Example
 
 ```bash
-crescentd query liquidfarming rewards 1 -o json | jq
+crescentd query liquidamm rewards 1 -o json | jq
 ```
 
 ## ExchangeRate
@@ -355,5 +355,5 @@ exchange-rate [pool-id]
 Example
 
 ```bash
-crescentd query liquidfarming exchange-rate 1 -o json | jq
+crescentd query liquidamm exchange-rate 1 -o json | jq
 ```

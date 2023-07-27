@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+package crescent.liquidamm.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package                      = "github.com/crescent-network/crescent/v5/x/liquidamm/types";
+option (gogoproto.goproto_getters_all) = false;
+
+message EventPublicPositionCreated {
+  uint64 public_position_id = 1;
+  uint64 pool_id            = 2;
+  int32  lower_tick         = 3;
+  int32  upper_tick         = 4;
+  string min_bid_amount     = 5
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string fee_rate = 6 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+}
+
+message EventMintShare {
+  string                   minter             = 1;
+  uint64                   public_position_id = 2;
+  cosmos.base.v1beta1.Coin minted_share       = 3 [(gogoproto.nullable) = false];
+  string                   liquidity          = 4
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.Coin amount = 5
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+}
+
+message EventBurnShare {
+  string                   burner             = 1;
+  uint64                   public_position_id = 2;
+  cosmos.base.v1beta1.Coin share              = 3 [(gogoproto.nullable) = false];
+  string                   removed_liquidity  = 4
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.Coin amount = 5
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+}
+
+message EventPlaceBid {
+  string                   bidder             = 1;
+  uint64                   public_position_id = 2;
+  uint64                   rewards_auction_id = 3;
+  cosmos.base.v1beta1.Coin share              = 4 [(gogoproto.nullable) = false];
+}
+
+message EventBidRefunded {
+  string                   bidder             = 1;
+  uint64                   public_position_id = 2;
+  uint64                   rewards_auction_id = 3;
+  cosmos.base.v1beta1.Coin share              = 4 [(gogoproto.nullable) = false];
+}
+
+message EventPublicPositionParameterChanged {
+  uint64 public_position_id = 1;
+  string min_bid_amount     = 2
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string fee_rate = 3 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+}

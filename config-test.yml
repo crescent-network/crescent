@@ -4,7 +4,7 @@ init:
 build:
   ldflags:
     - -X github.com/crescent-network/crescent/v5/x/farming/keeper.enableAdvanceEpoch=true
-    - -X github.com/crescent-network/crescent/v5/x/liquidfarming/keeper.enableAdvanceAuction=true
+    - -X github.com/crescent-network/crescent/v5/x/liquidamm/keeper.enableAdvanceAuction=true
   proto:
     path: proto
     third_party_paths:

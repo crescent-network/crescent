@@ -77,11 +77,11 @@
       }
     },
     {
-      "url": "./tmp-swagger-gen/crescent/liquidfarming/v1beta1/query.swagger.json",
+      "url": "./tmp-swagger-gen/crescent/liquidamm/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
-          "Params": "LiquidFarmingParams",
-          "Rewards": "LiquidFarmingRewards"
+          "Params": "LiquidAMMParams",
+          "Rewards": "LiquidAMMRewards"
         }
       }
     },

@@ -39,11 +39,6 @@ const (
 	DefaultWeightCompleteRedelegationUnbonding     int = 30
 	DefaultWeightTallyWithLiquidStaking            int = 30
 
-	DefaultWeightMsgLiquidFarm   int = 50
-	DefaultWeightMsgLiquidUnfarm int = 10
-	DefaultWeightMsgPlaceBid     int = 20
-	DefaultWeightMsgRefundBid    int = 5
-
 	DefaultWeightMsgApplyMarketMaker int = 20
 	DefaultWeightMsgClaimIncentives  int = 10
 
