@@ -26,6 +26,11 @@ const (
 	// Deprecated claim module
 	DefaultWeightMsgClaim int = 0
 
+	DefaultWeightMsgLiquidFarm   int = 50
+	DefaultWeightMsgLiquidUnfarm int = 10
+	DefaultWeightMsgPlaceBid     int = 20
+	DefaultWeightMsgRefundBid    int = 5
+
 	DefaultWeightAddPublicPlanProposal    int = 5
 	DefaultWeightUpdatePublicPlanProposal int = 5
 	DefaultWeightDeletePublicPlanProposal int = 5

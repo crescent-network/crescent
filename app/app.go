@@ -130,6 +130,9 @@ import (
 	liquidammclient "github.com/crescent-network/crescent/v5/x/liquidamm/client"
 	liquidammkeeper "github.com/crescent-network/crescent/v5/x/liquidamm/keeper"
 	liquidammtypes "github.com/crescent-network/crescent/v5/x/liquidamm/types"
+	"github.com/crescent-network/crescent/v5/x/liquidfarming"
+	liquidfarmingkeeper "github.com/crescent-network/crescent/v5/x/liquidfarming/keeper"
+	liquidfarmingtypes "github.com/crescent-network/crescent/v5/x/liquidfarming/types"
 	"github.com/crescent-network/crescent/v5/x/liquidity"
 	liquiditykeeper "github.com/crescent-network/crescent/v5/x/liquidity/keeper"
 	liquiditytypes "github.com/crescent-network/crescent/v5/x/liquidity/types"
@@ -199,6 +202,7 @@ var (
 		farming.AppModuleBasic{},
 		liquidity.AppModuleBasic{},
 		liquidstaking.AppModuleBasic{},
+		liquidfarming.AppModuleBasic{},
 		liquidamm.AppModuleBasic{},
 		claim.AppModuleBasic{},
 		marketmaker.AppModuleBasic{},
@@ -221,6 +225,7 @@ var (
 		farmingtypes.ModuleName:        nil,
 		liquiditytypes.ModuleName:      {authtypes.Minter, authtypes.Burner},
 		liquidstakingtypes.ModuleName:  {authtypes.Minter, authtypes.Burner},
+		liquidfarmingtypes.ModuleName:  {authtypes.Minter, authtypes.Burner},
 		liquidammtypes.ModuleName:      {authtypes.Minter, authtypes.Burner},
 		claimtypes.ModuleName:          nil,
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
@@ -280,6 +285,7 @@ type App struct {
 	FarmingKeeper       farmingkeeper.Keeper
 	LiquidityKeeper     liquiditykeeper.Keeper
 	LiquidStakingKeeper liquidstakingkeeper.Keeper
+	LiquidFarmingKeeper liquidfarmingkeeper.Keeper
 	LiquidAMMKeeper     liquidammkeeper.Keeper
 	ClaimKeeper         claimkeeper.Keeper
 	MarketMakerKeeper   marketmakerkeeper.Keeper
@@ -360,6 +366,7 @@ func NewApp(
 		farmingtypes.StoreKey,
 		liquiditytypes.StoreKey,
 		liquidstakingtypes.StoreKey,
+		liquidfarmingtypes.StoreKey,
 		liquidammtypes.StoreKey,
 		claimtypes.StoreKey,
 		marketmakertypes.StoreKey,
@@ -560,6 +567,15 @@ func NewApp(
 	app.ExchangeKeeper.SetOrderSources(
 		ammkeeper.NewOrderSource(app.AMMKeeper),
 	)
+	app.LiquidFarmingKeeper = liquidfarmingkeeper.NewKeeper(
+		appCodec,
+		keys[liquidfarmingtypes.StoreKey],
+		app.GetSubspace(liquidfarmingtypes.ModuleName),
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.LPFarmKeeper,
+		app.LiquidityKeeper,
+	)
 	app.LiquidAMMKeeper = liquidammkeeper.NewKeeper(
 		appCodec,
 		keys[liquidammtypes.StoreKey],
@@ -683,6 +699,7 @@ func NewApp(
 		liquidity.NewAppModule(appCodec, app.LiquidityKeeper, app.AccountKeeper, app.BankKeeper),
 		farming.NewAppModule(appCodec, app.FarmingKeeper, app.AccountKeeper, app.BankKeeper),
 		liquidstaking.NewAppModule(appCodec, app.LiquidStakingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.GovKeeper),
+		liquidfarming.NewAppModule(appCodec, app.LiquidFarmingKeeper, app.AccountKeeper, app.BankKeeper),
 		liquidamm.NewAppModule(appCodec, app.LiquidAMMKeeper, app.AccountKeeper, app.BankKeeper),
 		claim.NewAppModule(appCodec, app.ClaimKeeper, app.AccountKeeper, app.BankKeeper, app.DistrKeeper, app.GovKeeper, app.LiquidityKeeper, app.LiquidStakingKeeper),
 		marketmaker.NewAppModule(appCodec, app.MarketMakerKeeper, app.AccountKeeper, app.BankKeeper),
@@ -709,7 +726,8 @@ func NewApp(
 		stakingtypes.ModuleName,
 		liquidstakingtypes.ModuleName,
 		liquiditytypes.ModuleName,
-		liquidammtypes.ModuleName,
+		liquidfarmingtypes.ModuleName,
+		liquidammtypes.ModuleName, // must be prior to amm
 		ibchost.ModuleName,
 		ammtypes.ModuleName,
 		lpfarmtypes.ModuleName,
@@ -745,7 +763,6 @@ func NewApp(
 		liquiditytypes.ModuleName,
 		farmingtypes.ModuleName,
 		liquidstakingtypes.ModuleName,
-		liquidammtypes.ModuleName,
 
 		// empty logic modules
 		capabilitytypes.ModuleName,
@@ -770,6 +787,8 @@ func NewApp(
 		icatypes.ModuleName,
 		exchangetypes.ModuleName,
 		ammtypes.ModuleName,
+		liquidammtypes.ModuleName,
+		liquidfarmingtypes.ModuleName,
 
 		markertypes.ModuleName,
 	)
@@ -798,6 +817,7 @@ func NewApp(
 		farmingtypes.ModuleName,
 		liquiditytypes.ModuleName,
 		liquidstakingtypes.ModuleName,
+		liquidfarmingtypes.ModuleName,
 		liquidammtypes.ModuleName,
 		claimtypes.ModuleName,
 		marketmakertypes.ModuleName,
@@ -844,6 +864,7 @@ func NewApp(
 		evidence.NewAppModule(app.EvidenceKeeper),
 		liquidity.NewAppModule(appCodec, app.LiquidityKeeper, app.AccountKeeper, app.BankKeeper),
 		liquidstaking.NewAppModule(appCodec, app.LiquidStakingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.GovKeeper),
+		liquidfarming.NewAppModule(appCodec, app.LiquidFarmingKeeper, app.AccountKeeper, app.BankKeeper),
 		claim.NewAppModule(appCodec, app.ClaimKeeper, app.AccountKeeper, app.BankKeeper, app.DistrKeeper, app.GovKeeper, app.LiquidityKeeper, app.LiquidStakingKeeper),
 		liquidamm.NewAppModule(appCodec, app.LiquidAMMKeeper, app.AccountKeeper, app.BankKeeper),
 		marketmaker.NewAppModule(appCodec, app.MarketMakerKeeper, app.AccountKeeper, app.BankKeeper),
@@ -1061,6 +1082,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(farmingtypes.ModuleName)
 	paramsKeeper.Subspace(liquiditytypes.ModuleName)
 	paramsKeeper.Subspace(liquidstakingtypes.ModuleName)
+	paramsKeeper.Subspace(liquidfarmingtypes.ModuleName)
 	paramsKeeper.Subspace(liquidammtypes.ModuleName)
 	paramsKeeper.Subspace(marketmakertypes.ModuleName)
 	paramsKeeper.Subspace(lpfarmtypes.ModuleName)

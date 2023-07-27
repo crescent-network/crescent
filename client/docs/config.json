@@ -77,6 +77,15 @@
       }
     },
     {
+      "url": "./tmp-swagger-gen/crescent/liquidfarming/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "LiquidFarmingParams",
+          "Rewards": "LiquidFarmingRewards"
+        }
+      }
+    },
+    {
       "url": "./tmp-swagger-gen/crescent/liquidamm/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
