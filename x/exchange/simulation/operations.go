@@ -18,13 +18,19 @@ import (
 
 // Simulation operation weights constants.
 const (
-	OpWeightMsgCreateMarket     = "op_weight_msg_create_market"
-	OpWeightMsgPlaceLimitOrder  = "op_weight_msg_place_limit_order"
-	OpWeightMsgPlaceMarketOrder = "op_weight_msg_place_market_order"
+	OpWeightMsgCreateMarket      = "op_weight_msg_create_market"
+	OpWeightMsgPlaceLimitOrder   = "op_weight_msg_place_limit_order"
+	OpWeightMsgPlaceMarketOrder  = "op_weight_msg_place_market_order"
+	OpWeightMsgCancelOrder       = "op_weight_msg_cancel_order"
+	OpWeightMsgCancelAllOrders   = "op_weight_msg_cancel_all_orders"
+	OpWeightMsgSwapExactAmountIn = "op_weight_msg_swap_exact_amount_in"
 
-	DefaultWeightMsgCreateMarket     = 10
-	DefaultWeightMsgPlaceLimitOrder  = 90
-	DefaultWeightMsgPlaceMarketOrder = 90
+	DefaultWeightMsgCreateMarket      = 10
+	DefaultWeightMsgPlaceLimitOrder   = 90
+	DefaultWeightMsgPlaceMarketOrder  = 90
+	DefaultWeightMsgCancelOrder       = 20
+	DefaultWeightMsgCancelAllOrders   = 10
+	DefaultWeightMsgSwapExactAmountIn = 80
 )
 
 var (
@@ -38,9 +44,12 @@ func WeightedOperations(
 	ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper,
 ) simulation.WeightedOperations {
 	var (
-		weightMsgCreateMarket     int
-		weightMsgPlaceLimitOrder  int
-		weightMsgPlaceMarketOrder int
+		weightMsgCreateMarket      int
+		weightMsgPlaceLimitOrder   int
+		weightMsgPlaceMarketOrder  int
+		weightMsgCancelOrder       int
+		weightMsgCancelAllOrders   int
+		weightMsgSwapExactAmountIn int
 	)
 	appParams.GetOrGenerate(cdc, OpWeightMsgCreateMarket, &weightMsgCreateMarket, nil, func(_ *rand.Rand) {
 		weightMsgCreateMarket = DefaultWeightMsgCreateMarket
@@ -50,6 +59,15 @@ func WeightedOperations(
 	})
 	appParams.GetOrGenerate(cdc, OpWeightMsgPlaceMarketOrder, &weightMsgPlaceMarketOrder, nil, func(_ *rand.Rand) {
 		weightMsgPlaceMarketOrder = DefaultWeightMsgPlaceMarketOrder
+	})
+	appParams.GetOrGenerate(cdc, OpWeightMsgCancelOrder, &weightMsgCancelOrder, nil, func(_ *rand.Rand) {
+		weightMsgCancelOrder = DefaultWeightMsgCancelOrder
+	})
+	appParams.GetOrGenerate(cdc, OpWeightMsgCancelAllOrders, &weightMsgCancelAllOrders, nil, func(_ *rand.Rand) {
+		weightMsgCancelAllOrders = DefaultWeightMsgCancelAllOrders
+	})
+	appParams.GetOrGenerate(cdc, OpWeightMsgSwapExactAmountIn, &weightMsgSwapExactAmountIn, nil, func(_ *rand.Rand) {
+		weightMsgSwapExactAmountIn = DefaultWeightMsgSwapExactAmountIn
 	})
 
 	return simulation.WeightedOperations{
@@ -64,6 +82,18 @@ func WeightedOperations(
 		simulation.NewWeightedOperation(
 			weightMsgPlaceMarketOrder,
 			SimulateMsgPlaceMarketOrder(ak, bk, k),
+		),
+		simulation.NewWeightedOperation(
+			weightMsgCancelOrder,
+			SimulateMsgCancelOrder(ak, bk, k),
+		),
+		simulation.NewWeightedOperation(
+			weightMsgCancelAllOrders,
+			SimulateMsgCancelAllOrders(ak, bk, k),
+		),
+		simulation.NewWeightedOperation(
+			weightMsgSwapExactAmountIn,
+			SimulateMsgSwapExactAmountIn(ak, bk, k),
 		),
 	}
 }
@@ -138,6 +168,93 @@ func SimulateMsgPlaceMarketOrder(
 		if !found {
 			return simtypes.NoOpMsg(
 				types.ModuleName, types.TypeMsgPlaceMarketOrder, "unable to place market order"), nil, nil
+		}
+		txCtx := simulation.OperationInput{
+			R:               r,
+			App:             app,
+			TxGen:           appparams.MakeTestEncodingConfig().TxConfig,
+			Msg:             msg,
+			MsgType:         msg.Type(),
+			Context:         ctx,
+			SimAccount:      simAccount,
+			AccountKeeper:   ak,
+			Bankkeeper:      bk,
+			ModuleName:      types.ModuleName,
+			CoinsSpentInMsg: bk.SpendableCoins(ctx, simAccount.Address),
+		}
+		return utils.GenAndDeliverTxWithFees(txCtx, gas, fees)
+	}
+}
+
+func SimulateMsgCancelOrder(
+	ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper,
+) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		simAccount, msg, found := findMsgCancelOrderParams(r, accs, k, ctx)
+		if !found {
+			return simtypes.NoOpMsg(
+				types.ModuleName, types.TypeMsgCancelOrder, "unable to cancel order"), nil, nil
+		}
+		txCtx := simulation.OperationInput{
+			R:               r,
+			App:             app,
+			TxGen:           appparams.MakeTestEncodingConfig().TxConfig,
+			Msg:             msg,
+			MsgType:         msg.Type(),
+			Context:         ctx,
+			SimAccount:      simAccount,
+			AccountKeeper:   ak,
+			Bankkeeper:      bk,
+			ModuleName:      types.ModuleName,
+			CoinsSpentInMsg: bk.SpendableCoins(ctx, simAccount.Address),
+		}
+		return utils.GenAndDeliverTxWithFees(txCtx, gas, fees)
+	}
+}
+
+func SimulateMsgCancelAllOrders(
+	ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper,
+) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		simAccount, msg, found := findMsgCancelAllOrdersParams(r, accs, k, ctx)
+		if !found {
+			return simtypes.NoOpMsg(
+				types.ModuleName, types.TypeMsgCancelAllOrders, "unable to cancel all orders"), nil, nil
+		}
+		txCtx := simulation.OperationInput{
+			R:               r,
+			App:             app,
+			TxGen:           appparams.MakeTestEncodingConfig().TxConfig,
+			Msg:             msg,
+			MsgType:         msg.Type(),
+			Context:         ctx,
+			SimAccount:      simAccount,
+			AccountKeeper:   ak,
+			Bankkeeper:      bk,
+			ModuleName:      types.ModuleName,
+			CoinsSpentInMsg: bk.SpendableCoins(ctx, simAccount.Address),
+		}
+		return utils.GenAndDeliverTxWithFees(txCtx, gas, fees)
+	}
+}
+
+func SimulateMsgSwapExactAmountIn(
+	ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper,
+) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		simAccount, msg, found := findMsgSwapExactAmountInParams(r, accs, bk, k, ctx)
+		if !found {
+			return simtypes.NoOpMsg(
+				types.ModuleName, types.TypeMsgSwapExactAmountIn, "unable to swap exact amount in"), nil, nil
 		}
 		txCtx := simulation.OperationInput{
 			R:               r,
@@ -247,25 +364,96 @@ func findMsgPlaceMarketOrderParams(
 					return acc, msg, true
 				}
 			}
-			marketState := k.MustGetMarketState(ctx, market.Id)
-			if marketState.LastPrice == nil {
+			// Temporarily comment out buy market order operation because
+			// of performance issue.
+			//marketState := k.MustGetMarketState(ctx, market.Id)
+			//if marketState.LastPrice == nil {
+			//	continue
+			//}
+			//qty := utils.RandomDec(r, sdk.NewDec(100), sdk.NewDec(1_000000)).TruncateDec()
+			//cacheCtx, _ := ctx.CacheContext()
+			//if _, _, err := k.PlaceMarketOrder(cacheCtx, market.Id, acc.Address, true, qty); err != nil {
+			//	continue
+			//}
+			//msg = types.NewMsgPlaceMarketOrder(acc.Address, market.Id, true, qty)
+			//return acc, msg, true
+		}
+	}
+	return acc, msg, false
+}
+
+func findMsgCancelOrderParams(
+	r *rand.Rand, accs []simtypes.Account, k keeper.Keeper, ctx sdk.Context) (acc simtypes.Account, msg *types.MsgCancelOrder, found bool) {
+	accs = utils.ShuffleSimAccounts(r, accs)
+	for _, acc = range accs {
+		var orders []types.Order
+		k.IterateOrdersByOrderer(ctx, acc.Address, func(order types.Order) (stop bool) {
+			if order.MsgHeight < ctx.BlockHeight() {
+				orders = append(orders, order)
+			}
+			return false
+		})
+		if len(orders) > 0 {
+			order := orders[r.Intn(len(orders))]
+			msg = types.NewMsgCancelOrder(acc.Address, order.Id)
+			return acc, msg, true
+		}
+	}
+	return acc, nil, false
+}
+
+func findMsgCancelAllOrdersParams(
+	r *rand.Rand, accs []simtypes.Account, k keeper.Keeper, ctx sdk.Context) (acc simtypes.Account, msg *types.MsgCancelAllOrders, found bool) {
+	acc, _ = simtypes.RandomAcc(r, accs)
+	var markets []types.Market
+	k.IterateAllMarkets(ctx, func(market types.Market) (stop bool) {
+		markets = append(markets, market)
+		return false
+	})
+	if len(markets) == 0 {
+		return acc, nil, false
+	}
+	// CancelAllOrders will succeed even if the orderer has no orders in the market.
+	// So we just choose random market.
+	market := markets[r.Intn(len(markets))]
+	msg = types.NewMsgCancelAllOrders(acc.Address, market.Id)
+	return acc, msg, true
+}
+
+func findMsgSwapExactAmountInParams(
+	r *rand.Rand, accs []simtypes.Account, bk types.BankKeeper, k keeper.Keeper, ctx sdk.Context) (acc simtypes.Account, msg *types.MsgSwapExactAmountIn, found bool) {
+	var allDenoms []string
+	bk.IterateTotalSupply(ctx, func(coin sdk.Coin) bool {
+		allDenoms = append(allDenoms, coin.Denom)
+		return false
+	})
+	accs = utils.ShuffleSimAccounts(r, accs)
+	for _, acc = range accs {
+		spendable := bk.SpendableCoins(ctx, acc.Address)
+		// We shuffle denoms every time for better randomization of candidate
+		// denom pair.
+		r.Shuffle(len(allDenoms), func(i, j int) {
+			allDenoms[i], allDenoms[j] = allDenoms[j], allDenoms[i]
+		})
+		for _, denomIn := range allDenoms {
+			if !spendable.AmountOf(denomIn).GTE(sdk.NewInt(1_000000)) {
 				continue
 			}
-			qty := utils.RandomDec(r, sdk.NewDec(100), sdk.NewDec(1_000000)).TruncateDec()
-			cacheCtx, _ := ctx.CacheContext()
-			obs := k.ConstructMemOrderBookSide(cacheCtx, market, types.MemOrderBookSideOptions{
-				IsBuy:         false,
-				QuantityLimit: &qty,
-			}, nil)
-			if len(obs.Levels()) == 0 {
-				continue
-			}
-			price := obs.Levels()[len(obs.Levels())-1].Price()
-			if balance := spendable.AmountOf(market.QuoteDenom).ToDec(); balance.GT(types.QuoteAmount(true, price, qty)) {
-				msg = types.NewMsgPlaceMarketOrder(acc.Address, market.Id, true, qty)
+			input := sdk.NewDecCoin(denomIn, utils.RandomInt(r, sdk.NewInt(10000), sdk.NewInt(1_000000)))
+			for _, denomOut := range allDenoms {
+				querier := keeper.Querier{Keeper: k}
+				resp, err := querier.BestSwapExactAmountInRoutes(sdk.WrapSDKContext(ctx), &types.QueryBestSwapExactAmountInRoutesRequest{
+					Input:       input.String(),
+					OutputDenom: denomOut,
+				})
+				if err != nil {
+					continue
+				}
+				// If there's no error than the output amount always be positive.
+				msg = types.NewMsgSwapExactAmountIn(acc.Address, resp.Routes, input, resp.Output)
 				return acc, msg, true
 			}
 		}
 	}
-	return acc, msg, false
+	return acc, nil, false
 }
