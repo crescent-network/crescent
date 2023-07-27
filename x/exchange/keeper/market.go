@@ -24,7 +24,7 @@ func (k Keeper) CreateMarket(
 	fees := k.GetFees(ctx)
 	if err = k.bankKeeper.SendCoinsFromAccountToModule(
 		ctx, creatorAddr, types.ModuleName, fees.MarketCreationFee); err != nil {
-		return
+		return market, sdkerrors.Wrap(err, "insufficient market creation fee")
 	}
 
 	marketId := k.GetNextMarketIdWithUpdate(ctx)
