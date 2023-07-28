@@ -99,6 +99,32 @@ func (s *SimTestSuite) TestSimulateMsgPlaceLimitOrder() {
 	s.Require().Equal(2*time.Hour, msg.Lifespan)
 }
 
+func (s *SimTestSuite) TestSimulateMsgPlaceMMLimitOrder() {
+	r := rand.New(rand.NewSource(0))
+	accs := s.getTestingAccounts(r, 50)
+
+	s.CreateMarket("denom1", "denom2")
+
+	op := simulation.SimulateMsgPlaceMMLimitOrder(
+		s.App.AccountKeeper, s.App.BankKeeper, s.keeper)
+	opMsg, futureOps, err := op(r, s.App.BaseApp, s.Ctx, accs, "")
+	s.Require().NoError(err)
+	s.Require().True(opMsg.OK)
+	s.Require().Len(futureOps, 0)
+
+	var msg types.MsgPlaceMMLimitOrder
+	types.ModuleCdc.MustUnmarshalJSON(opMsg.Msg, &msg)
+
+	s.Require().Equal(types.TypeMsgPlaceMMLimitOrder, msg.Type())
+	s.Require().Equal(types.ModuleName, msg.Route())
+	s.Require().Equal("cosmos1r6vgn9cwpvja7448fg0fgglj63rcs6y84p8egu", msg.Sender)
+	s.Require().EqualValues(1, msg.MarketId)
+	s.Require().Equal(false, msg.IsBuy)
+	s.AssertEqual(utils.ParseDec("157.11"), msg.Price)
+	s.AssertEqual(utils.ParseDec("75503769"), msg.Quantity)
+	s.Require().Equal(2*time.Hour, msg.Lifespan)
+}
+
 func (s *SimTestSuite) TestSimulateMsgPlaceMarketOrder() {
 	r := rand.New(rand.NewSource(0))
 	accs := s.getTestingAccounts(r, 50)
