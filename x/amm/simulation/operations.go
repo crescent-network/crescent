@@ -21,10 +21,12 @@ const (
 	OpWeightMsgCreatePool      = "op_weight_msg_create_pool"
 	OpWeightMsgAddLiquidity    = "op_weight_msg_add_liquidity"
 	OpWeightMsgRemoveLiquidity = "op_weight_msg_remove_liquidity"
+	OpWeightMsgCollect         = "op_weight_msg_collect"
 
 	DefaultWeightMsgCreatePool      = 5
 	DefaultWeightMsgAddLiquidity    = 70
 	DefaultWeightMsgRemoveLiquidity = 50
+	DefaultWeightMsgCollect         = 50
 )
 
 var (
@@ -41,6 +43,7 @@ func WeightedOperations(
 		weightMsgCreatePool      int
 		weightMsgAddLiquidity    int
 		weightMsgRemoveLiquidity int
+		weightMsgCollect         int
 	)
 	appParams.GetOrGenerate(cdc, OpWeightMsgCreatePool, &weightMsgCreatePool, nil, func(_ *rand.Rand) {
 		weightMsgCreatePool = DefaultWeightMsgCreatePool
@@ -50,6 +53,9 @@ func WeightedOperations(
 	})
 	appParams.GetOrGenerate(cdc, OpWeightMsgRemoveLiquidity, &weightMsgRemoveLiquidity, nil, func(_ *rand.Rand) {
 		weightMsgRemoveLiquidity = DefaultWeightMsgRemoveLiquidity
+	})
+	appParams.GetOrGenerate(cdc, OpWeightMsgCollect, &weightMsgCollect, nil, func(_ *rand.Rand) {
+		weightMsgCollect = DefaultWeightMsgCollect
 	})
 
 	return simulation.WeightedOperations{
@@ -64,6 +70,10 @@ func WeightedOperations(
 		simulation.NewWeightedOperation(
 			weightMsgRemoveLiquidity,
 			SimulateMsgRemoveLiquidity(ak, bk, k),
+		),
+		simulation.NewWeightedOperation(
+			weightMsgCollect,
+			SimulateMsgCollect(ak, bk, k),
 		),
 	}
 }
@@ -138,6 +148,35 @@ func SimulateMsgRemoveLiquidity(
 		if !found {
 			return simtypes.NoOpMsg(
 				types.ModuleName, types.TypeMsgRemoveLiquidity, "unable to remove liquidity"), nil, nil
+		}
+		txCtx := simulation.OperationInput{
+			R:               r,
+			App:             app,
+			TxGen:           appparams.MakeTestEncodingConfig().TxConfig,
+			Msg:             msg,
+			MsgType:         msg.Type(),
+			Context:         ctx,
+			SimAccount:      simAccount,
+			AccountKeeper:   ak,
+			Bankkeeper:      bk,
+			ModuleName:      types.ModuleName,
+			CoinsSpentInMsg: bk.SpendableCoins(ctx, simAccount.Address),
+		}
+		return utils.GenAndDeliverTxWithFees(txCtx, gas, fees)
+	}
+}
+
+func SimulateMsgCollect(
+	ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper,
+) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		simAccount, msg, found := findMsgCollectParams(r, accs, k, ctx)
+		if !found {
+			return simtypes.NoOpMsg(
+				types.ModuleName, types.TypeMsgCollect, "unable to collect"), nil, nil
 		}
 		txCtx := simulation.OperationInput{
 			R:               r,
@@ -261,4 +300,33 @@ func findMsgPlaceRemoveLiquidityParams(
 		}
 	}
 	return acc, msg, false
+}
+
+func findMsgCollectParams(
+	r *rand.Rand, accs []simtypes.Account,
+	k keeper.Keeper, ctx sdk.Context) (acc simtypes.Account, msg *types.MsgCollect, found bool) {
+	accs = utils.ShuffleSimAccounts(r, accs)
+	for _, acc = range accs {
+		var positions []types.Position
+		k.IteratePositionsByOwner(ctx, acc.Address, func(position types.Position) (stop bool) {
+			fee, farmingRewards, err := k.CollectibleCoins(ctx, position.Id)
+			if err != nil { // skip
+				return false
+			}
+			if !fee.Add(farmingRewards...).IsAllPositive() { // skip
+				return false
+			}
+			positions = append(positions, position)
+			return false
+		})
+		if len(positions) == 0 {
+			continue
+		}
+		position := positions[r.Intn(len(positions))]
+		fee, farmingRewards, _ := k.CollectibleCoins(ctx, position.Id)
+		collectible := fee.Add(farmingRewards...)
+		msg = types.NewMsgCollect(acc.Address, position.Id, simtypes.RandSubsetCoins(r, collectible))
+		return acc, msg, true
+	}
+	return acc, nil, false
 }

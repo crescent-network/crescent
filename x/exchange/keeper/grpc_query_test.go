@@ -283,7 +283,7 @@ func (s *KeeperTestSuite) TestQueryBestSwapExactAmountInRoutes() {
 				s.Assert().EqualValues(1, resp.Results[1].MarketId)
 				s.AssertEqual(utils.ParseDecCoin("49924500uusd"), resp.Results[1].Input)
 				s.AssertEqual(utils.ParseDecCoin("9969723ucre"), resp.Results[1].Output)
-				s.AssertEqual(utils.ParseDecCoin("14977.050458990820183597ucre"), resp.Results[1].Fee)
+				s.AssertEqual(utils.ParseDecCoin("14977.050458990820183596ucre"), resp.Results[1].Fee)
 			},
 		},
 	} {

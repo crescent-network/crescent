@@ -62,11 +62,11 @@ func (order Order) Validate() error {
 	return nil
 }
 
-func (order Order) ExecutableQuantity(price sdk.Dec) sdk.Dec {
+func (order Order) ExecutableQuantity() sdk.Dec {
 	if order.IsBuy {
 		return sdk.MinDec(
 			order.OpenQuantity,
-			order.RemainingDeposit.QuoTruncate(price))
+			order.RemainingDeposit.QuoTruncate(order.Price))
 	}
 	return sdk.MinDec(order.OpenQuantity, order.RemainingDeposit)
 }
@@ -76,6 +76,7 @@ func (order Order) MustGetOrdererAddress() sdk.AccAddress {
 }
 
 type ExecuteOrderResult struct {
+	LastPrice        sdk.Dec
 	ExecutedQuantity sdk.Dec
 	ExecutedQuote    sdk.Dec
 	Paid             sdk.DecCoin
@@ -90,7 +91,10 @@ func NewExecuteOrderResult(payDenom, receiveDenom string) ExecuteOrderResult {
 		ExecutedQuote:    utils.ZeroDec,
 		Paid:             sdk.NewDecCoin(payDenom, utils.ZeroInt),
 		Received:         sdk.NewDecCoin(receiveDenom, utils.ZeroInt),
-		Fee:              sdk.NewDecCoin(receiveDenom, utils.ZeroInt),
-		FullyExecuted:    false,
+		Fee:              sdk.NewDecCoin(receiveDenom, utils.ZeroInt), // always taker
 	}
+}
+
+func (res ExecuteOrderResult) Executed() bool {
+	return !res.LastPrice.IsNil()
 }

@@ -69,7 +69,7 @@ func (s *KeeperTestSuite) TestIterateOrderBookSide() {
 			true,
 			nil,
 			[]priceLevel{
-				{utils.ParseDec("1.2"), []uint64{2, 1}},
+				{utils.ParseDec("1.2"), []uint64{1, 2}},
 				{utils.ParseDec("1.1"), []uint64{3}},
 				{utils.ParseDec("1.0"), []uint64{4}},
 			},
@@ -79,7 +79,7 @@ func (s *KeeperTestSuite) TestIterateOrderBookSide() {
 			true,
 			utils.ParseDecP("1.2"),
 			[]priceLevel{
-				{utils.ParseDec("1.2"), []uint64{2, 1}},
+				{utils.ParseDec("1.2"), []uint64{1, 2}},
 			},
 		},
 		{
@@ -87,7 +87,7 @@ func (s *KeeperTestSuite) TestIterateOrderBookSide() {
 			true,
 			utils.ParseDecP("1.1"),
 			[]priceLevel{
-				{utils.ParseDec("1.2"), []uint64{2, 1}},
+				{utils.ParseDec("1.2"), []uint64{1, 2}},
 				{utils.ParseDec("1.1"), []uint64{3}},
 			},
 		},
@@ -96,7 +96,7 @@ func (s *KeeperTestSuite) TestIterateOrderBookSide() {
 			true,
 			utils.ParseDecP("1.0"),
 			[]priceLevel{
-				{utils.ParseDec("1.2"), []uint64{2, 1}},
+				{utils.ParseDec("1.2"), []uint64{1, 2}},
 				{utils.ParseDec("1.1"), []uint64{3}},
 				{utils.ParseDec("1.0"), []uint64{4}},
 			},
@@ -106,7 +106,7 @@ func (s *KeeperTestSuite) TestIterateOrderBookSide() {
 			true,
 			utils.ParseDecP("0.9"),
 			[]priceLevel{
-				{utils.ParseDec("1.2"), []uint64{2, 1}},
+				{utils.ParseDec("1.2"), []uint64{1, 2}},
 				{utils.ParseDec("1.1"), []uint64{3}},
 				{utils.ParseDec("1.0"), []uint64{4}},
 			},

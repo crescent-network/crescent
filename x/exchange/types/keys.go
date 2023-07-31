@@ -53,6 +53,9 @@ func GetOrderKey(orderId uint64) []byte {
 }
 
 func GetOrderBookOrderIndexKey(marketId uint64, isBuy bool, price sdk.Dec, orderId uint64) []byte {
+	if isBuy {
+		orderId = -orderId
+	}
 	return utils.Key(
 		OrderBookOrderIndexKeyPrefix,
 		sdk.Uint64ToBigEndian(marketId),
@@ -116,7 +119,11 @@ func ParseMarketByDenomsIndexKey(key []byte) (baseDenom, quoteDenom string) {
 }
 
 func ParseOrderIdFromOrderBookOrderIndexKey(key []byte) (orderId uint64) {
+	isBuy := key[1+8] == 0
 	orderId = sdk.BigEndianToUint64(key[1+8+1+32:])
+	if isBuy {
+		orderId = -orderId
+	}
 	return
 }
 

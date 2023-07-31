@@ -49,7 +49,11 @@ func (k Keeper) SwapExactAmountIn(
 				sdkerrors.ErrInvalidRequest, "denom %s not in market %d", currentIn.Denom, market.Id)
 		}
 		res, err := k.executeOrder(
-			ctx, market, ordererAddr, isBuy, nil, qtyLimit, quoteLimit, halveFees, simulate)
+			ctx, market, ordererAddr, types.MemOrderBookSideOptions{
+				IsBuy:         !isBuy,
+				QuantityLimit: qtyLimit,
+				QuoteLimit:    quoteLimit,
+			}, halveFees, simulate)
 		if err != nil {
 			return output, nil, err
 		}

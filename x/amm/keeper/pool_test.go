@@ -25,7 +25,7 @@ func (s *KeeperTestSuite) TestCreatePool_InsufficientFee() {
 	market := s.CreateMarket("ucre", "uusd")
 	creatorAddr := utils.TestAddress(1)
 	_, err := s.keeper.CreatePool(s.Ctx, creatorAddr, market.Id, utils.ParseDec("5"))
-	s.Require().EqualError(err, "0ucre is smaller than 100000000ucre: insufficient funds")
+	s.Require().EqualError(err, "insufficient pool creation fee: 0ucre is smaller than 100000000ucre: insufficient funds")
 }
 
 func (s *KeeperTestSuite) TestCreatePool() {

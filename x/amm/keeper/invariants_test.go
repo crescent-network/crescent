@@ -10,7 +10,7 @@ import (
 	"github.com/crescent-network/crescent/v5/x/amm/types"
 )
 
-func (s *KeeperTestSuite) TestRewardsGrowthInvariant() {
+func (s *KeeperTestSuite) TestRewardsGrowthGlobalInvariant() {
 	market, pool := s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("0.5"))
 	farmingPoolAddr := s.FundedAccount(0, enoughCoins)
 	s.CreatePublicFarmingPlan(
@@ -31,7 +31,41 @@ func (s *KeeperTestSuite) TestRewardsGrowthInvariant() {
 	s.PlaceMarketOrder(market.Id, ordererAddr, true, sdk.NewDec(200_000000))
 	s.PlaceMarketOrder(market.Id, ordererAddr, false, sdk.NewDec(500_000000))
 
-	_, broken := keeper.RewardsGrowthInvariant(s.keeper)(s.Ctx)
+	_, broken := keeper.RewardsGrowthGlobalInvariant(s.keeper)(s.Ctx)
+	s.Require().False(broken)
+
+	// Negate rewards growths.
+	poolState := s.keeper.MustGetPoolState(s.Ctx, pool.Id)
+	poolState.FeeGrowthGlobal, _ = sdk.DecCoins{}.SafeSub(poolState.FeeGrowthGlobal)
+	poolState.FarmingRewardsGrowthGlobal, _ = sdk.DecCoins{}.SafeSub(poolState.FarmingRewardsGrowthGlobal)
+	s.keeper.SetPoolState(s.Ctx, pool.Id, poolState)
+
+	_, broken = keeper.RewardsGrowthGlobalInvariant(s.keeper)(s.Ctx)
+	s.Require().True(broken)
+}
+
+func (s *KeeperTestSuite) TestRewardsGrowthOutsideInvariant() {
+	market, pool := s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("0.5"))
+	farmingPoolAddr := s.FundedAccount(0, enoughCoins)
+	s.CreatePublicFarmingPlan(
+		"Farming plan", farmingPoolAddr, farmingPoolAddr, []types.FarmingRewardAllocation{
+			types.NewFarmingRewardAllocation(pool.Id, utils.ParseCoins("100_000000ucre")),
+		}, utils.ParseTime("2023-01-01T00:00:00Z"), utils.ParseTime("2024-01-01T00:00:00Z"))
+	lpAddr := s.FundedAccount(1, enoughCoins)
+	s.AddLiquidity(
+		lpAddr, pool.Id, utils.ParseDec("0.4"), utils.ParseDec("0.6"),
+		utils.ParseCoins("100_000000ucre,50_000000uusd"))
+	s.AddLiquidity(
+		lpAddr, pool.Id, utils.ParseDec("0.001"), utils.ParseDec("1000"),
+		utils.ParseCoins("1000_000000ucre,500_000000uusd"))
+	s.NextBlock()
+	s.NextBlock()
+
+	ordererAddr := s.FundedAccount(2, enoughCoins)
+	s.PlaceMarketOrder(market.Id, ordererAddr, true, sdk.NewDec(200_000000))
+	s.PlaceMarketOrder(market.Id, ordererAddr, false, sdk.NewDec(500_000000))
+
+	_, broken := keeper.RewardsGrowthOutsideInvariant(s.keeper)(s.Ctx)
 	s.Require().False(broken)
 
 	// Halve the rewards.
@@ -40,7 +74,7 @@ func (s *KeeperTestSuite) TestRewardsGrowthInvariant() {
 	poolState.FarmingRewardsGrowthGlobal = poolState.FarmingRewardsGrowthGlobal.QuoDec(sdk.NewDec(2))
 	s.keeper.SetPoolState(s.Ctx, pool.Id, poolState)
 
-	_, broken = keeper.RewardsGrowthInvariant(s.keeper)(s.Ctx)
+	_, broken = keeper.RewardsGrowthOutsideInvariant(s.keeper)(s.Ctx)
 	s.Require().True(broken)
 }
 

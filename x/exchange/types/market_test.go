@@ -1,14 +1,10 @@
 package types_test
 
 import (
-	"math/rand"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/crescent-network/crescent/v5/app/testutil"
 	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/exchange/types"
 )
@@ -108,37 +104,6 @@ func TestMarket_Validate(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestMarket(t *testing.T) {
-	// Test DepositCoin
-	market := types.NewMarket(1, "ucre", "uusd", utils.ParseDec("-0.0015"), utils.ParseDec("0.003"))
-	require.Equal(t, "uusd", market.DepositDenom(true))
-	require.Equal(t, "ucre", market.DepositDenom(false))
-
-	// Test DeductTakerFee
-	deducted, fee := market.DeductTakerFee(sdk.NewDec(123456789), false)
-	testutil.AssertEqual(t, utils.ParseDec("123086418.633"), deducted)
-	testutil.AssertEqual(t, utils.ParseDec("370370.367"), fee)
-	deducted, fee = market.DeductTakerFee(sdk.NewDec(123456789), true)
-	testutil.AssertEqual(t, utils.ParseDec("123271603.8165"), deducted)
-	testutil.AssertEqual(t, utils.ParseDec("185185.1835"), fee)
-
-	r := rand.New(rand.NewSource(1))
-	for i := 0; i < 50; i++ {
-		amt := utils.RandomDec(r, sdk.NewDec(10), sdk.NewDec(100000000))
-		deducted, fee = market.DeductTakerFee(amt, false)
-		testutil.AssertEqual(t, amt, deducted.Add(fee))
-		deducted, fee = market.DeductTakerFee(amt, true)
-		testutil.AssertEqual(t, amt, deducted.Add(fee))
-	}
-
-	payDenom, receiveDenom := market.PayReceiveDenoms(true)
-	require.Equal(t, "uusd", payDenom)
-	require.Equal(t, "ucre", receiveDenom)
-	payDenom, receiveDenom = market.PayReceiveDenoms(false)
-	require.Equal(t, "ucre", payDenom)
-	require.Equal(t, "uusd", receiveDenom)
 }
 
 func TestMarketState_Validate(t *testing.T) {
