@@ -225,8 +225,8 @@ func (s *KeeperTestSuite) TestQueryRewardsAuction() {
 		{
 			"invalid public position id",
 			&types.QueryRewardsAuctionRequest{
-				PublicPosition: 0,
-				AuctionId:      1,
+				PublicPositionId: 0,
+				AuctionId:        1,
 			},
 			"rpc error: code = InvalidArgument desc = public position id must not be 0",
 			nil,
@@ -234,8 +234,8 @@ func (s *KeeperTestSuite) TestQueryRewardsAuction() {
 		{
 			"public position not found",
 			&types.QueryRewardsAuctionRequest{
-				PublicPosition: 2,
-				AuctionId:      1,
+				PublicPositionId: 2,
+				AuctionId:        1,
 			},
 			"rpc error: code = NotFound desc = public position not found",
 			nil,
@@ -243,8 +243,8 @@ func (s *KeeperTestSuite) TestQueryRewardsAuction() {
 		{
 			"invalid auction id",
 			&types.QueryRewardsAuctionRequest{
-				PublicPosition: 1,
-				AuctionId:      0,
+				PublicPositionId: 1,
+				AuctionId:        0,
 			},
 			"rpc error: code = InvalidArgument desc = auction id must not be 0",
 			nil,
@@ -252,8 +252,8 @@ func (s *KeeperTestSuite) TestQueryRewardsAuction() {
 		{
 			"auction not found",
 			&types.QueryRewardsAuctionRequest{
-				PublicPosition: 1,
-				AuctionId:      3,
+				PublicPositionId: 1,
+				AuctionId:        3,
 			},
 			"rpc error: code = NotFound desc = auction not found",
 			nil,
@@ -261,8 +261,8 @@ func (s *KeeperTestSuite) TestQueryRewardsAuction() {
 		{
 			"happy case",
 			&types.QueryRewardsAuctionRequest{
-				PublicPosition: 1,
-				AuctionId:      1,
+				PublicPositionId: 1,
+				AuctionId:        1,
 			},
 			"",
 			func(resp *types.QueryRewardsAuctionResponse) {
@@ -273,8 +273,8 @@ func (s *KeeperTestSuite) TestQueryRewardsAuction() {
 		{
 			"happy case 2",
 			&types.QueryRewardsAuctionRequest{
-				PublicPosition: 1,
-				AuctionId:      2,
+				PublicPositionId: 1,
+				AuctionId:        2,
 			},
 			"",
 			func(resp *types.QueryRewardsAuctionResponse) {
