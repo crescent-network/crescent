@@ -452,19 +452,17 @@ func findMsgPlaceMarketOrderParams(
 					return acc, msg, true
 				}
 			}
-			// Temporarily comment out buy market order operation because
-			// of performance issue.
-			//marketState := k.MustGetMarketState(ctx, market.Id)
-			//if marketState.LastPrice == nil {
-			//	continue
-			//}
-			//qty := utils.RandomDec(r, sdk.NewDec(100), sdk.NewDec(1_000000)).TruncateDec()
-			//cacheCtx, _ := ctx.CacheContext()
-			//if _, _, err := k.PlaceMarketOrder(cacheCtx, market.Id, acc.Address, true, qty); err != nil {
-			//	continue
-			//}
-			//msg = types.NewMsgPlaceMarketOrder(acc.Address, market.Id, true, qty)
-			//return acc, msg, true
+			marketState := k.MustGetMarketState(ctx, market.Id)
+			if marketState.LastPrice == nil {
+				continue
+			}
+			qty := utils.RandomDec(r, sdk.NewDec(100), sdk.NewDec(1_000000)).TruncateDec()
+			cacheCtx, _ := ctx.CacheContext()
+			if _, _, err := k.PlaceMarketOrder(cacheCtx, market.Id, acc.Address, true, qty); err != nil {
+				continue
+			}
+			msg = types.NewMsgPlaceMarketOrder(acc.Address, market.Id, true, qty)
+			return acc, msg, true
 		}
 	}
 	return acc, msg, false
