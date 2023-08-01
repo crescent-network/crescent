@@ -22,11 +22,11 @@ const (
 
 // keys for the store prefixes
 var (
-	LastPublicPositionIdKey      = []byte{0xe1}
-	LastRewardsAuctionEndTimeKey = []byte{0xe3}
-	PublicPositionKeyPrefix      = []byte{0xe4}
-	RewardsAuctionKeyPrefix      = []byte{0xe5}
-	BidKeyPrefix                 = []byte{0xe6}
+	LastPublicPositionIdKey      = []byte{0x81}
+	LastRewardsAuctionEndTimeKey = []byte{0x82}
+	PublicPositionKeyPrefix      = []byte{0x83}
+	RewardsAuctionKeyPrefix      = []byte{0x84}
+	BidKeyPrefix                 = []byte{0x85}
 )
 
 // GetPublicPositionKey returns the store key to retrieve the public position object
