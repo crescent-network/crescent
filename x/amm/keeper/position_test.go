@@ -7,6 +7,7 @@ import (
 
 	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/amm/types"
+	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
 func (s *KeeperTestSuite) TestAddLiquidity() {
@@ -84,4 +85,77 @@ func (s *KeeperTestSuite) TestNegativeFarmingRewardsGrowthInside() {
 	s.Require().Equal("11573ucre", farmingRewards.String())
 	_, farmingRewards = s.CollectibleCoins(2)
 	s.Require().Equal("", farmingRewards.String())
+}
+
+func (s *KeeperTestSuite) TestNarrowPosition() {
+	s.keeper.SetDefaultTickSpacing(s.Ctx, 1)
+	_, pool1 := s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("20"))
+
+	lpAddr := s.FundedAccount(1, enoughCoins)
+	_, liquidity, _ := s.AddLiquidity(
+		lpAddr, pool1.Id, utils.ParseDec("19.999"), utils.ParseDec("20.001"),
+		utils.ParseCoins("500ucre,10000uusd"))
+	s.AssertEqual(sdk.NewInt(89441601), liquidity)
+
+	_, liquidity, _ = s.AddLiquidity(
+		lpAddr, pool1.Id, utils.ParseDec("19.998"), utils.ParseDec("20.001"),
+		utils.ParseCoins("250ucre,10000uusd"))
+	s.AssertEqual(sdk.NewInt(44720241), liquidity)
+
+	s.FundAccount(lpAddr, utils.ParseCoins("1_000_000_000_000000000000000000ufoo,1_000_000_000_000000000000000000ubar"))
+	_, pool2 := s.CreateMarketAndPool("ufoo", "ubar", utils.ParseDec("1"))
+
+	_, liquidity, _ = s.AddLiquidity(
+		lpAddr, pool2.Id, utils.ParseDec("0.99999"), utils.ParseDec("1.0001"),
+		utils.ParseCoins("1_000_000_000_000000000000000000ufoo,1_000_000_000_000000000000000000ubar"))
+	s.AssertEqual(utils.ParseInt("20001499987500662572187476524684"), liquidity)
+}
+
+func (s *KeeperTestSuite) TestExtremePrice() {
+	s.keeper.SetDefaultTickSpacing(s.Ctx, 1)
+	_, pool1 := s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("1000000000"))
+
+	lpAddr := s.FundedAccount(1, enoughCoins)
+	_, liquidity, _ := s.AddLiquidity(
+		lpAddr, pool1.Id, utils.ParseDec("900000000"), utils.ParseDec("1100000000"),
+		utils.ParseCoins("46ucre,50000000000uusd"))
+	s.AssertEqual(sdk.NewInt(30811388), liquidity)
+
+	_, liquidity, _ = s.AddLiquidity(
+		lpAddr, pool1.Id, utils.ParseDec("899900000"), utils.ParseDec("1100000000"),
+		utils.ParseCoins("46ucre,50000000000uusd"))
+	s.AssertEqual(sdk.NewInt(30779775), liquidity)
+
+	_, pool2 := s.CreateMarketAndPool("uusd", "ucre", utils.ParseDec("0.00000001"))
+	_, liquidity, _ = s.AddLiquidity(
+		lpAddr, pool2.Id, utils.ParseDec("0.000000009"), utils.ParseDec("0.000000011"),
+		utils.ParseCoins("90686675071631uusd,1000000ucre"))
+	s.AssertEqual(sdk.NewInt(194868329792), liquidity)
+
+	s.FundAccount(
+		lpAddr, utils.ParseCoins("1000000000000000000000000000000000000000000ufoo,1000000000000000000000000000000000000000000ubar"))
+	_, pool3 := s.CreateMarketAndPool("ufoo", "ubar", exchangetypes.PriceAtTick(types.MaxTick-1))
+	_, liquidity, _ = s.AddLiquidity(
+		lpAddr, pool3.Id, exchangetypes.PriceAtTick(types.MaxTick-2), exchangetypes.PriceAtTick(types.MaxTick),
+		utils.ParseCoins("10ufoo,100000000000000000000000000000000000000000ubar"))
+	s.AssertEqual(utils.ParseInt("199998499993749943749335928"), liquidity)
+
+	_, pool4 := s.CreateMarketAndPool("ubar", "ufoo", exchangetypes.PriceAtTick(types.MinTick+1))
+	_, liquidity, _ = s.AddLiquidity(
+		lpAddr, pool4.Id, exchangetypes.PriceAtTick(types.MinTick), exchangetypes.PriceAtTick(types.MinTick+2),
+		utils.ParseCoins("10ufoo,1000000000000000ubar"))
+	s.AssertEqual(utils.ParseInt("2000050001250"), liquidity)
+}
+
+func (s *KeeperTestSuite) TestSmallPosition() {
+	s.keeper.SetDefaultTickSpacing(s.Ctx, 1)
+	_, pool1 := s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("1"))
+
+	lpAddr := s.FundedAccount(1, enoughCoins)
+	_, liquidity, _ := s.AddLiquidity(
+		lpAddr, pool1.Id, utils.ParseDec("0.5"), utils.ParseDec("1.5"),
+		utils.ParseCoins("7ucre,10uusd"))
+	s.AssertEqual(sdk.NewInt(34), liquidity)
+
+	// TODO: write more code
 }
