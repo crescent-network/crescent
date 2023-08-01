@@ -143,6 +143,7 @@ func (k Keeper) Collect(
 	if ownerAddr.String() != position.Owner {
 		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "position is not owned by the user")
 	}
+	pool := k.MustGetPool(ctx, position.PoolId)
 
 	if position.Liquidity.IsPositive() {
 		var err error
@@ -158,8 +159,7 @@ func (k Keeper) Collect(
 	}
 	fee := amt.Min(position.OwedFee)
 	position.OwedFee = position.OwedFee.Sub(fee)
-	// TODO: use lp fee address
-	if err := k.bankKeeper.SendCoins(ctx, k.accountKeeper.GetModuleAddress(types.ModuleName), toAddr, fee); err != nil {
+	if err := k.bankKeeper.SendCoins(ctx, pool.MustGetRewardsPoolAddress(), toAddr, fee); err != nil {
 		return err
 	}
 	farmingRewards := amt.Sub(fee)

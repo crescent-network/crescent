@@ -84,6 +84,13 @@ func TestPool_Validate(t *testing.T) {
 			},
 			"invalid reserve address: decoding bech32 failed: invalid separator index -1",
 		},
+		{
+			"invalid rewards pool",
+			func(pool *types.Pool) {
+				pool.RewardsPool = "invalidaddr"
+			},
+			"invalid rewards pool: decoding bech32 failed: invalid separator index -1",
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			pool := types.NewPool(1, 2, "ucre", "uusd", 10)
