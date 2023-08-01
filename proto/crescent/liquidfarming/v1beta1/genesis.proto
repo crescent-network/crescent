@@ -1,0 +1,49 @@
+syntax = "proto3";
+package crescent.liquidfarming.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
+import "crescent/liquidfarming/v1beta1/liquidfarming.proto";
+import "crescent/liquidfarming/v1beta1/params.proto";
+
+option go_package = "github.com/crescent-network/crescent/v5/x/liquidfarming/types";
+
+// GenesisState defines the liquidfarming module's genesis state.
+message GenesisState {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  Params params = 1 [(gogoproto.nullable) = false];
+
+  repeated LastRewardsAuctionIdRecord last_rewards_auction_id_record = 2 [(gogoproto.nullable) = false];
+
+  repeated LiquidFarm liquid_farms = 3 [(gogoproto.nullable) = false];
+
+  repeated RewardsAuction rewards_auctions = 4 [(gogoproto.nullable) = false];
+
+  repeated Bid bids = 5 [(gogoproto.nullable) = false];
+
+  repeated WinningBidRecord winning_bid_records = 6 [(gogoproto.nullable) = false];
+
+  google.protobuf.Timestamp last_rewards_auction_end_time = 7 [(gogoproto.stdtime) = true];
+}
+
+message LastRewardsAuctionIdRecord {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  uint64 pool_id = 1;
+
+  uint64 auction_id = 2;
+}
+
+// WinningBidRecord defines a custom winning bid record that is required to be recorded
+// in genesis state.
+message WinningBidRecord {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  uint64 auction_id = 1;
+
+  Bid winning_bid = 2 [(gogoproto.nullable) = false];
+}

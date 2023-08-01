@@ -9452,6 +9452,938 @@ paths:
           type: string
       tags:
         - Query
+  /crescent/liquidfarming/v1beta1/liquidfarms:
+    get:
+      summary: LiquidFarms returns all liquid farms registered in params
+      operationId: LiquidFarms
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              liquid_farms:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    pool_id:
+                      type: string
+                      format: uint64
+                    liquid_farm_reserve_address:
+                      type: string
+                    lf_coin_denom:
+                      type: string
+                    lf_coin_supply:
+                      type: string
+                    pool_coin_denom:
+                      type: string
+                    pool_coin_farming_amount:
+                      type: string
+                    min_farm_amount:
+                      type: string
+                    min_bid_amount:
+                      type: string
+                  description: >-
+                    LiquidFarmResponse is response type for the Query/LiquidFarm
+                    RPC method.
+            description: >-
+              QueryLiquidFarmsResponse is response type for the
+              Query/LiquidFarms RPC method.
+        default:
+          description: An unexpected error response
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending
+
+            order.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+      tags:
+        - Query
+  '/crescent/liquidfarming/v1beta1/liquidfarms/{pool_id}':
+    get:
+      summary: LiquidFarm returns the specific liquid farm
+      operationId: LiquidFarm
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              liquid_farm:
+                type: object
+                properties:
+                  pool_id:
+                    type: string
+                    format: uint64
+                  liquid_farm_reserve_address:
+                    type: string
+                  lf_coin_denom:
+                    type: string
+                  lf_coin_supply:
+                    type: string
+                  pool_coin_denom:
+                    type: string
+                  pool_coin_farming_amount:
+                    type: string
+                  min_farm_amount:
+                    type: string
+                  min_bid_amount:
+                    type: string
+                description: >-
+                  LiquidFarmResponse is response type for the Query/LiquidFarm
+                  RPC method.
+            description: >-
+              QueryLiquidFarmResponse is response type for the Query/LiquidFarm
+              RPC method.
+        default:
+          description: An unexpected error response
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: pool_id
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - Query
+  '/crescent/liquidfarming/v1beta1/liquidfarms/{pool_id}/bids':
+    get:
+      summary: Bids returns all bids for the liquid farm
+      operationId: LiquidFarmingBids
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              bids:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    pool_id:
+                      type: string
+                      format: uint64
+                      title: pool_id specifies the pool id
+                    bidder:
+                      type: string
+                      title: >-
+                        bidder specifies the bech32-encoded address that places
+                        a bid for the auction
+                    amount:
+                      title: amount specifies the amount to place a bid
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                        amount:
+                          type: string
+                      description: >-
+                        Coin defines a token with a denomination and an amount.
+
+
+                        NOTE: The amount field is an Int which implements the
+                        custom method
+
+                        signatures required by gogoproto.
+                  description: Bid defines standard bid for a rewards auction.
+              pagination:
+                type: object
+                properties:
+                  next_key:
+                    type: string
+                    format: byte
+                    title: |-
+                      next_key is the key to be passed to PageRequest.key to
+                      query the next page most efficiently
+                  total:
+                    type: string
+                    format: uint64
+                    title: >-
+                      total is total number of results available if
+                      PageRequest.count_total
+
+                      was set, its value is undefined otherwise
+                description: >-
+                  PageResponse is to be embedded in gRPC response messages where
+                  the
+
+                  corresponding request message has used PageRequest.
+
+                   message SomeResponse {
+                           repeated Bar results = 1;
+                           PageResponse page = 2;
+                   }
+            description: QueryBidsResponse is response type for the Query/Bids RPC method.
+        default:
+          description: An unexpected error response
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: pool_id
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending
+
+            order.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+      tags:
+        - Query
+  '/crescent/liquidfarming/v1beta1/liquidfarms/{pool_id}/exchange_rate':
+    get:
+      summary: >-
+        ExchangeRate returns exchange rates (mint rate and burn rate) for the
+        liquid farm
+      operationId: LiquidFarmingExchangeRate
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              exchange_rate:
+                type: object
+                properties:
+                  mint_rate:
+                    type: string
+                  burn_rate:
+                    type: string
+            description: >-
+              QueryExchangeRateResponse is response type for the
+              Query/ExchangeRate RPC method.
+        default:
+          description: An unexpected error response
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: pool_id
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - Query
+  '/crescent/liquidfarming/v1beta1/liquidfarms/{pool_id}/rewards':
+    get:
+      summary: Rewards returns all accumulated farming rewards for the liquid farm
+      operationId: LiquidFarmingRewards
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              rewards:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    denom:
+                      type: string
+                    amount:
+                      type: string
+                  description: >-
+                    Coin defines a token with a denomination and an amount.
+
+
+                    NOTE: The amount field is an Int which implements the custom
+                    method
+
+                    signatures required by gogoproto.
+            description: >-
+              QueryRewardsResponse is response type for the Query/Rewards RPC
+              method.
+        default:
+          description: An unexpected error response
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: pool_id
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - Query
+  '/crescent/liquidfarming/v1beta1/liquidfarms/{pool_id}/rewards_auctions':
+    get:
+      summary: >-
+        RewardsAuctions returns all rewards auctions that correspond to the
+        given pool id
+      operationId: LiquidFarmingRewardsAuctions
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              rewards_auctions:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uint64
+                      title: id specifies the unique auction id
+                    pool_id:
+                      type: string
+                      format: uint64
+                      title: pool_id specifies the liquidity pool id
+                    bidding_coin_denom:
+                      type: string
+                      title: >-
+                        bidding_coin_denom specifies the bidding coin
+                        denomination
+                    paying_reserve_address:
+                      type: string
+                      title: >-
+                        paying_reserve_address specfies the account that
+                        reserves bidding amounts placed by bidders
+                    start_time:
+                      type: string
+                      format: date-time
+                      title: start_time specifies the start time of an auction
+                    end_time:
+                      type: string
+                      format: date-time
+                      title: end_time specifies the end time of an auction
+                    status:
+                      title: status specifies the status of an auction
+                      type: string
+                      enum:
+                        - AUCTION_STATUS_UNSPECIFIED
+                        - AUCTION_STATUS_STARTED
+                        - AUCTION_STATUS_FINISHED
+                        - AUCTION_STATUS_SKIPPED
+                      default: AUCTION_STATUS_UNSPECIFIED
+                      description: |-
+                        AuctionStatus enumerates the valid status of an auction.
+
+                         - AUCTION_STATUS_UNSPECIFIED: AUCTION_STATUS_UNSPECIFIED defines the default auction status
+                         - AUCTION_STATUS_STARTED: AUCTION_STATUS_STARTED defines the started auction status
+                         - AUCTION_STATUS_FINISHED: AUCTION_STATUS_FINISHED defines the finished auction status
+                         - AUCTION_STATUS_SKIPPED: AUCTION_STATUS_SKIPPED defines the skipped auction status
+                    winner:
+                      type: string
+                      title: |-
+                        winner specifies the bidder who won the auction
+                        the value is determined when an auction is finished
+                    winning_amount:
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                        amount:
+                          type: string
+                      description: >-
+                        Coin defines a token with a denomination and an amount.
+
+
+                        NOTE: The amount field is an Int which implements the
+                        custom method
+
+                        signatures required by gogoproto.
+                      title: >-
+                        winning_amount specifies the winning amount for the
+                        uaction
+                    rewards:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          denom:
+                            type: string
+                          amount:
+                            type: string
+                        description: >-
+                          Coin defines a token with a denomination and an
+                          amount.
+
+
+                          NOTE: The amount field is an Int which implements the
+                          custom method
+
+                          signatures required by gogoproto.
+                      title: >-
+                        rewards specifies the farming rewards for are
+                        accumulated in the farm module
+
+                        the value is determined when an auction is finished
+                    fees:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          denom:
+                            type: string
+                          amount:
+                            type: string
+                        description: >-
+                          Coin defines a token with a denomination and an
+                          amount.
+
+
+                          NOTE: The amount field is an Int which implements the
+                          custom method
+
+                          signatures required by gogoproto.
+                    fee_rate:
+                      type: string
+                  description: >-
+                    RewardsAuction defines rewards auction that is created by
+                    the module
+
+                    for every rewards_auction_duration in params.
+              pagination:
+                type: object
+                properties:
+                  next_key:
+                    type: string
+                    format: byte
+                    title: |-
+                      next_key is the key to be passed to PageRequest.key to
+                      query the next page most efficiently
+                  total:
+                    type: string
+                    format: uint64
+                    title: >-
+                      total is total number of results available if
+                      PageRequest.count_total
+
+                      was set, its value is undefined otherwise
+                description: >-
+                  PageResponse is to be embedded in gRPC response messages where
+                  the
+
+                  corresponding request message has used PageRequest.
+
+                   message SomeResponse {
+                           repeated Bar results = 1;
+                           PageResponse page = 2;
+                   }
+            description: >-
+              QueryRewardsAuctionsResponse is response type for the
+              Query/RewardsAuctions RPC method.
+        default:
+          description: An unexpected error response
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: pool_id
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: status
+          in: query
+          required: false
+          type: string
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending
+
+            order.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+      tags:
+        - Query
+  '/crescent/liquidfarming/v1beta1/liquidfarms/{pool_id}/rewards_auctions/{auction_id}':
+    get:
+      summary: RewardsAuction returns the specific rewards auction
+      operationId: LiquidFarmingRewardsAuction
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              rewards_auction:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uint64
+                    title: id specifies the unique auction id
+                  pool_id:
+                    type: string
+                    format: uint64
+                    title: pool_id specifies the liquidity pool id
+                  bidding_coin_denom:
+                    type: string
+                    title: bidding_coin_denom specifies the bidding coin denomination
+                  paying_reserve_address:
+                    type: string
+                    title: >-
+                      paying_reserve_address specfies the account that reserves
+                      bidding amounts placed by bidders
+                  start_time:
+                    type: string
+                    format: date-time
+                    title: start_time specifies the start time of an auction
+                  end_time:
+                    type: string
+                    format: date-time
+                    title: end_time specifies the end time of an auction
+                  status:
+                    title: status specifies the status of an auction
+                    type: string
+                    enum:
+                      - AUCTION_STATUS_UNSPECIFIED
+                      - AUCTION_STATUS_STARTED
+                      - AUCTION_STATUS_FINISHED
+                      - AUCTION_STATUS_SKIPPED
+                    default: AUCTION_STATUS_UNSPECIFIED
+                    description: |-
+                      AuctionStatus enumerates the valid status of an auction.
+
+                       - AUCTION_STATUS_UNSPECIFIED: AUCTION_STATUS_UNSPECIFIED defines the default auction status
+                       - AUCTION_STATUS_STARTED: AUCTION_STATUS_STARTED defines the started auction status
+                       - AUCTION_STATUS_FINISHED: AUCTION_STATUS_FINISHED defines the finished auction status
+                       - AUCTION_STATUS_SKIPPED: AUCTION_STATUS_SKIPPED defines the skipped auction status
+                  winner:
+                    type: string
+                    title: |-
+                      winner specifies the bidder who won the auction
+                      the value is determined when an auction is finished
+                  winning_amount:
+                    type: object
+                    properties:
+                      denom:
+                        type: string
+                      amount:
+                        type: string
+                    description: >-
+                      Coin defines a token with a denomination and an amount.
+
+
+                      NOTE: The amount field is an Int which implements the
+                      custom method
+
+                      signatures required by gogoproto.
+                    title: >-
+                      winning_amount specifies the winning amount for the
+                      uaction
+                  rewards:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                        amount:
+                          type: string
+                      description: >-
+                        Coin defines a token with a denomination and an amount.
+
+
+                        NOTE: The amount field is an Int which implements the
+                        custom method
+
+                        signatures required by gogoproto.
+                    title: >-
+                      rewards specifies the farming rewards for are accumulated
+                      in the farm module
+
+                      the value is determined when an auction is finished
+                  fees:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                        amount:
+                          type: string
+                      description: >-
+                        Coin defines a token with a denomination and an amount.
+
+
+                        NOTE: The amount field is an Int which implements the
+                        custom method
+
+                        signatures required by gogoproto.
+                  fee_rate:
+                    type: string
+                description: >-
+                  RewardsAuction defines rewards auction that is created by the
+                  module
+
+                  for every rewards_auction_duration in params.
+            description: >-
+              QueryRewardsAuctionResponse is response type for the
+              Query/RewardsAuction RPC method.
+        default:
+          description: An unexpected error response
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: pool_id
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: auction_id
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - Query
+  /crescent/liquidfarming/v1beta1/params:
+    get:
+      summary: Params returns parameters of the module
+      operationId: LiquidFarmingParams
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              params:
+                type: object
+                properties:
+                  fee_collector:
+                    type: string
+                  rewards_auction_duration:
+                    type: string
+                  liquid_farms:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        pool_id:
+                          type: string
+                          format: uint64
+                        min_farm_amount:
+                          type: string
+                        min_bid_amount:
+                          type: string
+                        fee_rate:
+                          type: string
+                      description: >-
+                        LiquidFarm defines liquid farm object that provides auto
+                        compounding functionality
+
+                        for the liquidity pool and undergoes farming rewards
+                        auction process.
+
+                        See the technical spec for more detailed information.
+                description: Params defines the parameters for the module.
+            description: >-
+              QueryParamsResponse is response type for the Query/Params RPC
+              method.
+        default:
+          description: An unexpected error response
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      tags:
+        - Query
   /crescent/liquidamm/v1beta1/params:
     get:
       summary: Params returns parameters of the module
@@ -9764,7 +10696,7 @@ paths:
       summary: >-
         ExchangeRate returns exchange rates (mint rate and burn rate) for the
         public position
-      operationId: ExchangeRate
+      operationId: LiquidAMMExchangeRate
       responses:
         '200':
           description: A successful response.
@@ -9873,7 +10805,7 @@ paths:
       summary: >-
         RewardsAuctions returns all rewards auctions that correspond to the
         given pool id
-      operationId: RewardsAuctions
+      operationId: LiquidAMMRewardsAuctions
       responses:
         '200':
           description: A successful response.
@@ -10126,7 +11058,7 @@ paths:
   '/crescent/liquidamm/v1beta1/public_positions/{public_position_id}/rewards_auctions/{auction_id}':
     get:
       summary: RewardsAuction returns the specific rewards auction
-      operationId: RewardsAuction
+      operationId: LiquidAMMRewardsAuction
       responses:
         '200':
           description: A successful response.
@@ -10288,7 +11220,7 @@ paths:
   '/crescent/liquidamm/v1beta1/public_positions/{public_position_id}/rewards_auctions/{auction_id}/bids':
     get:
       summary: Bids returns all bids for the rewards auction
-      operationId: Bids
+      operationId: LiquidAMMBids
       responses:
         '200':
           description: A successful response.
@@ -17727,6 +18659,663 @@ definitions:
 
             NOTE: The amount field is an Int which implements the custom method
             signatures required by gogoproto.
+  crescent.liquidfarming.v1beta1.AuctionStatus:
+    type: string
+    enum:
+      - AUCTION_STATUS_UNSPECIFIED
+      - AUCTION_STATUS_STARTED
+      - AUCTION_STATUS_FINISHED
+      - AUCTION_STATUS_SKIPPED
+    default: AUCTION_STATUS_UNSPECIFIED
+    description: |-
+      AuctionStatus enumerates the valid status of an auction.
+
+       - AUCTION_STATUS_UNSPECIFIED: AUCTION_STATUS_UNSPECIFIED defines the default auction status
+       - AUCTION_STATUS_STARTED: AUCTION_STATUS_STARTED defines the started auction status
+       - AUCTION_STATUS_FINISHED: AUCTION_STATUS_FINISHED defines the finished auction status
+       - AUCTION_STATUS_SKIPPED: AUCTION_STATUS_SKIPPED defines the skipped auction status
+  crescent.liquidfarming.v1beta1.Bid:
+    type: object
+    properties:
+      pool_id:
+        type: string
+        format: uint64
+        title: pool_id specifies the pool id
+      bidder:
+        type: string
+        title: >-
+          bidder specifies the bech32-encoded address that places a bid for the
+          auction
+      amount:
+        title: amount specifies the amount to place a bid
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
+    description: Bid defines standard bid for a rewards auction.
+  crescent.liquidfarming.v1beta1.ExchangeRateResponse:
+    type: object
+    properties:
+      mint_rate:
+        type: string
+      burn_rate:
+        type: string
+  crescent.liquidfarming.v1beta1.LiquidFarm:
+    type: object
+    properties:
+      pool_id:
+        type: string
+        format: uint64
+      min_farm_amount:
+        type: string
+      min_bid_amount:
+        type: string
+      fee_rate:
+        type: string
+    description: >-
+      LiquidFarm defines liquid farm object that provides auto compounding
+      functionality
+
+      for the liquidity pool and undergoes farming rewards auction process.
+
+      See the technical spec for more detailed information.
+  crescent.liquidfarming.v1beta1.LiquidFarmResponse:
+    type: object
+    properties:
+      pool_id:
+        type: string
+        format: uint64
+      liquid_farm_reserve_address:
+        type: string
+      lf_coin_denom:
+        type: string
+      lf_coin_supply:
+        type: string
+      pool_coin_denom:
+        type: string
+      pool_coin_farming_amount:
+        type: string
+      min_farm_amount:
+        type: string
+      min_bid_amount:
+        type: string
+    description: LiquidFarmResponse is response type for the Query/LiquidFarm RPC method.
+  crescent.liquidfarming.v1beta1.Params:
+    type: object
+    properties:
+      fee_collector:
+        type: string
+      rewards_auction_duration:
+        type: string
+      liquid_farms:
+        type: array
+        items:
+          type: object
+          properties:
+            pool_id:
+              type: string
+              format: uint64
+            min_farm_amount:
+              type: string
+            min_bid_amount:
+              type: string
+            fee_rate:
+              type: string
+          description: >-
+            LiquidFarm defines liquid farm object that provides auto compounding
+            functionality
+
+            for the liquidity pool and undergoes farming rewards auction
+            process.
+
+            See the technical spec for more detailed information.
+    description: Params defines the parameters for the module.
+  crescent.liquidfarming.v1beta1.QueryBidsResponse:
+    type: object
+    properties:
+      bids:
+        type: array
+        items:
+          type: object
+          properties:
+            pool_id:
+              type: string
+              format: uint64
+              title: pool_id specifies the pool id
+            bidder:
+              type: string
+              title: >-
+                bidder specifies the bech32-encoded address that places a bid
+                for the auction
+            amount:
+              title: amount specifies the amount to place a bid
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+              description: >-
+                Coin defines a token with a denomination and an amount.
+
+
+                NOTE: The amount field is an Int which implements the custom
+                method
+
+                signatures required by gogoproto.
+          description: Bid defines standard bid for a rewards auction.
+      pagination:
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            title: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+        description: |-
+          PageResponse is to be embedded in gRPC response messages where the
+          corresponding request message has used PageRequest.
+
+           message SomeResponse {
+                   repeated Bar results = 1;
+                   PageResponse page = 2;
+           }
+    description: QueryBidsResponse is response type for the Query/Bids RPC method.
+  crescent.liquidfarming.v1beta1.QueryExchangeRateResponse:
+    type: object
+    properties:
+      exchange_rate:
+        type: object
+        properties:
+          mint_rate:
+            type: string
+          burn_rate:
+            type: string
+    description: >-
+      QueryExchangeRateResponse is response type for the Query/ExchangeRate RPC
+      method.
+  crescent.liquidfarming.v1beta1.QueryLiquidFarmResponse:
+    type: object
+    properties:
+      liquid_farm:
+        type: object
+        properties:
+          pool_id:
+            type: string
+            format: uint64
+          liquid_farm_reserve_address:
+            type: string
+          lf_coin_denom:
+            type: string
+          lf_coin_supply:
+            type: string
+          pool_coin_denom:
+            type: string
+          pool_coin_farming_amount:
+            type: string
+          min_farm_amount:
+            type: string
+          min_bid_amount:
+            type: string
+        description: >-
+          LiquidFarmResponse is response type for the Query/LiquidFarm RPC
+          method.
+    description: >-
+      QueryLiquidFarmResponse is response type for the Query/LiquidFarm RPC
+      method.
+  crescent.liquidfarming.v1beta1.QueryLiquidFarmsResponse:
+    type: object
+    properties:
+      liquid_farms:
+        type: array
+        items:
+          type: object
+          properties:
+            pool_id:
+              type: string
+              format: uint64
+            liquid_farm_reserve_address:
+              type: string
+            lf_coin_denom:
+              type: string
+            lf_coin_supply:
+              type: string
+            pool_coin_denom:
+              type: string
+            pool_coin_farming_amount:
+              type: string
+            min_farm_amount:
+              type: string
+            min_bid_amount:
+              type: string
+          description: >-
+            LiquidFarmResponse is response type for the Query/LiquidFarm RPC
+            method.
+    description: >-
+      QueryLiquidFarmsResponse is response type for the Query/LiquidFarms RPC
+      method.
+  crescent.liquidfarming.v1beta1.QueryParamsResponse:
+    type: object
+    properties:
+      params:
+        type: object
+        properties:
+          fee_collector:
+            type: string
+          rewards_auction_duration:
+            type: string
+          liquid_farms:
+            type: array
+            items:
+              type: object
+              properties:
+                pool_id:
+                  type: string
+                  format: uint64
+                min_farm_amount:
+                  type: string
+                min_bid_amount:
+                  type: string
+                fee_rate:
+                  type: string
+              description: >-
+                LiquidFarm defines liquid farm object that provides auto
+                compounding functionality
+
+                for the liquidity pool and undergoes farming rewards auction
+                process.
+
+                See the technical spec for more detailed information.
+        description: Params defines the parameters for the module.
+    description: QueryParamsResponse is response type for the Query/Params RPC method.
+  crescent.liquidfarming.v1beta1.QueryRewardsAuctionResponse:
+    type: object
+    properties:
+      rewards_auction:
+        type: object
+        properties:
+          id:
+            type: string
+            format: uint64
+            title: id specifies the unique auction id
+          pool_id:
+            type: string
+            format: uint64
+            title: pool_id specifies the liquidity pool id
+          bidding_coin_denom:
+            type: string
+            title: bidding_coin_denom specifies the bidding coin denomination
+          paying_reserve_address:
+            type: string
+            title: >-
+              paying_reserve_address specfies the account that reserves bidding
+              amounts placed by bidders
+          start_time:
+            type: string
+            format: date-time
+            title: start_time specifies the start time of an auction
+          end_time:
+            type: string
+            format: date-time
+            title: end_time specifies the end time of an auction
+          status:
+            title: status specifies the status of an auction
+            type: string
+            enum:
+              - AUCTION_STATUS_UNSPECIFIED
+              - AUCTION_STATUS_STARTED
+              - AUCTION_STATUS_FINISHED
+              - AUCTION_STATUS_SKIPPED
+            default: AUCTION_STATUS_UNSPECIFIED
+            description: |-
+              AuctionStatus enumerates the valid status of an auction.
+
+               - AUCTION_STATUS_UNSPECIFIED: AUCTION_STATUS_UNSPECIFIED defines the default auction status
+               - AUCTION_STATUS_STARTED: AUCTION_STATUS_STARTED defines the started auction status
+               - AUCTION_STATUS_FINISHED: AUCTION_STATUS_FINISHED defines the finished auction status
+               - AUCTION_STATUS_SKIPPED: AUCTION_STATUS_SKIPPED defines the skipped auction status
+          winner:
+            type: string
+            title: |-
+              winner specifies the bidder who won the auction
+              the value is determined when an auction is finished
+          winning_amount:
+            type: object
+            properties:
+              denom:
+                type: string
+              amount:
+                type: string
+            description: >-
+              Coin defines a token with a denomination and an amount.
+
+
+              NOTE: The amount field is an Int which implements the custom
+              method
+
+              signatures required by gogoproto.
+            title: winning_amount specifies the winning amount for the uaction
+          rewards:
+            type: array
+            items:
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+              description: >-
+                Coin defines a token with a denomination and an amount.
+
+
+                NOTE: The amount field is an Int which implements the custom
+                method
+
+                signatures required by gogoproto.
+            title: >-
+              rewards specifies the farming rewards for are accumulated in the
+              farm module
+
+              the value is determined when an auction is finished
+          fees:
+            type: array
+            items:
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+              description: >-
+                Coin defines a token with a denomination and an amount.
+
+
+                NOTE: The amount field is an Int which implements the custom
+                method
+
+                signatures required by gogoproto.
+          fee_rate:
+            type: string
+        description: |-
+          RewardsAuction defines rewards auction that is created by the module
+          for every rewards_auction_duration in params.
+    description: >-
+      QueryRewardsAuctionResponse is response type for the Query/RewardsAuction
+      RPC method.
+  crescent.liquidfarming.v1beta1.QueryRewardsAuctionsResponse:
+    type: object
+    properties:
+      rewards_auctions:
+        type: array
+        items:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uint64
+              title: id specifies the unique auction id
+            pool_id:
+              type: string
+              format: uint64
+              title: pool_id specifies the liquidity pool id
+            bidding_coin_denom:
+              type: string
+              title: bidding_coin_denom specifies the bidding coin denomination
+            paying_reserve_address:
+              type: string
+              title: >-
+                paying_reserve_address specfies the account that reserves
+                bidding amounts placed by bidders
+            start_time:
+              type: string
+              format: date-time
+              title: start_time specifies the start time of an auction
+            end_time:
+              type: string
+              format: date-time
+              title: end_time specifies the end time of an auction
+            status:
+              title: status specifies the status of an auction
+              type: string
+              enum:
+                - AUCTION_STATUS_UNSPECIFIED
+                - AUCTION_STATUS_STARTED
+                - AUCTION_STATUS_FINISHED
+                - AUCTION_STATUS_SKIPPED
+              default: AUCTION_STATUS_UNSPECIFIED
+              description: |-
+                AuctionStatus enumerates the valid status of an auction.
+
+                 - AUCTION_STATUS_UNSPECIFIED: AUCTION_STATUS_UNSPECIFIED defines the default auction status
+                 - AUCTION_STATUS_STARTED: AUCTION_STATUS_STARTED defines the started auction status
+                 - AUCTION_STATUS_FINISHED: AUCTION_STATUS_FINISHED defines the finished auction status
+                 - AUCTION_STATUS_SKIPPED: AUCTION_STATUS_SKIPPED defines the skipped auction status
+            winner:
+              type: string
+              title: |-
+                winner specifies the bidder who won the auction
+                the value is determined when an auction is finished
+            winning_amount:
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+              description: >-
+                Coin defines a token with a denomination and an amount.
+
+
+                NOTE: The amount field is an Int which implements the custom
+                method
+
+                signatures required by gogoproto.
+              title: winning_amount specifies the winning amount for the uaction
+            rewards:
+              type: array
+              items:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+                description: >-
+                  Coin defines a token with a denomination and an amount.
+
+
+                  NOTE: The amount field is an Int which implements the custom
+                  method
+
+                  signatures required by gogoproto.
+              title: >-
+                rewards specifies the farming rewards for are accumulated in the
+                farm module
+
+                the value is determined when an auction is finished
+            fees:
+              type: array
+              items:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+                description: >-
+                  Coin defines a token with a denomination and an amount.
+
+
+                  NOTE: The amount field is an Int which implements the custom
+                  method
+
+                  signatures required by gogoproto.
+            fee_rate:
+              type: string
+          description: |-
+            RewardsAuction defines rewards auction that is created by the module
+            for every rewards_auction_duration in params.
+      pagination:
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            title: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+        description: |-
+          PageResponse is to be embedded in gRPC response messages where the
+          corresponding request message has used PageRequest.
+
+           message SomeResponse {
+                   repeated Bar results = 1;
+                   PageResponse page = 2;
+           }
+    description: >-
+      QueryRewardsAuctionsResponse is response type for the
+      Query/RewardsAuctions RPC method.
+  crescent.liquidfarming.v1beta1.QueryRewardsResponse:
+    type: object
+    properties:
+      rewards:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            Coin defines a token with a denomination and an amount.
+
+            NOTE: The amount field is an Int which implements the custom method
+            signatures required by gogoproto.
+    description: QueryRewardsResponse is response type for the Query/Rewards RPC method.
+  crescent.liquidfarming.v1beta1.RewardsAuction:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uint64
+        title: id specifies the unique auction id
+      pool_id:
+        type: string
+        format: uint64
+        title: pool_id specifies the liquidity pool id
+      bidding_coin_denom:
+        type: string
+        title: bidding_coin_denom specifies the bidding coin denomination
+      paying_reserve_address:
+        type: string
+        title: >-
+          paying_reserve_address specfies the account that reserves bidding
+          amounts placed by bidders
+      start_time:
+        type: string
+        format: date-time
+        title: start_time specifies the start time of an auction
+      end_time:
+        type: string
+        format: date-time
+        title: end_time specifies the end time of an auction
+      status:
+        title: status specifies the status of an auction
+        type: string
+        enum:
+          - AUCTION_STATUS_UNSPECIFIED
+          - AUCTION_STATUS_STARTED
+          - AUCTION_STATUS_FINISHED
+          - AUCTION_STATUS_SKIPPED
+        default: AUCTION_STATUS_UNSPECIFIED
+        description: |-
+          AuctionStatus enumerates the valid status of an auction.
+
+           - AUCTION_STATUS_UNSPECIFIED: AUCTION_STATUS_UNSPECIFIED defines the default auction status
+           - AUCTION_STATUS_STARTED: AUCTION_STATUS_STARTED defines the started auction status
+           - AUCTION_STATUS_FINISHED: AUCTION_STATUS_FINISHED defines the finished auction status
+           - AUCTION_STATUS_SKIPPED: AUCTION_STATUS_SKIPPED defines the skipped auction status
+      winner:
+        type: string
+        title: |-
+          winner specifies the bidder who won the auction
+          the value is determined when an auction is finished
+      winning_amount:
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
+        title: winning_amount specifies the winning amount for the uaction
+      rewards:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            Coin defines a token with a denomination and an amount.
+
+            NOTE: The amount field is an Int which implements the custom method
+            signatures required by gogoproto.
+        title: >-
+          rewards specifies the farming rewards for are accumulated in the farm
+          module
+
+          the value is determined when an auction is finished
+      fees:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            Coin defines a token with a denomination and an amount.
+
+            NOTE: The amount field is an Int which implements the custom method
+            signatures required by gogoproto.
+      fee_rate:
+        type: string
+    description: |-
+      RewardsAuction defines rewards auction that is created by the module
+      for every rewards_auction_duration in params.
   crescent.liquidamm.v1beta1.AuctionStatus:
     type: string
     enum:
