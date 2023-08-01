@@ -13,6 +13,10 @@ func DerivePoolReserveAddress(poolId uint64) sdk.AccAddress {
 	return address.Module(ModuleName, []byte(fmt.Sprintf("PoolReserveAddress/%d", poolId)))
 }
 
+func DerivePoolRewardsPoolAddress(poolId uint64) sdk.AccAddress {
+	return address.Module(ModuleName, []byte(fmt.Sprintf("PoolRewardsPool/%d", poolId)))
+}
+
 func NewPool(id uint64, marketId uint64, denom0, denom1 string, tickSpacing uint32) Pool {
 	return Pool{
 		Id:             id,
@@ -21,11 +25,16 @@ func NewPool(id uint64, marketId uint64, denom0, denom1 string, tickSpacing uint
 		Denom1:         denom1,
 		TickSpacing:    tickSpacing,
 		ReserveAddress: DerivePoolReserveAddress(id).String(),
+		RewardsPool:    DerivePoolRewardsPoolAddress(id).String(),
 	}
 }
 
 func (pool Pool) MustGetReserveAddress() sdk.AccAddress {
 	return sdk.MustAccAddressFromBech32(pool.ReserveAddress)
+}
+
+func (pool Pool) MustGetRewardsPoolAddress() sdk.AccAddress {
+	return sdk.MustAccAddressFromBech32(pool.RewardsPool)
 }
 
 func (pool Pool) DenomIn(isBuy bool) string {
@@ -63,6 +72,9 @@ func (pool Pool) Validate() error {
 	}
 	if _, err := sdk.AccAddressFromBech32(pool.ReserveAddress); err != nil {
 		return fmt.Errorf("invalid reserve address: %w", err)
+	}
+	if _, err := sdk.AccAddressFromBech32(pool.RewardsPool); err != nil {
+		return fmt.Errorf("invalid rewards pool: %w", err)
 	}
 	return nil
 }
