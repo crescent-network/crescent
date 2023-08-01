@@ -40,7 +40,6 @@ import (
 	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 	farmingtypes "github.com/crescent-network/crescent/v5/x/farming/types"
 	liquidammtypes "github.com/crescent-network/crescent/v5/x/liquidamm/types"
-	liquidfarmingtypes "github.com/crescent-network/crescent/v5/x/liquidfarming/types"
 	liquiditytypes "github.com/crescent-network/crescent/v5/x/liquidity/types"
 	liquidstakingtypes "github.com/crescent-network/crescent/v5/x/liquidstaking/types"
 	lpfarmtypes "github.com/crescent-network/crescent/v5/x/lpfarm/types"
@@ -198,7 +197,6 @@ func TestAppImportExport(t *testing.T) {
 		{app.keys[budgettypes.StoreKey], newApp.keys[budgettypes.StoreKey], [][]byte{}},
 		{app.keys[farmingtypes.StoreKey], newApp.keys[farmingtypes.StoreKey], [][]byte{}},
 		{app.keys[liquidstakingtypes.StoreKey], newApp.keys[liquidstakingtypes.StoreKey], [][]byte{}},
-		{app.keys[liquidfarmingtypes.StoreKey], newApp.keys[liquidfarmingtypes.StoreKey], [][]byte{}},
 		{app.keys[liquiditytypes.StoreKey], newApp.keys[liquiditytypes.StoreKey], [][]byte{}},
 		{app.keys[claimtypes.StoreKey], newApp.keys[claimtypes.StoreKey], [][]byte{}},
 		{app.keys[marketmakertypes.StoreKey], newApp.keys[marketmakertypes.StoreKey], [][]byte{}},
