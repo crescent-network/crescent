@@ -85,3 +85,27 @@ func (s *KeeperTestSuite) TestNegativeFarmingRewardsGrowthInside() {
 	_, farmingRewards = s.CollectibleCoins(2)
 	s.Require().Equal("", farmingRewards.String())
 }
+
+func (s *KeeperTestSuite) TestRewardsPool() {
+	market1, pool1 := s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("5"))
+	market2, pool2 := s.CreateMarketAndPool("uatom", "uusd", utils.ParseDec("10"))
+
+	lpAddr := s.FundedAccount(1, enoughCoins)
+	position1, _, _ := s.AddLiquidity(
+		lpAddr, pool1.Id, utils.ParseDec("4"), utils.ParseDec("6"), utils.ParseCoins("100_000000ucre,500_000000uusd"))
+	s.AddLiquidity(
+		lpAddr, pool2.Id, utils.ParseDec("9"), utils.ParseDec("12"), utils.ParseCoins("100_000000uatom,1000_000000uusd"))
+
+	ordererAddr := s.FundedAccount(2, enoughCoins)
+	s.PlaceMarketOrder(market1.Id, ordererAddr, true, sdk.NewInt(1_000000))
+	s.PlaceMarketOrder(market2.Id, ordererAddr, false, sdk.NewInt(1_000000))
+
+	s.Require().Equal(utils.ParseCoins("1498ucre,2612uusd"), s.GetAllBalances(pool1.MustGetRewardsPoolAddress()))
+	s.Require().Equal(utils.ParseCoins("265uatom,14981uusd"), s.GetAllBalances(pool2.MustGetRewardsPoolAddress()))
+
+	fee, _ := s.CollectibleCoins(position1.Id)
+	s.Require().Equal(utils.ParseCoins("1497ucre,2611uusd"), fee)
+	s.Collect(lpAddr, position1.Id, utils.ParseCoins("1497ucre,2611uusd"))
+	s.Require().Equal(utils.ParseCoins("1ucre,1uusd"), s.GetAllBalances(pool1.MustGetRewardsPoolAddress()))
+	s.Require().Equal(utils.ParseCoins("265uatom,14981uusd"), s.GetAllBalances(pool2.MustGetRewardsPoolAddress()))
+}

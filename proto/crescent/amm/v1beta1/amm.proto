@@ -15,6 +15,7 @@ message Pool {
   string denom1          = 4;
   uint32 tick_spacing    = 5;
   string reserve_address = 6;
+  string rewards_pool    = 7;
 }
 
 message PoolState {
