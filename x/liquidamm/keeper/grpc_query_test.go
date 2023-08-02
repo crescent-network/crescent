@@ -32,7 +32,7 @@ func (s *KeeperTestSuite) TestQueryPublicPositions() {
 			&types.QueryPublicPositionsRequest{},
 			"",
 			func(resp *types.QueryPublicPositionsResponse) {
-				s.Require().Len(resp.PublicPositions, 1)
+				s.Require().Len(resp.PublicPositions, 2)
 				publicPosition := resp.PublicPositions[0]
 				s.Require().EqualValues(1, publicPosition.Id)
 				s.Require().EqualValues(2, publicPosition.LastRewardsAuctionId)
@@ -40,6 +40,21 @@ func (s *KeeperTestSuite) TestQueryPublicPositions() {
 					s.App.BankKeeper.GetSupply(s.Ctx, types.ShareDenom(publicPosition.Id)),
 					publicPosition.TotalShare)
 				s.Require().Equal(sdk.NewInt(43138144377), publicPosition.Liquidity)
+			},
+		},
+		{
+			"pool not found",
+			&types.QueryPublicPositionsRequest{PoolId: 3},
+			"rpc error: code = NotFound desc = pool not found",
+			nil,
+		},
+		{
+			"by pool id",
+			&types.QueryPublicPositionsRequest{PoolId: 2},
+			"",
+			func(resp *types.QueryPublicPositionsResponse) {
+				s.Require().Len(resp.PublicPositions, 1)
+				s.Require().Equal(uint64(2), resp.PublicPositions[0].PoolId)
 			},
 		},
 	} {

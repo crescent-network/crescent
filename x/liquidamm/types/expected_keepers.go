@@ -27,6 +27,7 @@ type BankKeeper interface {
 }
 
 type AMMKeeper interface {
+	LookupPool(ctx sdk.Context, poolId uint64) (found bool)
 	GetPool(ctx sdk.Context, poolId uint64) (pool ammtypes.Pool, found bool)
 	GetPositionByParams(
 		ctx sdk.Context, ownerAddr sdk.AccAddress, poolId uint64, lowerTick, upperTick int32) (position ammtypes.Position, found bool)

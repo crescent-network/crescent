@@ -78,10 +78,31 @@ func (k Keeper) IterateAllPublicPositions(ctx sdk.Context, cb func(publicPositio
 	}
 }
 
+func (k Keeper) IteratePublicPositionsByPool(ctx sdk.Context, poolId uint64, cb func(publicPosition types.PublicPosition) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, types.GetPublicPositionsByPoolIteratorPrefix(poolId))
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		_, publicPositionId := types.ParsePublicPositionsByPoolIndexKey(iter.Key())
+		publicPosition, found := k.GetPublicPosition(ctx, publicPositionId)
+		if !found { // sanity check
+			panic("public position not found")
+		}
+		if cb(publicPosition) {
+			break
+		}
+	}
+}
+
 // DeletePublicPosition deletes the public position object from the store.
 func (k Keeper) DeletePublicPosition(ctx sdk.Context, publicPosition types.PublicPosition) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.GetPublicPositionKey(publicPosition.Id))
+}
+
+func (k Keeper) SetPublicPositionsByPoolIndex(ctx sdk.Context, publicPosition types.PublicPosition) {
+	store := ctx.KVStore(k.storeKey)
+	store.Set(types.GetPublicPositionsByPoolIndexKey(publicPosition.PoolId, publicPosition.Id), []byte{})
 }
 
 // GetNextRewardsAuctionEndTime returns the last rewards auction end time.

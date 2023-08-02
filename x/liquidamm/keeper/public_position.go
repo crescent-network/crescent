@@ -25,6 +25,7 @@ func (k Keeper) CreatePublicPosition(
 	publicPosition = types.NewPublicPosition(
 		publicPositionId, pool.Id, lowerTick, upperTick, minBidAmt, feeRate)
 	k.SetPublicPosition(ctx, publicPosition)
+	k.SetPublicPositionsByPoolIndex(ctx, publicPosition)
 
 	if err := ctx.EventManager().EmitTypedEvent(&types.EventPublicPositionCreated{
 		PublicPositionId: publicPosition.Id,
