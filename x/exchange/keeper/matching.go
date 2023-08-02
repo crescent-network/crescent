@@ -72,9 +72,6 @@ func (k Keeper) executeOrder(
 }
 
 func (k Keeper) FinalizeMatching(ctx sdk.Context, market types.Market, orders []*types.MemOrder, escrow *types.Escrow) error {
-	if escrow == nil {
-		escrow = types.NewEscrow(market.MustGetEscrowAddress())
-	}
 	var sourceNames []string
 	ordersBySource := map[string][]*types.MemOrder{}
 	for _, memOrder := range orders {
