@@ -298,12 +298,6 @@ func (ctx *MatchingContext) BatchMatchOrderBookSides(buyObs, sellObs *MemOrderBo
 	return newLastPrice
 }
 
-func DeductFee(amt, feeRate sdk.Dec) (deducted, fee sdk.Dec) {
-	fee = feeRate.Mul(amt)
-	deducted = amt.Sub(fee)
-	return
-}
-
 func PayReceiveDenoms(baseDenom, quoteDenom string, isBuy bool) (payDenom, receiveDenom string) {
 	if isBuy {
 		return quoteDenom, baseDenom
