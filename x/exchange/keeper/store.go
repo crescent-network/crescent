@@ -260,7 +260,7 @@ func (k Keeper) IterateOrderBookSideByMarket(ctx sdk.Context, marketId uint64, i
 	}
 }
 
-func (k Keeper) GetBestPrice(ctx sdk.Context, marketId uint64, isBuy bool) (price sdk.Dec, found bool) {
+func (k Keeper) GetBestOrderPrice(ctx sdk.Context, marketId uint64, isBuy bool) (bestPrice sdk.Dec, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	var iter sdk.Iterator
 	if isBuy {
@@ -272,10 +272,10 @@ func (k Keeper) GetBestPrice(ctx sdk.Context, marketId uint64, isBuy bool) (pric
 	}
 	defer iter.Close()
 	if iter.Valid() {
-		price = types.ParsePriceFromOrderBookOrderIndexKey(iter.Key())
-		return price, true
+		bestPrice = types.ParsePriceFromOrderBookOrderIndexKey(iter.Key())
+		return bestPrice, true
 	}
-	return price, false
+	return bestPrice, false
 }
 
 func (k Keeper) IterateOrderBookSide(

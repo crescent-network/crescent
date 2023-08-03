@@ -9,30 +9,25 @@ import (
 func (k Keeper) RunBatchMatching(ctx sdk.Context, market types.Market) (err error) {
 	// Find the best buy(bid) and sell(ask) prices to limit the price to load
 	// on the other side.
-	bestBuyPrice, _ := k.GetBestPrice(ctx, market.Id, true)
-	bestSellPrice, _ := k.GetBestPrice(ctx, market.Id, false)
+	bestBuyPrice, found := k.getBestPrice(ctx, market, true)
+	if !found { // Nothing to match, exit early
+		return nil
+	}
+	bestSellPrice, found := k.getBestPrice(ctx, market, false)
+	if !found { // Nothing to match, exit early
+		return nil
+	}
 
 	// Construct order book sides with the price limits we obtained previously.
 	escrow := types.NewEscrow(market.MustGetEscrowAddress())
-	var buyObs, sellObs *types.MemOrderBookSide
-	if !bestSellPrice.IsNil() {
-		buyObs = k.ConstructMemOrderBookSide(ctx, market, types.MemOrderBookSideOptions{
-			IsBuy:      true,
-			PriceLimit: &bestSellPrice,
-		}, escrow)
-	} else {
-		// TODO: fix
-		buyObs = types.NewMemOrderBookSide(true)
-	}
-	if !bestBuyPrice.IsNil() {
-		sellObs = k.ConstructMemOrderBookSide(ctx, market, types.MemOrderBookSideOptions{
-			IsBuy:      false,
-			PriceLimit: &bestBuyPrice,
-		}, escrow)
-	} else {
-		// TODO: fix
-		sellObs = types.NewMemOrderBookSide(false)
-	}
+	buyObs := k.ConstructMemOrderBookSide(ctx, market, types.MemOrderBookSideOptions{
+		IsBuy:      true,
+		PriceLimit: &bestSellPrice,
+	}, escrow)
+	sellObs := k.ConstructMemOrderBookSide(ctx, market, types.MemOrderBookSideOptions{
+		IsBuy:      false,
+		PriceLimit: &bestBuyPrice,
+	}, escrow)
 
 	var lastPrice sdk.Dec
 	marketState := k.MustGetMarketState(ctx, market.Id)
@@ -48,7 +43,7 @@ func (k Keeper) RunBatchMatching(ctx sdk.Context, market types.Market) (err erro
 
 		// Apply the match results.
 		memOrders := append(append(([]*types.MemOrder)(nil), buyObs.Orders()...), sellObs.Orders()...)
-		if err = k.FinalizeMatching(ctx, market, memOrders, escrow); err != nil {
+		if err = k.finalizeMatching(ctx, market, memOrders, escrow); err != nil {
 			return
 		}
 		marketState.LastPrice = &lastPrice

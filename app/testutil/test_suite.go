@@ -40,6 +40,7 @@ func (s *TestSuite) BeginBlock(blockTimeDelta time.Duration) {
 		WithBlockTime(s.Ctx.BlockTime().Add(blockTimeDelta)).
 		BlockHeader()
 	s.App.BeginBlock(abci.RequestBeginBlock{Header: newHeader})
+	s.App.MidBlock(abci.RequestMidBlock{Txs: nil})
 	s.Ctx = s.App.BaseApp.NewContext(false, newHeader)
 }
 

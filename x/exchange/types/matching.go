@@ -68,6 +68,8 @@ func (ctx *MatchingContext) fillOrder(orderType MemOrderType, isBuy bool, qty, p
 		pays = pays.Add(fee)
 	} else if orderType == UserMemOrder {
 		receives, fee = DeductFee(receives, ctx.feeRate(isMaker))
+	} else {
+		fee = utils.ZeroDec
 	}
 	return
 }
