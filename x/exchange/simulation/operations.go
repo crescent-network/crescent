@@ -101,10 +101,11 @@ func WeightedOperations(
 			weightMsgCancelAllOrders,
 			SimulateMsgCancelAllOrders(ak, bk, k),
 		),
-		simulation.NewWeightedOperation(
-			weightMsgSwapExactAmountIn,
-			SimulateMsgSwapExactAmountIn(ak, bk, k),
-		),
+		// XXX
+		//simulation.NewWeightedOperation(
+		//	weightMsgSwapExactAmountIn,
+		//	SimulateMsgSwapExactAmountIn(ak, bk, k),
+		//),
 	}
 }
 

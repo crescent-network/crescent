@@ -58,13 +58,12 @@ func (k Keeper) MintShare(
 
 	shareDenom := types.ShareDenom(publicPositionId)
 	shareSupply := k.bankKeeper.GetSupply(ctx, shareDenom).Amount
+	types.ValidatePublicPositionShareSupply(position, shareSupply)
 	mintedShareAmt := types.CalculateMintedShareAmount(
 		liquidity, position.Liquidity.Sub(liquidity), shareSupply)
 	mintedShare = sdk.NewCoin(shareDenom, mintedShareAmt)
 	types.ValidateMintShareResult(
 		liquidity, position.Liquidity.Sub(liquidity), mintedShareAmt, shareSupply)
-	types.ValidatePublicPositionShareSupply(
-		k.MustGetAMMPosition(ctx, publicPosition), shareSupply)
 	if err = k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(mintedShare)); err != nil {
 		return
 	}
@@ -72,7 +71,7 @@ func (k Keeper) MintShare(
 		return
 	}
 	types.ValidatePublicPositionShareSupply(
-		k.MustGetAMMPosition(ctx, publicPosition), shareSupply)
+		k.MustGetAMMPosition(ctx, publicPosition), shareSupply.Add(mintedShareAmt))
 
 	if err = ctx.EventManager().EmitTypedEvent(&types.EventMintShare{
 		Minter:           senderAddr.String(),
@@ -103,6 +102,7 @@ func (k Keeper) BurnShare(
 	position = k.MustGetAMMPosition(ctx, publicPosition)
 
 	shareSupply := k.bankKeeper.GetSupply(ctx, share.Denom).Amount
+	types.ValidatePublicPositionShareSupply(position, shareSupply)
 	var prevWinningBidShareAmt sdk.Int
 	auction, found := k.GetPreviousRewardsAuction(ctx, publicPosition)
 	if found && auction.WinningBid != nil {
@@ -112,8 +112,6 @@ func (k Keeper) BurnShare(
 	}
 	removedLiquidity = types.CalculateRemovedLiquidity(
 		share.Amount, shareSupply, position.Liquidity, prevWinningBidShareAmt)
-	types.ValidatePublicPositionShareSupply(
-		k.MustGetAMMPosition(ctx, publicPosition), shareSupply)
 
 	if err = k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(share)); err != nil {
 		return
@@ -124,7 +122,7 @@ func (k Keeper) BurnShare(
 		return
 	}
 	types.ValidatePublicPositionShareSupply(
-		k.MustGetAMMPosition(ctx, publicPosition), shareSupply)
+		k.MustGetAMMPosition(ctx, publicPosition), shareSupply.Sub(share.Amount))
 
 	if err = ctx.EventManager().EmitTypedEvent(&types.EventBurnShare{
 		Burner:           senderAddr.String(),

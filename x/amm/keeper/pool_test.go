@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	utils "github.com/crescent-network/crescent/v5/types"
@@ -156,5 +158,57 @@ func (s *KeeperTestSuite) TestPoolOrders() {
 				s.AssertEqual(tc.sellOrders[i].qty, sellOrders[i].qty)
 			}
 		})
+	}
+}
+
+func (s *KeeperTestSuite) TestCorrectPoolPrice() {
+	market := s.CreateMarket("ucre", "uusd")
+
+	ordererAddr1 := s.FundedAccount(1, enoughCoins)
+	ordererAddr2 := s.FundedAccount(2, enoughCoins)
+	s.PlaceLimitOrder(
+		market.Id, ordererAddr1, false, utils.ParseDec("5"), sdk.NewDec(1000000), time.Hour)
+	s.PlaceMarketOrder(market.Id, ordererAddr2, true, sdk.NewDec(1000000))
+
+	marketState := s.App.ExchangeKeeper.MustGetMarketState(s.Ctx, market.Id)
+	s.AssertEqual(utils.ParseDec("5"), *marketState.LastPrice)
+
+	pool := s.CreatePool(market.Id, utils.ParseDec("0.000001"))
+
+	lpAddr := s.FundedAccount(3, enoughCoins)
+	s.AddLiquidity(
+		lpAddr, pool.Id, utils.ParseDec("4.9"), utils.ParseDec("5.1"),
+		utils.ParseCoins("1_000000ucre,5_000000uusd"))
+
+	_, _, res := s.PlaceLimitOrder(
+		market.Id, ordererAddr1, true, utils.ParseDec("5.001"), sdk.NewDec(10000), 0)
+	s.AssertEqual(utils.ParseDec("4.905"), res.LastPrice)
+
+	marketState = s.App.ExchangeKeeper.MustGetMarketState(s.Ctx, market.Id)
+	s.AssertEqual(utils.ParseDec("4.905"), *marketState.LastPrice)
+
+	poolState := s.keeper.MustGetPoolState(s.Ctx, pool.Id)
+	s.AssertEqual(utils.ParseDec("4.901941362919812648"), poolState.CurrentPrice)
+}
+
+func (s *KeeperTestSuite) TestPoolOrdersFindEdgecase() {
+	market, pool := s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("5"))
+
+	lpAddr := s.FundedAccount(1, enoughCoins)
+	s.AddLiquidity(
+		lpAddr, pool.Id, utils.ParseDec("4"), utils.ParseDec("6"),
+		utils.ParseCoins("10_000000ucre,50_000000uusd"))
+
+	ordererAddr := s.FundedAccount(2, enoughCoins)
+	ctx := s.Ctx
+	for i := 0; i < 2000; i++ {
+		s.Ctx, _ = ctx.CacheContext()
+
+		s.PlaceMarketOrder(market.Id, ordererAddr, false, sdk.NewDec(int64((i+1)*50)))
+	}
+	for i := 0; i < 2000; i++ {
+		s.Ctx, _ = ctx.CacheContext()
+
+		s.PlaceMarketOrder(market.Id, ordererAddr, true, sdk.NewDec(int64((i+1)*50)))
 	}
 }

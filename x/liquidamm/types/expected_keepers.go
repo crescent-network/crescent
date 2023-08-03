@@ -2,6 +2,7 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	ammtypes "github.com/crescent-network/crescent/v5/x/amm/types"
@@ -10,6 +11,8 @@ import (
 // AccountKeeper defines the expected interface needed for the module.
 type AccountKeeper interface {
 	GetModuleAddress(name string) sdk.AccAddress
+
+	GetAccount(ctx sdk.Context, addr sdk.AccAddress) authtypes.AccountI
 }
 
 // BankKeeper defines the expected interface needed for the module.
@@ -39,4 +42,8 @@ type AMMKeeper interface {
 	Collect(
 		ctx sdk.Context, ownerAddr, toAddr sdk.AccAddress, positionId uint64, amt sdk.Coins) error
 	CollectibleCoins(ctx sdk.Context, positionId uint64) (fee, farmingRewards sdk.Coins, err error)
+
+	// Used in simulation tests
+	IterateAllPools(ctx sdk.Context, cb func(pool ammtypes.Pool) (stop bool))
+	MustGetPoolState(ctx sdk.Context, poolId uint64) ammtypes.PoolState
 }
