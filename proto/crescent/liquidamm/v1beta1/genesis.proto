@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package crescent.liquidamm.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
+import "crescent/liquidamm/v1beta1/liquidamm.proto";
+import "crescent/liquidamm/v1beta1/params.proto";
+
+option go_package                      = "github.com/crescent-network/crescent/v5/x/liquidamm/types";
+option (gogoproto.goproto_getters_all) = false;
+
+// GenesisState defines the module's genesis state.
+message GenesisState {
+  Params                    params                        = 1 [(gogoproto.nullable) = false];
+  uint64                    last_public_position_id       = 2;
+  repeated PublicPosition   public_positions              = 3 [(gogoproto.nullable) = false];
+  repeated RewardsAuction   rewards_auctions              = 4 [(gogoproto.nullable) = false];
+  repeated Bid              bids                          = 5 [(gogoproto.nullable) = false];
+  google.protobuf.Timestamp next_rewards_auction_end_time = 6 [(gogoproto.stdtime) = true];
+}

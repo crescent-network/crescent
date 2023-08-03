@@ -5,468 +5,550 @@ import (
 
 	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/liquidfarming/types"
+	liquiditytypes "github.com/crescent-network/crescent/v5/x/liquidity/types"
+	lpfarmtypes "github.com/crescent-network/crescent/v5/x/lpfarm/types"
+
+	_ "github.com/stretchr/testify/suite"
 )
 
-func (s *KeeperTestSuite) TestQueryParams() {
-	resp, err := s.querier.Params(sdk.WrapSDKContext(s.Ctx), &types.QueryParamsRequest{})
+func (s *KeeperTestSuite) TestGRPCParams() {
+	resp, err := s.querier.Params(sdk.WrapSDKContext(s.ctx), &types.QueryParamsRequest{})
 	s.Require().NoError(err)
-	s.Require().Equal(s.keeper.GetParams(s.Ctx), resp.Params)
+	s.Require().Equal(s.keeper.GetParams(s.ctx), resp.Params)
 }
 
-func (s *KeeperTestSuite) TestQueryLiquidFarms() {
-	s.SetupSampleScenario()
+func (s *KeeperTestSuite) TestGRPCLiquidFarms() {
+	pair1 := s.createPair(s.addr(0), "denom1", "denom2")
+	pool1 := s.createPool(s.addr(0), pair1.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
+	minFarmAmt1, minBidAmt1 := sdk.NewInt(10_000_000), sdk.NewInt(10_000_000)
+	s.createLiquidFarm(pool1.Id, minFarmAmt1, minBidAmt1, sdk.ZeroDec())
+
+	pair2 := s.createPair(s.addr(1), "denom3", "denom4")
+	pool2 := s.createPool(s.addr(1), pair2.Id, utils.ParseCoins("100_000_000denom3, 100_000_000denom4"))
+	minFarmAmt2, minBidAmt2 := sdk.NewInt(30_000_000), sdk.NewInt(30_000_000)
+	s.createLiquidFarm(pool2.Id, minFarmAmt2, minBidAmt2, sdk.ZeroDec())
+
 	for _, tc := range []struct {
-		name        string
-		req         *types.QueryLiquidFarmsRequest
-		expectedErr string
-		postRun     func(resp *types.QueryLiquidFarmsResponse)
+		name      string
+		req       *types.QueryLiquidFarmsRequest
+		expectErr bool
+		postRun   func(*types.QueryLiquidFarmsResponse)
 	}{
 		{
-			"empty request",
+			"nil request",
 			nil,
-			"rpc error: code = InvalidArgument desc = empty request",
+			true,
 			nil,
 		},
 		{
 			"happy case",
 			&types.QueryLiquidFarmsRequest{},
-			"",
+			false,
 			func(resp *types.QueryLiquidFarmsResponse) {
-				s.Require().Len(resp.LiquidFarms, 1)
-				liquidFarm := resp.LiquidFarms[0]
-				s.Require().EqualValues(1, liquidFarm.Id)
-				s.Require().EqualValues(2, liquidFarm.LastRewardsAuctionId)
-				s.Require().Equal(
-					s.App.BankKeeper.GetSupply(s.Ctx, types.ShareDenom(liquidFarm.Id)),
-					liquidFarm.TotalShare)
-				s.Require().Equal(sdk.NewInt(43138144377), liquidFarm.Liquidity)
+				s.Require().Len(resp.LiquidFarms, 2)
+
+				for _, liquidFarm := range resp.LiquidFarms {
+					switch liquidFarm.PoolId {
+					case 1:
+						s.Require().Equal(minFarmAmt1, liquidFarm.MinFarmAmount)
+						s.Require().Equal(minBidAmt1, liquidFarm.MinBidAmount)
+					case 2:
+						s.Require().Equal(minFarmAmt2, liquidFarm.MinFarmAmount)
+						s.Require().Equal(minBidAmt2, liquidFarm.MinBidAmount)
+					}
+					reserveAddr := types.LiquidFarmReserveAddress(liquidFarm.PoolId)
+					lfCoinDenom := types.LiquidFarmCoinDenom(liquidFarm.PoolId)
+					lfCoinSupplyAmt := s.app.BankKeeper.GetSupply(s.ctx, lfCoinDenom).Amount
+					poolCoinDenom := liquiditytypes.PoolCoinDenom(liquidFarm.PoolId)
+					position, found := s.app.LPFarmKeeper.GetPosition(s.ctx, reserveAddr, poolCoinDenom)
+					if !found {
+						position.FarmingAmount = sdk.ZeroInt()
+					}
+					s.Require().Equal(lfCoinDenom, liquidFarm.LFCoinDenom)
+					s.Require().Equal(lfCoinSupplyAmt, liquidFarm.LFCoinSupply)
+					s.Require().Equal(poolCoinDenom, liquidFarm.PoolCoinDenom)
+					s.Require().Equal(position.FarmingAmount, liquidFarm.PoolCoinFarmingAmount)
+				}
 			},
 		},
 	} {
 		s.Run(tc.name, func() {
-			resp, err := s.querier.LiquidFarms(sdk.WrapSDKContext(s.Ctx), tc.req)
-			if tc.expectedErr == "" {
+			resp, err := s.querier.LiquidFarms(sdk.WrapSDKContext(s.ctx), tc.req)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
 				s.Require().NoError(err)
 				tc.postRun(resp)
-			} else {
-				s.Require().EqualError(err, tc.expectedErr)
 			}
 		})
 	}
 }
 
-func (s *KeeperTestSuite) TestQueryLiquidFarm() {
-	s.SetupSampleScenario()
+func (s *KeeperTestSuite) TestGRPCLiquidFarm() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2")
+	pool := s.createPool(s.addr(0), pair.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
+	minFarmAmt, minBidAmt := sdk.NewInt(10_000_000), sdk.NewInt(10_000_000)
+	s.createLiquidFarm(pool.Id, minFarmAmt, minBidAmt, sdk.ZeroDec())
+
 	for _, tc := range []struct {
-		name        string
-		req         *types.QueryLiquidFarmRequest
-		expectedErr string
-		postRun     func(resp *types.QueryLiquidFarmResponse)
+		name      string
+		req       *types.QueryLiquidFarmRequest
+		expectErr bool
+		postRun   func(*types.QueryLiquidFarmResponse)
 	}{
 		{
-			"empty request",
+			"nil request",
 			nil,
-			"rpc error: code = InvalidArgument desc = empty request",
-			nil,
-		},
-		{
-			"invalid liquid farm id",
-			&types.QueryLiquidFarmRequest{
-				LiquidFarmId: 0,
-			},
-			"rpc error: code = InvalidArgument desc = liquid farm id must not be 0",
-			nil,
-		},
-		{
-			"liquid farm not found",
-			&types.QueryLiquidFarmRequest{
-				LiquidFarmId: 2,
-			},
-			"rpc error: code = NotFound desc = liquid farm not found",
+			true,
 			nil,
 		},
 		{
 			"happy case",
 			&types.QueryLiquidFarmRequest{
-				LiquidFarmId: 1,
+				PoolId: pool.Id,
 			},
-			"",
+			false,
 			func(resp *types.QueryLiquidFarmResponse) {
-				liquidFarm := resp.LiquidFarm
-				s.Require().EqualValues(1, liquidFarm.Id)
-				s.Require().EqualValues(2, liquidFarm.LastRewardsAuctionId)
-				s.Require().Equal(
-					s.App.BankKeeper.GetSupply(s.Ctx, types.ShareDenom(liquidFarm.Id)),
-					liquidFarm.TotalShare)
-				s.Require().Equal(sdk.NewInt(43138144377), liquidFarm.Liquidity)
+				reserveAddr := types.LiquidFarmReserveAddress(resp.LiquidFarm.PoolId)
+				lfCoinDenom := types.LiquidFarmCoinDenom(pool.Id)
+				lfCoinSupplyAmt := s.app.BankKeeper.GetSupply(s.ctx, lfCoinDenom).Amount
+				poolCoinDenom := liquiditytypes.PoolCoinDenom(resp.LiquidFarm.PoolId)
+				position, found := s.app.LPFarmKeeper.GetPosition(s.ctx, reserveAddr, poolCoinDenom)
+				if !found {
+					position.FarmingAmount = sdk.ZeroInt()
+				}
+				s.Require().Equal(types.LiquidFarmReserveAddress(pool.Id).String(), resp.LiquidFarm.LiquidFarmReserveAddress)
+				s.Require().Equal(lfCoinDenom, resp.LiquidFarm.LFCoinDenom)
+				s.Require().Equal(lfCoinSupplyAmt, resp.LiquidFarm.LFCoinSupply)
+				s.Require().Equal(poolCoinDenom, resp.LiquidFarm.PoolCoinDenom)
+				s.Require().Equal(position.FarmingAmount, resp.LiquidFarm.PoolCoinFarmingAmount)
+				s.Require().Equal(minFarmAmt, resp.LiquidFarm.MinFarmAmount)
+				s.Require().Equal(minBidAmt, resp.LiquidFarm.MinBidAmount)
 			},
+		},
+		{
+			"query by invalid pool id",
+			&types.QueryLiquidFarmRequest{
+				PoolId: 5,
+			},
+			true,
+			nil,
 		},
 	} {
 		s.Run(tc.name, func() {
-			resp, err := s.querier.LiquidFarm(sdk.WrapSDKContext(s.Ctx), tc.req)
-			if tc.expectedErr == "" {
+			resp, err := s.querier.LiquidFarm(sdk.WrapSDKContext(s.ctx), tc.req)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
 				s.Require().NoError(err)
 				tc.postRun(resp)
-			} else {
-				s.Require().EqualError(err, tc.expectedErr)
 			}
 		})
 	}
 }
 
-func (s *KeeperTestSuite) TestQueryRewardsAuctions() {
-	s.SetupSampleScenario()
+func (s *KeeperTestSuite) TestGRPCRewardsAuctions() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2")
+	pool := s.createPool(s.addr(0), pair.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
+
+	s.createLiquidFarm(pool.Id, sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroDec())
+
+	s.deposit(s.addr(1), pool.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"), true)
+	s.deposit(s.addr(2), pool.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"), true)
+	s.deposit(s.addr(3), pool.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"), true)
+	s.nextBlock()
+
+	s.nextBlock()
+
+	s.liquidFarm(pool.Id, s.addr(1), utils.ParseCoin("100_000pool1"), true)
+	s.liquidFarm(pool.Id, s.addr(2), utils.ParseCoin("300_000pool1"), true)
+	s.liquidFarm(pool.Id, s.addr(3), utils.ParseCoin("500_000pool1"), true)
+	s.nextBlock()
+
+	s.nextAuction()
+
+	s.placeBid(pool.Id, s.addr(5), utils.ParseCoin("100_000pool1"), true)
+	s.placeBid(pool.Id, s.addr(6), utils.ParseCoin("110_000pool1"), true)
+	s.placeBid(pool.Id, s.addr(7), utils.ParseCoin("150_000pool1"), true)
+	s.nextBlock()
+
+	s.nextAuction()
+
+	s.placeBid(pool.Id, s.addr(5), utils.ParseCoin("100_000pool1"), true)
+	s.placeBid(pool.Id, s.addr(6), utils.ParseCoin("110_000pool1"), true)
+	s.placeBid(pool.Id, s.addr(7), utils.ParseCoin("150_000pool1"), true)
+	s.nextBlock()
+
+	s.nextAuction()
+
 	for _, tc := range []struct {
-		name        string
-		req         *types.QueryRewardsAuctionsRequest
-		expectedErr string
-		postRun     func(*types.QueryRewardsAuctionsResponse)
+		name      string
+		req       *types.QueryRewardsAuctionsRequest
+		expectErr bool
+		postRun   func(*types.QueryRewardsAuctionsResponse)
 	}{
 		{
-			"empty request",
+			"nil request",
 			nil,
-			"rpc error: code = InvalidArgument desc = empty request",
-			nil,
-		},
-		{
-			"invalid liquid farm id",
-			&types.QueryRewardsAuctionsRequest{
-				LiquidFarmId: 0,
-			},
-			"rpc error: code = InvalidArgument desc = liquid farm id must not be 0",
+			true,
 			nil,
 		},
 		{
-			"liquid farm not found",
+			"query by invalid pool id",
 			&types.QueryRewardsAuctionsRequest{
-				LiquidFarmId: 2,
+				PoolId: 0,
 			},
-			"rpc error: code = NotFound desc = liquid farm not found",
-			nil,
+			true,
+			func(resp *types.QueryRewardsAuctionsResponse) {},
 		},
 		{
-			"invalid auction status",
+			"query by invalid pool id",
 			&types.QueryRewardsAuctionsRequest{
-				LiquidFarmId: 1,
-				Status:       "blah",
+				PoolId: 10,
 			},
-			"rpc error: code = InvalidArgument desc = invalid auction status blah",
-			nil,
+			false,
+			func(resp *types.QueryRewardsAuctionsResponse) {
+				s.Require().Len(resp.RewardsAuctions, 0)
+			},
 		},
 		{
-			"happy case",
+			"query by pool id",
 			&types.QueryRewardsAuctionsRequest{
-				LiquidFarmId: 1,
+				PoolId: pool.Id,
 			},
-			"",
+			false,
+			func(resp *types.QueryRewardsAuctionsResponse) {
+				s.Require().Len(resp.RewardsAuctions, 3)
+			},
+		},
+		{
+			"query by pool id and AuctionStatusStarted status",
+			&types.QueryRewardsAuctionsRequest{
+				PoolId: pool.Id,
+				Status: types.AuctionStatusStarted.String(),
+			},
+			false,
+			func(resp *types.QueryRewardsAuctionsResponse) {
+				s.Require().Len(resp.RewardsAuctions, 1)
+			},
+		},
+		{
+			"query by pool id and AuctionStatusFinished status",
+			&types.QueryRewardsAuctionsRequest{
+				PoolId: pool.Id,
+				Status: types.AuctionStatusFinished.String(),
+			},
+			false,
 			func(resp *types.QueryRewardsAuctionsResponse) {
 				s.Require().Len(resp.RewardsAuctions, 2)
-				auction := resp.RewardsAuctions[0]
-				s.Require().EqualValues(1, auction.Id)
-				s.Require().Equal(types.AuctionStatusFinished, auction.Status)
-				s.Require().Equal(utils.ParseCoin("1307216496lfshare1"), auction.WinningBid.Share)
-				auction = resp.RewardsAuctions[1]
-				s.Require().EqualValues(2, auction.Id)
-				s.Require().Equal(types.AuctionStatusStarted, auction.Status)
-				s.Require().Equal(utils.ParseCoin("814642164lfshare1"), auction.WinningBid.Share)
-			},
-		},
-		{
-			"query by status",
-			&types.QueryRewardsAuctionsRequest{
-				LiquidFarmId: 1,
-				Status:       types.AuctionStatusStarted.String(),
-			},
-			"",
-			func(resp *types.QueryRewardsAuctionsResponse) {
-				s.Require().Len(resp.RewardsAuctions, 1)
-				s.Require().EqualValues(2, resp.RewardsAuctions[0].Id)
-			},
-		},
-		{
-			"query by status 2",
-			&types.QueryRewardsAuctionsRequest{
-				LiquidFarmId: 1,
-				Status:       types.AuctionStatusFinished.String(),
-			},
-			"",
-			func(resp *types.QueryRewardsAuctionsResponse) {
-				s.Require().Len(resp.RewardsAuctions, 1)
-				s.Require().EqualValues(1, resp.RewardsAuctions[0].Id)
 			},
 		},
 	} {
 		s.Run(tc.name, func() {
-			resp, err := s.querier.RewardsAuctions(sdk.WrapSDKContext(s.Ctx), tc.req)
-			if tc.expectedErr == "" {
+			resp, err := s.querier.RewardsAuctions(sdk.WrapSDKContext(s.ctx), tc.req)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
 				s.Require().NoError(err)
 				tc.postRun(resp)
-			} else {
-				s.Require().EqualError(err, tc.expectedErr)
 			}
 		})
 	}
 }
 
-func (s *KeeperTestSuite) TestQueryRewardsAuction() {
-	s.SetupSampleScenario()
+func (s *KeeperTestSuite) TestGRPCRewardsAuction() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2")
+	pool := s.createPool(s.addr(0), pair.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
+
+	s.createLiquidFarm(pool.Id, sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroDec())
+
+	s.deposit(s.addr(1), pool.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"), true)
+	s.deposit(s.addr(2), pool.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"), true)
+	s.deposit(s.addr(3), pool.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"), true)
+	s.nextBlock()
+
+	s.liquidFarm(pool.Id, s.addr(1), utils.ParseCoin("100_000pool1"), true)
+	s.liquidFarm(pool.Id, s.addr(2), utils.ParseCoin("300_000pool1"), true)
+	s.liquidFarm(pool.Id, s.addr(3), utils.ParseCoin("500_000pool1"), true)
+	s.nextBlock()
+
+	s.nextAuction()
+
+	s.placeBid(pool.Id, s.addr(5), utils.ParseCoin("100_000pool1"), true)
+	s.placeBid(pool.Id, s.addr(6), utils.ParseCoin("110_000pool1"), true)
+	s.placeBid(pool.Id, s.addr(7), utils.ParseCoin("150_000pool1"), true)
+	s.nextBlock()
+
+	s.nextAuction()
+
 	for _, tc := range []struct {
-		name        string
-		req         *types.QueryRewardsAuctionRequest
-		expectedErr string
-		postRun     func(*types.QueryRewardsAuctionResponse)
+		name      string
+		req       *types.QueryRewardsAuctionRequest
+		expectErr bool
+		postRun   func(*types.QueryRewardsAuctionResponse)
 	}{
 		{
-			"empty request",
+			"nil request",
 			nil,
-			"rpc error: code = InvalidArgument desc = empty request",
-			nil,
-		},
-		{
-			"invalid liquid farm id",
-			&types.QueryRewardsAuctionRequest{
-				LiquidFarmId: 0,
-				AuctionId:    1,
-			},
-			"rpc error: code = InvalidArgument desc = liquid farm id must not be 0",
+			true,
 			nil,
 		},
 		{
-			"liquid farm not found",
+			"query by invalid pool id",
 			&types.QueryRewardsAuctionRequest{
-				LiquidFarmId: 2,
-				AuctionId:    1,
+				PoolId:    10,
+				AuctionId: 1,
 			},
-			"rpc error: code = NotFound desc = liquid farm not found",
-			nil,
+			true,
+			func(resp *types.QueryRewardsAuctionResponse) {},
 		},
 		{
-			"invalid auction id",
+			"query by invalid auction id",
 			&types.QueryRewardsAuctionRequest{
-				LiquidFarmId: 1,
-				AuctionId:    0,
+				PoolId:    1,
+				AuctionId: 10,
 			},
-			"rpc error: code = InvalidArgument desc = auction id must not be 0",
-			nil,
+			true,
+			func(resp *types.QueryRewardsAuctionResponse) {},
 		},
 		{
-			"auction not found",
+			"query finished auction",
 			&types.QueryRewardsAuctionRequest{
-				LiquidFarmId: 1,
-				AuctionId:    3,
+				PoolId:    pool.Id,
+				AuctionId: 1,
 			},
-			"rpc error: code = NotFound desc = auction not found",
-			nil,
-		},
-		{
-			"happy case",
-			&types.QueryRewardsAuctionRequest{
-				LiquidFarmId: 1,
-				AuctionId:    1,
-			},
-			"",
+			false,
 			func(resp *types.QueryRewardsAuctionResponse) {
-				s.Require().EqualValues(1, resp.RewardsAuction.Id)
+				s.Require().Equal(pool.PoolCoinDenom, resp.RewardsAuction.BiddingCoinDenom)
+				s.Require().Equal(types.PayingReserveAddress(pool.Id), resp.RewardsAuction.GetPayingReserveAddress())
 				s.Require().Equal(types.AuctionStatusFinished, resp.RewardsAuction.Status)
 			},
 		},
 		{
-			"happy case 2",
+			"query started auction",
 			&types.QueryRewardsAuctionRequest{
-				LiquidFarmId: 1,
-				AuctionId:    2,
+				PoolId:    pool.Id,
+				AuctionId: 2,
 			},
-			"",
+			false,
 			func(resp *types.QueryRewardsAuctionResponse) {
-				s.Require().EqualValues(2, resp.RewardsAuction.Id)
+				s.Require().Equal(pool.PoolCoinDenom, resp.RewardsAuction.BiddingCoinDenom)
+				s.Require().Equal(types.PayingReserveAddress(pool.Id), resp.RewardsAuction.GetPayingReserveAddress())
 				s.Require().Equal(types.AuctionStatusStarted, resp.RewardsAuction.Status)
 			},
 		},
 	} {
 		s.Run(tc.name, func() {
-			resp, err := s.querier.RewardsAuction(sdk.WrapSDKContext(s.Ctx), tc.req)
-			if tc.expectedErr == "" {
+			resp, err := s.querier.RewardsAuction(sdk.WrapSDKContext(s.ctx), tc.req)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
 				s.Require().NoError(err)
 				tc.postRun(resp)
-			} else {
-				s.Require().EqualError(err, tc.expectedErr)
 			}
 		})
 	}
 }
 
-func (s *KeeperTestSuite) TestQueryBids() {
-	s.SetupSampleScenario()
+func (s *KeeperTestSuite) TestGRPCBids() {
+	pair := s.createPair(s.addr(0), "denom1", "denom2")
+	pool := s.createPool(s.addr(0), pair.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
+	s.createLiquidFarm(pool.Id, sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroDec())
+
+	s.deposit(s.addr(1), pool.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"), true)
+	s.deposit(s.addr(2), pool.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"), true)
+	s.deposit(s.addr(3), pool.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"), true)
+	s.nextBlock()
+
+	s.liquidFarm(pool.Id, s.addr(1), utils.ParseCoin("100_000pool1"), true)
+	s.liquidFarm(pool.Id, s.addr(2), utils.ParseCoin("300_000pool1"), true)
+	s.liquidFarm(pool.Id, s.addr(3), utils.ParseCoin("500_000pool1"), true)
+	s.nextBlock()
+
+	s.nextAuction()
+
+	s.placeBid(pool.Id, s.addr(5), utils.ParseCoin("100_000pool1"), true)
+	s.placeBid(pool.Id, s.addr(6), utils.ParseCoin("110_000pool1"), true)
+	s.placeBid(pool.Id, s.addr(7), utils.ParseCoin("150_000pool1"), true)
+	s.nextBlock()
+
 	for _, tc := range []struct {
-		name        string
-		req         *types.QueryBidsRequest
-		expectedErr string
-		postRun     func(*types.QueryBidsResponse)
+		name      string
+		req       *types.QueryBidsRequest
+		expectErr bool
+		postRun   func(*types.QueryBidsResponse)
 	}{
 		{
-			"empty request",
+			"nil request",
 			nil,
-			"rpc error: code = InvalidArgument desc = empty request",
-			nil,
-		},
-		{
-			"invalid liquid farm id",
-			&types.QueryBidsRequest{
-				LiquidFarmId: 0,
-				AuctionId:    1,
-			},
-			"rpc error: code = InvalidArgument desc = liquid farm id must not be 0",
+			true,
 			nil,
 		},
 		{
-			"liquid farm not found",
+			"query by invalid pool id",
 			&types.QueryBidsRequest{
-				LiquidFarmId: 2,
-				AuctionId:    1,
+				PoolId: 0,
 			},
-			"rpc error: code = NotFound desc = liquid farm not found",
-			nil,
+			true,
+			func(resp *types.QueryBidsResponse) {},
 		},
 		{
-			"invalid auction id",
+			"query by pool id",
 			&types.QueryBidsRequest{
-				LiquidFarmId: 1,
-				AuctionId:    0,
+				PoolId: pool.Id,
 			},
-			"rpc error: code = InvalidArgument desc = auction id must not be 0",
-			nil,
-		},
-		{
-			"auction not found",
-			&types.QueryBidsRequest{
-				LiquidFarmId: 1,
-				AuctionId:    3,
-			},
-			"rpc error: code = NotFound desc = auction not found",
-			nil,
-		},
-		{
-			"happy case",
-			&types.QueryBidsRequest{
-				LiquidFarmId: 1,
-				AuctionId:    1,
-			},
-			"",
+			false,
 			func(resp *types.QueryBidsResponse) {
-				// All bids have been deleted since the auction is finished.
-				s.Require().Empty(resp.Bids)
-			},
-		},
-		{
-			"happy case 2",
-			&types.QueryBidsRequest{
-				LiquidFarmId: 1,
-				AuctionId:    2,
-			},
-			"",
-			func(resp *types.QueryBidsResponse) {
-				s.Require().Len(resp.Bids, 2)
+				s.Require().Len(resp.Bids, 3)
 			},
 		},
 	} {
 		s.Run(tc.name, func() {
-			resp, err := s.querier.Bids(sdk.WrapSDKContext(s.Ctx), tc.req)
-			if tc.expectedErr == "" {
+			resp, err := s.querier.Bids(sdk.WrapSDKContext(s.ctx), tc.req)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
 				s.Require().NoError(err)
 				tc.postRun(resp)
-			} else {
-				s.Require().EqualError(err, tc.expectedErr)
 			}
 		})
 	}
 }
 
-func (s *KeeperTestSuite) TestQueryRewards() {
-	s.SetupSampleScenario()
+func (s *KeeperTestSuite) TestRewards() {
+	pair := s.createPairWithLastPrice(helperAddr, "denom1", "denom2", sdk.NewDec(1))
+	pool := s.createPool(helperAddr, pair.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
+	plan := s.createPrivatePlan(helperAddr, []lpfarmtypes.RewardAllocation{
+		{
+			PairId:        pool.PairId,
+			RewardsPerDay: utils.ParseCoins("100_000_000stake"),
+		},
+	})
+	s.fundAddr(plan.GetFarmingPoolAddress(), utils.ParseCoins("500_000_000stake"))
+
+	err := s.keeper.LiquidFarm(s.ctx, pool.Id, s.addr(0), utils.ParseCoin("1_000_000pool1"))
+	s.Require().EqualError(err, "liquid farm by pool 1 not found: not found")
+
+	s.createLiquidFarm(pool.Id, sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroDec())
+	s.Require().Len(s.keeper.GetParams(s.ctx).LiquidFarms, 1)
+
+	s.liquidFarm(pool.Id, s.addr(0), sdk.NewCoin(pool.PoolCoinDenom, sdk.NewInt(100_000_000)), true)
+	s.nextBlock()
+
+	s.liquidFarm(pool.Id, s.addr(1), sdk.NewCoin(pool.PoolCoinDenom, sdk.NewInt(200_000_000)), true)
+	s.nextBlock()
+
+	s.liquidFarm(pool.Id, s.addr(2), sdk.NewCoin(pool.PoolCoinDenom, sdk.NewInt(300_000_000)), true)
+	s.nextBlock()
+
 	for _, tc := range []struct {
-		name        string
-		req         *types.QueryRewardsRequest
-		expectedErr string
-		postRun     func(*types.QueryRewardsResponse)
+		name      string
+		req       *types.QueryRewardsRequest
+		expectErr bool
+		postRun   func(*types.QueryRewardsResponse)
 	}{
 		{
-			"empty request",
+			"nil request",
 			nil,
-			"rpc error: code = InvalidArgument desc = empty request",
-			nil,
-		},
-		{
-			"invalid liquid farm id",
-			&types.QueryRewardsRequest{
-				LiquidFarmId: 0,
-			},
-			"rpc error: code = InvalidArgument desc = liquid farm id must not be 0",
+			true,
 			nil,
 		},
 		{
-			"happy case",
+			"query by invalid pool id",
 			&types.QueryRewardsRequest{
-				LiquidFarmId: 1,
+				PoolId: 0,
 			},
-			"",
+			true,
+			func(resp *types.QueryRewardsResponse) {},
+		},
+		{
+			"query by valid pool id",
+			&types.QueryRewardsRequest{
+				PoolId: 1,
+			},
+			false,
 			func(resp *types.QueryRewardsResponse) {
 				s.Require().True(resp.Rewards.IsAllPositive())
 			},
 		},
 	} {
 		s.Run(tc.name, func() {
-			resp, err := s.querier.Rewards(sdk.WrapSDKContext(s.Ctx), tc.req)
-			if tc.expectedErr == "" {
+			resp, err := s.querier.Rewards(sdk.WrapSDKContext(s.ctx), tc.req)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
 				s.Require().NoError(err)
 				tc.postRun(resp)
-			} else {
-				s.Require().Error(err)
 			}
 		})
 	}
 }
 
-func (s *KeeperTestSuite) TestQueryExchangeRate() {
-	s.SetupSampleScenario()
+func (s *KeeperTestSuite) TestGRPCExchangeRate() {
+	pair := s.createPairWithLastPrice(helperAddr, "denom1", "denom2", sdk.NewDec(1))
+	pool := s.createPool(helperAddr, pair.Id, utils.ParseCoins("100_000_000denom1, 100_000_000denom2"))
+	plan := s.createPrivatePlan(helperAddr, []lpfarmtypes.RewardAllocation{
+		{
+			PairId:        pool.PairId,
+			RewardsPerDay: utils.ParseCoins("100_000_000stake"),
+		},
+	})
+	s.fundAddr(plan.GetFarmingPoolAddress(), utils.ParseCoins("500_000_000stake"))
+
+	err := s.keeper.LiquidFarm(s.ctx, pool.Id, s.addr(0), utils.ParseCoin("1_000_000pool1"))
+	s.Require().EqualError(err, "liquid farm by pool 1 not found: not found")
+
+	s.createLiquidFarm(pool.Id, sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroDec())
+	s.Require().Len(s.keeper.GetParams(s.ctx).LiquidFarms, 1)
+
+	s.liquidFarm(pool.Id, s.addr(0), sdk.NewCoin(pool.PoolCoinDenom, sdk.NewInt(100_000_000)), true)
+	s.nextBlock()
+
+	s.liquidFarm(pool.Id, s.addr(1), sdk.NewCoin(pool.PoolCoinDenom, sdk.NewInt(200_000_000)), true)
+	s.nextBlock()
+
+	s.liquidFarm(pool.Id, s.addr(2), sdk.NewCoin(pool.PoolCoinDenom, sdk.NewInt(300_000_000)), true)
+	s.nextBlock()
+
 	for _, tc := range []struct {
-		name        string
-		req         *types.QueryExchangeRateRequest
-		expectedErr string
-		postRun     func(*types.QueryExchangeRateResponse)
+		name      string
+		req       *types.QueryExchangeRateRequest
+		expectErr bool
+		postRun   func(*types.QueryExchangeRateResponse)
 	}{
 		{
-			"empty request",
+			"nil request",
 			nil,
-			"rpc error: code = InvalidArgument desc = empty request",
-			nil,
-		},
-		{
-			"liquid farm not found",
-			&types.QueryExchangeRateRequest{
-				LiquidFarmId: 10,
-			},
-			"rpc error: code = InvalidArgument desc = liquid farm id must not be 0",
+			true,
 			nil,
 		},
 		{
-			"happy case",
+			"query by invalid pool id",
 			&types.QueryExchangeRateRequest{
-				LiquidFarmId: 1,
+				PoolId: 0,
 			},
-			"",
+			true,
+			func(resp *types.QueryExchangeRateResponse) {},
+		},
+		{
+			"query by valid pool id",
+			&types.QueryExchangeRateRequest{
+				PoolId: 1,
+			},
+			false,
 			func(resp *types.QueryExchangeRateResponse) {
-				s.Require().Equal("0.934782608695148231", resp.MintRate.String())
-				s.Require().Equal("1.036177474410059339", resp.BurnRate.String())
+				s.Require().True(resp.ExchangeRate.MintRate.Equal(sdk.OneDec()))
+				s.Require().True(resp.ExchangeRate.BurnRate.Equal(sdk.OneDec()))
 			},
 		},
 	} {
 		s.Run(tc.name, func() {
-			resp, err := s.querier.ExchangeRate(sdk.WrapSDKContext(s.Ctx), tc.req)
-			if tc.expectedErr == "" {
+			resp, err := s.querier.ExchangeRate(sdk.WrapSDKContext(s.ctx), tc.req)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
 				s.Require().NoError(err)
 				tc.postRun(resp)
-			} else {
-				s.Require().Error(err)
 			}
 		})
 	}

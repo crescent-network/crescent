@@ -4,7 +4,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	ammtypes "github.com/crescent-network/crescent/v5/x/amm/types"
+	liquiditytypes "github.com/crescent-network/crescent/v5/x/liquidity/types"
+	lpfarmtypes "github.com/crescent-network/crescent/v5/x/lpfarm/types"
 )
 
 // AccountKeeper defines the expected interface needed for the module.
@@ -26,17 +27,18 @@ type BankKeeper interface {
 	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 }
 
-type AMMKeeper interface {
-	GetPool(ctx sdk.Context, poolId uint64) (pool ammtypes.Pool, found bool)
-	GetPositionByParams(
-		ctx sdk.Context, ownerAddr sdk.AccAddress, poolId uint64, lowerTick, upperTick int32) (position ammtypes.Position, found bool)
-	AddLiquidity(
-		ctx sdk.Context, ownerAddr, fromAddr sdk.AccAddress, poolId uint64,
-		lowerPrice, upperPrice sdk.Dec, desiredAmt sdk.Coins) (position ammtypes.Position, liquidity sdk.Int, amt sdk.Coins, err error)
-	RemoveLiquidity(
-		ctx sdk.Context, ownerAddr, toAddr sdk.AccAddress,
-		positionId uint64, liquidity sdk.Int) (position ammtypes.Position, amt sdk.Coins, err error)
-	Collect(
-		ctx sdk.Context, ownerAddr, toAddr sdk.AccAddress, positionId uint64, amt sdk.Coins) error
-	CollectibleCoins(ctx sdk.Context, positionId uint64) (fee, farmingRewards sdk.Coins, err error)
+// LPFarmKeeper defines the expected interface needed for the module.
+type LPFarmKeeper interface {
+	Farm(ctx sdk.Context, farmerAddr sdk.AccAddress, coin sdk.Coin) (withdrawnRewards sdk.Coins, err error)
+	Unfarm(ctx sdk.Context, farmerAddr sdk.AccAddress, coin sdk.Coin) (withdrawnRewards sdk.Coins, err error)
+	Harvest(ctx sdk.Context, farmerAddr sdk.AccAddress, denom string) (withdrawnRewards sdk.Coins, err error)
+	Rewards(ctx sdk.Context, farmerAddr sdk.AccAddress, denom string) sdk.DecCoins
+	GetFarm(ctx sdk.Context, denom string) (farm lpfarmtypes.Farm, found bool)
+	GetPosition(ctx sdk.Context, farmerAddr sdk.AccAddress, denom string) (position lpfarmtypes.Position, found bool)
+}
+
+// LiquidityKeeper defines the expected interface needed for the module.
+type LiquidityKeeper interface {
+	GetPool(ctx sdk.Context, id uint64) (pool liquiditytypes.Pool, found bool)
+	Withdraw(ctx sdk.Context, msg *liquiditytypes.MsgWithdraw) (liquiditytypes.WithdrawRequest, error)
 }

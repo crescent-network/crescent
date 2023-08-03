@@ -18,12 +18,14 @@ func TestDecodeFarmingStore(t *testing.T) {
 	dec := simulation.NewDecodeStore(cdc)
 
 	liquidFarm := types.LiquidFarm{}
+	compoundingRewards := types.CompoundingRewards{}
 	rewardsAuction := types.RewardsAuction{}
 	bid := types.Bid{}
 
 	kvPairs := kv.Pairs{
 		Pairs: []kv.Pair{
 			{Key: types.LiquidFarmKeyPrefix, Value: cdc.MustMarshal(&liquidFarm)},
+			{Key: types.CompoundingRewardsKeyPrefix, Value: cdc.MustMarshal(&compoundingRewards)},
 			{Key: types.RewardsAuctionKeyPrefix, Value: cdc.MustMarshal(&rewardsAuction)},
 			{Key: types.BidKeyPrefix, Value: cdc.MustMarshal(&bid)},
 			{Key: []byte{0x99}, Value: []byte{0x99}},
@@ -35,6 +37,7 @@ func TestDecodeFarmingStore(t *testing.T) {
 		expectedLog string
 	}{
 		{"LiquidFarm", fmt.Sprintf("%v\n%v", liquidFarm, liquidFarm)},
+		{"CompoundingRewards", fmt.Sprintf("%v\n%v", compoundingRewards, compoundingRewards)},
 		{"RewardsAuction", fmt.Sprintf("%v\n%v", rewardsAuction, rewardsAuction)},
 		{"Bid", fmt.Sprintf("%v\n%v", bid, bid)},
 		{"other", ""},

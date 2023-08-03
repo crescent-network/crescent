@@ -8,6 +8,8 @@
   - x/liquidstaking/**/*
 "x/liquidfarming":
   - x/liquidfarming/**/*
+"x/liquidamm":
+  - x/liquidamm/**/*
 "x/mint":
   - x/mint/**/*
 "x/marketmaker":

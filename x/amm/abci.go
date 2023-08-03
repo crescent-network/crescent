@@ -18,4 +18,5 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	if err := k.AllocateFarmingRewards(ctx); err != nil {
 		panic(err)
 	}
+	//k.RunValidations(ctx)
 }

@@ -160,7 +160,7 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 		amtInDiff := result.Received().Sub(expectedAmtIn)
 		if amtInDiff.IsPositive() {
 			denomIn := pool.DenomIn(isBuy)
-			fee, _ := sdk.NewDecCoinFromDec(denomIn, amtInDiff).TruncateDecimal()
+			fee := sdk.NewCoin(denomIn, amtInDiff.TruncateInt())
 			accruedRewards = accruedRewards.Add(fee)
 			feeGrowth := sdk.NewDecCoinFromDec(
 				fee.Denom, fee.Amount.ToDec().
@@ -198,4 +198,7 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 		ctx, reserveAddr, types.ModuleName, accruedRewards); err != nil {
 		panic(err)
 	}
+
+	types.ValidatePoolPriceAfterMatching(
+		isBuy, pool.TickSpacing, results[len(results)-1].Price(), poolState.CurrentPrice)
 }

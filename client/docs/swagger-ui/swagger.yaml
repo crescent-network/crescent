@@ -9452,17 +9452,63 @@ paths:
           type: string
       tags:
         - Query
-  /crescent/liquidfarming/v1beta1/liquidfarms:
+  /crescent/liquidamm/v1beta1/params:
     get:
-      summary: LiquidFarms returns all liquid farms registered in params
-      operationId: LiquidFarms
+      summary: Params returns parameters of the module
+      operationId: LiquidAMMParams
       responses:
         '200':
           description: A successful response.
           schema:
             type: object
             properties:
-              liquid_farms:
+              params:
+                type: object
+                properties:
+                  rewards_auction_duration:
+                    type: string
+                  max_num_recent_rewards_auctions:
+                    type: integer
+                    format: int64
+                description: Params defines the parameters for the module.
+            description: >-
+              QueryParamsResponse is response type for the Query/Params RPC
+              method.
+        default:
+          description: An unexpected error response
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      tags:
+        - Query
+  /crescent/liquidamm/v1beta1/public_positions:
+    get:
+      summary: PublicPositions returns all public positions registered in module
+      operationId: PublicPositions
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              public_positions:
                 type: array
                 items:
                   type: object
@@ -9509,8 +9555,8 @@ paths:
 
                         signatures required by gogoproto.
                   description: >-
-                    LiquidFarmResponse is response type for the Query/LiquidFarm
-                    RPC method.
+                    PublicPositionResponse is response type for the
+                    Query/PublicPosition RPC method.
               pagination:
                 type: object
                 properties:
@@ -9539,8 +9585,8 @@ paths:
                            PageResponse page = 2;
                    }
             description: >-
-              QueryLiquidFarmsResponse is response type for the
-              Query/LiquidFarms RPC method.
+              QueryPublicPositionsResponse is response type for the
+              Query/PublicPositions RPC method.
         default:
           description: An unexpected error response
           schema:
@@ -9623,17 +9669,17 @@ paths:
           format: boolean
       tags:
         - Query
-  '/crescent/liquidfarming/v1beta1/liquidfarms/{liquid_farm_id}':
+  '/crescent/liquidamm/v1beta1/public_positions/{public_position_id}':
     get:
-      summary: LiquidFarm returns the specific liquid farm
-      operationId: LiquidFarm
+      summary: PublicPosition returns the specific public position
+      operationId: PublicPosition
       responses:
         '200':
           description: A successful response.
           schema:
             type: object
             properties:
-              liquid_farm:
+              public_position:
                 type: object
                 properties:
                   id:
@@ -9678,11 +9724,11 @@ paths:
 
                       signatures required by gogoproto.
                 description: >-
-                  LiquidFarmResponse is response type for the Query/LiquidFarm
-                  RPC method.
+                  PublicPositionResponse is response type for the
+                  Query/PublicPosition RPC method.
             description: >-
-              QueryLiquidFarmResponse is response type for the Query/LiquidFarm
-              RPC method.
+              QueryPublicPositionResponse is response type for the
+              Query/PublicPosition RPC method.
         default:
           description: An unexpected error response
           schema:
@@ -9706,18 +9752,18 @@ paths:
                       type: string
                       format: byte
       parameters:
-        - name: liquid_farm_id
+        - name: public_position_id
           in: path
           required: true
           type: string
           format: uint64
       tags:
         - Query
-  '/crescent/liquidfarming/v1beta1/liquidfarms/{liquid_farm_id}/exchange_rate':
+  '/crescent/liquidamm/v1beta1/public_positions/{public_position_id}/exchange_rate':
     get:
       summary: >-
         ExchangeRate returns exchange rates (mint rate and burn rate) for the
-        liquid farm
+        public position
       operationId: ExchangeRate
       responses:
         '200':
@@ -9755,17 +9801,17 @@ paths:
                       type: string
                       format: byte
       parameters:
-        - name: liquid_farm_id
+        - name: public_position_id
           in: path
           required: true
           type: string
           format: uint64
       tags:
         - Query
-  '/crescent/liquidfarming/v1beta1/liquidfarms/{liquid_farm_id}/rewards':
+  '/crescent/liquidamm/v1beta1/public_positions/{public_position_id}/rewards':
     get:
-      summary: Rewards returns all accumulated rewards for the liquid farm
-      operationId: LiquidFarmingRewards
+      summary: Rewards returns all accumulated rewards for the public position
+      operationId: LiquidAMMRewards
       responses:
         '200':
           description: A successful response.
@@ -9815,14 +9861,14 @@ paths:
                       type: string
                       format: byte
       parameters:
-        - name: liquid_farm_id
+        - name: public_position_id
           in: path
           required: true
           type: string
           format: uint64
       tags:
         - Query
-  '/crescent/liquidfarming/v1beta1/liquidfarms/{liquid_farm_id}/rewards_auctions':
+  '/crescent/liquidamm/v1beta1/public_positions/{public_position_id}/rewards_auctions':
     get:
       summary: >-
         RewardsAuctions returns all rewards auctions that correspond to the
@@ -9839,14 +9885,16 @@ paths:
                 items:
                   type: object
                   properties:
-                    liquid_farm_id:
+                    public_position_id:
                       type: string
                       format: uint64
-                      title: liquid_farm_id specifies the liquid farm id
+                      description: public_position_id specifies the public position's id.
                     id:
                       type: string
                       format: uint64
-                      title: id specifies the unique auction id in the liquid farm
+                      title: >-
+                        id specifies the unique auction id in the public
+                        position
                     start_time:
                       type: string
                       format: date-time
@@ -9875,10 +9923,12 @@ paths:
                       title: winning_bid specifies the winning bid
                       type: object
                       properties:
-                        liquid_farm_id:
+                        public_position_id:
                           type: string
                           format: uint64
-                          title: liquid_farm_id specifies the liquid farm's id
+                          title: >-
+                            public_position_id specifies the public position's
+                            id
                         rewards_auction_id:
                           type: string
                           format: uint64
@@ -10005,7 +10055,7 @@ paths:
                       type: string
                       format: byte
       parameters:
-        - name: liquid_farm_id
+        - name: public_position_id
           in: path
           required: true
           type: string
@@ -10073,7 +10123,7 @@ paths:
           format: boolean
       tags:
         - Query
-  '/crescent/liquidfarming/v1beta1/liquidfarms/{liquid_farm_id}/rewards_auctions/{auction_id}':
+  '/crescent/liquidamm/v1beta1/public_positions/{public_position_id}/rewards_auctions/{auction_id}':
     get:
       summary: RewardsAuction returns the specific rewards auction
       operationId: RewardsAuction
@@ -10086,14 +10136,14 @@ paths:
               rewards_auction:
                 type: object
                 properties:
-                  liquid_farm_id:
+                  public_position_id:
                     type: string
                     format: uint64
-                    title: liquid_farm_id specifies the liquid farm id
+                    description: public_position_id specifies the public position's id.
                   id:
                     type: string
                     format: uint64
-                    title: id specifies the unique auction id in the liquid farm
+                    title: id specifies the unique auction id in the public position
                   start_time:
                     type: string
                     format: date-time
@@ -10122,10 +10172,10 @@ paths:
                     title: winning_bid specifies the winning bid
                     type: object
                     properties:
-                      liquid_farm_id:
+                      public_position_id:
                         type: string
                         format: uint64
-                        title: liquid_farm_id specifies the liquid farm's id
+                        title: public_position_id specifies the public position's id
                       rewards_auction_id:
                         type: string
                         format: uint64
@@ -10223,7 +10273,7 @@ paths:
                       type: string
                       format: byte
       parameters:
-        - name: liquid_farm_id
+        - name: public_position_id
           in: path
           required: true
           type: string
@@ -10235,7 +10285,7 @@ paths:
           format: uint64
       tags:
         - Query
-  '/crescent/liquidfarming/v1beta1/liquidfarms/{liquid_farm_id}/rewards_auctions/{auction_id}/bids':
+  '/crescent/liquidamm/v1beta1/public_positions/{public_position_id}/rewards_auctions/{auction_id}/bids':
     get:
       summary: Bids returns all bids for the rewards auction
       operationId: Bids
@@ -10250,10 +10300,10 @@ paths:
                 items:
                   type: object
                   properties:
-                    liquid_farm_id:
+                    public_position_id:
                       type: string
                       format: uint64
-                      title: liquid_farm_id specifies the liquid farm's id
+                      title: public_position_id specifies the public position's id
                     rewards_auction_id:
                       type: string
                       format: uint64
@@ -10331,7 +10381,7 @@ paths:
                       type: string
                       format: byte
       parameters:
-        - name: liquid_farm_id
+        - name: public_position_id
           in: path
           required: true
           type: string
@@ -10398,52 +10448,6 @@ paths:
           required: false
           type: boolean
           format: boolean
-      tags:
-        - Query
-  /crescent/liquidfarming/v1beta1/params:
-    get:
-      summary: Params returns parameters of the module
-      operationId: LiquidFarmingParams
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              params:
-                type: object
-                properties:
-                  rewards_auction_duration:
-                    type: string
-                  max_num_recent_rewards_auctions:
-                    type: integer
-                    format: int64
-                description: Params defines the parameters for the module.
-            description: >-
-              QueryParamsResponse is response type for the Query/Params RPC
-              method.
-        default:
-          description: An unexpected error response
-          schema:
-            type: object
-            properties:
-              error:
-                type: string
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    type_url:
-                      type: string
-                    value:
-                      type: string
-                      format: byte
       tags:
         - Query
   /crescent/marker/v1beta1/last_block_time:
@@ -17723,7 +17727,7 @@ definitions:
 
             NOTE: The amount field is an Int which implements the custom method
             signatures required by gogoproto.
-  crescent.liquidfarming.v1beta1.AuctionStatus:
+  crescent.liquidamm.v1beta1.AuctionStatus:
     type: string
     enum:
       - AUCTION_STATUS_UNSPECIFIED
@@ -17738,13 +17742,13 @@ definitions:
        - AUCTION_STATUS_STARTED: AUCTION_STATUS_STARTED defines the started auction status
        - AUCTION_STATUS_FINISHED: AUCTION_STATUS_FINISHED defines the finished auction status
        - AUCTION_STATUS_SKIPPED: AUCTION_STATUS_SKIPPED defines the skipped auction status
-  crescent.liquidfarming.v1beta1.Bid:
+  crescent.liquidamm.v1beta1.Bid:
     type: object
     properties:
-      liquid_farm_id:
+      public_position_id:
         type: string
         format: uint64
-        title: liquid_farm_id specifies the liquid farm's id
+        title: public_position_id specifies the public position's id
       rewards_auction_id:
         type: string
         format: uint64
@@ -17768,7 +17772,16 @@ definitions:
           signatures required by gogoproto.
         title: share specifies the share amount to place a bid
     description: Bid defines standard bid for a rewards auction.
-  crescent.liquidfarming.v1beta1.LiquidFarmResponse:
+  crescent.liquidamm.v1beta1.Params:
+    type: object
+    properties:
+      rewards_auction_duration:
+        type: string
+      max_num_recent_rewards_auctions:
+        type: integer
+        format: int64
+    description: Params defines the parameters for the module.
+  crescent.liquidamm.v1beta1.PublicPositionResponse:
     type: object
     properties:
       id:
@@ -17809,17 +17822,10 @@ definitions:
 
           NOTE: The amount field is an Int which implements the custom method
           signatures required by gogoproto.
-    description: LiquidFarmResponse is response type for the Query/LiquidFarm RPC method.
-  crescent.liquidfarming.v1beta1.Params:
-    type: object
-    properties:
-      rewards_auction_duration:
-        type: string
-      max_num_recent_rewards_auctions:
-        type: integer
-        format: int64
-    description: Params defines the parameters for the module.
-  crescent.liquidfarming.v1beta1.QueryBidsResponse:
+    description: >-
+      PublicPositionResponse is response type for the Query/PublicPosition RPC
+      method.
+  crescent.liquidamm.v1beta1.QueryBidsResponse:
     type: object
     properties:
       bids:
@@ -17827,10 +17833,10 @@ definitions:
         items:
           type: object
           properties:
-            liquid_farm_id:
+            public_position_id:
               type: string
               format: uint64
-              title: liquid_farm_id specifies the liquid farm's id
+              title: public_position_id specifies the public position's id
             rewards_auction_id:
               type: string
               format: uint64
@@ -17883,7 +17889,7 @@ definitions:
                    PageResponse page = 2;
            }
     description: QueryBidsResponse is response type for the Query/Bids RPC method.
-  crescent.liquidfarming.v1beta1.QueryExchangeRateResponse:
+  crescent.liquidamm.v1beta1.QueryExchangeRateResponse:
     type: object
     properties:
       mint_rate:
@@ -17893,10 +17899,23 @@ definitions:
     description: >-
       QueryExchangeRateResponse is response type for the Query/ExchangeRate RPC
       method.
-  crescent.liquidfarming.v1beta1.QueryLiquidFarmResponse:
+  crescent.liquidamm.v1beta1.QueryParamsResponse:
     type: object
     properties:
-      liquid_farm:
+      params:
+        type: object
+        properties:
+          rewards_auction_duration:
+            type: string
+          max_num_recent_rewards_auctions:
+            type: integer
+            format: int64
+        description: Params defines the parameters for the module.
+    description: QueryParamsResponse is response type for the Query/Params RPC method.
+  crescent.liquidamm.v1beta1.QueryPublicPositionResponse:
+    type: object
+    properties:
+      public_position:
         type: object
         properties:
           id:
@@ -17941,15 +17960,15 @@ definitions:
 
               signatures required by gogoproto.
         description: >-
-          LiquidFarmResponse is response type for the Query/LiquidFarm RPC
-          method.
+          PublicPositionResponse is response type for the Query/PublicPosition
+          RPC method.
     description: >-
-      QueryLiquidFarmResponse is response type for the Query/LiquidFarm RPC
-      method.
-  crescent.liquidfarming.v1beta1.QueryLiquidFarmsResponse:
+      QueryPublicPositionResponse is response type for the Query/PublicPosition
+      RPC method.
+  crescent.liquidamm.v1beta1.QueryPublicPositionsResponse:
     type: object
     properties:
-      liquid_farms:
+      public_positions:
         type: array
         items:
           type: object
@@ -17996,8 +18015,8 @@ definitions:
 
                 signatures required by gogoproto.
           description: >-
-            LiquidFarmResponse is response type for the Query/LiquidFarm RPC
-            method.
+            PublicPositionResponse is response type for the Query/PublicPosition
+            RPC method.
       pagination:
         type: object
         properties:
@@ -18024,35 +18043,22 @@ definitions:
                    PageResponse page = 2;
            }
     description: >-
-      QueryLiquidFarmsResponse is response type for the Query/LiquidFarms RPC
-      method.
-  crescent.liquidfarming.v1beta1.QueryParamsResponse:
-    type: object
-    properties:
-      params:
-        type: object
-        properties:
-          rewards_auction_duration:
-            type: string
-          max_num_recent_rewards_auctions:
-            type: integer
-            format: int64
-        description: Params defines the parameters for the module.
-    description: QueryParamsResponse is response type for the Query/Params RPC method.
-  crescent.liquidfarming.v1beta1.QueryRewardsAuctionResponse:
+      QueryPublicPositionsResponse is response type for the
+      Query/PublicPositions RPC method.
+  crescent.liquidamm.v1beta1.QueryRewardsAuctionResponse:
     type: object
     properties:
       rewards_auction:
         type: object
         properties:
-          liquid_farm_id:
+          public_position_id:
             type: string
             format: uint64
-            title: liquid_farm_id specifies the liquid farm id
+            description: public_position_id specifies the public position's id.
           id:
             type: string
             format: uint64
-            title: id specifies the unique auction id in the liquid farm
+            title: id specifies the unique auction id in the public position
           start_time:
             type: string
             format: date-time
@@ -18081,10 +18087,10 @@ definitions:
             title: winning_bid specifies the winning bid
             type: object
             properties:
-              liquid_farm_id:
+              public_position_id:
                 type: string
                 format: uint64
-                title: liquid_farm_id specifies the liquid farm's id
+                title: public_position_id specifies the public position's id
               rewards_auction_id:
                 type: string
                 format: uint64
@@ -18154,7 +18160,7 @@ definitions:
     description: >-
       QueryRewardsAuctionResponse is response type for the Query/RewardsAuction
       RPC method.
-  crescent.liquidfarming.v1beta1.QueryRewardsAuctionsResponse:
+  crescent.liquidamm.v1beta1.QueryRewardsAuctionsResponse:
     type: object
     properties:
       rewards_auctions:
@@ -18162,14 +18168,14 @@ definitions:
         items:
           type: object
           properties:
-            liquid_farm_id:
+            public_position_id:
               type: string
               format: uint64
-              title: liquid_farm_id specifies the liquid farm id
+              description: public_position_id specifies the public position's id.
             id:
               type: string
               format: uint64
-              title: id specifies the unique auction id in the liquid farm
+              title: id specifies the unique auction id in the public position
             start_time:
               type: string
               format: date-time
@@ -18198,10 +18204,10 @@ definitions:
               title: winning_bid specifies the winning bid
               type: object
               properties:
-                liquid_farm_id:
+                public_position_id:
                   type: string
                   format: uint64
-                  title: liquid_farm_id specifies the liquid farm's id
+                  title: public_position_id specifies the public position's id
                 rewards_auction_id:
                   type: string
                   format: uint64
@@ -18296,7 +18302,7 @@ definitions:
     description: >-
       QueryRewardsAuctionsResponse is response type for the
       Query/RewardsAuctions RPC method.
-  crescent.liquidfarming.v1beta1.QueryRewardsResponse:
+  crescent.liquidamm.v1beta1.QueryRewardsResponse:
     type: object
     properties:
       rewards:
@@ -18314,17 +18320,17 @@ definitions:
             NOTE: The amount field is an Int which implements the custom method
             signatures required by gogoproto.
     description: QueryRewardsResponse is response type for the Query/Rewards RPC method.
-  crescent.liquidfarming.v1beta1.RewardsAuction:
+  crescent.liquidamm.v1beta1.RewardsAuction:
     type: object
     properties:
-      liquid_farm_id:
+      public_position_id:
         type: string
         format: uint64
-        title: liquid_farm_id specifies the liquid farm id
+        description: public_position_id specifies the public position's id.
       id:
         type: string
         format: uint64
-        title: id specifies the unique auction id in the liquid farm
+        title: id specifies the unique auction id in the public position
       start_time:
         type: string
         format: date-time
@@ -18353,10 +18359,10 @@ definitions:
         title: winning_bid specifies the winning bid
         type: object
         properties:
-          liquid_farm_id:
+          public_position_id:
             type: string
             format: uint64
-            title: liquid_farm_id specifies the liquid farm's id
+            title: public_position_id specifies the public position's id
           rewards_auction_id:
             type: string
             format: uint64
