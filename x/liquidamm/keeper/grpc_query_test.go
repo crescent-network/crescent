@@ -95,7 +95,7 @@ func (s *KeeperTestSuite) TestQueryPublicPosition() {
 		{
 			"public position not found",
 			&types.QueryPublicPositionRequest{
-				PublicPositionId: 2,
+				PublicPositionId: 3,
 			},
 			"rpc error: code = NotFound desc = public position not found",
 			nil,
@@ -154,7 +154,7 @@ func (s *KeeperTestSuite) TestQueryRewardsAuctions() {
 		{
 			"public position not found",
 			&types.QueryRewardsAuctionsRequest{
-				PublicPositionId: 2,
+				PublicPositionId: 3,
 			},
 			"rpc error: code = NotFound desc = public position not found",
 			nil,
@@ -249,7 +249,7 @@ func (s *KeeperTestSuite) TestQueryRewardsAuction() {
 		{
 			"public position not found",
 			&types.QueryRewardsAuctionRequest{
-				PublicPositionId: 2,
+				PublicPositionId: 3,
 				AuctionId:        1,
 			},
 			"rpc error: code = NotFound desc = public position not found",
@@ -336,7 +336,7 @@ func (s *KeeperTestSuite) TestQueryBids() {
 		{
 			"public position not found",
 			&types.QueryBidsRequest{
-				PublicPositionId: 2,
+				PublicPositionId: 3,
 				AuctionId:        1,
 			},
 			"rpc error: code = NotFound desc = public position not found",

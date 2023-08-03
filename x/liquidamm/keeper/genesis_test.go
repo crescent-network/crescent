@@ -11,7 +11,7 @@ func (s *KeeperTestSuite) TestImportExportGenesis() {
 	var genState *types.GenesisState
 	s.Require().NotPanics(func() {
 		genState = s.keeper.ExportGenesis(s.Ctx)
-		s.Require().Len(genState.RewardsAuctions, 2)
+		s.Require().Len(genState.RewardsAuctions, 4)
 		s.Require().Len(genState.Bids, 2)
 	})
 	s.Require().NoError(genState.Validate())
