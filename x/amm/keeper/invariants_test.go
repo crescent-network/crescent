@@ -123,9 +123,26 @@ func (s *KeeperTestSuite) TestCanCollectInvariant() {
 	_, broken := keeper.CanCollectInvariant(s.keeper)(s.Ctx)
 	s.Require().False(broken)
 
+	for positionId := uint64(1); positionId <= 10; positionId++ {
+		fee, farmingRewards, err := s.keeper.CollectibleCoins(s.Ctx, positionId)
+		s.Require().NoError(err)
+		s.Collect(lpAddr, positionId, fee.Add(farmingRewards...))
+	}
+
+	s.NextBlock()
+	s.NextBlock()
+	s.NextBlock()
+
+	for i := 0; i < 100; i++ {
+		s.PlaceMarketOrder(market.Id, ordererAddr, false, sdk.NewDec(50_000000))
+	}
+	for i := 0; i < 150; i++ {
+		s.PlaceMarketOrder(market.Id, ordererAddr, true, sdk.NewDec(50_000000))
+	}
+
 	position := s.keeper.MustGetPosition(s.Ctx, 1)
-	position.LastFeeGrowthInside = position.LastFeeGrowthInside.MulDec(sdk.NewDec(2))
-	position.LastFarmingRewardsGrowthInside = position.LastFarmingRewardsGrowthInside.MulDec(sdk.NewDec(2))
+	position.LastFeeGrowthInside = nil
+	position.LastFarmingRewardsGrowthInside = nil
 	s.keeper.SetPosition(s.Ctx, position)
 
 	_, broken = keeper.CanCollectInvariant(s.keeper)(s.Ctx)
