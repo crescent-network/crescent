@@ -19,13 +19,14 @@ func DerivePoolRewardsPoolAddress(poolId uint64) sdk.AccAddress {
 
 func NewPool(id uint64, marketId uint64, denom0, denom1 string, tickSpacing uint32) Pool {
 	return Pool{
-		Id:             id,
-		MarketId:       marketId,
-		Denom0:         denom0,
-		Denom1:         denom1,
-		TickSpacing:    tickSpacing,
-		ReserveAddress: DerivePoolReserveAddress(id).String(),
-		RewardsPool:    DerivePoolRewardsPoolAddress(id).String(),
+		Id:               id,
+		MarketId:         marketId,
+		Denom0:           denom0,
+		Denom1:           denom1,
+		ReserveAddress:   DerivePoolReserveAddress(id).String(),
+		RewardsPool:      DerivePoolRewardsPoolAddress(id).String(),
+		TickSpacing:      tickSpacing,
+		MinOrderQuantity: utils.OneDec, // default is 1
 	}
 }
 
@@ -67,14 +68,17 @@ func (pool Pool) Validate() error {
 	if pool.Denom0 == pool.Denom1 {
 		return fmt.Errorf("denom 0 and denom 1 must not be same: %s", pool.Denom0)
 	}
-	if !IsAllowedTickSpacing(pool.TickSpacing) {
-		return fmt.Errorf("tick spacing %d is not allowed", pool.TickSpacing)
-	}
 	if _, err := sdk.AccAddressFromBech32(pool.ReserveAddress); err != nil {
 		return fmt.Errorf("invalid reserve address: %w", err)
 	}
 	if _, err := sdk.AccAddressFromBech32(pool.RewardsPool); err != nil {
 		return fmt.Errorf("invalid rewards pool: %w", err)
+	}
+	if !IsAllowedTickSpacing(pool.TickSpacing) {
+		return fmt.Errorf("tick spacing %d is not allowed", pool.TickSpacing)
+	}
+	if pool.MinOrderQuantity.IsNegative() {
+		return fmt.Errorf("min order quantity must be positive: %s", pool.MinOrderQuantity)
 	}
 	return nil
 }

@@ -143,7 +143,6 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 			nextPrice = result.Price()
 			max = true
 		} else { // Partially executed
-			// TODO: fix nextSqrtPrice?
 			nextSqrtPrice = types.NextSqrtPriceFromOutput(
 				currentSqrtPrice, poolState.CurrentLiquidity, result.PaidWithoutFee(), isBuy)
 			nextPrice = nextSqrtPrice.Power(2)

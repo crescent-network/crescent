@@ -54,6 +54,7 @@ func (k Keeper) IteratePoolOrders(ctx sdk.Context, pool types.Pool, isBuy bool, 
 	ts := int32(pool.TickSpacing)
 	poolState := k.MustGetPoolState(ctx, pool.Id)
 	reserveBalance := k.bankKeeper.SpendableCoins(ctx, pool.MustGetReserveAddress()).AmountOf(pool.DenomOut(isBuy)).ToDec()
+	var prevSqrtPrice sdk.Dec
 	k.IteratePoolOrderTicks(ctx, pool, poolState, isBuy, func(tick int32, liquidity sdk.Int) (stop bool) {
 		if !reserveBalance.IsPositive() {
 			return true
@@ -63,25 +64,30 @@ func (k Keeper) IteratePoolOrders(ctx sdk.Context, pool types.Pool, isBuy bool, 
 		sqrtPrice := utils.DecApproxSqrt(price)
 		var qty sdk.Dec
 		if isBuy {
-			prevSqrtPrice := sdk.MinDec(
-				types.SqrtPriceAtTick(tick+ts),
-				utils.DecApproxSqrt(poolState.CurrentPrice))
+			if prevSqrtPrice.IsNil() {
+				prevSqrtPrice = sdk.MinDec(
+					types.SqrtPriceAtTick(tick+ts),
+					utils.DecApproxSqrt(poolState.CurrentPrice))
+			}
 			qty = sdk.MinDec(
 				reserveBalance.QuoTruncate(price),
 				types.Amount1DeltaDec(prevSqrtPrice, sqrtPrice, liquidity).QuoTruncate(price))
 		} else {
-			prevSqrtPrice := sdk.MaxDec(
-				types.SqrtPriceAtTick(tick-ts),
-				utils.DecApproxSqrt(poolState.CurrentPrice))
+			if prevSqrtPrice.IsNil() {
+				prevSqrtPrice = sdk.MaxDec(
+					types.SqrtPriceAtTick(tick-ts),
+					utils.DecApproxSqrt(poolState.CurrentPrice))
+			}
 			qty = sdk.MinDec(
 				reserveBalance,
 				types.Amount0DeltaRoundingDec(prevSqrtPrice, sqrtPrice, liquidity, false))
 		}
-		if qty.IsPositive() {
+		if qty.GTE(pool.MinOrderQuantity) {
 			if cb(price, qty) {
 				return true
 			}
 			reserveBalance = reserveBalance.Sub(exchangetypes.DepositAmount(isBuy, price, qty))
+			prevSqrtPrice = sqrtPrice
 		}
 		return false
 	})
