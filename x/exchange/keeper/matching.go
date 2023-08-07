@@ -59,7 +59,7 @@ func (k Keeper) executeOrder(
 		if !simulate {
 			escrow.Lock(ordererAddr, res.Paid)
 			escrow.Unlock(ordererAddr, res.Received)
-			if err = k.FinalizeMatching(ctx, market, obs.Orders(), escrow); err != nil {
+			if err = k.finalizeMatching(ctx, market, obs.Orders(), escrow); err != nil {
 				return
 			}
 			state := k.MustGetMarketState(ctx, market.Id)
@@ -71,7 +71,7 @@ func (k Keeper) executeOrder(
 	return
 }
 
-func (k Keeper) FinalizeMatching(ctx sdk.Context, market types.Market, orders []*types.MemOrder, escrow *types.Escrow) error {
+func (k Keeper) finalizeMatching(ctx sdk.Context, market types.Market, orders []*types.MemOrder, escrow *types.Escrow) error {
 	if escrow == nil {
 		escrow = types.NewEscrow(market.MustGetEscrowAddress())
 	}
@@ -182,4 +182,17 @@ func (k Keeper) FinalizeMatching(ctx sdk.Context, market types.Market, orders []
 		}
 	}
 	return nil
+}
+
+// getBestPrice returns the best(the highest for buy and the lowest for sell)
+// price on the order book.
+func (k Keeper) getBestPrice(ctx sdk.Context, market types.Market, isBuy bool) (bestPrice sdk.Dec, found bool) {
+	obs := k.ConstructMemOrderBookSide(ctx, market, types.MemOrderBookSideOptions{
+		IsBuy:             isBuy,
+		MaxNumPriceLevels: 1,
+	}, nil)
+	if len(obs.Levels()) > 0 {
+		return obs.Levels()[0].Price(), true
+	}
+	return bestPrice, false
 }

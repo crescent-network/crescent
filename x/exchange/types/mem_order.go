@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 	"sort"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -252,6 +253,15 @@ func (side *MemOrderBookSide) AddOrder(order *MemOrder) {
 		copy(newLevels[i+1:], side.levels[i:])
 		side.levels = newLevels
 	}
+}
+
+func (side *MemOrderBookSide) String() string {
+	var lines []string
+	for _, level := range side.levels {
+		qty := TotalExecutableQuantity(level.orders)
+		lines = append(lines, fmt.Sprintf("%s | %s", level.price, qty))
+	}
+	return strings.Join(lines, "\n")
 }
 
 type MemOrderGroup struct {

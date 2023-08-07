@@ -70,6 +70,23 @@ func Amount1Delta(sqrtPriceA, sqrtPriceB sdk.Dec, liquidity sdk.Int) sdk.Int {
 	return Amount1DeltaRounding(sqrtPriceA, sqrtPriceB, liquidity, true)
 }
 
+func AmountsForLiquidity(currentSqrtPrice, sqrtPriceA, sqrtPriceB sdk.Dec, liquidity sdk.Int) (amt0, amt1 sdk.Int) {
+	if sqrtPriceA.GT(sqrtPriceB) {
+		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
+	}
+	if currentSqrtPrice.LTE(sqrtPriceA) {
+		amt0 = Amount0DeltaRounding(sqrtPriceA, sqrtPriceB, liquidity, true)
+		amt1 = utils.ZeroInt
+	} else if currentSqrtPrice.LT(sqrtPriceB) {
+		amt0 = Amount0DeltaRounding(currentSqrtPrice, sqrtPriceB, liquidity, true)
+		amt1 = Amount1DeltaRounding(sqrtPriceA, currentSqrtPrice, liquidity, true)
+	} else {
+		amt0 = utils.ZeroInt
+		amt1 = Amount1DeltaRounding(sqrtPriceA, sqrtPriceB, liquidity, true)
+	}
+	return
+}
+
 func nextSqrtPriceFromAmount0RoundingUp(sqrtPrice sdk.Dec, liquidity sdk.Int, amt sdk.Dec, add bool) sdk.Dec {
 	numerator := liquidity.ToDec()
 	if add {
