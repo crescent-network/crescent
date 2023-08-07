@@ -21,7 +21,7 @@ func TestParamChanges(t *testing.T) {
 		simValue    string
 		subspace    string
 	}{
-		{"amm/DefaultTickSpacing", "DefaultTickSpacing", "10", "amm"},
+		{"amm/DefaultTickSpacing", "DefaultTickSpacing", "5", "amm"},
 		{"amm/MaxNumPrivateFarmingPlans", "MaxNumPrivateFarmingPlans", "10", "amm"},
 		{"amm/MaxFarmingBlockTime", "MaxFarmingBlockTime", `"14000000000"`, "amm"},
 	}

@@ -240,24 +240,15 @@ func (k Keeper) IterateAllOrderBookOrderIds(ctx sdk.Context, cb func(orderId uin
 	}
 }
 
-func (k Keeper) IterateOrderBookByMarket(ctx sdk.Context, marketId uint64, cb func(order types.Order) (stop bool)) {
-	k.IterateOrderBookSideByMarket(ctx, marketId, false, true, cb)
-	k.IterateOrderBookSideByMarket(ctx, marketId, true, false, cb)
-}
-
-func (k Keeper) IterateOrderBookSideByMarket(ctx sdk.Context, marketId uint64, isBuy, reverse bool, cb func(order types.Order) (stop bool)) {
+func (k Keeper) IterateOrderBookSideByMarket(ctx sdk.Context, marketId uint64, isBuy bool, cb func(order types.Order) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	var iter sdk.Iterator
-	var iterPrefix []byte
 	if isBuy {
-		iterPrefix = types.GetOrderBookSideIteratorPrefix(marketId, true)
+		iter = sdk.KVStoreReversePrefixIterator(
+			store, types.GetOrderBookSideIteratorPrefix(marketId, true))
 	} else {
-		iterPrefix = types.GetOrderBookSideIteratorPrefix(marketId, false)
-	}
-	if isBuy != reverse { // (isBuy && !reverse) || (!isBuy && reverse)
-		iter = sdk.KVStoreReversePrefixIterator(store, iterPrefix)
-	} else { // (isBuy && reverse) || (!isBuy && !reverse)
-		iter = sdk.KVStorePrefixIterator(store, iterPrefix)
+		iter = sdk.KVStorePrefixIterator(
+			store, types.GetOrderBookSideIteratorPrefix(marketId, false))
 	}
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
@@ -266,6 +257,73 @@ func (k Keeper) IterateOrderBookSideByMarket(ctx sdk.Context, marketId uint64, i
 		if cb(order) {
 			break
 		}
+	}
+}
+
+func (k Keeper) GetBestOrderPrice(ctx sdk.Context, marketId uint64, isBuy bool) (bestPrice sdk.Dec, found bool) {
+	store := ctx.KVStore(k.storeKey)
+	var iter sdk.Iterator
+	if isBuy {
+		iter = sdk.KVStoreReversePrefixIterator(
+			store, types.GetOrderBookSideIteratorPrefix(marketId, true))
+	} else {
+		iter = sdk.KVStorePrefixIterator(
+			store, types.GetOrderBookSideIteratorPrefix(marketId, false))
+	}
+	defer iter.Close()
+	if iter.Valid() {
+		bestPrice = types.ParsePriceFromOrderBookOrderIndexKey(iter.Key())
+		return bestPrice, true
+	}
+	return bestPrice, false
+}
+
+func (k Keeper) IterateOrderBookSide(
+	ctx sdk.Context, marketId uint64, isBuy bool, priceLimit *sdk.Dec,
+	cb func(price sdk.Dec, orders []types.Order) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	var iter sdk.Iterator
+	if isBuy {
+		if priceLimit == nil {
+			iter = sdk.KVStoreReversePrefixIterator(
+				store, types.GetOrderBookSideIteratorPrefix(marketId, true))
+		} else {
+			iter = store.ReverseIterator(
+				types.GetOrderBookSidePriceLimitIteratorPrefix(marketId, true, *priceLimit),
+				sdk.PrefixEndBytes(
+					types.GetOrderBookSideIteratorPrefix(marketId, true)))
+		}
+	} else {
+		if priceLimit == nil {
+			iter = sdk.KVStorePrefixIterator(
+				store, types.GetOrderBookSideIteratorPrefix(marketId, false))
+		} else {
+			iter = store.Iterator(
+				types.GetOrderBookSideIteratorPrefix(marketId, false),
+				sdk.PrefixEndBytes(types.GetOrderBookSidePriceLimitIteratorPrefix(marketId, false, *priceLimit)))
+		}
+	}
+	defer iter.Close()
+	var (
+		currentPrice sdk.Dec
+		orders       []types.Order
+	)
+	for ; iter.Valid(); iter.Next() {
+		orderId := types.ParseOrderIdFromOrderBookOrderIndexKey(iter.Key())
+		order := k.MustGetOrder(ctx, orderId)
+		if !currentPrice.IsNil() && !order.Price.Equal(currentPrice) {
+			if cb(currentPrice, orders) {
+				break
+			}
+			orders = []types.Order{order}
+		} else {
+			orders = append(orders, order)
+		}
+		currentPrice = order.Price
+	}
+	if len(orders) > 0 {
+		// Ignore the return value since it's the last iteration.
+		_ = cb(currentPrice, orders)
 	}
 }
 
@@ -317,44 +375,4 @@ func (k Keeper) IterateAllNumMMOrders(ctx sdk.Context, cb func(ordererAddr sdk.A
 func (k Keeper) DeleteNumMMOrders(ctx sdk.Context, ordererAddr sdk.AccAddress, marketId uint64) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.GetNumMMOrdersKey(ordererAddr, marketId))
-}
-
-func (k Keeper) GetTransientBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin {
-	store := ctx.TransientStore(k.tsKey)
-	bz := store.Get(types.GetTransientBalanceKey(addr, denom))
-	if bz == nil {
-		return sdk.NewCoin(denom, utils.ZeroInt)
-	}
-	var balance sdk.IntProto
-	k.cdc.MustUnmarshal(bz, &balance)
-	return sdk.Coin{Denom: denom, Amount: balance.Int}
-}
-
-func (k Keeper) SetTransientBalance(ctx sdk.Context, addr sdk.AccAddress, coin sdk.Coin) {
-	store := ctx.TransientStore(k.tsKey)
-	if coin.IsZero() {
-		k.DeleteTransientBalance(ctx, addr, coin.Denom)
-	} else {
-		bz := k.cdc.MustMarshal(&sdk.IntProto{Int: coin.Amount})
-		store.Set(types.GetTransientBalanceKey(addr, coin.Denom), bz)
-	}
-}
-
-func (k Keeper) IterateAllTransientBalances(ctx sdk.Context, cb func(addr sdk.AccAddress, coin sdk.Coin) (stop bool)) {
-	store := ctx.TransientStore(k.tsKey)
-	iter := sdk.KVStorePrefixIterator(store, types.TransientBalanceKeyPrefix)
-	defer iter.Close()
-	for ; iter.Valid(); iter.Next() {
-		addr, denom := types.ParseTransientBalanceKey(iter.Key())
-		var balance sdk.IntProto
-		k.cdc.MustUnmarshal(iter.Value(), &balance)
-		if cb(addr, sdk.Coin{Denom: denom, Amount: balance.Int}) {
-			break
-		}
-	}
-}
-
-func (k Keeper) DeleteTransientBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) {
-	store := ctx.TransientStore(k.tsKey)
-	store.Delete(types.GetTransientBalanceKey(addr, denom))
 }

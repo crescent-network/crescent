@@ -117,21 +117,22 @@ func TestAmount1Delta(t *testing.T) {
 
 func TestNextSqrtPriceFromOutput(t *testing.T) {
 	for i, tc := range []struct {
-		price          sdk.Dec
-		liquidity, amt sdk.Int
-		isBuy          bool
-		nextPrice      sdk.Dec
+		price     sdk.Dec
+		liquidity sdk.Int
+		amt       sdk.Dec
+		isBuy     bool
+		nextPrice sdk.Dec
 	}{
 		{
-			utils.ParseDec("1"), sdk.NewInt(1000000000), sdk.NewInt(100000), true,
+			utils.ParseDec("1"), sdk.NewInt(1000000000), sdk.NewDec(100000), true,
 			utils.ParseDec("0.999800010000000000"),
 		},
 		{
-			utils.ParseDec("1"), sdk.NewInt(1000000000), sdk.NewInt(123456), true,
+			utils.ParseDec("1"), sdk.NewInt(1000000000), sdk.NewDec(123456), true,
 			utils.ParseDec("0.999753103241383936"),
 		},
 		{
-			utils.ParseDec("1"), sdk.NewInt(1000000000), sdk.NewInt(123456), false,
+			utils.ParseDec("1"), sdk.NewInt(1000000000), sdk.NewDec(123456), false,
 			utils.ParseDec("1.000246957731679532"),
 		},
 	} {

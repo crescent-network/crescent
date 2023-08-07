@@ -28,10 +28,10 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 	s.FundAccount(ordererAddr, utils.ParseCoins("10000_000000ucre,10000_000000uatom,10000_000000uusd"))
 
 	routes := []uint64{market1.Id, market2.Id}
-	input := sdk.NewInt64Coin("uusd", 100_000000)
-	minOutput := sdk.NewInt64Coin("uatom", 9_000000)
+	input := sdk.NewInt64DecCoin("uusd", 100_000000)
+	minOutput := sdk.NewInt64DecCoin("uatom", 9_000000)
 	output, _ := s.SwapExactAmountIn(ordererAddr, routes, input, minOutput, false)
-	s.Require().Equal("9874876uatom", output.String())
+	s.AssertEqual(utils.ParseDecCoin("9874881uatom"), output)
 }
 
 func (s *KeeperTestSuite) TestQueryBestSwapExactAmountInRoutes() {
@@ -55,14 +55,14 @@ func (s *KeeperTestSuite) TestQueryBestSwapExactAmountInRoutes() {
 	s.Require().NoError(err)
 
 	s.Require().EqualValues([]uint64{2, 3}, resp.Routes)
-	s.Require().Equal("972699534uusd", resp.Output.String())
+	s.AssertEqual(utils.ParseDecCoin("972699556uusd"), resp.Output)
 	s.Require().Len(resp.Results, 2)
 	s.Require().EqualValues(2, resp.Results[0].MarketId)
-	s.Require().Equal("100000000ucre", resp.Results[0].Input.String())
-	s.Require().Equal("95135825uatom", resp.Results[0].Output.String())
-	s.Require().Equal("142919uatom", resp.Results[0].Fee.String())
+	s.AssertEqual(utils.ParseDecCoin("100000000ucre"), resp.Results[0].Input)
+	s.AssertEqual(utils.ParseDecCoin("95135827uatom"), resp.Results[0].Output)
+	s.AssertEqual(utils.ParseDecCoin("142918.117689604923591861uatom"), resp.Results[0].Fee)
 	s.Require().EqualValues(3, resp.Results[1].MarketId)
-	s.Require().Equal("95135825uatom", resp.Results[1].Input.String())
-	s.Require().Equal("972699534uusd", resp.Results[1].Output.String())
-	s.Require().Equal("1461242uusd", resp.Results[1].Fee.String())
+	s.AssertEqual(utils.ParseDecCoin("95135827uatom"), resp.Results[1].Input)
+	s.AssertEqual(utils.ParseDecCoin("972699556uusd"), resp.Results[1].Output)
+	s.AssertEqual(utils.ParseDecCoin("1461241.196265277979044799uusd"), resp.Results[1].Fee)
 }

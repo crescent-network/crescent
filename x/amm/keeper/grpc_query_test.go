@@ -61,10 +61,10 @@ func (s *KeeperTestSuite) SetupSampleScenario() {
 	ordererAddr := s.FundedAccount(4, enoughCoins)
 	s.SwapExactAmountIn(
 		ordererAddr, []uint64{atomUsdMarket.Id, creUsdMarket.Id},
-		utils.ParseCoin("20_000000uatom"), utils.ParseCoin("38_000000ucre"), false)
+		utils.ParseDecCoin("20_000000uatom"), utils.ParseDecCoin("38_000000ucre"), false)
 	s.SwapExactAmountIn(
 		ordererAddr, []uint64{creUsdMarket.Id, atomUsdMarket.Id},
-		utils.ParseCoin("100_000000ucre"), utils.ParseCoin("45_000000uatom"), false)
+		utils.ParseDecCoin("100_000000ucre"), utils.ParseDecCoin("45_000000uatom"), false)
 }
 
 func (s *KeeperTestSuite) TestQueryParams() {
@@ -103,8 +103,8 @@ func (s *KeeperTestSuite) TestQueryAllPools() {
 				pool := resp.Pools[0]
 				s.Require().EqualValues(1, pool.MarketId)
 				s.Require().EqualValues(2, pool.Id)
-				s.Require().Equal("153579880ucre", pool.Balance0.String())
-				s.Require().Equal("257373978uusd", pool.Balance1.String())
+				s.AssertEqual(utils.ParseCoin("153579797ucre"), pool.Balance0)
+				s.AssertEqual(utils.ParseCoin("257373998uusd"), pool.Balance1)
 			},
 		},
 		{
@@ -145,8 +145,8 @@ func (s *KeeperTestSuite) TestQueryPool() {
 			"",
 			func(resp *types.QueryPoolResponse) {
 				s.Require().EqualValues(1, resp.Pool.Id)
-				s.Require().Equal("71751020uatom", resp.Pool.Balance0.String())
-				s.Require().Equal("1390716211uusd", resp.Pool.Balance1.String())
+				s.Require().Equal("71751002uatom", resp.Pool.Balance0.String())
+				s.Require().Equal("1390716312uusd", resp.Pool.Balance1.String())
 			},
 		},
 		{
@@ -333,8 +333,8 @@ func (s *KeeperTestSuite) TestQueryAddLiquiditySimulation() {
 			},
 			"",
 			func(resp *types.QueryAddLiquiditySimulationResponse) {
-				s.Require().Equal(sdk.NewInt(2224210577), resp.Liquidity)
-				s.Require().Equal("100000000ucre,433591uusd", resp.Amount.String())
+				s.Require().Equal(sdk.NewInt(2224212612), resp.Liquidity)
+				s.Require().Equal("100000000ucre,434003uusd", resp.Amount.String())
 			},
 		},
 		{
@@ -423,7 +423,7 @@ func (s *KeeperTestSuite) TestQueryRemoveLiquiditySimulation() {
 			},
 			"",
 			func(resp *types.QueryRemoveLiquiditySimulationResponse) {
-				s.Require().Equal("631129ucre,1215152uusd", resp.Amount.String())
+				s.Require().Equal("631128ucre,1215154uusd", resp.Amount.String())
 			},
 		},
 		{
@@ -483,7 +483,7 @@ func (s *KeeperTestSuite) TestQueryCollectibleCoins() {
 			},
 			"",
 			func(resp *types.QueryCollectibleCoinsResponse) {
-				s.Require().Equal("24165uatom,62520ucre,944795uusd", resp.Fee.String())
+				s.Require().Equal("24170uatom,62606ucre,945031uusd", resp.Fee.String())
 				s.Require().Equal("8578uatom,8467ucre", resp.FarmingRewards.String())
 			},
 		},
@@ -494,7 +494,7 @@ func (s *KeeperTestSuite) TestQueryCollectibleCoins() {
 			},
 			"",
 			func(resp *types.QueryCollectibleCoinsResponse) {
-				s.Require().Equal("62520ucre,365838uusd", resp.Fee.String())
+				s.Require().Equal("62606ucre,365999uusd", resp.Fee.String())
 				s.Require().Equal("8467ucre", resp.FarmingRewards.String())
 			},
 		},

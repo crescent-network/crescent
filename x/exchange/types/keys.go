@@ -14,8 +14,6 @@ const (
 	// StoreKey defines the primary module store key
 	StoreKey = ModuleName
 
-	TStoreKey = "transient_exchange"
-
 	// RouterKey is the message route for slashing
 	RouterKey = ModuleName
 
@@ -33,7 +31,6 @@ var (
 	OrderBookOrderIndexKeyPrefix  = []byte{0x66}
 	OrdersByOrdererIndexKeyPrefix = []byte{0x67}
 	NumMMOrdersKeyPrefix          = []byte{0x68}
-	TransientBalanceKeyPrefix     = []byte{0x69}
 )
 
 func GetMarketKey(marketId uint64) []byte {
@@ -56,6 +53,9 @@ func GetOrderKey(orderId uint64) []byte {
 }
 
 func GetOrderBookOrderIndexKey(marketId uint64, isBuy bool, price sdk.Dec, orderId uint64) []byte {
+	if isBuy {
+		orderId = -orderId
+	}
 	return utils.Key(
 		OrderBookOrderIndexKeyPrefix,
 		sdk.Uint64ToBigEndian(marketId),
@@ -69,6 +69,14 @@ func GetOrderBookSideIteratorPrefix(marketId uint64, isBuy bool) []byte {
 		OrderBookOrderIndexKeyPrefix,
 		sdk.Uint64ToBigEndian(marketId),
 		isBuyToBytes(isBuy))
+}
+
+func GetOrderBookSidePriceLimitIteratorPrefix(marketId uint64, isBuy bool, priceLimit sdk.Dec) []byte {
+	return utils.Key(
+		OrderBookOrderIndexKeyPrefix,
+		sdk.Uint64ToBigEndian(marketId),
+		isBuyToBytes(isBuy),
+		PriceToBytes(priceLimit))
 }
 
 func GetOrdersByMarketIteratorPrefix(marketId uint64) []byte {
@@ -103,13 +111,6 @@ func GetNumMMOrdersKey(ordererAddr sdk.AccAddress, marketId uint64) []byte {
 		sdk.Uint64ToBigEndian(marketId))
 }
 
-func GetTransientBalanceKey(addr sdk.AccAddress, denom string) []byte {
-	return utils.Key(
-		TransientBalanceKeyPrefix,
-		address.MustLengthPrefix(addr),
-		[]byte(denom))
-}
-
 func ParseMarketByDenomsIndexKey(key []byte) (baseDenom, quoteDenom string) {
 	baseDenomLen := key[1]
 	baseDenom = string(key[2 : 2+baseDenomLen])
@@ -118,7 +119,16 @@ func ParseMarketByDenomsIndexKey(key []byte) (baseDenom, quoteDenom string) {
 }
 
 func ParseOrderIdFromOrderBookOrderIndexKey(key []byte) (orderId uint64) {
-	orderId = sdk.BigEndianToUint64(key[1+1+32+8:])
+	isBuy := key[1+8] == 0
+	orderId = sdk.BigEndianToUint64(key[1+8+1+32:])
+	if isBuy {
+		orderId = -orderId
+	}
+	return
+}
+
+func ParsePriceFromOrderBookOrderIndexKey(key []byte) (price sdk.Dec) {
+	price = BytesToPrice(key[1+8+1 : 1+8+1+32])
 	return
 }
 
@@ -132,13 +142,6 @@ func ParseNumMMOrdersKey(key []byte) (ordererAddr sdk.AccAddress, marketId uint6
 	addrLen := key[1]
 	ordererAddr = key[2 : 2+addrLen]
 	marketId = sdk.BigEndianToUint64(key[2+addrLen:])
-	return
-}
-
-func ParseTransientBalanceKey(key []byte) (addr sdk.AccAddress, denom string) {
-	addrLen := key[1]
-	addr = key[2 : 2+addrLen]
-	denom = string(key[2+addrLen:])
 	return
 }
 

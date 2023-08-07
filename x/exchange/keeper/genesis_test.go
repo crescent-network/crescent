@@ -13,8 +13,8 @@ func (s *KeeperTestSuite) TestImportExportGenesis() {
 	s.CreateMarket("ucre", "uusd")
 	ordererAddr1 := s.FundedAccount(1, enoughCoins)
 	ordererAddr2 := s.FundedAccount(1, enoughCoins)
-	s.PlaceLimitOrder(1, ordererAddr1, true, utils.ParseDec("4.9"), sdk.NewInt(10_000000), time.Hour)
-	s.PlaceLimitOrder(1, ordererAddr2, false, utils.ParseDec("5"), sdk.NewInt(20_000000), time.Hour)
+	s.PlaceLimitOrder(1, ordererAddr1, true, utils.ParseDec("4.9"), sdk.NewDec(10_000000), time.Hour)
+	s.PlaceLimitOrder(1, ordererAddr2, false, utils.ParseDec("5"), sdk.NewDec(20_000000), time.Hour)
 
 	genState := s.keeper.ExportGenesis(s.Ctx)
 	bz := s.App.AppCodec().MustMarshalJSON(genState)

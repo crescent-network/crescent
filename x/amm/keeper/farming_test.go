@@ -219,7 +219,7 @@ func (s *KeeperTestSuite) TestFarming() {
 	s.Collect(lpAddr2, position2.Id, utils.ParseCoins("47uatom"))
 
 	ordererAddr := s.FundedAccount(3, utils.ParseCoins("10000_000000uusd"))
-	s.PlaceMarketOrder(pool.MarketId, ordererAddr, true, sdk.NewInt(120_000000))
+	s.PlaceMarketOrder(pool.MarketId, ordererAddr, true, sdk.NewDec(120_000000))
 
 	poolState := s.App.AMMKeeper.MustGetPoolState(s.Ctx, pool.Id)
 	fmt.Println(poolState.CurrentPrice)

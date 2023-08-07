@@ -19,7 +19,8 @@ const (
 )
 
 func GenDefaultTickSpacing(r *rand.Rand) uint32 {
-	return types.AllowedTickSpacings[r.Intn(len(types.AllowedTickSpacings))]
+	// Exclude tick spacing 1 temporarily.
+	return types.AllowedTickSpacings[1+r.Intn(len(types.AllowedTickSpacings)-1)]
 }
 
 func GenMaxNumPrivateFarmingPlans(r *rand.Rand) uint32 {

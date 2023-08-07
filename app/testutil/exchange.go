@@ -22,7 +22,7 @@ func (s *TestSuite) CreateMarket(baseDenom, quoteDenom string) exchangetypes.Mar
 }
 
 func (s *TestSuite) PlaceLimitOrder(
-	marketId uint64, ordererAddr sdk.AccAddress, isBuy bool, price sdk.Dec, qty sdk.Int, lifespan time.Duration) (orderId uint64, order exchangetypes.Order, res exchangetypes.ExecuteOrderResult) {
+	marketId uint64, ordererAddr sdk.AccAddress, isBuy bool, price, qty sdk.Dec, lifespan time.Duration) (orderId uint64, order exchangetypes.Order, res exchangetypes.ExecuteOrderResult) {
 	s.T().Helper()
 	var err error
 	orderId, order, res, err = s.App.ExchangeKeeper.PlaceLimitOrder(s.Ctx, marketId, ordererAddr, isBuy, price, qty, lifespan)
@@ -31,7 +31,7 @@ func (s *TestSuite) PlaceLimitOrder(
 }
 
 func (s *TestSuite) PlaceBatchLimitOrder(
-	marketId uint64, ordererAddr sdk.AccAddress, isBuy bool, price sdk.Dec, qty sdk.Int, lifespan time.Duration) (order exchangetypes.Order) {
+	marketId uint64, ordererAddr sdk.AccAddress, isBuy bool, price, qty sdk.Dec, lifespan time.Duration) (order exchangetypes.Order) {
 	s.T().Helper()
 	var err error
 	order, err = s.App.ExchangeKeeper.PlaceBatchLimitOrder(s.Ctx, marketId, ordererAddr, isBuy, price, qty, lifespan)
@@ -40,7 +40,7 @@ func (s *TestSuite) PlaceBatchLimitOrder(
 }
 
 func (s *TestSuite) PlaceMMLimitOrder(
-	marketId uint64, ordererAddr sdk.AccAddress, isBuy bool, price sdk.Dec, qty sdk.Int, lifespan time.Duration) (orderId uint64, order exchangetypes.Order, res exchangetypes.ExecuteOrderResult) {
+	marketId uint64, ordererAddr sdk.AccAddress, isBuy bool, price, qty sdk.Dec, lifespan time.Duration) (orderId uint64, order exchangetypes.Order, res exchangetypes.ExecuteOrderResult) {
 	s.T().Helper()
 	var err error
 	orderId, order, res, err = s.App.ExchangeKeeper.PlaceMMLimitOrder(s.Ctx, marketId, ordererAddr, isBuy, price, qty, lifespan)
@@ -49,7 +49,7 @@ func (s *TestSuite) PlaceMMLimitOrder(
 }
 
 func (s *TestSuite) PlaceMMBatchLimitOrder(
-	marketId uint64, ordererAddr sdk.AccAddress, isBuy bool, price sdk.Dec, qty sdk.Int, lifespan time.Duration) (order exchangetypes.Order) {
+	marketId uint64, ordererAddr sdk.AccAddress, isBuy bool, price, qty sdk.Dec, lifespan time.Duration) (order exchangetypes.Order) {
 	s.T().Helper()
 	var err error
 	order, err = s.App.ExchangeKeeper.PlaceMMBatchLimitOrder(s.Ctx, marketId, ordererAddr, isBuy, price, qty, lifespan)
@@ -58,7 +58,7 @@ func (s *TestSuite) PlaceMMBatchLimitOrder(
 }
 
 func (s *TestSuite) PlaceMarketOrder(
-	marketId uint64, ordererAddr sdk.AccAddress, isBuy bool, qty sdk.Int) (orderId uint64, res exchangetypes.ExecuteOrderResult) {
+	marketId uint64, ordererAddr sdk.AccAddress, isBuy bool, qty sdk.Dec) (orderId uint64, res exchangetypes.ExecuteOrderResult) {
 	s.T().Helper()
 	var err error
 	orderId, res, err = s.App.ExchangeKeeper.PlaceMarketOrder(s.Ctx, marketId, ordererAddr, isBuy, qty)
@@ -83,7 +83,7 @@ func (s *TestSuite) CancelAllOrders(ordererAddr sdk.AccAddress, marketId uint64)
 }
 
 func (s *TestSuite) SwapExactAmountIn(
-	ordererAddr sdk.AccAddress, routes []uint64, input, minOutput sdk.Coin, simulate bool) (output sdk.Coin, results []exchangetypes.SwapRouteResult) {
+	ordererAddr sdk.AccAddress, routes []uint64, input, minOutput sdk.DecCoin, simulate bool) (output sdk.DecCoin, results []exchangetypes.SwapRouteResult) {
 	s.T().Helper()
 	var err error
 	output, results, err = s.App.ExchangeKeeper.SwapExactAmountIn(s.Ctx, ordererAddr, routes, input, minOutput, simulate)

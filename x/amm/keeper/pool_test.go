@@ -25,7 +25,7 @@ func (s *KeeperTestSuite) TestCreatePool_InsufficientFee() {
 	market := s.CreateMarket("ucre", "uusd")
 	creatorAddr := utils.TestAddress(1)
 	_, err := s.keeper.CreatePool(s.Ctx, creatorAddr, market.Id, utils.ParseDec("5"))
-	s.Require().EqualError(err, "0ucre is smaller than 100000000ucre: insufficient funds")
+	s.Require().EqualError(err, "insufficient pool creation fee: 0ucre is smaller than 100000000ucre: insufficient funds")
 }
 
 func (s *KeeperTestSuite) TestCreatePool() {
@@ -48,8 +48,8 @@ func (s *KeeperTestSuite) TestCreatePool() {
 
 func (s *KeeperTestSuite) TestPoolOrders() {
 	type order struct {
-		Price sdk.Dec
-		Qty   sdk.Int
+		price sdk.Dec
+		qty   sdk.Dec
 	}
 	for _, tc := range []struct {
 		name         string
@@ -65,16 +65,16 @@ func (s *KeeperTestSuite) TestPoolOrders() {
 					utils.ParseCoins("100_000000ucre,500_000000uusd"))
 			},
 			[]order{
-				{utils.ParseDec("4.9950"), sdk.NewInt(25006228)},
-				{utils.ParseDec("4.9900"), sdk.NewInt(25043815)},
-				{utils.ParseDec("4.9850"), sdk.NewInt(25081497)},
-				{utils.ParseDec("4.9800"), sdk.NewInt(25119274)},
+				{utils.ParseDec("4.9950"), utils.ParseDec("25006228.045359273458597011")},
+				{utils.ParseDec("4.9900"), utils.ParseDec("25043815.694766946591052267")},
+				{utils.ParseDec("4.9850"), utils.ParseDec("25081497.603931454430609096")},
+				{utils.ParseDec("4.9800"), utils.ParseDec("25119274.104114621728236342")},
 			},
 			[]order{
-				{utils.ParseDec("5.0050"), sdk.NewInt(24956259)},
-				{utils.ParseDec("5.0100"), sdk.NewInt(24918890)},
-				{utils.ParseDec("5.0150"), sdk.NewInt(24881614)},
-				{utils.ParseDec("5.0200"), sdk.NewInt(24844431)},
+				{utils.ParseDec("5.0050"), utils.ParseDec("24956259.314253166236473605")},
+				{utils.ParseDec("5.0100"), utils.ParseDec("24918890.317138035518922385")},
+				{utils.ParseDec("5.0150"), utils.ParseDec("24881614.486321922356604332")},
+				{utils.ParseDec("5.0200"), utils.ParseDec("24844431.496940975997647047")},
 			},
 		},
 		{
@@ -88,16 +88,16 @@ func (s *KeeperTestSuite) TestPoolOrders() {
 					utils.ParseCoins("100_000000ucre,500_000000uusd"))
 			},
 			[]order{
-				{utils.ParseDec("4.9750"), sdk.NewInt(25106679)},
-				{utils.ParseDec("4.9700"), sdk.NewInt(25144570)},
-				{utils.ParseDec("4.9650"), sdk.NewInt(25182556)},
-				{utils.ParseDec("4.9600"), sdk.NewInt(25220637)},
+				{utils.ParseDec("4.9750"), utils.ParseDec("25106679.687535992611509571")},
+				{utils.ParseDec("4.9700"), utils.ParseDec("25144570.207463681941517428")},
+				{utils.ParseDec("4.9650"), utils.ParseDec("25182556.129454879252944134")},
+				{utils.ParseDec("4.9600"), utils.ParseDec("25220637.790137883245677765")},
 			},
 			[]order{
-				{utils.ParseDec("5.0250"), sdk.NewInt(25055960)},
-				{utils.ParseDec("5.0300"), sdk.NewInt(25018591)},
-				{utils.ParseDec("5.0350"), sdk.NewInt(24981315)},
-				{utils.ParseDec("5.0400"), sdk.NewInt(24944131)},
+				{utils.ParseDec("5.0250"), utils.ParseDec("25055960.893621086799461016")},
+				{utils.ParseDec("5.0300"), utils.ParseDec("25018591.820577420876682247")},
+				{utils.ParseDec("5.0350"), utils.ParseDec("24981315.543854639280576018")},
+				{utils.ParseDec("5.0400"), utils.ParseDec("24944131.741163331026323419")},
 			},
 		},
 		{
@@ -114,20 +114,20 @@ func (s *KeeperTestSuite) TestPoolOrders() {
 					utils.ParseCoins("100_000000ucre,500_000000uusd"))
 			},
 			[]order{
-				{utils.ParseDec("4.9950"), sdk.NewInt(16662453)},
-				{utils.ParseDec("4.9900"), sdk.NewInt(16687499)},
-				{utils.ParseDec("4.9850"), sdk.NewInt(66850484)},
-				{utils.ParseDec("4.9800"), sdk.NewInt(66951171)},
-				{utils.ParseDec("4.9750"), sdk.NewInt(16763015)},
-				{utils.ParseDec("4.9700"), sdk.NewInt(16788313)},
+				{utils.ParseDec("4.9950"), utils.ParseDec("16662453.996505449171218157")},
+				{utils.ParseDec("4.9900"), utils.ParseDec("16687499.856199124957359553")},
+				{utils.ParseDec("4.9850"), utils.ParseDec("66850484.536911765050696598")},
+				{utils.ParseDec("4.9800"), utils.ParseDec("66951171.401038954332729693")},
+				{utils.ParseDec("4.9750"), utils.ParseDec("16763015.169045484918964269")},
+				{utils.ParseDec("4.9700"), utils.ParseDec("16788313.590350720122141501")},
 			},
 			[]order{
-				{utils.ParseDec("5.0050"), sdk.NewInt(16629158)},
-				{utils.ParseDec("5.0100"), sdk.NewInt(16604258)},
-				{utils.ParseDec("5.0150"), sdk.NewInt(66616807)},
-				{utils.ParseDec("5.0200"), sdk.NewInt(66517255)},
-				{utils.ParseDec("5.0250"), sdk.NewInt(16529929)},
-				{utils.ParseDec("5.0300"), sdk.NewInt(16505276)},
+				{utils.ParseDec("5.0050"), utils.ParseDec("16629158.223875967012562200")},
+				{utils.ParseDec("5.0100"), utils.ParseDec("16604258.059237103564291374")},
+				{utils.ParseDec("5.0150"), utils.ParseDec("66616807.814489223777976688")},
+				{utils.ParseDec("5.0200"), utils.ParseDec("66517255.912062619753483793")},
+				{utils.ParseDec("5.0250"), utils.ParseDec("16529929.178629755600051203")},
+				{utils.ParseDec("5.0300"), utils.ParseDec("16505276.037865950359873963")},
 			},
 		},
 	} {
@@ -137,16 +137,24 @@ func (s *KeeperTestSuite) TestPoolOrders() {
 			lpAddr := s.FundedAccount(1, utils.ParseCoins("10000_000000ucre,10000_000000uusd"))
 			tc.addLiquidity(pool, lpAddr)
 			var buyOrders, sellOrders []order
-			s.App.AMMKeeper.IteratePoolOrders(s.Ctx, pool, true, func(price sdk.Dec, qty sdk.Int) (stop bool) {
+			s.App.AMMKeeper.IteratePoolOrders(s.Ctx, pool, true, func(price, qty sdk.Dec) (stop bool) {
 				buyOrders = append(buyOrders, order{price, qty})
 				return false
 			})
-			s.App.AMMKeeper.IteratePoolOrders(s.Ctx, pool, false, func(price sdk.Dec, qty sdk.Int) (stop bool) {
+			s.App.AMMKeeper.IteratePoolOrders(s.Ctx, pool, false, func(price, qty sdk.Dec) (stop bool) {
 				sellOrders = append(sellOrders, order{price, qty})
 				return false
 			})
-			s.Require().EqualValues(tc.buyOrders, buyOrders)
-			s.Require().EqualValues(tc.sellOrders, sellOrders)
+			s.Require().Len(buyOrders, len(tc.buyOrders))
+			for i := range tc.buyOrders {
+				s.AssertEqual(tc.buyOrders[i].price, buyOrders[i].price)
+				s.AssertEqual(tc.buyOrders[i].qty, buyOrders[i].qty)
+			}
+			s.Require().Len(sellOrders, len(tc.sellOrders))
+			for i := range tc.sellOrders {
+				s.AssertEqual(tc.sellOrders[i].price, sellOrders[i].price)
+				s.AssertEqual(tc.sellOrders[i].qty, sellOrders[i].qty)
+			}
 		})
 	}
 }

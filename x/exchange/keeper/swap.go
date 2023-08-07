@@ -12,7 +12,7 @@ import (
 
 func (k Keeper) SwapExactAmountIn(
 	ctx sdk.Context, ordererAddr sdk.AccAddress,
-	routes []uint64, input, minOutput sdk.Coin, simulate bool) (output sdk.Coin, results []types.SwapRouteResult, err error) {
+	routes []uint64, input, minOutput sdk.DecCoin, simulate bool) (output sdk.DecCoin, results []types.SwapRouteResult, err error) {
 	if maxRoutesLen := int(k.GetMaxSwapRoutesLen(ctx)); len(routes) > maxRoutesLen {
 		return output, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "routes length exceeded the limit %d", maxRoutesLen)
 	}
@@ -24,7 +24,7 @@ func (k Keeper) SwapExactAmountIn(
 		}
 		if !simulate {
 			balances := k.bankKeeper.SpendableCoins(ctx, ordererAddr)
-			if balance := balances.AmountOf(currentIn.Denom); balance.LT(currentIn.Amount) {
+			if balance := balances.AmountOf(currentIn.Denom).ToDec(); balance.LT(currentIn.Amount) {
 				return output, nil, sdkerrors.Wrapf(
 					sdkerrors.ErrInsufficientFunds, "%s%s < %s", balance, currentIn.Denom, currentIn)
 			}
@@ -35,7 +35,7 @@ func (k Keeper) SwapExactAmountIn(
 		}
 		var (
 			isBuy                bool
-			qtyLimit, quoteLimit *sdk.Int
+			qtyLimit, quoteLimit *sdk.Dec
 		)
 		switch currentIn.Denom {
 		case market.BaseDenom:
@@ -49,7 +49,11 @@ func (k Keeper) SwapExactAmountIn(
 				sdkerrors.ErrInvalidRequest, "denom %s not in market %d", currentIn.Denom, market.Id)
 		}
 		res, err := k.executeOrder(
-			ctx, market, ordererAddr, isBuy, nil, qtyLimit, quoteLimit, halveFees, simulate)
+			ctx, market, ordererAddr, types.MemOrderBookSideOptions{
+				IsBuy:         !isBuy,
+				QuantityLimit: qtyLimit,
+				QuoteLimit:    quoteLimit,
+			}, halveFees, simulate)
 		if err != nil {
 			return output, nil, err
 		}

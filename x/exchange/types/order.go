@@ -11,8 +11,8 @@ import (
 
 func NewOrder(
 	orderId uint64, typ OrderType, ordererAddr sdk.AccAddress, marketId uint64,
-	isBuy bool, price sdk.Dec, qty sdk.Int, msgHeight int64,
-	openQty, remainingDeposit sdk.Int, deadline time.Time) Order {
+	isBuy bool, price, qty sdk.Dec, msgHeight int64,
+	openQty, remainingDeposit sdk.Dec, deadline time.Time) Order {
 	return Order{
 		Id:               orderId,
 		Type:             typ,
@@ -62,13 +62,13 @@ func (order Order) Validate() error {
 	return nil
 }
 
-func (order Order) ExecutableQuantity(price sdk.Dec) sdk.Int {
+func (order Order) ExecutableQuantity() sdk.Dec {
 	if order.IsBuy {
-		return utils.MinInt(
+		return sdk.MinDec(
 			order.OpenQuantity,
-			order.RemainingDeposit.ToDec().QuoTruncate(price).TruncateInt())
+			order.RemainingDeposit.QuoTruncate(order.Price))
 	}
-	return utils.MinInt(order.OpenQuantity, order.RemainingDeposit)
+	return sdk.MinDec(order.OpenQuantity, order.RemainingDeposit)
 }
 
 func (order Order) MustGetOrdererAddress() sdk.AccAddress {
@@ -76,21 +76,25 @@ func (order Order) MustGetOrdererAddress() sdk.AccAddress {
 }
 
 type ExecuteOrderResult struct {
-	ExecutedQuantity sdk.Int
-	ExecutedQuote    sdk.Int
-	Paid             sdk.Coin
-	Received         sdk.Coin
-	Fee              sdk.Coin
+	LastPrice        sdk.Dec
+	ExecutedQuantity sdk.Dec
+	ExecutedQuote    sdk.Dec
+	Paid             sdk.DecCoin
+	Received         sdk.DecCoin
+	Fee              sdk.DecCoin
 	FullyExecuted    bool
 }
 
 func NewExecuteOrderResult(payDenom, receiveDenom string) ExecuteOrderResult {
 	return ExecuteOrderResult{
-		ExecutedQuantity: utils.ZeroInt,
-		ExecutedQuote:    utils.ZeroInt,
-		Paid:             sdk.NewCoin(payDenom, utils.ZeroInt),
-		Received:         sdk.NewCoin(receiveDenom, utils.ZeroInt),
-		Fee:              sdk.NewCoin(receiveDenom, utils.ZeroInt),
-		FullyExecuted:    false,
+		ExecutedQuantity: utils.ZeroDec,
+		ExecutedQuote:    utils.ZeroDec,
+		Paid:             sdk.NewDecCoin(payDenom, utils.ZeroInt),
+		Received:         sdk.NewDecCoin(receiveDenom, utils.ZeroInt),
+		Fee:              sdk.NewDecCoin(receiveDenom, utils.ZeroInt), // always taker
 	}
+}
+
+func (res ExecuteOrderResult) Executed() bool {
+	return !res.LastPrice.IsNil()
 }

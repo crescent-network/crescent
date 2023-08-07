@@ -25,13 +25,6 @@ func NewMarket(
 	}
 }
 
-func (market Market) DepositCoin(isBuy bool, amt sdk.Int) sdk.Coin {
-	if isBuy {
-		return sdk.NewCoin(market.QuoteDenom, amt)
-	}
-	return sdk.NewCoin(market.BaseDenom, amt)
-}
-
 func (market Market) Validate() error {
 	if market.Id == 0 {
 		return fmt.Errorf("id must not be 0")
@@ -66,23 +59,6 @@ func (market Market) Validate() error {
 		return fmt.Errorf("maker fee rate must not exceed 1.0:% s", market.MakerFeeRate)
 	}
 	return nil
-}
-
-func (market Market) DeductTakerFee(amt sdk.Int, halveFee bool) (deducted, fee sdk.Int) {
-	takerFeeRate := market.TakerFeeRate
-	if halveFee {
-		takerFeeRate = takerFeeRate.QuoInt64(2)
-	}
-	deducted = utils.OneDec.Sub(takerFeeRate).MulInt(amt).TruncateInt()
-	fee = amt.Sub(deducted)
-	return
-}
-
-func (market Market) PayReceiveDenoms(isBuy bool) (payDenom, receiveDenom string) {
-	if isBuy {
-		return market.QuoteDenom, market.BaseDenom
-	}
-	return market.BaseDenom, market.QuoteDenom
 }
 
 func (market Market) MustGetEscrowAddress() sdk.AccAddress {

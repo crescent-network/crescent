@@ -71,7 +71,7 @@ func OrderStateInvariant(k Keeper) sdk.Invariant {
 				msg += fmt.Sprintf("\torder %d should have been expired at %s\n", order.Id, order.Deadline)
 				cnt++
 			}
-			if order.ExecutableQuantity(order.Price).IsZero() {
+			if order.ExecutableQuantity().IsZero() {
 				msg += fmt.Sprintf("\torder %d should have been deleted since it has no executable quantity\n", order.Id)
 				cnt++
 			}
@@ -89,27 +89,19 @@ func OrderBookInvariant(k Keeper) sdk.Invariant {
 		msg := ""
 		cnt := 0
 		k.IterateAllMarkets(ctx, func(market types.Market) (stop bool) {
-			var (
-				bestBuyOrder, bestSellOrder           types.Order
-				foundBestBuyOrder, foundBestSellOrder bool
-			)
-			k.IterateOrderBookSideByMarket(ctx, market.Id, false, false, func(order types.Order) (stop bool) {
-				bestSellOrder = order
-				foundBestSellOrder = true
-				return true
-			})
-			k.IterateOrderBookSideByMarket(ctx, market.Id, true, false, func(order types.Order) (stop bool) {
-				bestBuyOrder = order
-				foundBestBuyOrder = true
-				return true
-			})
-			if foundBestSellOrder && foundBestBuyOrder {
-				if bestSellOrder.Price.LTE(bestBuyOrder.Price) {
-					msg += fmt.Sprintf(
-						"\tmarket %d has crossed order book: sell price %s <= buy price %s\n",
-						market.Id, bestSellOrder.Price, bestBuyOrder.Price)
-					cnt++
-				}
+			bestBuyPrice, found := k.getBestPrice(ctx, market, true)
+			if !found { // Skip
+				return false
+			}
+			bestSellPrice, found := k.getBestPrice(ctx, market, false)
+			if !found { // Skip
+				return false
+			}
+			if bestSellPrice.LTE(bestBuyPrice) {
+				msg += fmt.Sprintf(
+					"\tmarket %d has crossed order book: sell price %s <= buy price %s\n",
+					market.Id, bestSellPrice, bestBuyPrice)
+				cnt++
 			}
 			return false
 		})

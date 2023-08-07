@@ -24,7 +24,7 @@ func (k Keeper) CreateMarket(
 	fees := k.GetFees(ctx)
 	if err = k.bankKeeper.SendCoinsFromAccountToModule(
 		ctx, creatorAddr, types.ModuleName, fees.MarketCreationFee); err != nil {
-		return
+		return market, sdkerrors.Wrap(err, "insufficient market creation fee")
 	}
 
 	marketId := k.GetNextMarketIdWithUpdate(ctx)
@@ -44,38 +44,20 @@ func (k Keeper) CreateMarket(
 	return market, nil
 }
 
-func (k Keeper) EscrowCoin(
-	ctx sdk.Context, market types.Market, addr sdk.AccAddress, amt sdk.Coin, queue bool) error {
-	return k.EscrowCoins(ctx, market, addr, sdk.NewCoins(amt), queue)
-}
-
 func (k Keeper) EscrowCoins(
-	ctx sdk.Context, market types.Market, addr sdk.AccAddress, amt sdk.Coins, queue bool) error {
-	if amt.IsAllPositive() {
-		escrowAddr := market.MustGetEscrowAddress()
-		if queue {
-			k.QueueSendCoins(ctx, addr, escrowAddr, amt)
-			return nil
-		}
-		return k.bankKeeper.SendCoins(ctx, addr, escrowAddr, amt)
+	ctx sdk.Context, market types.Market, addr sdk.AccAddress, amt ...sdk.Coin) error {
+	coins := sdk.NewCoins(amt...)
+	if coins.IsAllPositive() {
+		return k.bankKeeper.SendCoins(ctx, addr, market.MustGetEscrowAddress(), coins)
 	}
 	return nil
 }
 
-func (k Keeper) ReleaseCoin(
-	ctx sdk.Context, market types.Market, addr sdk.AccAddress, amt sdk.Coin, queue bool) error {
-	return k.ReleaseCoins(ctx, market, addr, sdk.NewCoins(amt), queue)
-}
-
 func (k Keeper) ReleaseCoins(
-	ctx sdk.Context, market types.Market, addr sdk.AccAddress, amt sdk.Coins, queue bool) error {
-	if amt.IsAllPositive() {
-		escrowAddr := market.MustGetEscrowAddress()
-		if queue {
-			k.QueueSendCoins(ctx, escrowAddr, addr, amt)
-			return nil
-		}
-		return k.bankKeeper.SendCoins(ctx, escrowAddr, addr, amt)
+	ctx sdk.Context, market types.Market, addr sdk.AccAddress, amt ...sdk.Coin) error {
+	coins := sdk.NewCoins(amt...)
+	if coins.IsAllPositive() {
+		return k.bankKeeper.SendCoins(ctx, market.MustGetEscrowAddress(), addr, coins)
 	}
 	return nil
 }

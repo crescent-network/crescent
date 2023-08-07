@@ -32,8 +32,8 @@ func (s *KeeperTestSuite) TestReinitializePosition() {
 		ownerAddr, pool.Id, lowerPrice, upperPrice, desiredAmt)
 
 	ordererAddr := s.FundedAccount(2, enoughCoins)
-	s.PlaceMarketOrder(market.Id, ordererAddr, true, sdk.NewInt(1000000))
-	s.PlaceMarketOrder(market.Id, ordererAddr, false, sdk.NewInt(1000000))
+	s.PlaceMarketOrder(market.Id, ordererAddr, true, sdk.NewDec(1000000))
+	s.PlaceMarketOrder(market.Id, ordererAddr, false, sdk.NewDec(1000000))
 
 	s.RemoveLiquidity(ownerAddr, position.Id, liquidity)
 	position, _ = s.keeper.GetPosition(s.Ctx, position.Id)
@@ -51,8 +51,8 @@ func (s *KeeperTestSuite) TestRemoveAllAndCollect() {
 
 	// Accrue fees.
 	ordererAddr := s.FundedAccount(2, enoughCoins)
-	s.PlaceMarketOrder(market.Id, ordererAddr, true, sdk.NewInt(10_000000))
-	s.PlaceMarketOrder(market.Id, ordererAddr, false, sdk.NewInt(10_000000))
+	s.PlaceMarketOrder(market.Id, ordererAddr, true, sdk.NewDec(10_000000))
+	s.PlaceMarketOrder(market.Id, ordererAddr, false, sdk.NewDec(10_000000))
 
 	s.RemoveLiquidity(lpAddr, position.Id, position.Liquidity)
 
@@ -97,15 +97,15 @@ func (s *KeeperTestSuite) TestRewardsPool() {
 		lpAddr, pool2.Id, utils.ParseDec("9"), utils.ParseDec("12"), utils.ParseCoins("100_000000uatom,1000_000000uusd"))
 
 	ordererAddr := s.FundedAccount(2, enoughCoins)
-	s.PlaceMarketOrder(market1.Id, ordererAddr, true, sdk.NewInt(1_000000))
-	s.PlaceMarketOrder(market2.Id, ordererAddr, false, sdk.NewInt(1_000000))
+	s.PlaceMarketOrder(market1.Id, ordererAddr, true, sdk.NewDec(1_000000))
+	s.PlaceMarketOrder(market2.Id, ordererAddr, false, sdk.NewDec(1_000000))
 
-	s.Require().Equal(utils.ParseCoins("1498ucre,2612uusd"), s.GetAllBalances(pool1.MustGetRewardsPoolAddress()))
+	s.Require().Equal(utils.ParseCoins("1498ucre,2619uusd"), s.GetAllBalances(pool1.MustGetRewardsPoolAddress()))
 	s.Require().Equal(utils.ParseCoins("265uatom,14981uusd"), s.GetAllBalances(pool2.MustGetRewardsPoolAddress()))
 
 	fee, _ := s.CollectibleCoins(position1.Id)
-	s.Require().Equal(utils.ParseCoins("1497ucre,2611uusd"), fee)
-	s.Collect(lpAddr, position1.Id, utils.ParseCoins("1497ucre,2611uusd"))
+	s.Require().Equal(utils.ParseCoins("1497ucre,2618uusd"), fee)
+	s.Collect(lpAddr, position1.Id, utils.ParseCoins("1497ucre,2618uusd"))
 	s.Require().Equal(utils.ParseCoins("1ucre,1uusd"), s.GetAllBalances(pool1.MustGetRewardsPoolAddress()))
 	s.Require().Equal(utils.ParseCoins("265uatom,14981uusd"), s.GetAllBalances(pool2.MustGetRewardsPoolAddress()))
 }
