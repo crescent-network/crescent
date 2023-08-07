@@ -138,6 +138,13 @@ func TestPoolState_Validate(t *testing.T) {
 			"current liquidity must not be negative: -1000000000",
 		},
 		{
+			"invalid total liquidity",
+			func(poolState *types.PoolState) {
+				poolState.TotalLiquidity = sdk.NewInt(-1000)
+			},
+			"total liquidity must not be negative: -1000",
+		},
+		{
 			"invalid fee growth global",
 			func(poolState *types.PoolState) {
 				poolState.FeeGrowthGlobal = sdk.DecCoins{sdk.NewInt64DecCoin("ucre", 0)}
@@ -164,6 +171,7 @@ func TestPoolState_Validate(t *testing.T) {
 				CurrentTick:                -10,
 				CurrentPrice:               utils.ParseDec("0.99991100001"),
 				CurrentLiquidity:           sdk.NewInt(1000_000000),
+				TotalLiquidity:             sdk.NewInt(2000_000000),
 				FeeGrowthGlobal:            utils.ParseDecCoins("0.0001ucre,0.0001uusd"),
 				FarmingRewardsGrowthGlobal: utils.ParseDecCoins("0.0001uatom,0.0001stake"),
 			}

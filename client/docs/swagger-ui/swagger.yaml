@@ -11695,6 +11695,8 @@ paths:
                       type: string
                     current_liquidity:
                       type: string
+                    total_liquidity:
+                      type: string
                     fee_growth_global:
                       type: array
                       items:
@@ -11906,6 +11908,8 @@ paths:
                   current_price:
                     type: string
                   current_liquidity:
+                    type: string
+                  total_liquidity:
                     type: string
                   fee_growth_global:
                     type: array
@@ -19108,6 +19112,8 @@ definitions:
         type: string
       current_liquidity:
         type: string
+      total_liquidity:
+        type: string
       fee_growth_global:
         type: array
         items:
@@ -19364,6 +19370,8 @@ definitions:
             current_price:
               type: string
             current_liquidity:
+              type: string
+            total_liquidity:
               type: string
             fee_growth_global:
               type: array
@@ -19805,6 +19813,8 @@ definitions:
           current_price:
             type: string
           current_liquidity:
+            type: string
+          total_liquidity:
             type: string
           fee_growth_global:
             type: array
