@@ -89,11 +89,11 @@ func OrderBookInvariant(k Keeper) sdk.Invariant {
 		msg := ""
 		cnt := 0
 		k.IterateAllMarkets(ctx, func(market types.Market) (stop bool) {
-			bestBuyPrice, found := k.getBestPrice(ctx, market, true)
+			bestBuyPrice, found := k.GetBestOrderPrice(ctx, market.Id, true)
 			if !found { // Skip
 				return false
 			}
-			bestSellPrice, found := k.getBestPrice(ctx, market, false)
+			bestSellPrice, found := k.GetBestOrderPrice(ctx, market.Id, false)
 			if !found { // Skip
 				return false
 			}

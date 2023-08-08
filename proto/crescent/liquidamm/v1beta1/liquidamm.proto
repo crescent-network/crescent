@@ -1,0 +1,76 @@
+syntax = "proto3";
+
+package crescent.liquidamm.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package                      = "github.com/crescent-network/crescent/v5/x/liquidamm/types";
+option (gogoproto.goproto_getters_all) = false;
+
+// PublicPosition defines public position object that provides auto compounding functionality
+// for the amm position and undergoes rewards auction process.
+// See the technical spec for more detailed information.
+message PublicPosition {
+  uint64 id         = 1;
+  uint64 pool_id    = 2;
+  int32  lower_tick = 3;
+  int32  upper_tick = 4;
+  // bid_reserve_address specifies the account that reserves bidding amounts placed by bidders
+  string bid_reserve_address = 5;
+  string min_bid_amount      = 6
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string fee_rate = 7 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  uint64 last_rewards_auction_id = 8;
+}
+
+// RewardsAuction defines rewards auction that is created by the module
+// for every rewards_auction_duration in params.
+message RewardsAuction {
+  // public_position_id specifies the public position's id.
+  uint64 public_position_id = 1;
+  // id specifies the unique auction id in the public position
+  uint64 id = 2;
+  // start_time specifies the start time of an auction
+  google.protobuf.Timestamp start_time = 3 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+  // end_time specifies the end time of an auction
+  google.protobuf.Timestamp end_time = 4 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+  // status specifies the status of an auction
+  AuctionStatus status = 5;
+  // winning_bid specifies the winning bid
+  Bid winning_bid = 6;
+  // rewards specifies the rewards the winning bidder has received
+  // the value is determined when an auction is finished
+  repeated cosmos.base.v1beta1.Coin rewards = 7
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.Coin fees = 8
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+}
+
+// Bid defines standard bid for a rewards auction.
+message Bid {
+  // public_position_id specifies the public position's id
+  uint64 public_position_id = 1;
+  // rewards_auction_id specifies the reward auction's id
+  uint64 rewards_auction_id = 2;
+  // bidder specifies the bech32-encoded address that places a bid for the auction
+  string bidder = 3;
+  // share specifies the share amount to place a bid
+  cosmos.base.v1beta1.Coin share = 4 [(gogoproto.nullable) = false];
+}
+
+// AuctionStatus enumerates the valid status of an auction.
+enum AuctionStatus {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  // AUCTION_STATUS_UNSPECIFIED defines the default auction status
+  AUCTION_STATUS_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "AuctionStatusNil"];
+  // AUCTION_STATUS_STARTED defines the started auction status
+  AUCTION_STATUS_STARTED = 1 [(gogoproto.enumvalue_customname) = "AuctionStatusStarted"];
+  // AUCTION_STATUS_FINISHED defines the finished auction status
+  AUCTION_STATUS_FINISHED = 2 [(gogoproto.enumvalue_customname) = "AuctionStatusFinished"];
+  // AUCTION_STATUS_SKIPPED defines the skipped auction status
+  AUCTION_STATUS_SKIPPED = 3 [(gogoproto.enumvalue_customname) = "AuctionStatusSkipped"];
+}

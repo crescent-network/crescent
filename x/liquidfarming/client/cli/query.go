@@ -9,13 +9,14 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/version"
 
 	"github.com/crescent-network/crescent/v5/x/liquidfarming/types"
 )
 
 // GetQueryCmd returns the cli query commands for the module
-func GetQueryCmd() *cobra.Command {
+func GetQueryCmd(queryRoute string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      fmt.Sprintf("Querying commands for the %s module", types.ModuleName),
@@ -32,6 +33,7 @@ func GetQueryCmd() *cobra.Command {
 		NewQueryRewardsAuctionCmd(),
 		NewQueryBidsCmd(),
 		NewQueryRewardsCmd(),
+		NewQueryExchangeRateCmd(),
 	)
 
 	return cmd
@@ -117,7 +119,7 @@ $ %s query %s liquidfarms
 
 func NewQueryLiquidFarmCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "liquidfarm [liquid-farm-id]",
+		Use:   "liquidfarm [pool-id]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Query the specific liquidfarm",
 		Long: strings.TrimSpace(
@@ -135,14 +137,14 @@ $ %s query %s liquidfarm 1
 				return err
 			}
 
-			liquidFarmId, err := strconv.ParseUint(args[0], 10, 64)
+			poolId, err := strconv.ParseUint(args[0], 10, 64)
 			if err != nil {
-				return fmt.Errorf("invalid liquid farm id: %w", err)
+				return fmt.Errorf("failed to parse pool id: %w", err)
 			}
 
 			queryClient := types.NewQueryClient(clientCtx)
 			res, err := queryClient.LiquidFarm(cmd.Context(), &types.QueryLiquidFarmRequest{
-				LiquidFarmId: liquidFarmId,
+				PoolId: poolId,
 			})
 			if err != nil {
 				return err
@@ -159,7 +161,7 @@ $ %s query %s liquidfarm 1
 
 func NewQueryRewardsAuctionsCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "rewards-auctions [liquid-farm-id]",
+		Use:   "rewards-auctions [pool-id]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Query all rewards auctions for the liquidfarm",
 		Long: strings.TrimSpace(
@@ -167,9 +169,7 @@ func NewQueryRewardsAuctionsCmd() *cobra.Command {
 
 Example:
 $ %s query %s rewards-auctions 1
-$ %s query %s rewards-auctions 1 --status=AUCTION_STATUS_SKIPPED
 `,
-				version.AppName, types.ModuleName,
 				version.AppName, types.ModuleName,
 			),
 		),
@@ -178,24 +178,42 @@ $ %s query %s rewards-auctions 1 --status=AUCTION_STATUS_SKIPPED
 			if err != nil {
 				return err
 			}
-			liquidFarmId, err := strconv.ParseUint(args[0], 10, 64)
+
+			poolId, err := strconv.ParseUint(args[0], 10, 64)
 			if err != nil {
-				return fmt.Errorf("invalid liquid farm id: %w", err)
+				return fmt.Errorf("failed to parse pool id: %w", err)
 			}
-			auctionStatus, _ := cmd.Flags().GetString(FlagRewardsAuctionStatus)
+
+			status, _ := cmd.Flags().GetString(FlagRewardsAuctionStatus)
+
 			pageReq, err := client.ReadPageRequest(cmd.Flags())
 			if err != nil {
 				return err
 			}
+
+			req := &types.QueryRewardsAuctionsRequest{
+				PoolId:     poolId,
+				Pagination: pageReq,
+			}
+
+			if status != "" {
+				if status == types.AuctionStatusStarted.String() ||
+					status == types.AuctionStatusFinished.String() ||
+					status == types.AuctionStatusSkipped.String() {
+					req.Status = status
+				} else {
+					return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest,
+						"auction status type must be AUCTION_STATUS_STARTED, AUCTION_STATUS_FINISHED, or AUCTION_STATUS_SKIPPED")
+				}
+			}
+
 			queryClient := types.NewQueryClient(clientCtx)
-			res, err := queryClient.RewardsAuctions(cmd.Context(), &types.QueryRewardsAuctionsRequest{
-				LiquidFarmId: liquidFarmId,
-				Status:       auctionStatus,
-				Pagination:   pageReq,
-			})
+
+			res, err := queryClient.RewardsAuctions(cmd.Context(), req)
 			if err != nil {
 				return err
 			}
+
 			return clientCtx.PrintProto(res)
 		},
 	}
@@ -209,7 +227,7 @@ $ %s query %s rewards-auctions 1 --status=AUCTION_STATUS_SKIPPED
 
 func NewQueryRewardsAuctionCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "rewards-auction [liquid-farm-id] [auction-id]",
+		Use:   "rewards-auction [pool-id] [auction-id]",
 		Args:  cobra.ExactArgs(2),
 		Short: "Query the specific reward auction",
 		Long: strings.TrimSpace(
@@ -226,22 +244,27 @@ $ %s query %s rewards-auction 1 1
 			if err != nil {
 				return err
 			}
-			liquidFarmId, err := strconv.ParseUint(args[0], 10, 64)
+
+			poolId, err := strconv.ParseUint(args[0], 10, 64)
 			if err != nil {
-				return fmt.Errorf("invalid liquid farm id: %w", err)
+				return fmt.Errorf("failed to parse pool id: %w", err)
 			}
+
 			auctionId, err := strconv.ParseUint(args[1], 10, 64)
 			if err != nil {
-				return fmt.Errorf("invalid auction id: %w", err)
+				return fmt.Errorf("failed to auction pool id: %w", err)
 			}
+
 			queryClient := types.NewQueryClient(clientCtx)
+
 			res, err := queryClient.RewardsAuction(cmd.Context(), &types.QueryRewardsAuctionRequest{
-				LiquidFarmId: liquidFarmId,
-				AuctionId:    auctionId,
+				PoolId:    poolId,
+				AuctionId: auctionId,
 			})
 			if err != nil {
 				return err
 			}
+
 			return clientCtx.PrintProto(res)
 		},
 	}
@@ -253,14 +276,14 @@ $ %s query %s rewards-auction 1 1
 
 func NewQueryBidsCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "bids [liquid-farm-id] [auction-id]",
-		Args:  cobra.ExactArgs(2),
+		Use:   "bids [pool-id]",
+		Args:  cobra.ExactArgs(1),
 		Short: "Query all bids for the rewards auction",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query all bids for the rewards auction on a network.
 
 Example:
-$ %s query %s bids 1 1
+$ %s query %s bids 1
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -270,27 +293,27 @@ $ %s query %s bids 1 1
 			if err != nil {
 				return err
 			}
-			liquidFarmId, err := strconv.ParseUint(args[0], 10, 64)
+
+			poolId, err := strconv.ParseUint(args[0], 10, 64)
 			if err != nil {
-				return fmt.Errorf("invalid liquid farm id: %w", err)
+				return fmt.Errorf("failed to parse pool id: %w", err)
 			}
-			auctionId, err := strconv.ParseUint(args[1], 10, 64)
-			if err != nil {
-				return fmt.Errorf("invalid auction id: %w", err)
-			}
+
 			pageReq, err := client.ReadPageRequest(cmd.Flags())
 			if err != nil {
 				return err
 			}
+
 			queryClient := types.NewQueryClient(clientCtx)
+
 			res, err := queryClient.Bids(cmd.Context(), &types.QueryBidsRequest{
-				LiquidFarmId: liquidFarmId,
-				AuctionId:    auctionId,
-				Pagination:   pageReq,
+				PoolId:     poolId,
+				Pagination: pageReq,
 			})
 			if err != nil {
 				return err
 			}
+
 			return clientCtx.PrintProto(res)
 		},
 	}
@@ -303,11 +326,11 @@ $ %s query %s bids 1 1
 
 func NewQueryRewardsCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "rewards [liquid-farm-id]",
+		Use:   "rewards [pool-id]",
 		Args:  cobra.ExactArgs(1),
-		Short: "Query accumulated rewards for liquid farm",
+		Short: "Query accumulated farming rewards for liquid farm",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query accumulated rewards for liquid farm.
+			fmt.Sprintf(`Query accumulated farming rewards for liquid farm.
 
 Example:
 $ %s query %s rewards 1
@@ -320,17 +343,64 @@ $ %s query %s rewards 1
 			if err != nil {
 				return err
 			}
-			liquidFarmId, err := strconv.ParseUint(args[0], 10, 64)
+
+			poolId, err := strconv.ParseUint(args[0], 10, 64)
 			if err != nil {
-				return fmt.Errorf("invalid liquid farm id: %w", err)
+				return fmt.Errorf("failed to parse pool id: %w", err)
 			}
+
 			queryClient := types.NewQueryClient(clientCtx)
+
 			res, err := queryClient.Rewards(cmd.Context(), &types.QueryRewardsRequest{
-				LiquidFarmId: liquidFarmId,
+				PoolId: poolId,
 			})
 			if err != nil {
 				return err
 			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func NewQueryExchangeRateCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "exchange-rate [pool-id]",
+		Args:  cobra.ExactArgs(1),
+		Short: "Query the exchange rate for liquid farm",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query the exchange rate, such as mint rate and burn rate for liquid farm.
+
+Example:
+$ %s query %s exchange-rate 1
+`,
+				version.AppName, types.ModuleName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			poolId, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return fmt.Errorf("failed to parse pool id: %w", err)
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.ExchangeRate(cmd.Context(), &types.QueryExchangeRateRequest{
+				PoolId: poolId,
+			})
+			if err != nil {
+				return err
+			}
+
 			return clientCtx.PrintProto(res)
 		},
 	}

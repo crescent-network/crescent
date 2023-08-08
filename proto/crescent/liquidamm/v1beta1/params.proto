@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package crescent.liquidamm.v1beta1;
+
+import "google/protobuf/duration.proto";
+import "gogoproto/gogo.proto";
+
+option go_package                      = "github.com/crescent-network/crescent/v5/x/liquidamm/types";
+option (gogoproto.goproto_getters_all) = false;
+
+// Params defines the parameters for the module.
+message Params {
+  google.protobuf.Duration rewards_auction_duration = 1 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
+  uint32                   max_num_recent_rewards_auctions = 2;
+}
