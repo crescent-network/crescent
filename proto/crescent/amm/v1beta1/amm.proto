@@ -9,13 +9,15 @@ option go_package                      = "github.com/crescent-network/crescent/v
 option (gogoproto.goproto_getters_all) = false;
 
 message Pool {
-  uint64 id              = 1;
-  uint64 market_id       = 2;
-  string denom0          = 3;
-  string denom1          = 4;
-  uint32 tick_spacing    = 5;
-  string reserve_address = 6;
-  string rewards_pool    = 7;
+  uint64 id                 = 1;
+  uint64 market_id          = 2;
+  string denom0             = 3;
+  string denom1             = 4;
+  string reserve_address    = 5;
+  string rewards_pool       = 6;
+  uint32 tick_spacing       = 7;
+  string min_order_quantity = 8
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 }
 
 message PoolState {

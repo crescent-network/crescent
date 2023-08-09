@@ -12622,12 +12622,14 @@ paths:
                         custom method
 
                         signatures required by gogoproto.
-                    tick_spacing:
-                      type: integer
-                      format: int64
                     reserve_address:
                       type: string
                     rewards_pool:
+                      type: string
+                    tick_spacing:
+                      type: integer
+                      format: int64
+                    min_order_quantity:
                       type: string
                     current_tick:
                       type: integer
@@ -12834,12 +12836,14 @@ paths:
                       custom method
 
                       signatures required by gogoproto.
-                  tick_spacing:
-                    type: integer
-                    format: int64
                   reserve_address:
                     type: string
                   rewards_pool:
+                    type: string
+                  tick_spacing:
+                    type: integer
+                    format: int64
+                  min_order_quantity:
                     type: string
                   current_tick:
                     type: integer
@@ -20694,12 +20698,14 @@ definitions:
 
           NOTE: The amount field is an Int which implements the custom method
           signatures required by gogoproto.
-      tick_spacing:
-        type: integer
-        format: int64
       reserve_address:
         type: string
       rewards_pool:
+        type: string
+      tick_spacing:
+        type: integer
+        format: int64
+      min_order_quantity:
         type: string
       current_tick:
         type: integer
@@ -20951,12 +20957,14 @@ definitions:
                 method
 
                 signatures required by gogoproto.
-            tick_spacing:
-              type: integer
-              format: int64
             reserve_address:
               type: string
             rewards_pool:
+              type: string
+            tick_spacing:
+              type: integer
+              format: int64
+            min_order_quantity:
               type: string
             current_tick:
               type: integer
@@ -21392,12 +21400,14 @@ definitions:
               method
 
               signatures required by gogoproto.
-          tick_spacing:
-            type: integer
-            format: int64
           reserve_address:
             type: string
           rewards_pool:
+            type: string
+          tick_spacing:
+            type: integer
+            format: int64
+          min_order_quantity:
             type: string
           current_tick:
             type: integer
