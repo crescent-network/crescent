@@ -94,7 +94,7 @@ func (k Keeper) SwapExactAmountIn(
 
 func (k Keeper) FindAllRoutes(ctx sdk.Context, fromDenom, toDenom string, maxRoutesLen int) (allRoutes [][]uint64) {
 	// TODO: cache all routes on-chain?
-	denomMap := map[string]map[string]uint64{}
+	denomMap := map[string]map[string][]uint64{}
 	store := ctx.KVStore(k.storeKey)
 	iter := sdk.KVStorePrefixIterator(store, types.MarketByDenomsIndexKeyPrefix)
 	defer iter.Close()
@@ -102,13 +102,13 @@ func (k Keeper) FindAllRoutes(ctx sdk.Context, fromDenom, toDenom string, maxRou
 		baseDenom, quoteDenom := types.ParseMarketByDenomsIndexKey(iter.Key())
 		marketId := sdk.BigEndianToUint64(iter.Value())
 		if _, ok := denomMap[baseDenom]; !ok {
-			denomMap[baseDenom] = map[string]uint64{}
+			denomMap[baseDenom] = map[string][]uint64{}
 		}
 		if _, ok := denomMap[quoteDenom]; !ok {
-			denomMap[quoteDenom] = map[string]uint64{}
+			denomMap[quoteDenom] = map[string][]uint64{}
 		}
-		denomMap[baseDenom][quoteDenom] = marketId
-		denomMap[quoteDenom][baseDenom] = marketId
+		denomMap[baseDenom][quoteDenom] = append(denomMap[baseDenom][quoteDenom], marketId)
+		denomMap[quoteDenom][baseDenom] = append(denomMap[quoteDenom][baseDenom], marketId)
 	}
 	var currentRoutes []uint64
 	visited := map[uint64]struct{}{}
@@ -118,21 +118,23 @@ func (k Keeper) FindAllRoutes(ctx sdk.Context, fromDenom, toDenom string, maxRou
 		denoms := maps.Keys(denomMap[currentDenom])
 		slices.Sort(denoms)
 		for _, denom := range denoms {
-			marketId := denomMap[currentDenom][denom]
-			if _, ok := visited[marketId]; !ok {
-				if denom == toDenom {
-					routes := make([]uint64, len(currentRoutes), len(currentRoutes)+1)
-					copy(routes[:len(currentRoutes)], currentRoutes)
-					routes = append(routes, marketId)
-					allRoutes = append(allRoutes, routes)
-				} else {
-					visited[marketId] = struct{}{}
-					currentRoutes = append(currentRoutes, marketId)
-					if len(currentRoutes) < maxRoutesLen {
-						backtrack(denom)
+			marketIds := denomMap[currentDenom][denom]
+			for _, marketId := range marketIds {
+				if _, ok := visited[marketId]; !ok {
+					if denom == toDenom {
+						routes := make([]uint64, len(currentRoutes), len(currentRoutes)+1)
+						copy(routes[:len(currentRoutes)], currentRoutes)
+						routes = append(routes, marketId)
+						allRoutes = append(allRoutes, routes)
+					} else {
+						visited[marketId] = struct{}{}
+						currentRoutes = append(currentRoutes, marketId)
+						if len(currentRoutes) < maxRoutesLen {
+							backtrack(denom)
+						}
+						currentRoutes = currentRoutes[:len(currentRoutes)-1]
+						delete(visited, marketId)
 					}
-					currentRoutes = currentRoutes[:len(currentRoutes)-1]
-					delete(visited, marketId)
 				}
 			}
 		}

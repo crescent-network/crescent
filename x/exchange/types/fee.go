@@ -22,3 +22,10 @@ func ValidateMakerTakerFeeRates(makerFeeRate, takerFeeRate sdk.Dec) error {
 	}
 	return nil
 }
+
+// DeductFee returns coin amount after deducting fee along with the fee.
+func DeductFee(amt, feeRate sdk.Dec) (deducted, fee sdk.Dec) {
+	fee = feeRate.Mul(amt)
+	deducted = amt.Sub(fee)
+	return
+}

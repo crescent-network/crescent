@@ -66,7 +66,8 @@ message QueryParamsResponse {
 
 // QueryPublicPositionsRequest is the request type for the Query/PublicPositions RPC method.
 message QueryPublicPositionsRequest {
-  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+  uint64                                pool_id    = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
 // QueryPublicPositionsResponse is response type for the Query/PublicPositions RPC method.

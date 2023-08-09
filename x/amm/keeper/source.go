@@ -63,7 +63,7 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 	var targetTick int32
 	foundTargetTick := false
 	if isBuy {
-		k.IterateTickInfosBelowInclusive(ctx, pool.Id, poolState.CurrentTick, func(tick int32, tickInfo types.TickInfo) (stop bool) {
+		k.IterateTickInfosBelow(ctx, pool.Id, poolState.CurrentTick, true, func(tick int32, tickInfo types.TickInfo) (stop bool) {
 			if tick <= firstOrderTick {
 				targetTick = tick
 				foundTargetTick = true
@@ -101,7 +101,7 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 			netLiquidity := k.crossTick(ctx, pool.Id, targetTick, poolState)
 			poolState.CurrentLiquidity = poolState.CurrentLiquidity.Sub(netLiquidity)
 			foundTargetTick = false
-			k.IterateTickInfosBelow(ctx, pool.Id, targetTick, func(tick int32, tickInfo types.TickInfo) (stop bool) {
+			k.IterateTickInfosBelow(ctx, pool.Id, targetTick, false, func(tick int32, tickInfo types.TickInfo) (stop bool) {
 				if tick <= orderTick {
 					targetTick = tick
 					foundTargetTick = true
@@ -143,7 +143,6 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 			nextPrice = result.Price()
 			max = true
 		} else { // Partially executed
-			// TODO: fix nextSqrtPrice?
 			nextSqrtPrice = types.NextSqrtPriceFromOutput(
 				currentSqrtPrice, poolState.CurrentLiquidity, result.PaidWithoutFee(), isBuy)
 			nextPrice = nextSqrtPrice.Power(2)
@@ -193,9 +192,8 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 	}
 	k.SetPoolState(ctx, pool.Id, poolState)
 
-	// TODO: use separate addresses for different pools
-	if err := k.bankKeeper.SendCoinsFromAccountToModule(
-		ctx, reserveAddr, types.ModuleName, accruedRewards); err != nil {
+	if err := k.bankKeeper.SendCoins(
+		ctx, reserveAddr, pool.MustGetRewardsPoolAddress(), accruedRewards); err != nil {
 		panic(err)
 	}
 

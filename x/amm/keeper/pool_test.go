@@ -7,6 +7,7 @@ import (
 
 	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/amm/types"
+	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
 func (s *KeeperTestSuite) TestCreatePool_WithoutMarket() {
@@ -211,4 +212,27 @@ func (s *KeeperTestSuite) TestPoolOrdersFindEdgecase() {
 
 		s.PlaceMarketOrder(market.Id, ordererAddr, true, sdk.NewDec(int64((i+1)*50)))
 	}
+}
+
+func (s *KeeperTestSuite) TestPoolMinOrderQuantity() {
+	s.keeper.SetDefaultTickSpacing(s.Ctx, 1)
+	market, pool := s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("5"))
+	pool.MinOrderQuantity = sdk.NewDec(100)
+	s.keeper.SetPool(s.Ctx, pool)
+
+	lpAddr := s.FundedAccount(1, enoughCoins)
+	s.AddLiquidity(
+		lpAddr, pool.Id, utils.ParseDec("0.0001"), utils.ParseDec("10000"),
+		utils.ParseCoins("10000ucre,50000uusd"))
+
+	buyObs := s.App.ExchangeKeeper.ConstructMemOrderBookSide(s.Ctx, market, exchangetypes.MemOrderBookSideOptions{
+		IsBuy:      true,
+		PriceLimit: utils.ParseDecP("4.995"),
+	}, nil)
+	s.Require().Empty(buyObs.Levels())
+	sellObs := s.App.ExchangeKeeper.ConstructMemOrderBookSide(s.Ctx, market, exchangetypes.MemOrderBookSideOptions{
+		IsBuy:      false,
+		PriceLimit: utils.ParseDecP("5.005"),
+	}, nil)
+	s.Require().Empty(sellObs.Levels())
 }

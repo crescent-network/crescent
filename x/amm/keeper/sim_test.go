@@ -7,6 +7,7 @@ import (
 
 	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/amm/types"
+	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
 func (s *KeeperTestSuite) TestSimulation() {
@@ -54,8 +55,10 @@ func (s *KeeperTestSuite) TestSimulation() {
 						lowerPrice = utils.RandomDec(r, poolState.CurrentPrice, maxPrice.Mul(utils.ParseDec("0.8")))
 						upperPrice = utils.RandomDec(r, lowerPrice.Mul(utils.ParseDec("1.001")), maxPrice)
 					}
-					lowerPrice = types.AdjustPriceToTickSpacing(lowerPrice, pool.TickSpacing, false)
-					upperPrice = types.AdjustPriceToTickSpacing(upperPrice, pool.TickSpacing, true)
+					lowerPrice = exchangetypes.PriceAtTick(types.AdjustTickToTickSpacing(
+						exchangetypes.TickAtPrice(lowerPrice), pool.TickSpacing, false))
+					upperPrice = exchangetypes.PriceAtTick(types.AdjustTickToTickSpacing(
+						exchangetypes.TickAtPrice(upperPrice), pool.TickSpacing, true))
 					if upperPrice.LTE(poolState.CurrentPrice) {
 						desiredAmt = sdk.NewCoins(sdk.NewCoin("uusd", utils.RandomInt(r, sdk.NewInt(10000), sdk.NewInt(1000_000000))))
 					} else if lowerPrice.GTE(poolState.CurrentPrice) {

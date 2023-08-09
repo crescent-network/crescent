@@ -9,6 +9,7 @@ import (
 
 	utils "github.com/crescent-network/crescent/v5/types"
 	ammtypes "github.com/crescent-network/crescent/v5/x/amm/types"
+	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 	"github.com/crescent-network/crescent/v5/x/liquidamm/keeper"
 	"github.com/crescent-network/crescent/v5/x/liquidamm/types"
 )
@@ -44,10 +45,12 @@ func SimulatePublicPositionCreateProposalContent(ammK types.AMMKeeper, k keeper.
 		}
 		pool := pools[r.Intn(len(pools))]
 		poolState := ammK.MustGetPoolState(ctx, pool.Id)
-		lowerPrice := ammtypes.AdjustPriceToTickSpacing(
-			poolState.CurrentPrice.Mul(utils.ParseDec("0.8")), pool.TickSpacing, false)
-		upperPrice := ammtypes.AdjustPriceToTickSpacing(
-			poolState.CurrentPrice.Mul(utils.ParseDec("1.25")), pool.TickSpacing, true)
+		lowerPrice := exchangetypes.PriceAtTick(
+			ammtypes.AdjustTickToTickSpacing(
+				exchangetypes.TickAtPrice(poolState.CurrentPrice.Mul(utils.ParseDec("0.8"))), pool.TickSpacing, false))
+		upperPrice := exchangetypes.PriceAtTick(
+			ammtypes.AdjustTickToTickSpacing(
+				exchangetypes.TickAtPrice(poolState.CurrentPrice.Mul(utils.ParseDec("1.25"))), pool.TickSpacing, true))
 		minBidAmt := utils.RandomInt(r, sdk.NewInt(10000), sdk.NewInt(1000000))
 
 		p := types.NewPublicPositionCreateProposal(

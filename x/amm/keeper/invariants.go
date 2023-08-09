@@ -97,6 +97,7 @@ func RewardsGrowthOutsideInvariant(k Keeper) sdk.Invariant {
 
 func CanCollectInvariant(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
+		ctx, _ = ctx.CacheContext()
 		msg := ""
 		cnt := 0
 		k.IterateAllPositions(ctx, func(position types.Position) (stop bool) {

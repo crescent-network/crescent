@@ -73,6 +73,7 @@ $ %s query %s params
 }
 
 func NewQueryPublicPositionsCmd() *cobra.Command {
+	const flagPoolId = "pool-id"
 	cmd := &cobra.Command{
 		Use:   "public-positions",
 		Args:  cobra.NoArgs,
@@ -92,6 +93,11 @@ $ %s query %s public-positions
 				return err
 			}
 
+			poolId, err := cmd.Flags().GetUint64(flagPoolId)
+			if err != nil {
+				return fmt.Errorf("invalid pool id: %w", err)
+			}
+
 			pageReq, err := client.ReadPageRequest(cmd.Flags())
 			if err != nil {
 				return err
@@ -99,6 +105,7 @@ $ %s query %s public-positions
 
 			queryClient := types.NewQueryClient(clientCtx)
 			res, err := queryClient.PublicPositions(cmd.Context(), &types.QueryPublicPositionsRequest{
+				PoolId:     poolId,
 				Pagination: pageReq,
 			})
 			if err != nil {
@@ -109,6 +116,7 @@ $ %s query %s public-positions
 		},
 	}
 
+	cmd.Flags().Uint64(flagPoolId, 0, "Filter positions by pool ID")
 	flags.AddQueryFlagsToCmd(cmd)
 	flags.AddPaginationFlagsToCmd(cmd, "public-positions")
 

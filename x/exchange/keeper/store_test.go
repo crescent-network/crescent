@@ -12,9 +12,9 @@ import (
 func (s *KeeperTestSuite) TestGetBestPrice() {
 	market := s.CreateMarket("ucre", "uusd")
 
-	_, found := s.keeper.GetBestPrice(s.Ctx, market.Id, true)
+	_, found := s.keeper.GetBestOrderPrice(s.Ctx, market.Id, true)
 	s.Require().False(found)
-	_, found = s.keeper.GetBestPrice(s.Ctx, market.Id, false)
+	_, found = s.keeper.GetBestOrderPrice(s.Ctx, market.Id, false)
 	s.Require().False(found)
 
 	ordererAddr := s.FundedAccount(1, enoughCoins)
@@ -26,10 +26,10 @@ func (s *KeeperTestSuite) TestGetBestPrice() {
 		market.Id, ordererAddr, false, utils.ParseDec("1.01"), sdk.NewDec(10000), time.Hour)
 	s.PlaceLimitOrder(
 		market.Id, ordererAddr, false, utils.ParseDec("1.02"), sdk.NewDec(10000), time.Hour)
-	bestBuyPrice, found := s.keeper.GetBestPrice(s.Ctx, market.Id, true)
+	bestBuyPrice, found := s.keeper.GetBestOrderPrice(s.Ctx, market.Id, true)
 	s.Require().True(found)
 	s.AssertEqual(utils.ParseDec("0.99"), bestBuyPrice)
-	bestSellPrice, found := s.keeper.GetBestPrice(s.Ctx, market.Id, false)
+	bestSellPrice, found := s.keeper.GetBestOrderPrice(s.Ctx, market.Id, false)
 	s.Require().True(found)
 	s.AssertEqual(utils.ParseDec("1.01"), bestSellPrice)
 }

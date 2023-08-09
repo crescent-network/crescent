@@ -68,6 +68,8 @@ func (ctx *MatchingContext) fillOrder(orderType MemOrderType, isBuy bool, qty, p
 		pays = pays.Add(fee)
 	} else if orderType == UserMemOrder {
 		receives, fee = DeductFee(receives, ctx.feeRate(isMaker))
+	} else {
+		fee = utils.ZeroDec
 	}
 	return
 }
@@ -296,12 +298,6 @@ func (ctx *MatchingContext) BatchMatchOrderBookSides(buyObs, sellObs *MemOrderBo
 		}
 	}
 	return newLastPrice
-}
-
-func DeductFee(amt, feeRate sdk.Dec) (deducted, fee sdk.Dec) {
-	fee = feeRate.Mul(amt)
-	deducted = amt.Sub(fee)
-	return
 }
 
 func PayReceiveDenoms(baseDenom, quoteDenom string, isBuy bool) (payDenom, receiveDenom string) {

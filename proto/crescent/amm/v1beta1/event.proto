@@ -73,6 +73,7 @@ message EventFarmingPlanTerminated {
 }
 
 message EventPoolParameterChanged {
-  uint64 pool_id      = 1;
-  uint32 tick_spacing = 2;
+  uint64 pool_id            = 1;
+  uint32 tick_spacing       = 2;
+  string min_order_quantity = 3 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
 }

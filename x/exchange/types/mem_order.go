@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 	"sort"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -15,6 +16,17 @@ const (
 	UserMemOrder MemOrderType = iota + 1
 	OrderSourceMemOrder
 )
+
+func (typ MemOrderType) String() string {
+	switch typ {
+	case UserMemOrder:
+		return "UserMemOrder"
+	case OrderSourceMemOrder:
+		return "OrderSourceMemOrder"
+	default:
+		return fmt.Sprintf("MemOrderType(%d)", typ)
+	}
+}
 
 type MemOrder struct {
 	typ              MemOrderType
@@ -67,6 +79,16 @@ func NewOrderSourceMemOrder(
 		fee:              utils.ZeroDec,
 		source:           source,
 	}
+}
+
+func (order *MemOrder) String() string {
+	isBuyStr := "buy"
+	if !order.isBuy {
+		isBuyStr = "sell"
+	}
+	return fmt.Sprintf(
+		"{%s %s %s %s}",
+		order.typ, isBuyStr, order.price, order.openQty)
 }
 
 func (order *MemOrder) Type() MemOrderType {
@@ -259,6 +281,15 @@ func (side *MemOrderBookSide) AddOrder(order *MemOrder) {
 		copy(newLevels[i+1:], side.levels[i:])
 		side.levels = newLevels
 	}
+}
+
+func (side *MemOrderBookSide) String() string {
+	var lines []string
+	for _, level := range side.levels {
+		qty := TotalExecutableQuantity(level.orders)
+		lines = append(lines, fmt.Sprintf("%s | %s", level.price, qty))
+	}
+	return strings.Join(lines, "\n")
 }
 
 type MemOrderGroup struct {

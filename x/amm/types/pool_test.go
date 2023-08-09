@@ -71,6 +71,20 @@ func TestPool_Validate(t *testing.T) {
 			"denom 0 and denom 1 must not be same: ucre",
 		},
 		{
+			"invalid reserve address",
+			func(pool *types.Pool) {
+				pool.ReserveAddress = "invalidaddr"
+			},
+			"invalid reserve address: decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			"invalid rewards pool",
+			func(pool *types.Pool) {
+				pool.RewardsPool = "invalidaddr"
+			},
+			"invalid rewards pool: decoding bech32 failed: invalid separator index -1",
+		},
+		{
 			"not allowed tick spacing",
 			func(pool *types.Pool) {
 				pool.TickSpacing = 7
@@ -78,11 +92,11 @@ func TestPool_Validate(t *testing.T) {
 			"tick spacing 7 is not allowed",
 		},
 		{
-			"invalid reserve address",
+			"negative min order quantity",
 			func(pool *types.Pool) {
-				pool.ReserveAddress = "invalidaddr"
+				pool.MinOrderQuantity = sdk.NewDec(-1000)
 			},
-			"invalid reserve address: decoding bech32 failed: invalid separator index -1",
+			"min order quantity must not be negative: -1000.000000000000000000",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

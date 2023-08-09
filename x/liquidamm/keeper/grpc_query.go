@@ -36,14 +36,40 @@ func (k Querier) PublicPositions(c context.Context, req *types.QueryPublicPositi
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
-
 	ctx := sdk.UnwrapSDKContext(c)
+	if req.PoolId > 0 {
+		if found := k.ammKeeper.LookupPool(ctx, req.PoolId); !found {
+			return nil, status.Error(codes.NotFound, "pool not found")
+		}
+	}
+
 	store := ctx.KVStore(k.storeKey)
-	publicPositionStore := prefix.NewStore(store, types.PublicPositionKeyPrefix)
+	var (
+		keyPrefix            []byte
+		publicPositionGetter func(key, value []byte) types.PublicPosition
+	)
+	if req.PoolId > 0 {
+		keyPrefix = types.GetPublicPositionsByPoolIteratorPrefix(req.PoolId)
+		publicPositionGetter = func(key, _ []byte) types.PublicPosition {
+			_, publicPositionId := types.ParsePublicPositionsByPoolIndexKey(utils.Key(keyPrefix, key))
+			publicPosition, found := k.GetPublicPosition(ctx, publicPositionId)
+			if !found { // sanity check
+				panic("public position not found")
+			}
+			return publicPosition
+		}
+	} else {
+		keyPrefix = types.PublicPositionKeyPrefix
+		publicPositionGetter = func(_, value []byte) types.PublicPosition {
+			var publicPosition types.PublicPosition
+			k.cdc.MustUnmarshal(value, &publicPosition)
+			return publicPosition
+		}
+	}
+	publicPositionStore := prefix.NewStore(store, keyPrefix)
 	var publicPositions []types.PublicPositionResponse
-	pageRes, err := query.Paginate(publicPositionStore, req.Pagination, func(_, value []byte) error {
-		var publicPosition types.PublicPosition
-		k.cdc.MustUnmarshal(value, &publicPosition)
+	pageRes, err := query.Paginate(publicPositionStore, req.Pagination, func(key, value []byte) error {
+		publicPosition := publicPositionGetter(key, value)
 		position, found := k.GetAMMPosition(ctx, publicPosition)
 		if !found {
 			position.Liquidity = utils.ZeroInt

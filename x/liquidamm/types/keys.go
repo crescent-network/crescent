@@ -22,17 +22,29 @@ const (
 
 // keys for the store prefixes
 var (
-	LastPublicPositionIdKey      = []byte{0xe1}
-	LastRewardsAuctionEndTimeKey = []byte{0xe3}
-	PublicPositionKeyPrefix      = []byte{0xe4}
-	RewardsAuctionKeyPrefix      = []byte{0xe5}
-	BidKeyPrefix                 = []byte{0xe6}
+	LastPublicPositionIdKey             = []byte{0x81}
+	LastRewardsAuctionEndTimeKey        = []byte{0x82}
+	PublicPositionKeyPrefix             = []byte{0x83}
+	PublicPositionsByPoolIndexKeyPrefix = []byte{0x84}
+	RewardsAuctionKeyPrefix             = []byte{0x85}
+	BidKeyPrefix                        = []byte{0x86}
 )
 
 // GetPublicPositionKey returns the store key to retrieve the public position object
 // by the given id.
 func GetPublicPositionKey(publicPositionId uint64) []byte {
 	return utils.Key(PublicPositionKeyPrefix, sdk.Uint64ToBigEndian(publicPositionId))
+}
+
+func GetPublicPositionsByPoolIndexKey(poolId, publicPositionId uint64) []byte {
+	return utils.Key(
+		PublicPositionsByPoolIndexKeyPrefix,
+		sdk.Uint64ToBigEndian(poolId),
+		sdk.Uint64ToBigEndian(publicPositionId))
+}
+
+func GetPublicPositionsByPoolIteratorPrefix(poolId uint64) []byte {
+	return utils.Key(PublicPositionsByPoolIndexKeyPrefix, sdk.Uint64ToBigEndian(poolId))
 }
 
 // GetRewardsAuctionKey returns the store key to retrieve the rewards auction object
@@ -65,4 +77,10 @@ func GetBidsByRewardsAuctionIteratorPrefix(publicPositionId, auctionId uint64) [
 		BidKeyPrefix,
 		sdk.Uint64ToBigEndian(publicPositionId),
 		sdk.Uint64ToBigEndian(auctionId))
+}
+
+func ParsePublicPositionsByPoolIndexKey(key []byte) (poolId, publicPositionId uint64) {
+	poolId = sdk.BigEndianToUint64(key[1:9])
+	publicPositionId = sdk.BigEndianToUint64(key[9:17])
+	return
 }
