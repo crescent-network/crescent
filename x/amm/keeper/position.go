@@ -57,8 +57,7 @@ func (k Keeper) AddLiquidity(
 	var amt0, amt1 sdk.Int
 	position, amt0, amt1 = k.modifyPosition(
 		ctx, pool, ownerAddr, lowerTick, upperTick, liquidity)
-	//types.ValidateAddLiquidityResult(
-	//	lowerPrice, upperPrice, poolState.CurrentPrice, desiredAmt0, desiredAmt1, liquidity, amt0, amt1)
+	types.ValidateAddLiquidityResult(desiredAmt0, desiredAmt1, amt0, amt1)
 
 	amt = sdk.NewCoins(sdk.NewCoin(pool.Denom0, amt0), sdk.NewCoin(pool.Denom1, amt1))
 	if err = k.bankKeeper.SendCoins(
@@ -103,9 +102,6 @@ func (k Keeper) RemoveLiquidity(
 	position, amt0, amt1 = k.modifyPosition(
 		ctx, pool, ownerAddr, position.LowerTick, position.UpperTick, liquidity.Neg())
 	amt0, amt1 = amt0.Neg(), amt1.Neg()
-	//types.ValidateRemoveLiquidityResult(
-	//	exchangetypes.PriceAtTick(position.LowerTick), exchangetypes.PriceAtTick(position.UpperTick),
-	//	k.MustGetPoolState(ctx, pool.Id).CurrentPrice, position.Liquidity, amt0, amt1)
 
 	amt = sdk.NewCoins(sdk.NewCoin(pool.Denom0, amt0), sdk.NewCoin(pool.Denom1, amt1))
 	reserveAddr := pool.MustGetReserveAddress()

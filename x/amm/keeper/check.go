@@ -8,6 +8,9 @@ import (
 
 func (k Keeper) RunValidations(ctx sdk.Context) {
 	k.IterateAllPositions(ctx, func(position types.Position) (stop bool) {
+		if !position.Liquidity.IsPositive() {
+			return false
+		}
 		pool := k.MustGetPool(ctx, position.PoolId)
 		poolState := k.MustGetPoolState(ctx, position.PoolId)
 
