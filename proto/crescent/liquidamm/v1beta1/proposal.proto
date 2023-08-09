@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package crescent.liquidamm.v1beta1;
+
+import "gogoproto/gogo.proto";
+
+option go_package                      = "github.com/crescent-network/crescent/v5/x/liquidamm/types";
+option (gogoproto.goproto_getters_all) = false;
+
+message PublicPositionCreateProposal {
+  option (gogoproto.goproto_stringer) = false;
+  string title                        = 1;
+  string description                  = 2;
+  uint64 pool_id                      = 3;
+  string lower_price                  = 4
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string upper_price = 5
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string min_bid_amount = 6
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string fee_rate = 7 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+}
+
+message PublicPositionParameterChangeProposal {
+  option (gogoproto.goproto_stringer)                = false;
+  string                                 title       = 1;
+  string                                 description = 2;
+  repeated PublicPositionParameterChange changes     = 3 [(gogoproto.nullable) = false];
+}
+
+message PublicPositionParameterChange {
+  uint64 public_position_id = 1;
+  string min_bid_amount     = 2
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string fee_rate = 3 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+}

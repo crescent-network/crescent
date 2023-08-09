@@ -13,19 +13,26 @@ func SqrtPriceAtTick(tick int32) sdk.Dec {
 	return utils.DecApproxSqrt(exchangetypes.PriceAtTick(tick))
 }
 
-// AdjustPriceToTickSpacing returns rounded tick price considering the tick
-// spacing.
-func AdjustPriceToTickSpacing(price sdk.Dec, tickSpacing uint32, roundUp bool) sdk.Dec {
-	// We assume that the price is already a valid tick price, so here's
-	// no check for that.
-	tick := exchangetypes.TickAtPrice(price)
+// AdjustTickToTickSpacing returns rounded tick based on tickSpacing.
+func AdjustTickToTickSpacing(tick int32, tickSpacing uint32, roundUp bool) int32 {
 	ts := int32(tickSpacing)
 	if roundUp {
 		q, _ := utils.DivMod(tick+ts-1, ts)
-		return exchangetypes.PriceAtTick(q * ts)
+		return q * ts
 	}
 	q, _ := utils.DivMod(tick, ts)
-	return exchangetypes.PriceAtTick(q * ts)
+	return q * ts
+}
+
+// NextTick returns the next tick based on tickSpacing.
+// If up is true, then the next up tick is returned.
+// If up is false, then the next down tick is returned.
+func NextTick(tick int32, tickSpacing uint32, up bool) int32 {
+	tick = AdjustTickToTickSpacing(tick, tickSpacing, !up)
+	if up {
+		return tick + int32(tickSpacing)
+	}
+	return tick - int32(tickSpacing)
 }
 
 func NewTickInfo(grossLiquidity, netLiquidity sdk.Int) TickInfo {

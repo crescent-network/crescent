@@ -5,7 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/crescent-network/crescent/v5/x/liquidfarming/keeper"
 	"github.com/crescent-network/crescent/v5/x/liquidfarming/types"
@@ -19,30 +18,32 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
 
 		switch msg := msg.(type) {
-		case *types.MsgMintShare:
-			res, err := msgServer.MintShare(sdk.WrapSDKContext(ctx), msg)
+		case *types.MsgLiquidFarm:
+			res, err := msgServer.LiquidFarm(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
-		case *types.MsgBurnShare:
-			res, err := msgServer.BurnShare(sdk.WrapSDKContext(ctx), msg)
+
+		case *types.MsgLiquidUnfarm:
+			res, err := msgServer.LiquidUnfarm(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
+
+		case *types.MsgLiquidUnfarmAndWithdraw:
+			res, err := msgServer.LiquidUnfarmAndWithdraw(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
+
 		case *types.MsgPlaceBid:
 			res, err := msgServer.PlaceBid(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
+
+		case *types.MsgRefundBid:
+			res, err := msgServer.RefundBid(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
+
+		case *types.MsgAdvanceAuction:
+			res, err := msgServer.AdvanceAuction(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
+
 		default:
 			return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, fmt.Sprintf("unrecognized %s message type: %T", types.ModuleName, msg))
-		}
-	}
-}
-
-func NewProposalHandler(k keeper.Keeper) govtypes.Handler {
-	return func(ctx sdk.Context, content govtypes.Content) error {
-		switch c := content.(type) {
-		case *types.LiquidFarmCreateProposal:
-			return keeper.HandleLiquidFarmCreateProposal(ctx, k, c)
-		case *types.LiquidFarmParameterChangeProposal:
-			return keeper.HandleLiquidFarmParameterChangeProposal(ctx, k, c)
-		default:
-			return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized %s proposal content type: %T", types.ModuleName, c)
 		}
 	}
 }

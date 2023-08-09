@@ -23,8 +23,6 @@ import (
 	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 	farmingkeeper "github.com/crescent-network/crescent/v5/x/farming/keeper"
 	farmingtypes "github.com/crescent-network/crescent/v5/x/farming/types"
-	liquidfarmingkeeper "github.com/crescent-network/crescent/v5/x/liquidfarming/keeper"
-	liquidfarmingtypes "github.com/crescent-network/crescent/v5/x/liquidfarming/types"
 	liquiditykeeper "github.com/crescent-network/crescent/v5/x/liquidity/keeper"
 	liquiditytypes "github.com/crescent-network/crescent/v5/x/liquidity/types"
 	lpfarmkeeper "github.com/crescent-network/crescent/v5/x/lpfarm/keeper"
@@ -48,7 +46,7 @@ func UpgradeHandler(
 	bankKeeper bankkeeper.Keeper, distrKeeper distrkeeper.Keeper, liquidityKeeper liquiditykeeper.Keeper,
 	lpFarmKeeper lpfarmkeeper.Keeper, exchangeKeeper exchangekeeper.Keeper, ammKeeper ammkeeper.Keeper,
 	markerKeeper markerkeeper.Keeper, farmingKeeper farmingkeeper.Keeper, claimKeeper claimkeeper.Keeper,
-	liquidFarmingKeeper liquidfarmingkeeper.Keeper, disableUpgradeEvents bool) upgradetypes.UpgradeHandler {
+	disableUpgradeEvents bool) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		vm, err := mm.RunMigrations(ctx, configurator, fromVM)
 		if err != nil {
@@ -65,7 +63,6 @@ func UpgradeHandler(
 		exchangeKeeper.SetParams(ctx, exchangeParams)
 		ammParams := ammtypes.DefaultParams()
 		ammKeeper.SetParams(ctx, ammParams)
-		liquidFarmingKeeper.SetMaxNumRecentRewardsAuctions(ctx, liquidfarmingtypes.DefaultMaxNumRecentRewardsAuctions)
 
 		// Migrate farming plans and staked coins to the new amm module.
 
@@ -299,8 +296,12 @@ func UpgradeHandler(
 						lowerPrice = exchangetypes.PriceAtTick(ammtypes.MinTick)
 						upperPrice = exchangetypes.PriceAtTick(ammtypes.MaxTick)
 					} else { // the pool is a ranged pool
-						lowerPrice = ammtypes.AdjustPriceToTickSpacing(*oldPool.MinPrice, defaultTickSpacing, false)
-						upperPrice = ammtypes.AdjustPriceToTickSpacing(*oldPool.MaxPrice, defaultTickSpacing, true)
+						lowerPrice = exchangetypes.PriceAtTick(
+							ammtypes.AdjustTickToTickSpacing(
+								exchangetypes.TickAtPrice(*oldPool.MinPrice), defaultTickSpacing, false))
+						upperPrice = exchangetypes.PriceAtTick(
+							ammtypes.AdjustTickToTickSpacing(
+								exchangetypes.TickAtPrice(*oldPool.MaxPrice), defaultTickSpacing, true))
 					}
 					if _, _, _, err := ammKeeper.AddLiquidity(
 						ctx, addr, addr, newPoolId, lowerPrice, upperPrice, req.WithdrawnCoins); err != nil {

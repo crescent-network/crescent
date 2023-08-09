@@ -9,6 +9,20 @@ import (
 	"github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
+func (s *KeeperTestSuite) createLiquidity(
+	marketId uint64, ordererAddr sdk.AccAddress, centerPrice, totalQty sdk.Dec) {
+	tick := types.TickAtPrice(centerPrice)
+	interval := types.PriceIntervalAtTick(tick + 10*10)
+	for i := 0; i < 10; i++ {
+		sellPrice := centerPrice.Add(interval.MulInt64(int64(i+1) * 10))
+		buyPrice := centerPrice.Sub(interval.MulInt64(int64(i+1) * 10))
+
+		qty := totalQty.QuoInt64(200).Add(totalQty.QuoInt64(100).MulInt64(int64(i)))
+		s.PlaceLimitOrder(marketId, ordererAddr, false, sellPrice, qty, time.Hour)
+		s.PlaceLimitOrder(marketId, ordererAddr, true, buyPrice, qty, time.Hour)
+	}
+}
+
 // SetupSampleScenario creates markets and orders for query tests.
 func (s *KeeperTestSuite) SetupSampleScenario() {
 	s.T().Helper()
@@ -376,4 +390,27 @@ func (s *KeeperTestSuite) TestQueryOrderBook() {
 			}
 		})
 	}
+}
+
+func (s *KeeperTestSuite) TestFindBestSwapExactAmountInRoutes() {
+	s.CreateMarket("ucre", "uusd")
+	s.CreateMarket("uatom", "ucre")
+	s.CreateMarket("stake", "uatom")
+	s.CreateMarket("uatom", "stake")
+
+	lpAddr := s.FundedAccount(1, enoughCoins)
+	s.createLiquidity(1, lpAddr, utils.ParseDec("5"), sdk.NewDec(10_000000))
+	s.createLiquidity(2, lpAddr, utils.ParseDec("2"), sdk.NewDec(10_000000))
+	s.createLiquidity(3, lpAddr, utils.ParseDec("0.33333"), sdk.NewDec(30_000000))
+	s.createLiquidity(4, lpAddr, utils.ParseDec("3"), sdk.NewDec(1_000000))
+
+	routes := s.keeper.FindAllRoutes(s.Ctx, "uusd", "stake", 3)
+	s.Require().Equal([][]uint64{{1, 2, 3}, {1, 2, 4}}, routes)
+
+	resp, err := s.querier.BestSwapExactAmountInRoutes(sdk.WrapSDKContext(s.Ctx), &types.QueryBestSwapExactAmountInRoutesRequest{
+		Input:       "20000000uusd", // 20_000000uusd
+		OutputDenom: "stake",
+	})
+	s.Require().NoError(err)
+	s.AssertEqual(utils.ParseDecCoin("5942989stake"), resp.Output)
 }

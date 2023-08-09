@@ -27,7 +27,7 @@
       "url": "./tmp-swagger-gen/tendermint/budget/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
-          "Params": "BudgetParams",
+          "Params": "BudgetParams"
         }
       }
     },
@@ -81,7 +81,24 @@
       "operationIds": {
         "rename": {
           "Params": "LiquidFarmingParams",
-          "Rewards": "LiquidFarmingRewards"
+          "Rewards": "LiquidFarmingRewards",
+          "Bids": "LiquidFarmingBids",
+          "ExchangeRate": "LiquidFarmingExchangeRate",
+          "RewardsAuction": "LiquidFarmingRewardsAuction",
+          "RewardsAuctions": "LiquidFarmingRewardsAuctions"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/crescent/liquidamm/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "LiquidAMMParams",
+          "Rewards": "LiquidAMMRewards",
+          "Bids": "LiquidAMMBids",
+          "ExchangeRate": "LiquidAMMExchangeRate",
+          "RewardsAuction": "LiquidAMMRewardsAuction",
+          "RewardsAuctions": "LiquidAMMRewardsAuctions"
         }
       }
     },

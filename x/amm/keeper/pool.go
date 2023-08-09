@@ -51,69 +51,57 @@ func (k Keeper) CreatePool(ctx sdk.Context, creatorAddr sdk.AccAddress, marketId
 }
 
 func (k Keeper) IteratePoolOrders(ctx sdk.Context, pool types.Pool, isBuy bool, cb func(price, qty sdk.Dec) (stop bool)) {
-	ts := int32(pool.TickSpacing)
 	poolState := k.MustGetPoolState(ctx, pool.Id)
-	reserveBalance := k.bankKeeper.SpendableCoins(ctx, pool.MustGetReserveAddress()).AmountOf(pool.DenomOut(isBuy)).ToDec()
-	k.IteratePoolOrderTicks(ctx, pool, poolState, isBuy, func(tick int32, liquidity sdk.Int) (stop bool) {
-		if !reserveBalance.IsPositive() {
-			return true
-		}
-		// TODO: check out of tick range
-		price := exchangetypes.PriceAtTick(tick)
-		sqrtPrice := utils.DecApproxSqrt(price)
-		var qty sdk.Dec
-		if isBuy {
-			prevSqrtPrice := sdk.MinDec(
-				types.SqrtPriceAtTick(tick+ts),
-				utils.DecApproxSqrt(poolState.CurrentPrice))
-			qty = sdk.MinDec(
-				reserveBalance.QuoTruncate(price),
-				types.Amount1DeltaDec(prevSqrtPrice, sqrtPrice, liquidity).QuoTruncate(price))
-		} else {
-			prevSqrtPrice := sdk.MaxDec(
-				types.SqrtPriceAtTick(tick-ts),
-				utils.DecApproxSqrt(poolState.CurrentPrice))
-			qty = sdk.MinDec(
-				reserveBalance,
-				types.Amount0DeltaRoundingDec(prevSqrtPrice, sqrtPrice, liquidity, false))
-		}
-		if qty.IsPositive() {
-			if cb(price, qty) {
-				return true
-			}
-			reserveBalance = reserveBalance.Sub(exchangetypes.DepositAmount(isBuy, price, qty))
-		}
-		return false
-	})
-}
-
-func (k Keeper) IteratePoolOrderTicks(ctx sdk.Context, pool types.Pool, poolState types.PoolState, isBuy bool, cb func(tick int32, liquidity sdk.Int) (stop bool)) {
-	ts := int32(pool.TickSpacing)
+	reserveBalance := k.bankKeeper.SpendableCoins(ctx, pool.MustGetReserveAddress()).
+		AmountOf(pool.DenomOut(isBuy)).ToDec()
 	currentTick := poolState.CurrentTick
+	placeCurrentTickOrder := isBuy && currentTick%int32(pool.TickSpacing) == 0 &&
+		!poolState.CurrentPrice.Equal(exchangetypes.PriceAtTick(currentTick))
 	orderLiquidity := poolState.CurrentLiquidity
-	if isBuy && currentTick%ts == 0 && orderLiquidity.IsPositive() {
-		if cb(currentTick, orderLiquidity) {
-			return
-		}
-	}
-	iterCb := func(tick int32, tickInfo types.TickInfo) bool {
+
+	currentSqrtPrice := utils.DecApproxSqrt(poolState.CurrentPrice)
+
+	iterCb := func(tick int32, tickInfo types.TickInfo) (stop bool) {
 		if orderLiquidity.IsPositive() {
-			for currentTick != tick {
-				var nextTick int32
-				if isBuy {
-					q, _ := utils.DivMod(currentTick+ts-1, ts)
-					nextTick = q*ts - ts
-				} else {
-					q, _ := utils.DivMod(currentTick, ts)
-					nextTick = q*ts + ts
-				}
-				if cb(nextTick, orderLiquidity) {
+			for placeCurrentTickOrder || currentTick != tick {
+				if !reserveBalance.IsPositive() {
 					return true
 				}
-				currentTick = nextTick
+
+				var orderTick int32
+				if placeCurrentTickOrder {
+					orderTick = currentTick
+				} else {
+					orderTick = types.NextTick(currentTick, pool.TickSpacing, !isBuy)
+				}
+				orderPrice := exchangetypes.PriceAtTick(orderTick)
+				orderSqrtPrice := utils.DecApproxSqrt(orderPrice)
+				// TODO: use binary search here to find positive qty order
+
+				var qty sdk.Dec
+				if isBuy {
+					qty = sdk.MinDec(
+						reserveBalance.QuoTruncate(orderPrice),
+						types.Amount1DeltaDec(currentSqrtPrice, orderSqrtPrice, orderLiquidity).QuoTruncate(orderPrice))
+				} else {
+					qty = sdk.MinDec(
+						reserveBalance,
+						types.Amount0DeltaRoundingDec(currentSqrtPrice, orderSqrtPrice, orderLiquidity, false))
+				}
+				if qty.GTE(pool.MinOrderQuantity) || orderTick == tick {
+					if cb(orderPrice, qty) {
+						return true
+					}
+					reserveBalance = reserveBalance.Sub(exchangetypes.DepositAmount(isBuy, orderPrice, qty))
+					currentSqrtPrice = orderSqrtPrice
+				}
+
+				currentTick = orderTick
+				placeCurrentTickOrder = false
 			}
 		} else {
 			currentTick = tick
+			currentSqrtPrice = types.SqrtPriceAtTick(tick)
 		}
 		if isBuy {
 			orderLiquidity = orderLiquidity.Sub(tickInfo.NetLiquidity)
@@ -123,7 +111,7 @@ func (k Keeper) IteratePoolOrderTicks(ctx sdk.Context, pool types.Pool, poolStat
 		return false
 	}
 	if isBuy {
-		k.IterateTickInfosBelowInclusive(ctx, pool.Id, currentTick, iterCb)
+		k.IterateTickInfosBelow(ctx, pool.Id, currentTick, true, iterCb)
 	} else {
 		k.IterateTickInfosAbove(ctx, pool.Id, currentTick, iterCb)
 	}
