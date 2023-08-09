@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	utils "github.com/crescent-network/crescent/v5/types"
+	ammtypes "github.com/crescent-network/crescent/v5/x/amm/types"
 	"github.com/crescent-network/crescent/v5/x/liquidamm/keeper"
 	"github.com/crescent-network/crescent/v5/x/liquidamm/types"
 )
@@ -247,4 +248,84 @@ func (s *KeeperTestSuite) TestRewardsAuction_RewardsAndFees() {
 	auction, _ = s.keeper.GetRewardsAuction(s.Ctx, publicPosition.Id, auction.Id)
 	s.Require().True(auction.Rewards.IsEqual(deducted.Add(fees...)))
 	s.Require().True(auction.Fees.IsEqual(fees))
+}
+
+func (s *KeeperTestSuite) TestRewardsAuction_Scenario1() {
+	market := s.CreateMarket("ucre", "uusd")
+	pool := s.CreatePool(market.Id, utils.ParseDec("10"))
+
+	publicPosition := s.CreatePublicPosition(
+		pool.Id, utils.ParseDec("5"), utils.ParseDec("20"), sdk.NewInt(10000), sdk.ZeroDec())
+
+	minterAddr := utils.TestAddress(1)
+	mintedShare, _, _, _ := s.MintShare(minterAddr, publicPosition.Id, utils.ParseCoins("100000ucre,1000000uusd"), true)
+	s.AssertEqual(utils.ParseCoin("1079669lashare1"), mintedShare)
+
+	s.CreatePrivateFarmingPlan(
+		utils.TestAddress(0), "", utils.TestAddress(0), []ammtypes.FarmingRewardAllocation{
+			ammtypes.NewFarmingRewardAllocation(1, utils.ParseCoins("10_000000uatom")),
+		}, utils.ParseTime("0001-01-01T00:00:00Z"), utils.ParseTime("9999-12-31T00:00:00Z"),
+		utils.ParseCoins("100000_000000uatom"), true)
+
+	s.NextBlock()
+	s.NextBlock()
+	s.NextBlock()
+	s.AdvanceRewardsAuctions() // Start new auction
+
+	bidderAddr := utils.TestAddress(2)
+	s.MintShare(bidderAddr, publicPosition.Id, utils.ParseCoins("10000ucre,100000uusd"), true)
+
+	publicPosition, _ = s.keeper.GetPublicPosition(s.Ctx, publicPosition.Id)
+	s.Require().Equal(uint64(1), publicPosition.LastRewardsAuctionId)
+	s.PlaceBid(bidderAddr, publicPosition.Id, publicPosition.LastRewardsAuctionId, utils.ParseCoin("100000lashare1"))
+
+	s.AdvanceRewardsAuctions()
+
+	mintedShare, _, _, _ = s.MintShare(minterAddr, publicPosition.Id, utils.ParseCoins("100000ucre,1000000uusd"), true)
+	s.AssertEqual(utils.ParseCoin("988759lashare1"), mintedShare)
+}
+
+func (s *KeeperTestSuite) TestRewardsAuction_Scenario2() {
+	market := s.CreateMarket("ucre", "uusd")
+	pool := s.CreatePool(market.Id, utils.ParseDec("10"))
+
+	publicPosition := s.CreatePublicPosition(
+		pool.Id, utils.ParseDec("5"), utils.ParseDec("20"), sdk.NewInt(10000), sdk.ZeroDec())
+
+	minterAddr1 := utils.TestAddress(1)
+	mintedShare1, _, _, _ := s.MintShare(minterAddr1, publicPosition.Id, utils.ParseCoins("100000ucre,1000000uusd"), true)
+	s.AssertEqual(utils.ParseCoin("1079669lashare1"), mintedShare1)
+
+	s.CreatePrivateFarmingPlan(
+		utils.TestAddress(0), "", utils.TestAddress(0), []ammtypes.FarmingRewardAllocation{
+			ammtypes.NewFarmingRewardAllocation(1, utils.ParseCoins("10_000000uatom")),
+		}, utils.ParseTime("0001-01-01T00:00:00Z"), utils.ParseTime("9999-12-31T00:00:00Z"),
+		utils.ParseCoins("100000_000000uatom"), true)
+
+	s.NextBlock()
+	s.NextBlock()
+	s.NextBlock()
+	s.AdvanceRewardsAuctions() // Start new auction
+
+	s.NextBlock()
+	s.NextBlock()
+	s.NextBlock()
+	s.AdvanceRewardsAuctions() // Skip the auction
+
+	minterAddr2 := utils.TestAddress(2)
+	mintedShare2, _, _, _ := s.MintShare(minterAddr2, publicPosition.Id, utils.ParseCoins("100000ucre,1000000uusd"), true)
+	s.AssertEqual(utils.ParseCoin("1079669lashare1"), mintedShare2)
+
+	bidderAddr := utils.TestAddress(3)
+	s.MintShare(bidderAddr, publicPosition.Id, utils.ParseCoins("20000ucre,200000uusd"), true)
+
+	publicPosition, _ = s.keeper.GetPublicPosition(s.Ctx, publicPosition.Id)
+	s.Require().Equal(uint64(2), publicPosition.LastRewardsAuctionId)
+	s.PlaceBid(bidderAddr, publicPosition.Id, publicPosition.LastRewardsAuctionId, utils.ParseCoin("100000lashare1"))
+
+	s.AdvanceRewardsAuctions()
+
+	_, _, amt1 := s.BurnShare(minterAddr1, publicPosition.Id, mintedShare1)
+	_, _, amt2 := s.BurnShare(minterAddr2, publicPosition.Id, mintedShare2)
+	s.AssertEqual(amt1, amt2)
 }
