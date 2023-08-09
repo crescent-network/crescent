@@ -237,7 +237,7 @@ func (s *KeeperTestSuite) TestSamePositions() {
 	_, amt = s.RemoveLiquidity(lpAddr2, position2.Id, position2.Liquidity)
 	s.AssertEqual(utils.ParseCoins("117592576ucre,842955162uusd"), amt)
 	_, amt = s.RemoveLiquidity(lpAddr3, position3.Id, position3.Liquidity)
-	s.AssertEqual(utils.ParseCoins("117592576ucre,842955162uusd"), amt)
+	s.AssertEqual(utils.ParseCoins("117593642ucre,842958034uusd"), amt)
 }
 
 func (s *KeeperTestSuite) TestSamePositions2() {
@@ -269,12 +269,12 @@ func (s *KeeperTestSuite) TestSamePositions2() {
 	s.AssertEqual(utils.ParseCoins("1818181818ucre,1091790048475uusd"), amt)
 	_, amt, err = s.keeper.RemoveLiquidity(cacheCtx, lpAddr2, lpAddr2, position2.Id, position2.Liquidity)
 	s.Require().NoError(err)
-	s.AssertEqual(utils.ParseCoins("181818181ucre,109179004845uusd"), amt)
+	s.AssertEqual(utils.ParseCoins("181818191ucre,109179004856uusd"), amt)
 
 	_, amt = s.RemoveLiquidity(lpAddr2, position2.Id, position2.Liquidity)
 	s.AssertEqual(utils.ParseCoins("181818181ucre,109179004845uusd"), amt)
 	_, amt = s.RemoveLiquidity(lpAddr1, position1.Id, position1.Liquidity)
-	s.AssertEqual(utils.ParseCoins("1818181818ucre,1091790048475uusd"), amt)
+	s.AssertEqual(utils.ParseCoins("1818181828ucre,1091790048486uusd"), amt)
 }
 
 func (s *KeeperTestSuite) TestSymmetricPositions() {
@@ -327,7 +327,7 @@ func (s *KeeperTestSuite) TestIndependentRemoveLiquidity() {
 	_, amt = s.RemoveLiquidity(lpAddr2, position2.Id, position2.Liquidity)
 	s.AssertEqual(utils.ParseCoins("999999999ucre,99999999997uusd"), amt)
 	_, amt = s.RemoveLiquidity(lpAddr4, position4.Id, position4.Liquidity)
-	s.AssertEqual(utils.ParseCoins("999999999ucre,99999999995uusd"), amt)
+	s.AssertEqual(utils.ParseCoins("1000000003ucre,99999999999uusd"), amt)
 }
 
 func (s *KeeperTestSuite) TestInitialPoolPriceDifference() {
@@ -354,7 +354,13 @@ func (s *KeeperTestSuite) TestInitialPoolPriceDifference() {
 
 	s.NextBlock() // Run matching at batch
 
-	// TODO: write the rest of test after fixing bug in batch matching
+	marketState = s.App.ExchangeKeeper.MustGetMarketState(s.Ctx, market.Id)
+	s.AssertEqual(utils.ParseDec("10"), *marketState.LastPrice)
+	poolState := s.keeper.MustGetPoolState(s.Ctx, pool.Id)
+	s.AssertEqual(utils.ParseDec("10"), poolState.CurrentPrice)
+
+	_, amt := s.RemoveLiquidity(lpAddr, position.Id, position.Liquidity)
+	s.AssertEqual(utils.ParseCoins("4489uusd"), amt)
 }
 
 func (s *KeeperTestSuite) TestInitialPoolPriceDifference2() {
@@ -381,7 +387,13 @@ func (s *KeeperTestSuite) TestInitialPoolPriceDifference2() {
 
 	s.NextBlock() // Run matching at batch
 
-	// TODO: write the rest of test after fixing bug in batch matching
+	marketState = s.App.ExchangeKeeper.MustGetMarketState(s.Ctx, market.Id)
+	s.AssertEqual(utils.ParseDec("1"), *marketState.LastPrice)
+	poolState := s.keeper.MustGetPoolState(s.Ctx, pool.Id)
+	s.AssertEqual(utils.ParseDec("1"), poolState.CurrentPrice)
+
+	_, amt := s.RemoveLiquidity(lpAddr, position.Id, position.Liquidity)
+	s.AssertEqual(utils.ParseCoins("417ucre,681uusd"), amt) // All remaining reserve
 }
 
 func (s *KeeperTestSuite) TestRewardsPool() {
