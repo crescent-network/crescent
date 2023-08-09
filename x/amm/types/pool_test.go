@@ -96,7 +96,7 @@ func TestPool_Validate(t *testing.T) {
 			func(pool *types.Pool) {
 				pool.MinOrderQuantity = sdk.NewDec(-1000)
 			},
-			"min order quantity must be positive: -1000.000000000000000000",
+			"min order quantity must not be negative: -1000.000000000000000000",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

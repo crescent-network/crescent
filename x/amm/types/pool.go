@@ -78,7 +78,7 @@ func (pool Pool) Validate() error {
 		return fmt.Errorf("tick spacing %d is not allowed", pool.TickSpacing)
 	}
 	if pool.MinOrderQuantity.IsNegative() {
-		return fmt.Errorf("min order quantity must be positive: %s", pool.MinOrderQuantity)
+		return fmt.Errorf("min order quantity must not be negative: %s", pool.MinOrderQuantity)
 	}
 	return nil
 }

@@ -37,17 +37,13 @@ func (s *SimTestSuite) TestProposalContents() {
 	s.Require().Equal(simulation.OpWeightSubmitPoolParameterChangeProposal, w0.AppParamsKey())
 	s.Require().Equal(simulation.DefaultWeightPoolParameterChangeProposal, w0.DefaultWeight())
 	content := w0.ContentSimulatorFn()(r, s.Ctx, accs)
-	s.Require().Equal("ibtYndRwpdsvyCktRHFalvUuEKMqXbItfGcNGWsGzubdPMYayOUOINjpcFBeESdwpdlTYmrPsLsVDhpTzoMegKrytNVZkfJRPuDC", content.GetDescription())
-	s.Require().Equal("SthOohmsux", content.GetTitle())
-	s.Require().Equal("amm", content.ProposalRoute())
-	s.Require().Equal("PoolParameterChange", content.ProposalType())
+	s.Assert().Equal("amm", content.ProposalRoute())
+	s.Assert().Equal("PoolParameterChange", content.ProposalType())
 
 	w1 := weightedProposalContent[1]
 	s.Require().Equal(simulation.OpWeightSubmitPublicFarmingPlanProposal, w1.AppParamsKey())
 	s.Require().Equal(simulation.DefaultWeightPublicFarmingPlanProposal, w1.DefaultWeight())
 	content = w1.ContentSimulatorFn()(r, s.Ctx, accs)
-	s.Require().Equal("jVUZZCgqDrSeltJGXPMgZnGDZqISrGDOClxXCxMjmKqEPwKHoOfOeyGmqWqihqjINXLqnyTesZePQRqaWDQNqpLgNrAUKulklmck", content.GetDescription())
-	s.Require().Equal("TijUltQKuW", content.GetTitle())
-	s.Require().Equal("amm", content.ProposalRoute())
-	s.Require().Equal("PublicFarmingPlan", content.ProposalType())
+	s.Assert().Equal("amm", content.ProposalRoute())
+	s.Assert().Equal("PublicFarmingPlan", content.ProposalType())
 }

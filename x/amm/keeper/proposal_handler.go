@@ -13,13 +13,18 @@ func HandlePoolParameterChangeProposal(ctx sdk.Context, k Keeper, p *types.PoolP
 		if !found {
 			return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "pool %d not found", change.PoolId)
 		}
-		if pool.TickSpacing == change.TickSpacing {
-			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "tick spacing is not changed: %d", pool.TickSpacing)
+		if change.TickSpacing != 0 {
+			if pool.TickSpacing == change.TickSpacing {
+				return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "tick spacing is not changed: %d", pool.TickSpacing)
+			}
+			if err := types.ValidateTickSpacing(pool.TickSpacing, change.TickSpacing); err != nil {
+				return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+			}
+			pool.TickSpacing = change.TickSpacing
 		}
-		if err := types.ValidateTickSpacing(pool.TickSpacing, change.TickSpacing); err != nil {
-			return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		if change.MinOrderQuantity != nil {
+			pool.MinOrderQuantity = *change.MinOrderQuantity
 		}
-		pool.TickSpacing = change.TickSpacing
 		k.SetPool(ctx, pool)
 		if err := ctx.EventManager().EmitTypedEvent(&types.EventPoolParameterChanged{
 			PoolId:      change.PoolId,

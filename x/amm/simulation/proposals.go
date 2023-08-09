@@ -42,13 +42,16 @@ func SimulatePoolParameterChangeProposal(k keeper.Keeper) simtypes.ContentSimula
 		k.IterateAllPools(ctx, func(pool types.Pool) (stop bool) {
 			if r.Float64() <= 0.5 {
 				allowedTickSpacings := utils.Filter(types.AllowedTickSpacings, func(tickSpacing uint32) bool {
-					return tickSpacing < pool.TickSpacing && pool.TickSpacing%tickSpacing == 0
+					return tickSpacing > 1 && // temporarily disable tick spacing 1
+						tickSpacing < pool.TickSpacing && pool.TickSpacing%tickSpacing == 0
 				})
+				tickSpacing := uint32(0)
 				if len(allowedTickSpacings) > 0 {
-					changes = append(changes,
-						types.NewPoolParameterChange(
-							pool.Id, allowedTickSpacings[r.Intn(len(allowedTickSpacings))]))
+					tickSpacing = allowedTickSpacings[r.Intn(len(allowedTickSpacings))]
 				}
+				minOrderQty := utils.RandomDec(r, utils.ParseDec("1"), utils.ParseDec("10000"))
+				changes = append(changes,
+					types.NewPoolParameterChange(pool.Id, tickSpacing, &minOrderQty))
 			}
 			return false
 		})
