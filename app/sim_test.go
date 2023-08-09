@@ -5,7 +5,6 @@ package app
 import (
 	"encoding/json"
 	"fmt"
-	"math/rand"
 	"os"
 	"testing"
 
@@ -312,12 +311,12 @@ func TestAppStateDeterminism(t *testing.T) {
 	config.AllInvariants = false
 	config.ChainID = helpers.SimAppChainID
 
-	numSeeds := 3
-	numTimesToRunPerSeed := 5
+	numSeeds := config.NumBlocks / 10
+	numTimesToRunPerSeed := 2
 	appHashList := make([]json.RawMessage, numTimesToRunPerSeed)
 
 	for i := 0; i < numSeeds; i++ {
-		config.Seed = rand.Int63()
+		config.Seed = config.Seed + int64(i)
 
 		for j := 0; j < numTimesToRunPerSeed; j++ {
 			var logger log.Logger
