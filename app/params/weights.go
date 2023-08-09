@@ -42,7 +42,7 @@ const (
 	DefaultWeightAddWhitelistValidatorsProposal    int = 50
 	DefaultWeightUpdateWhitelistValidatorsProposal int = 5
 	DefaultWeightDeleteWhitelistValidatorsProposal int = 5
-	DefaultWeightCompleteRedelegationUnbonding     int = 30
+	DefaultWeightCompleteRedelegationUnbonding     int = 2
 	DefaultWeightTallyWithLiquidStaking            int = 30
 
 	DefaultWeightMsgApplyMarketMaker int = 20
