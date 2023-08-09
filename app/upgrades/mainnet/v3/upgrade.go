@@ -11,7 +11,7 @@ import (
 
 	farmingkeeper "github.com/crescent-network/crescent/v5/x/farming/keeper"
 	farmingtypes "github.com/crescent-network/crescent/v5/x/farming/types"
-	liquidfarmingtypes "github.com/crescent-network/crescent/v5/x/liquidfarming/types"
+	liquidammtypes "github.com/crescent-network/crescent/v5/x/liquidamm/types"
 	liquiditykeeper "github.com/crescent-network/crescent/v5/x/liquidity/keeper"
 	liquiditytypes "github.com/crescent-network/crescent/v5/x/liquidity/types"
 	lpfarmkeeper "github.com/crescent-network/crescent/v5/x/lpfarm/keeper"
@@ -136,6 +136,6 @@ var StoreUpgrades = store.StoreUpgrades{
 	Added: []string{
 		marketmakertypes.ModuleName,
 		lpfarmtypes.ModuleName,
-		liquidfarmingtypes.ModuleName,
+		liquidammtypes.ModuleName,
 	},
 }

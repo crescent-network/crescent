@@ -1,23 +1,40 @@
 package keeper_test
 
 import (
+	"encoding/binary"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/crescent-network/crescent/v5/app/testutil"
+	chain "github.com/crescent-network/crescent/v5/app"
 	utils "github.com/crescent-network/crescent/v5/types"
-	ammtypes "github.com/crescent-network/crescent/v5/x/amm/types"
+	"github.com/crescent-network/crescent/v5/x/liquidfarming"
 	"github.com/crescent-network/crescent/v5/x/liquidfarming/keeper"
 	"github.com/crescent-network/crescent/v5/x/liquidfarming/types"
+	liquiditytypes "github.com/crescent-network/crescent/v5/x/liquidity/types"
+	lpfarmtypes "github.com/crescent-network/crescent/v5/x/lpfarm/types"
+)
+
+var (
+	helperAddr      = utils.TestAddress(10000)
+	sampleStartTime = utils.ParseTime("0001-01-01T00:00:00Z")
+	sampleEndTime   = utils.ParseTime("9999-12-31T23:59:59Z")
 )
 
 type KeeperTestSuite struct {
-	testutil.TestSuite
-	keeper  keeper.Keeper
-	querier keeper.Querier
+	suite.Suite
+
+	app       *chain.App
+	ctx       sdk.Context
+	keeper    keeper.Keeper
+	querier   keeper.Querier
+	msgServer types.MsgServer
+	hdr       tmproto.Header
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -25,76 +42,197 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (s *KeeperTestSuite) SetupTest() {
-	s.TestSuite.SetupTest()
-	s.FundAccount(utils.TestAddress(0), utils.ParseCoins("1ucre,1uusd,1uatom")) // make positive supply
-	s.keeper = s.App.LiquidFarmingKeeper
-	s.querier = keeper.Querier{Keeper: s.App.LiquidFarmingKeeper}
+	s.app = chain.Setup(false)
+	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
+	s.keeper = s.app.LiquidFarmingKeeper
+	s.querier = keeper.Querier{Keeper: s.keeper}
+	s.msgServer = keeper.NewMsgServerImpl(s.keeper)
+	s.ctx = s.ctx.WithBlockTime(time.Now()) // set to current time
+	s.hdr = tmproto.Header{
+		Height: 1,
+		Time:   time.Now(),
+	}
 }
 
-func (s *KeeperTestSuite) CreateSampleLiquidFarm() types.LiquidFarm {
-	market := s.CreateMarket("ucre", "uusd")
-	pool := s.CreatePool(market.Id, utils.ParseDec("5"))
-	s.CreatePrivateFarmingPlan(utils.TestAddress(0), "", utils.TestAddress(0), []ammtypes.FarmingRewardAllocation{
-		ammtypes.NewFarmingRewardAllocation(1, utils.ParseCoins("100_000000uatom")),
-	}, utils.ParseTime("0001-01-01T00:00:00Z"), utils.ParseTime("9999-12-31T00:00:00Z"),
-		utils.ParseCoins("100000_000000uatom"), true)
-	return s.CreateLiquidFarm(
-		pool.Id, utils.ParseDec("4.5"), utils.ParseDec("5.5"),
-		sdk.NewInt(10000), utils.ParseDec("0.003"))
+//
+// Below are just shortcuts to frequently-used functions.
+//
+
+func (s *KeeperTestSuite) beginBlock() {
+	s.T().Helper()
+	s.app.BeginBlock(abci.RequestBeginBlock{Header: s.hdr})
+	s.ctx = s.app.BaseApp.NewContext(false, s.hdr)
 }
 
-func (s *KeeperTestSuite) SetupSampleScenario() {
-	market := s.CreateMarket("ucre", "uusd")
-	pool := s.CreatePool(market.Id, utils.ParseDec("5"))
-	s.CreatePrivateFarmingPlan(utils.TestAddress(0), "", utils.TestAddress(0), []ammtypes.FarmingRewardAllocation{
-		ammtypes.NewFarmingRewardAllocation(1, utils.ParseCoins("100_000000uatom")),
-	}, utils.ParseTime("0001-01-01T00:00:00Z"), utils.ParseTime("9999-12-31T00:00:00Z"),
-		utils.ParseCoins("100000_000000uatom"), true)
-	enoughCoins := utils.ParseCoins("10000_000000ucre,10000_000000uusd")
-	lpAddr := s.FundedAccount(1, enoughCoins)
-	s.AddLiquidity(
-		lpAddr, pool.Id, utils.ParseDec("4"), utils.ParseDec("6"), utils.ParseCoins("1000_000000ucre,5000_000000uusd"))
-	s.NextBlock()
-	s.NextBlock()
+func (s *KeeperTestSuite) endBlock() {
+	s.T().Helper()
+	s.app.EndBlock(abci.RequestEndBlock{Height: s.ctx.BlockHeight()})
+	s.app.Commit()
+}
 
-	liquidFarm := s.CreateLiquidFarm(
-		pool.Id, utils.ParseDec("4.5"), utils.ParseDec("5.5"),
-		sdk.NewInt(10000), utils.ParseDec("0.003"))
+func (s *KeeperTestSuite) nextBlock() {
+	s.T().Helper()
+	s.endBlock()
+	s.hdr.Height++
+	s.hdr.Time = s.hdr.Time.Add(5 * time.Second)
+	s.beginBlock()
+}
 
-	// Two account mints liquid farm share.
-	minterAddr1 := utils.TestAddress(2)
-	minterAddr2 := utils.TestAddress(3)
-	s.MintShare(minterAddr1, liquidFarm.Id, utils.ParseCoins("100_000000ucre,500_000000uusd"), true)
-	s.MintShare(minterAddr2, liquidFarm.Id, utils.ParseCoins("300_000000ucre,1500_000000uusd"), true)
+func (s *KeeperTestSuite) fundAddr(addr sdk.AccAddress, amt sdk.Coins) {
+	s.T().Helper()
+	err := s.app.BankKeeper.MintCoins(s.ctx, types.ModuleName, amt)
+	s.Require().NoError(err)
+	err = s.app.BankKeeper.SendCoinsFromModuleToAccount(s.ctx, types.ModuleName, addr, amt)
+	s.Require().NoError(err)
+}
 
-	// Auction starts and rewards are accrued
-	s.AdvanceRewardsAuctions()
-	s.NextBlock()
-	s.NextBlock()
+func (s *KeeperTestSuite) assertEq(exp, got interface{}) {
+	s.T().Helper()
+	var equal bool
+	switch exp := exp.(type) {
+	case sdk.Int:
+		equal = exp.Equal(got.(sdk.Int))
+	case sdk.Dec:
+		equal = exp.Equal(got.(sdk.Dec))
+	case sdk.Coin:
+		equal = exp.IsEqual(got.(sdk.Coin))
+	case sdk.Coins:
+		equal = exp.IsEqual(got.(sdk.Coins))
+	case sdk.DecCoins:
+		equal = exp.IsEqual(got.(sdk.DecCoins))
+	}
+	s.Require().True(equal, "expected:\t%v\ngot:\t\t%v", exp, got)
+}
 
-	auction, found := s.keeper.GetLastRewardsAuction(s.Ctx, liquidFarm.Id)
-	s.Require().True(found)
+func (s *KeeperTestSuite) createPrivatePlan(creator sdk.AccAddress, rewardAllocs []lpfarmtypes.RewardAllocation) lpfarmtypes.Plan {
+	s.T().Helper()
+	s.fundAddr(creator, s.app.LPFarmKeeper.GetPrivatePlanCreationFee(s.ctx))
+	plan, err := s.app.LPFarmKeeper.CreatePrivatePlan(s.ctx, creator, "", rewardAllocs, sampleStartTime, sampleEndTime)
+	s.Require().NoError(err)
+	return plan
+}
 
-	bidderAddr1 := utils.TestAddress(4)
-	bidderAddr2 := utils.TestAddress(5)
-	bidderAddr3 := utils.TestAddress(6)
-	bidderShare1, _, _, _ := s.MintShare(bidderAddr1, liquidFarm.Id, utils.ParseCoins("10_000000ucre,50_000000uusd"), true)
-	bidderShare2, _, _, _ := s.MintShare(bidderAddr2, liquidFarm.Id, utils.ParseCoins("20_000000ucre,100_000000uusd"), true)
-	bidderShare3, _, _, _ := s.MintShare(bidderAddr3, liquidFarm.Id, utils.ParseCoins("30_000000ucre,150_000000uusd"), true)
-	s.PlaceBid(bidderAddr1, liquidFarm.Id, auction.Id, bidderShare1)
-	s.PlaceBid(bidderAddr2, liquidFarm.Id, auction.Id, bidderShare2)
-	s.PlaceBid(bidderAddr3, liquidFarm.Id, auction.Id, bidderShare3)
+func (s *KeeperTestSuite) createPair(creator sdk.AccAddress, baseCoinDenom, quoteCoinDenom string) liquiditytypes.Pair {
+	s.T().Helper()
+	s.fundAddr(creator, s.app.LiquidityKeeper.GetPairCreationFee(s.ctx))
+	pair, err := s.app.LiquidityKeeper.CreatePair(s.ctx, liquiditytypes.NewMsgCreatePair(creator, baseCoinDenom, quoteCoinDenom))
+	s.Require().NoError(err)
+	return pair
+}
 
-	s.AdvanceRewardsAuctions()
-	s.NextBlock()
-	s.NextBlock()
+// createPairWithLastPrice is a convenient method to create a pair with last price.
+// it is needed as farming plan doesn't distribute farming rewards if the last price is not set.
+func (s *KeeperTestSuite) createPairWithLastPrice(creator sdk.AccAddress, baseCoinDenom, quoteCoinDenom string, lastPrice sdk.Dec) liquiditytypes.Pair {
+	s.T().Helper()
+	pair := s.createPair(creator, baseCoinDenom, quoteCoinDenom)
+	pair.LastPrice = &lastPrice
+	s.app.LiquidityKeeper.SetPair(s.ctx, pair)
+	return pair
+}
 
-	minterAddr3 := utils.TestAddress(7)
-	s.MintShare(minterAddr3, liquidFarm.Id, utils.ParseCoins("500_000000ucre,2500_000000uusd"), true)
+func (s *KeeperTestSuite) createPool(creator sdk.AccAddress, pairId uint64, depositCoins sdk.Coins) liquiditytypes.Pool {
+	s.T().Helper()
+	s.fundAddr(creator, s.app.LiquidityKeeper.GetPoolCreationFee(s.ctx).Add(depositCoins...))
+	pool, err := s.app.LiquidityKeeper.CreatePool(s.ctx, liquiditytypes.NewMsgCreatePool(creator, pairId, depositCoins))
+	s.Require().NoError(err)
+	return pool
+}
 
-	auction, _ = s.keeper.GetLastRewardsAuction(s.Ctx, liquidFarm.Id)
-	bidderShare1, _, _, _ = s.MintShare(bidderAddr1, liquidFarm.Id, utils.ParseCoins("10_000000ucre,50_000000uusd"), true)
-	bidderShare2, _, _, _ = s.MintShare(bidderAddr2, liquidFarm.Id, utils.ParseCoins("20_000000ucre,100_000000uusd"), true)
-	s.PlaceBid(bidderAddr1, liquidFarm.Id, auction.Id, bidderShare1)
-	s.PlaceBid(bidderAddr2, liquidFarm.Id, auction.Id, bidderShare2)
+func (s *KeeperTestSuite) deposit(depositor sdk.AccAddress, poolId uint64, depositCoins sdk.Coins, fund bool) liquiditytypes.DepositRequest {
+	s.T().Helper()
+	if fund {
+		s.fundAddr(depositor, depositCoins)
+	}
+	req, err := s.app.LiquidityKeeper.Deposit(s.ctx, liquiditytypes.NewMsgDeposit(depositor, poolId, depositCoins))
+	s.Require().NoError(err)
+	return req
+}
+
+func (s *KeeperTestSuite) createLiquidFarm(poolId uint64, minFarmAmt, minBidAmt sdk.Int, feeRate sdk.Dec) types.LiquidFarm {
+	s.T().Helper()
+	liquidFarm := types.NewLiquidFarm(poolId, minFarmAmt, minBidAmt, feeRate)
+	params := s.keeper.GetParams(s.ctx)
+	params.LiquidFarms = append(params.LiquidFarms, liquidFarm)
+	s.keeper.SetParams(s.ctx, params)
+	s.keeper.SetLiquidFarm(s.ctx, liquidFarm)
+	return liquidFarm
+}
+
+func (s *KeeperTestSuite) createRewardsAuction(poolId uint64) {
+	s.T().Helper()
+	duration := s.keeper.GetRewardsAuctionDuration(s.ctx)
+	s.keeper.CreateRewardsAuction(s.ctx, poolId, s.ctx.BlockTime().Add(duration*time.Hour))
+}
+
+func (s *KeeperTestSuite) liquidFarm(poolId uint64, farmer sdk.AccAddress, lpCoin sdk.Coin, fund bool) {
+	s.T().Helper()
+	if fund {
+		s.fundAddr(farmer, sdk.NewCoins(lpCoin))
+	}
+	err := s.keeper.LiquidFarm(s.ctx, poolId, farmer, lpCoin)
+	s.Require().NoError(err)
+}
+
+func (s *KeeperTestSuite) liquidUnfarm(poolId uint64, farmer sdk.AccAddress, lfCoin sdk.Coin, fund bool) {
+	s.T().Helper()
+	if fund {
+		s.fundAddr(farmer, sdk.NewCoins(lfCoin))
+	}
+	_, err := s.keeper.LiquidUnfarm(s.ctx, poolId, farmer, lfCoin)
+	s.Require().NoError(err)
+}
+
+func (s *KeeperTestSuite) placeBid(poolId uint64, bidder sdk.AccAddress, biddingCoin sdk.Coin, fund bool) types.Bid {
+	s.T().Helper()
+	if fund {
+		s.fundAddr(bidder, sdk.NewCoins(biddingCoin))
+	}
+
+	auctionId := s.keeper.GetLastRewardsAuctionId(s.ctx, poolId)
+	bid, err := s.keeper.PlaceBid(s.ctx, auctionId, poolId, bidder, biddingCoin)
+	s.Require().NoError(err)
+
+	return bid
+}
+
+//
+// Below are helper functions to write test code easily
+//
+
+func (s *KeeperTestSuite) addr(addrNum int) sdk.AccAddress {
+	addr := make(sdk.AccAddress, 20)
+	binary.PutVarint(addr, int64(addrNum))
+	return addr
+}
+
+func (s *KeeperTestSuite) getBalances(addr sdk.AccAddress) sdk.Coins { //nolint
+	return s.app.BankKeeper.GetAllBalances(s.ctx, addr)
+}
+
+func (s *KeeperTestSuite) getBalance(addr sdk.AccAddress, denom string) sdk.Coin {
+	return s.app.BankKeeper.GetBalance(s.ctx, addr, denom)
+}
+
+// func (s *KeeperTestSuite) nextBlock() {
+// 	s.T().Helper()
+// 	s.app.EndBlock(abci.RequestEndBlock{})
+// 	s.app.Commit()
+// 	hdr := tmproto.Header{
+// 		Height: s.app.LastBlockHeight() + 1,
+// 		Time:   s.ctx.BlockTime().Add(5 * time.Second),
+// 	}
+// 	s.app.BeginBlock(abci.RequestBeginBlock{Header: hdr})
+// 	s.ctx = s.app.BaseApp.NewContext(false, hdr)
+// 	s.app.BeginBlocker(s.ctx, abci.RequestBeginBlock{Header: hdr})
+// }
+
+func (s *KeeperTestSuite) nextAuction() {
+	s.T().Helper()
+	endTime, found := s.keeper.GetLastRewardsAuctionEndTime(s.ctx)
+	if !found {
+		duration := s.keeper.GetRewardsAuctionDuration(s.ctx)
+		endTime = s.ctx.BlockTime().Add(duration)
+	}
+	s.ctx = s.ctx.WithBlockTime(endTime)
+	liquidfarming.BeginBlocker(s.ctx, s.keeper)
 }

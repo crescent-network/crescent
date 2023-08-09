@@ -39,7 +39,7 @@ import (
 	claimtypes "github.com/crescent-network/crescent/v5/x/claim/types"
 	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 	farmingtypes "github.com/crescent-network/crescent/v5/x/farming/types"
-	liquidfarmingtypes "github.com/crescent-network/crescent/v5/x/liquidfarming/types"
+	liquidammtypes "github.com/crescent-network/crescent/v5/x/liquidamm/types"
 	liquiditytypes "github.com/crescent-network/crescent/v5/x/liquidity/types"
 	liquidstakingtypes "github.com/crescent-network/crescent/v5/x/liquidstaking/types"
 	lpfarmtypes "github.com/crescent-network/crescent/v5/x/lpfarm/types"
@@ -203,7 +203,7 @@ func TestAppImportExport(t *testing.T) {
 		{app.keys[lpfarmtypes.StoreKey], newApp.keys[lpfarmtypes.StoreKey], [][]byte{}},
 		{app.keys[exchangetypes.StoreKey], newApp.keys[exchangetypes.StoreKey], [][]byte{}},
 		{app.keys[ammtypes.StoreKey], newApp.keys[ammtypes.StoreKey], [][]byte{}},
-		{app.keys[liquidfarmingtypes.StoreKey], newApp.keys[liquidfarmingtypes.StoreKey], [][]byte{}},
+		{app.keys[liquidammtypes.StoreKey], newApp.keys[liquidammtypes.StoreKey], [][]byte{}},
 		{app.keys[ibchost.StoreKey], newApp.keys[ibchost.StoreKey], [][]byte{}},
 		{app.keys[ibctransfertypes.StoreKey], newApp.keys[ibctransfertypes.StoreKey], [][]byte{}},
 	}
