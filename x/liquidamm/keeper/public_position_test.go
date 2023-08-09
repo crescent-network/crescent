@@ -75,7 +75,7 @@ func (s *KeeperTestSuite) TestPublicPositionShare() {
 	s.Require().Equal(mintedShare.Amount, liquidity)
 
 	burnedLiquidity, _, amt := s.BurnShare(senderAddr, publicPosition.Id, mintedShare)
-	s.Require().Equal("9068667ucre,49999999uusd", amt.String()) // Decimal loss
+	s.Require().Equal("9068668ucre,50000000uusd", amt.String())
 	s.Require().Equal(liquidity, burnedLiquidity)
 }
 

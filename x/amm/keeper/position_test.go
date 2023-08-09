@@ -109,3 +109,33 @@ func (s *KeeperTestSuite) TestRewardsPool() {
 	s.Require().Equal(utils.ParseCoins("1ucre,1uusd"), s.GetAllBalances(pool1.MustGetRewardsPoolAddress()))
 	s.Require().Equal(utils.ParseCoins("265uatom,14981uusd"), s.GetAllBalances(pool2.MustGetRewardsPoolAddress()))
 }
+
+func (s *KeeperTestSuite) TestLastRemoveLiquidity() {
+	_, pool := s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("5"))
+
+	lpAddr1 := s.FundedAccount(1, enoughCoins)
+	lpAddr2 := s.FundedAccount(2, enoughCoins)
+	lpAddr3 := s.FundedAccount(3, enoughCoins)
+
+	// Three position parameters are same.
+	position1, _, _ := s.AddLiquidity(
+		lpAddr1, pool.Id, utils.ParseDec("4"), utils.ParseDec("6"),
+		utils.ParseCoins("100_000000ucre,500_000000uusd"))
+	position2, _, _ := s.AddLiquidity(
+		lpAddr2, pool.Id, utils.ParseDec("4"), utils.ParseDec("6"),
+		utils.ParseCoins("100_000000ucre,500_000000uusd"))
+	position3, _, _ := s.AddLiquidity(
+		lpAddr3, pool.Id, utils.ParseDec("4"), utils.ParseDec("6"),
+		utils.ParseCoins("100_000000ucre,500_000000uusd"))
+
+	_, amt := s.RemoveLiquidity(lpAddr1, position1.Id, position1.Liquidity)
+	s.AssertEqual(utils.ParseCoins("82529840ucre,499999999uusd"), amt)
+	_, amt = s.RemoveLiquidity(lpAddr2, position2.Id, position2.Liquidity)
+	s.AssertEqual(utils.ParseCoins("82529840ucre,499999999uusd"), amt)
+	// The last liquidity remover takes all remaining reserve balances in the pool.
+	_, amt = s.RemoveLiquidity(lpAddr3, position3.Id, position3.Liquidity)
+	s.AssertEqual(utils.ParseCoins("82529843ucre,500000002uusd"), amt)
+
+	// No balances left in the pool.
+	s.AssertEqual(sdk.Coins{}, s.GetAllBalances(pool.MustGetReserveAddress()))
+}
