@@ -103,10 +103,15 @@ func (k Keeper) RemoveLiquidity(
 		ctx, pool, ownerAddr, position.LowerTick, position.UpperTick, liquidity.Neg())
 	amt0, amt1 = amt0.Neg(), amt1.Neg()
 
-	amt = sdk.NewCoins(sdk.NewCoin(pool.Denom0, amt0), sdk.NewCoin(pool.Denom1, amt1))
 	reserveAddr := pool.MustGetReserveAddress()
 	reserveBalances := k.bankKeeper.SpendableCoins(ctx, reserveAddr)
-	amt = reserveBalances.Min(amt)
+	poolState := k.MustGetPoolState(ctx, pool.Id)
+	if poolState.TotalLiquidity.IsZero() { // the last liquidity removal from the pool
+		amt = reserveBalances
+	} else {
+		amt = reserveBalances.Min(
+			sdk.NewCoins(sdk.NewCoin(pool.Denom0, amt0), sdk.NewCoin(pool.Denom1, amt1)))
+	}
 	if amt.IsAllPositive() {
 		if err = k.bankKeeper.SendCoins(
 			ctx, reserveAddr, toAddr, amt); err != nil {
@@ -274,10 +279,11 @@ func (k Keeper) modifyPosition(
 			amt0 = types.Amount0Delta(currentSqrtPrice, sqrtPriceB, liquidityDelta)
 			amt1 = types.Amount1Delta(sqrtPriceA, currentSqrtPrice, liquidityDelta)
 			poolState.CurrentLiquidity = poolState.CurrentLiquidity.Add(liquidityDelta)
-			k.SetPoolState(ctx, pool.Id, poolState)
 		} else {
 			amt1 = types.Amount1Delta(sqrtPriceA, sqrtPriceB, liquidityDelta)
 		}
+		poolState.TotalLiquidity = poolState.TotalLiquidity.Add(liquidityDelta)
+		k.SetPoolState(ctx, pool.Id, poolState)
 	}
 	return
 }

@@ -26,9 +26,11 @@ message PoolState {
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
   string current_liquidity = 3
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  repeated cosmos.base.v1beta1.DecCoin fee_growth_global = 4
+  string total_liquidity = 4
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.DecCoin fee_growth_global = 5
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
-  repeated cosmos.base.v1beta1.DecCoin farming_rewards_growth_global = 5
+  repeated cosmos.base.v1beta1.DecCoin farming_rewards_growth_global = 6
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
 }
 
