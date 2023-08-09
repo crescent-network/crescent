@@ -10,6 +10,7 @@ import (
 
 	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/amm/types"
+	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
 func TestAdjustPriceToTickSpacing(t *testing.T) {
@@ -35,7 +36,9 @@ func TestAdjustPriceToTickSpacing(t *testing.T) {
 		{utils.ParseDec("0.99999"), true, utils.ParseDec("1")},
 	} {
 		t.Run(fmt.Sprint(i), func(t *testing.T) {
-			price := types.AdjustPriceToTickSpacing(tc.price, tickSpacing, tc.roundUp)
+			price := exchangetypes.PriceAtTick(
+				types.AdjustTickToTickSpacing(
+					exchangetypes.TickAtPrice(tc.price), tickSpacing, tc.roundUp))
 			require.Equal(t, tc.expected.String(), price.String())
 		})
 	}

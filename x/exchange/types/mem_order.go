@@ -17,6 +17,17 @@ const (
 	OrderSourceMemOrder
 )
 
+func (typ MemOrderType) String() string {
+	switch typ {
+	case UserMemOrder:
+		return "UserMemOrder"
+	case OrderSourceMemOrder:
+		return "OrderSourceMemOrder"
+	default:
+		return fmt.Sprintf("MemOrderType(%d)", typ)
+	}
+}
+
 type MemOrder struct {
 	typ              MemOrderType
 	order            *Order      // nil for OrderSourceMemOrder
@@ -68,6 +79,16 @@ func NewOrderSourceMemOrder(
 		fee:              utils.ZeroDec,
 		source:           source,
 	}
+}
+
+func (order *MemOrder) String() string {
+	isBuyStr := "buy"
+	if !order.isBuy {
+		isBuyStr = "sell"
+	}
+	return fmt.Sprintf(
+		"{%s %s %s %s}",
+		order.typ, isBuyStr, order.price, order.openQty)
 }
 
 func (order *MemOrder) Type() MemOrderType {

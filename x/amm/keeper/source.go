@@ -63,7 +63,7 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 	var targetTick int32
 	foundTargetTick := false
 	if isBuy {
-		k.IterateTickInfosBelowInclusive(ctx, pool.Id, poolState.CurrentTick, func(tick int32, tickInfo types.TickInfo) (stop bool) {
+		k.IterateTickInfosBelow(ctx, pool.Id, poolState.CurrentTick, true, func(tick int32, tickInfo types.TickInfo) (stop bool) {
 			if tick <= firstOrderTick {
 				targetTick = tick
 				foundTargetTick = true
@@ -101,7 +101,7 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 			netLiquidity := k.crossTick(ctx, pool.Id, targetTick, poolState)
 			poolState.CurrentLiquidity = poolState.CurrentLiquidity.Sub(netLiquidity)
 			foundTargetTick = false
-			k.IterateTickInfosBelow(ctx, pool.Id, targetTick, func(tick int32, tickInfo types.TickInfo) (stop bool) {
+			k.IterateTickInfosBelow(ctx, pool.Id, targetTick, false, func(tick int32, tickInfo types.TickInfo) (stop bool) {
 				if tick <= orderTick {
 					targetTick = tick
 					foundTargetTick = true

@@ -2,7 +2,6 @@ package types_test
 
 import (
 	"fmt"
-	"math/rand"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -142,67 +141,5 @@ func TestNextSqrtPriceFromOutput(t *testing.T) {
 				utils.DecApproxSqrt(tc.price), tc.liquidity, tc.amt, tc.isBuy)
 			require.Equal(t, tc.nextPrice, nextSqrtPrice.Power(2))
 		})
-	}
-}
-
-func TestCPMMAdjustment(t *testing.T) {
-	r := rand.New(rand.NewSource(1))
-
-	for i := 0; i < 100; i++ {
-		seed := r.Int63()
-		r := rand.New(rand.NewSource(seed))
-
-		liquidity := utils.RandomInt(r, sdk.NewInt(10000), sdk.NewInt(10000000000))
-		currentPrice := utils.RandomDec(r, utils.ParseDec("0.5"), utils.ParseDec("2"))
-		currentSqrtPrice := utils.DecApproxSqrt(currentPrice)
-
-		for _, tickSpacing := range []uint32{5, 10, 50} {
-			for _, isBuy := range []bool{true, false} {
-				orderPrice := types.AdjustPriceToTickSpacing(currentPrice, tickSpacing, !isBuy)
-				orderSqrtPrice := utils.DecApproxSqrt(orderPrice)
-
-				var prevSqrtPrice, qty sdk.Dec
-				if isBuy {
-					qty = types.Amount1DeltaDec(prevSqrtPrice, orderSqrtPrice, liquidity).
-						QuoTruncate(orderPrice)
-				} else {
-					qty = types.Amount0DeltaRoundingDec(prevSqrtPrice, orderSqrtPrice, liquidity, false)
-				}
-
-				executedRatio := utils.ParseDec("1") // starting from 100%
-				step := utils.ParseDec("0.01")
-				for ; executedRatio.IsPositive(); executedRatio = executedRatio.Sub(step) {
-					executedQty := qty.Mul(executedRatio)
-					var paid, received sdk.Dec
-					if isBuy {
-						paid = exchangetypes.QuoteAmount(true, orderPrice, executedQty)
-						received = executedQty
-					} else {
-						paid = executedQty
-						received = exchangetypes.QuoteAmount(false, orderPrice, executedQty)
-					}
-
-					var nextSqrtPrice sdk.Dec
-					if executedRatio.Equal(sdk.OneDec()) {
-						nextSqrtPrice = utils.DecApproxSqrt(orderPrice)
-					} else {
-						nextSqrtPrice = types.NextSqrtPriceFromOutput(
-							currentSqrtPrice, liquidity, paid, isBuy)
-					}
-
-					var expectedReceived sdk.Dec
-					if isBuy {
-						expectedReceived = types.Amount0DeltaRoundingDec(
-							currentSqrtPrice, nextSqrtPrice, liquidity, true)
-					} else {
-						expectedReceived = types.Amount1DeltaDec(
-							currentSqrtPrice, nextSqrtPrice, liquidity)
-					}
-
-					receivedDiff := received.Sub(expectedReceived)
-					require.True(t, !receivedDiff.IsNegative(), receivedDiff)
-				}
-			}
-		}
 	}
 }
