@@ -14,6 +14,7 @@ import (
 	claimtypes "github.com/crescent-network/crescent/v5/x/claim/types"
 	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 	farmingtypes "github.com/crescent-network/crescent/v5/x/farming/types"
+	liquidfarmingtypes "github.com/crescent-network/crescent/v5/x/liquidfarming/types"
 	liquiditytypes "github.com/crescent-network/crescent/v5/x/liquidity/types"
 )
 
@@ -85,6 +86,7 @@ func (d MsgFilterDecorator) ValidateMsgs(ctx sdk.Context, msgs []sdk.Msg) error 
 			if legacyMsg, ok := msg.(legacytx.LegacyMsg); ok {
 				switch legacyMsg.Route() {
 				case liquiditytypes.RouterKey,
+					liquidfarmingtypes.RouterKey,
 					farmingtypes.RouterKey,
 					claimtypes.RouterKey:
 					return fmt.Errorf("%s is deprecated msg type", sdk.MsgTypeURL(msg))

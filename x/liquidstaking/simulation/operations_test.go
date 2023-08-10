@@ -30,7 +30,7 @@ func TestWeightedOperations(t *testing.T) {
 	cdc := types.ModuleCdc
 	appParams := make(simtypes.AppParams)
 
-	weightedOps := simulation.WeightedOperations(appParams, cdc, app.AccountKeeper, app.BankKeeper, app.LiquidStakingKeeper)
+	weightedOps := simulation.WeightedOperations(appParams, cdc, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.LiquidStakingKeeper)
 
 	s := rand.NewSource(2)
 	r := rand.New(s)

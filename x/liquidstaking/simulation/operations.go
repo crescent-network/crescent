@@ -35,7 +35,7 @@ var (
 // WeightedOperations returns all the operations from the module with their respective weights.
 func WeightedOperations(
 	appParams simtypes.AppParams, cdc codec.JSONCodec, ak types.AccountKeeper,
-	bk types.BankKeeper, k keeper.Keeper,
+	bk types.BankKeeper, sk types.StakingKeeper, k keeper.Keeper,
 ) simulation.WeightedOperations {
 
 	var weightMsgLiquidStake int
@@ -59,7 +59,7 @@ func WeightedOperations(
 		),
 		simulation.NewWeightedOperation(
 			weightMsgLiquidUnstake,
-			SimulateMsgLiquidUnstake(ak, bk, k),
+			SimulateMsgLiquidUnstake(ak, bk, sk, k),
 		),
 	}
 }
@@ -127,10 +127,16 @@ func SimulateMsgLiquidStake(ak types.AccountKeeper, bk types.BankKeeper, k keepe
 
 // SimulateMsgLiquidUnstake generates a SimulateMsgLiquidUnstake with random values
 // nolint: interfacer
-func SimulateMsgLiquidUnstake(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.Operation {
+func SimulateMsgLiquidUnstake(ak types.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+
+		liquidVals := k.GetAllLiquidValidators(ctx)
+		totalLiquidTokens, _ := liquidVals.TotalLiquidTokens(ctx, sk, false)
+		if !totalLiquidTokens.IsPositive() {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgLiquidUnstake, "insufficient total liquid tokens"), nil, nil
+		}
 
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 		var delegator sdk.AccAddress

@@ -20,6 +20,10 @@
   - x/marker/**/*
 "x/budget":
   - x/budget/**/*
+"x/exchange":
+  - x/exchange/**/*
+"x/amm":
+  - x/amm/**/*
 "documentation":
   - docs/**/*
 "build":

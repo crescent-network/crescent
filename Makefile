@@ -194,28 +194,30 @@ benchmark:
 test-sim-nondeterminism:
 	@echo "Running non-determinism test..."
 	@go test -mod=readonly $(SIMAPP) -run TestAppStateDeterminism -Enabled=true \
-		-NumBlocks=100 -BlockSize=50 -Commit=true -Period=0 -v -timeout 1h
+		-NumBlocks=20 -BlockSize=100 -Commit=true -Seed=42 -Period=1 -v -timeout 10m
+
+test-sim-nondeterminism-long:
+	@echo "Running non-determinism-long test..."
+	@go test -mod=readonly $(SIMAPP) -run TestAppStateDeterminism -Enabled=true \
+		-NumBlocks=100 -BlockSize=200 -Commit=true -Seed=42 -Period=1 -v -timeout 10h
 
 test-sim-import-export: runsim
 	@echo "Running application import/export simulation. This may take several minutes..."
-	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) -ExitOnFail 2 2 TestAppImportExport
+	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) -Seeds=1,10,100,1000 -ExitOnFail 50 5 TestAppImportExport
+
+test-sim-import-export-long: runsim
+	@echo "Running application simulation-import-export-long. This may take several minutes..."
+	$(eval SEED := $(shell awk 'BEGIN{srand(); for (i=1; i<=50; i++) {n=int(10000*rand())+1; printf "%d%s", n, (i==50 ? "" : ",")}}'))
+	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) -Seeds="$(SEED)" -ExitOnFail 500 5 TestAppImportExport
 
 test-sim-after-import: runsim
 	@echo "Running application simulation-after-import. This may take several minutes..."
-	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) -ExitOnFail 2 2 TestAppSimulationAfterImport
-
-test-sim-nondeterminism-long:
-	@echo "Running non-determinism test..."
-	@go test -mod=readonly $(SIMAPP) -run TestAppStateDeterminism -Enabled=true \
-		-NumBlocks=100 -BlockSize=100 -Commit=true -Period=0 -v -timeout 1h
-
-test-sim-import-export-long: runsim
-	@echo "Running application import/export simulation. This may take several minutes..."
-	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) -ExitOnFail 5 5 TestAppImportExport
+	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) -Seeds=1,10,100,1000 -ExitOnFail 50 5 TestAppSimulationAfterImport
 
 test-sim-after-import-long: runsim
-	@echo "Running application simulation-after-import. This may take several minutes..."
-	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) -ExitOnFail 5 5 TestAppSimulationAfterImport
+	@echo "Running application simulation-after-import-long. This may take several minutes..."
+	$(eval SEED := $(shell awk 'BEGIN{srand(); for (i=1; i<=50; i++) {n=int(10000*rand())+1; printf "%d%s", n, (i==50 ? "" : ",")}}'))
+	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) -Seeds="$(SEED)" -ExitOnFail 500 5 TestAppSimulationAfterImport
 
 .PHONY: \
 test-sim-nondeterminism \
