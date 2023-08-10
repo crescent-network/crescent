@@ -307,8 +307,6 @@ func (s *KeeperTestSuite) TestDecQuantity() {
 }
 
 func (s *KeeperTestSuite) TestNumMMOrdersEdgecase() {
-	s.keeper.SetMaxNumMMOrders(s.Ctx, 3) // Override the default
-
 	market := s.CreateMarket("ucre", "uusd")
 
 	ordererAddr := s.FundedAccount(1, enoughCoins)
