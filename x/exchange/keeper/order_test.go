@@ -305,3 +305,20 @@ func (s *KeeperTestSuite) TestDecQuantity() {
 	diff, _ := orderer3BalancesAfter.SafeSub(orderer3BalancesBefore)
 	s.AssertEqual(sdk.NewInt(380), diff.AmountOf("uusd")) // 2699.7*0.14076=380.009722
 }
+
+func (s *KeeperTestSuite) TestNumMMOrdersEdgecase() {
+	market := s.CreateMarket("ucre", "uusd")
+
+	ordererAddr := s.FundedAccount(1, enoughCoins)
+	// Place 2 MM orders
+	s.PlaceMMLimitOrder(market.Id, ordererAddr, true, utils.ParseDec("4.9"), sdk.NewDec(10_000000), time.Hour)
+	s.PlaceMMLimitOrder(market.Id, ordererAddr, true, utils.ParseDec("4.85"), sdk.NewDec(10_000000), time.Hour)
+
+	// Match against own orders
+	s.PlaceMMLimitOrder(market.Id, ordererAddr, false, utils.ParseDec("4.5"), sdk.NewDec(30_000000), time.Hour)
+
+	numMMOrders, _ := s.keeper.GetNumMMOrders(s.Ctx, ordererAddr, market.Id)
+	// The number of MM orders should be 1, since previous order are fully matched
+	// and deleted.
+	s.Require().Equal(uint32(1), numMMOrders)
+}

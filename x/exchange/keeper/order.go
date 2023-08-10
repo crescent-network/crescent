@@ -177,6 +177,9 @@ func (k Keeper) placeLimitOrder(
 		k.SetOrdersByOrdererIndex(ctx, order)
 
 		if typ == types.OrderTypeMM {
+			// NOTE: NumMMOrders might have been changed in executeOrder if the
+			// orderer completed own orders.
+			numMMOrders, _ = k.GetNumMMOrders(ctx, ordererAddr, marketId)
 			k.SetNumMMOrders(ctx, ordererAddr, marketId, numMMOrders+1)
 		}
 	}
