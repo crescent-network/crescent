@@ -27,13 +27,13 @@ func (k Keeper) ConstructMemOrderBookSide(
 	})
 	for _, name := range k.sourceNames {
 		source := k.sources[name]
-		source.ConstructMemOrderBookSide(ctx, market, func(ordererAddr sdk.AccAddress, price, qty sdk.Dec) {
+		source.ConstructMemOrderBookSide(ctx, market, func(ordererAddr sdk.AccAddress, price, qty, feeRate sdk.Dec) {
 			deposit := types.DepositAmount(opts.IsBuy, price, qty)
 			if escrow != nil {
 				payDenom, _ := types.PayReceiveDenoms(market.BaseDenom, market.QuoteDenom, opts.IsBuy)
 				escrow.Lock(ordererAddr, sdk.NewDecCoinFromDec(payDenom, deposit))
 			}
-			obs.AddOrder(types.NewOrderSourceMemOrder(ordererAddr, opts.IsBuy, price, qty, source))
+			obs.AddOrder(types.NewOrderSourceMemOrder(ordererAddr, opts.IsBuy, price, qty, feeRate, source))
 		}, opts)
 	}
 	if opts.MaxNumPriceLevels > 0 {

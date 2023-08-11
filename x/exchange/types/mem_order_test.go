@@ -23,7 +23,7 @@ func newUserMemOrder(
 func newOrderSourceMemOrder(
 	isBuy bool, price, qty sdk.Dec, source types.OrderSource) *types.MemOrder {
 	return types.NewOrderSourceMemOrder(
-		utils.TestAddress(1), isBuy, price, qty, source)
+		utils.TestAddress(1), isBuy, price, qty, sdk.ZeroDec(), source)
 }
 
 func TestMemOrderBookSide_AddOrder(t *testing.T) {
@@ -119,7 +119,7 @@ func TestGroupMemOrdersByMsgHeight(t *testing.T) {
 			if r.Float64() <= 0.3 { // 30% chance
 				hasOrderSourceOrders = true
 				orders = append(orders, types.NewOrderSourceMemOrder(
-					orderSourceOrdererAddr, true, price, qty, source))
+					orderSourceOrdererAddr, true, price, qty, sdk.ZeroDec(), source))
 			} else {
 				msgHeight := int64(r.Intn(20))
 				order := types.NewOrder(

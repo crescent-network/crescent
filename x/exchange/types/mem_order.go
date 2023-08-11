@@ -32,6 +32,7 @@ type MemOrder struct {
 	typ              MemOrderType
 	order            *Order      // nil for OrderSourceMemOrder
 	source           OrderSource // nil for UserMemOrder
+	feeRate          sdk.Dec     // not used for UserMemOrder
 	ordererAddr      sdk.AccAddress
 	isBuy            bool
 	price            sdk.Dec
@@ -64,9 +65,11 @@ func NewUserMemOrder(order Order) *MemOrder {
 }
 
 func NewOrderSourceMemOrder(
-	ordererAddr sdk.AccAddress, isBuy bool, price, qty sdk.Dec, source OrderSource) *MemOrder {
+	ordererAddr sdk.AccAddress, isBuy bool, price, qty, feeRate sdk.Dec, source OrderSource) *MemOrder {
 	return &MemOrder{
 		typ:              OrderSourceMemOrder,
+		source:           source,
+		feeRate:          feeRate,
 		ordererAddr:      ordererAddr,
 		isBuy:            isBuy,
 		price:            price,
@@ -77,7 +80,6 @@ func NewOrderSourceMemOrder(
 		paid:             utils.ZeroDec,
 		received:         utils.ZeroDec,
 		fee:              utils.ZeroDec,
-		source:           source,
 	}
 }
 

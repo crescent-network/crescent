@@ -34,6 +34,7 @@ var (
 	// DecMulFactor is multiplied to fee and farming rewards growth variables
 	// so that small amount of rewards can be handled correctly.
 	DecMulFactor = sdk.NewDecFromInt(sdk.NewIntWithDecimal(1, 12))
+	PoolFeeRate  = sdk.NewDecWithPrec(-15, 4) // -0.15%
 )
 
 func IsAllowedTickSpacing(tickSpacing uint32) bool {

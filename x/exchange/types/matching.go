@@ -11,28 +11,30 @@ import (
 type MatchingContext struct {
 	baseDenom, quoteDenom      string
 	makerFeeRate, takerFeeRate sdk.Dec
+	halveFees                  bool
 }
 
 func NewMatchingContext(market Market, halveFees bool) *MatchingContext {
-	makerFeeRate := market.MakerFeeRate
-	takerFeeRate := market.TakerFeeRate
-	if halveFees {
-		makerFeeRate = makerFeeRate.QuoInt64(2)
-		takerFeeRate = takerFeeRate.QuoInt64(2)
-	}
 	return &MatchingContext{
 		baseDenom:    market.BaseDenom,
 		quoteDenom:   market.QuoteDenom,
-		makerFeeRate: makerFeeRate,
-		takerFeeRate: takerFeeRate,
+		makerFeeRate: market.MakerFeeRate,
+		takerFeeRate: market.TakerFeeRate,
+		halveFees:    halveFees,
 	}
 }
 
 func (ctx *MatchingContext) feeRate(isMaker bool) sdk.Dec {
+	var feeRate sdk.Dec
 	if isMaker {
-		return ctx.makerFeeRate
+		feeRate = ctx.makerFeeRate
+	} else {
+		feeRate = ctx.takerFeeRate
 	}
-	return ctx.takerFeeRate
+	if ctx.halveFees {
+		return feeRate.QuoInt64(2)
+	}
+	return feeRate
 }
 
 func (ctx *MatchingContext) FillOrder(order *MemOrder, qty, price sdk.Dec, isMaker bool) {
@@ -43,7 +45,7 @@ func (ctx *MatchingContext) FillOrder(order *MemOrder, qty, price sdk.Dec, isMak
 	if order.isMaker != nil && isMaker != *order.isMaker { // sanity check
 		panic("an order's isMaker must be consistent under one matching context")
 	}
-	_, pays, receives, fee := ctx.fillOrder(order.typ, order.isBuy, qty, price, isMaker)
+	_, pays, receives, fee := ctx.fillOrder(order.typ, order.isBuy, qty, price, order.feeRate, isMaker)
 	order.paid = order.paid.Add(pays)
 	order.remainingDeposit = order.remainingDeposit.Sub(pays)
 	order.received = order.received.Add(receives)
@@ -53,7 +55,7 @@ func (ctx *MatchingContext) FillOrder(order *MemOrder, qty, price sdk.Dec, isMak
 	order.isMaker = &isMaker
 }
 
-func (ctx *MatchingContext) fillOrder(orderType MemOrderType, isBuy bool, qty, price sdk.Dec, isMaker bool) (executedQuote, pays, receives, fee sdk.Dec) {
+func (ctx *MatchingContext) fillOrder(orderType MemOrderType, isBuy bool, qty, price, feeRate sdk.Dec, isMaker bool) (executedQuote, pays, receives, fee sdk.Dec) {
 	executedQuote = QuoteAmount(isBuy, price, qty)
 	if isBuy {
 		pays = executedQuote
@@ -62,14 +64,23 @@ func (ctx *MatchingContext) fillOrder(orderType MemOrderType, isBuy bool, qty, p
 		pays = qty
 		receives = executedQuote
 	}
-	negativeMakerFeeRate := ctx.makerFeeRate.IsNegative()
-	if isMaker && negativeMakerFeeRate {
-		fee = ctx.makerFeeRate.MulTruncate(pays) // is negative
+	if orderType == UserMemOrder {
+		feeRate = ctx.feeRate(isMaker)
+	} else if ctx.halveFees {
+		feeRate = feeRate.QuoInt64(2)
+	}
+	if feeRate.IsNegative() && isMaker {
+		if orderType == OrderSourceMemOrder && feeRate.Abs().GT(ctx.takerFeeRate.Abs()) {
+			feeRate = ctx.takerFeeRate.Abs().Neg()
+		}
+		fee = feeRate.MulTruncate(pays)
 		pays = pays.Add(fee)
-	} else if orderType == UserMemOrder {
-		receives, fee = DeductFee(receives, ctx.feeRate(isMaker))
 	} else {
-		fee = utils.ZeroDec
+		if orderType == UserMemOrder {
+			receives, fee = DeductFee(receives, feeRate)
+		} else {
+			fee = utils.ZeroDec
+		}
 	}
 	return
 }
@@ -189,7 +200,7 @@ func (ctx *MatchingContext) ExecuteOrder(
 
 		matchPrice := level.price
 		ctx.FillOrderBookPriceLevel(level, executedQty, matchPrice, true)
-		executedQuote, pays, receives, fee := ctx.fillOrder(UserMemOrder, isBuy, executedQty, matchPrice, false)
+		executedQuote, pays, receives, fee := ctx.fillOrder(UserMemOrder, isBuy, executedQty, matchPrice, sdk.Dec{}, false)
 		res.ExecutedQuantity = res.ExecutedQuantity.Add(executedQty)
 		res.ExecutedQuote = res.ExecutedQuote.Add(executedQuote)
 		res.Paid.Amount = res.Paid.Amount.Add(pays)

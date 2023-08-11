@@ -145,8 +145,8 @@ func (s *KeeperTestSuite) TestQueryPool() {
 			"",
 			func(resp *types.QueryPoolResponse) {
 				s.Require().EqualValues(1, resp.Pool.Id)
-				s.Require().Equal("71751002uatom", resp.Pool.Balance0.String())
-				s.Require().Equal("1390716312uusd", resp.Pool.Balance1.String())
+				s.AssertEqual(utils.ParseCoin("71751002uatom"), resp.Pool.Balance0)
+				s.AssertEqual(utils.ParseCoin("1390716312uusd"), resp.Pool.Balance1)
 			},
 		},
 		{
@@ -281,8 +281,8 @@ func (s *KeeperTestSuite) TestQueryPosition() {
 			"",
 			func(resp *types.QueryPositionResponse) {
 				s.Require().EqualValues(1, resp.Position.Id)
-				s.Require().Equal("4.000000000000000000", resp.Position.LowerPrice.String())
-				s.Require().Equal("6.000000000000000000", resp.Position.UpperPrice.String())
+				s.AssertEqual(utils.ParseDec("4"), resp.Position.LowerPrice)
+				s.AssertEqual(utils.ParseDec("6"), resp.Position.UpperPrice)
 			},
 		},
 		{
@@ -333,8 +333,8 @@ func (s *KeeperTestSuite) TestQueryAddLiquiditySimulation() {
 			},
 			"",
 			func(resp *types.QueryAddLiquiditySimulationResponse) {
-				s.Require().Equal(sdk.NewInt(2224212612), resp.Liquidity)
-				s.Require().Equal("100000000ucre,434003uusd", resp.Amount.String())
+				s.AssertEqual(sdk.NewInt(2224212612), resp.Liquidity)
+				s.AssertEqual(utils.ParseCoins("100000000ucre,434003uusd"), resp.Amount)
 			},
 		},
 		{
@@ -423,7 +423,7 @@ func (s *KeeperTestSuite) TestQueryRemoveLiquiditySimulation() {
 			},
 			"",
 			func(resp *types.QueryRemoveLiquiditySimulationResponse) {
-				s.Require().Equal("631128ucre,1215154uusd", resp.Amount.String())
+				s.AssertEqual(utils.ParseCoins("631128ucre,1215154uusd"), resp.Amount)
 			},
 		},
 		{
@@ -483,8 +483,8 @@ func (s *KeeperTestSuite) TestQueryCollectibleCoins() {
 			},
 			"",
 			func(resp *types.QueryCollectibleCoinsResponse) {
-				s.Require().Equal("24170uatom,62606ucre,945031uusd", resp.Fee.String())
-				s.Require().Equal("8578uatom,8467ucre", resp.FarmingRewards.String())
+				s.AssertEqual(utils.ParseCoins("24170uatom,62606ucre,945031uusd"), resp.Fee)
+				s.AssertEqual(utils.ParseCoins("8578uatom,8467ucre"), resp.FarmingRewards)
 			},
 		},
 		{
@@ -494,8 +494,8 @@ func (s *KeeperTestSuite) TestQueryCollectibleCoins() {
 			},
 			"",
 			func(resp *types.QueryCollectibleCoinsResponse) {
-				s.Require().Equal("62606ucre,365999uusd", resp.Fee.String())
-				s.Require().Equal("8467ucre", resp.FarmingRewards.String())
+				s.AssertEqual(utils.ParseCoins("62606ucre,365999uusd"), resp.Fee)
+				s.AssertEqual(utils.ParseCoins("8467ucre"), resp.FarmingRewards)
 			},
 		},
 		{

@@ -39,7 +39,7 @@ func (k OrderSource) ConstructMemOrderBookSide(
 		if opts.ReachedLimit(price, accQty, accQuote, numPriceLevels) {
 			return true
 		}
-		createOrder(reserveAddr, price, qty)
+		createOrder(reserveAddr, price, qty, types.PoolFeeRate)
 		accQty = accQty.Add(qty)
 		accQuote = accQuote.Add(exchangetypes.QuoteAmount(!opts.IsBuy, price, qty))
 		numPriceLevels++
