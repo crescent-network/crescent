@@ -49,29 +49,26 @@ func ValidatePositionState(pool Pool, poolState PoolState, position Position, am
 	// Position asset check
 	if poolState.CurrentPrice.LTE(lowerPrice) {
 		if len(amt) != 1 || !amt1.IsZero() {
-			fmt.Println(lowerPrice, upperPrice, poolState.CurrentPrice, amt)
 			panic(fmt.Errorf("there must be token0 only: %s", amt))
 		}
 	} else if poolState.CurrentPrice.GTE(upperPrice) {
 		if len(amt) != 1 || !amt0.IsZero() {
-			fmt.Println(lowerPrice, upperPrice, poolState.CurrentPrice, amt)
 			panic(fmt.Errorf("there must be token1 only: %s", amt))
 		}
 	} else {
-		// XXX
-		//if len(amt) != 2 {
-		//	fmt.Println(lowerPrice, upperPrice, poolState.CurrentPrice, amt)
-		//	panic(fmt.Errorf("there must be both token0 and token1: %s", amt))
-		//}
-		//if poolState.CurrentPrice.GTE(utils.DecApproxSqrt(lowerPrice.Mul(upperPrice))) {
-		//	if t := poolState.CurrentPrice.MulInt(amt0); !t.LTE(amt1.ToDec()) {
-		//		panic(fmt.Errorf("must satisfy: %s*%s(=%s) <= %s", poolState.CurrentPrice, amt0, t, amt1))
-		//	}
-		//} else {
-		//	if t := poolState.CurrentPrice.MulInt(amt0); !t.GTE(amt1.ToDec()) {
-		//		panic(fmt.Errorf("must satisfy: %s*%s(=%s) >= %s", poolState.CurrentPrice, amt0, t, amt1))
-		//	}
-		//}
+		if len(amt) != 2 {
+			panic(fmt.Errorf("there must be both token0 and token1: %s", amt))
+		}
+		if poolState.CurrentPrice.GTE(utils.DecApproxSqrt(lowerPrice.Mul(upperPrice))) {
+			if t := poolState.CurrentPrice.MulInt(amt0); !t.LTE(amt1.ToDec()) {
+				panic(fmt.Errorf("must satisfy: %s*%s(=%s) <= %s", poolState.CurrentPrice, amt0, t, amt1))
+			}
+		} else {
+			// XXX
+			//if t := poolState.CurrentPrice.MulInt(amt0); !t.GTE(amt1.ToDec()) {
+			//	panic(fmt.Errorf("must satisfy: %s*%s(=%s) >= %s", poolState.CurrentPrice, amt0, t, amt1))
+			//}
+		}
 	}
 
 	// Tokens check
