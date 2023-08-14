@@ -21,11 +21,16 @@ func (k Keeper) CreatePublicPosition(
 	lowerTick := exchangetypes.TickAtPrice(lowerPrice)
 	upperTick := exchangetypes.TickAtPrice(upperPrice)
 
+	if found := k.LookupPublicPositionByParams(ctx, poolId, lowerTick, upperTick); found {
+		return publicPosition, types.ErrPublicPositionExists
+	}
+
 	publicPositionId := k.GetNextPublicPositionIdWithUpdate(ctx)
 	publicPosition = types.NewPublicPosition(
 		publicPositionId, pool.Id, lowerTick, upperTick, minBidAmt, feeRate)
 	k.SetPublicPosition(ctx, publicPosition)
 	k.SetPublicPositionsByPoolIndex(ctx, publicPosition)
+	k.SetPublicPositionByParamsIndex(ctx, publicPosition)
 
 	if err := ctx.EventManager().EmitTypedEvent(&types.EventPublicPositionCreated{
 		PublicPositionId: publicPosition.Id,
@@ -51,6 +56,10 @@ func (k Keeper) MintShare(
 
 	lowerPrice := exchangetypes.PriceAtTick(publicPosition.LowerTick)
 	upperPrice := exchangetypes.PriceAtTick(publicPosition.UpperTick)
+	if ammPosition, found := k.GetAMMPosition(ctx, publicPosition); found {
+		types.ValidatePublicPositionShareSupply(
+			ammPosition, k.bankKeeper.GetSupply(ctx, types.ShareDenom(publicPositionId)).Amount, types.ShareDenom(publicPositionId))
+	}
 	position, liquidity, amt, err = k.ammKeeper.AddLiquidity(
 		ctx, k.GetModuleAddress(), senderAddr, publicPosition.PoolId, lowerPrice, upperPrice, desiredAmt)
 	if err != nil {
@@ -59,7 +68,6 @@ func (k Keeper) MintShare(
 
 	shareDenom := types.ShareDenom(publicPositionId)
 	shareSupply := k.bankKeeper.GetSupply(ctx, shareDenom).Amount
-	types.ValidatePublicPositionShareSupply(position, shareSupply)
 	mintedShareAmt := types.CalculateMintedShareAmount(
 		liquidity, position.Liquidity.Sub(liquidity), shareSupply)
 	mintedShare = sdk.NewCoin(shareDenom, mintedShareAmt)
@@ -72,7 +80,7 @@ func (k Keeper) MintShare(
 		return
 	}
 	types.ValidatePublicPositionShareSupply(
-		k.MustGetAMMPosition(ctx, publicPosition), shareSupply.Add(mintedShareAmt))
+		k.MustGetAMMPosition(ctx, publicPosition), shareSupply.Add(mintedShareAmt), shareDenom)
 
 	if err = ctx.EventManager().EmitTypedEvent(&types.EventMintShare{
 		Minter:           senderAddr.String(),
@@ -103,7 +111,7 @@ func (k Keeper) BurnShare(
 	position = k.MustGetAMMPosition(ctx, publicPosition)
 
 	shareSupply := k.bankKeeper.GetSupply(ctx, share.Denom).Amount
-	types.ValidatePublicPositionShareSupply(position, shareSupply)
+	types.ValidatePublicPositionShareSupply(position, shareSupply, share.Denom)
 	var prevWinningBidShareAmt sdk.Int
 	auction, found := k.GetPreviousRewardsAuction(ctx, publicPosition)
 	if found && auction.WinningBid != nil {
@@ -123,7 +131,7 @@ func (k Keeper) BurnShare(
 		return
 	}
 	types.ValidatePublicPositionShareSupply(
-		k.MustGetAMMPosition(ctx, publicPosition), shareSupply.Sub(share.Amount))
+		k.MustGetAMMPosition(ctx, publicPosition), shareSupply.Sub(share.Amount), share.Denom)
 
 	if err = ctx.EventManager().EmitTypedEvent(&types.EventBurnShare{
 		Burner:           senderAddr.String(),

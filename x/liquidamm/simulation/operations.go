@@ -170,7 +170,7 @@ func findMsgMintShareParams(
 					sdk.NewCoin(pool.Denom0, spendable.AmountOf(pool.Denom0)),
 					sdk.NewCoin(pool.Denom1, spendable.AmountOf(pool.Denom1))))
 			_, _, _, err := ammK.AddLiquidity(
-				cacheCtx, acc.Address, acc.Address, publicPosition.PoolId, lowerPrice, upperPrice,
+				cacheCtx, k.GetModuleAddress(), acc.Address, publicPosition.PoolId, lowerPrice, upperPrice,
 				desiredAmt)
 			if err != nil {
 				continue

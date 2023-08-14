@@ -9,11 +9,10 @@ import (
 	ammtypes "github.com/crescent-network/crescent/v5/x/amm/types"
 )
 
-func ValidatePublicPositionShareSupply(ammPosition ammtypes.Position, shareSupply sdk.Int) {
-	// TODO: check why other modules change the supply during simulation test
-	//if !ammPosition.Liquidity.GTE(shareSupply) {
-	//	panic(fmt.Errorf("must satisfy: %s >= %s", ammPosition.Liquidity, shareSupply))
-	//}
+func ValidatePublicPositionShareSupply(ammPosition ammtypes.Position, shareSupply sdk.Int, shareDenom string) {
+	if !ammPosition.Liquidity.GTE(shareSupply) {
+		panic(fmt.Errorf("must satisfy: %s >= %s (%s)", ammPosition.Liquidity, shareSupply, shareDenom))
+	}
 }
 
 func ValidateMintShareResult(mintedLiquidity, totalLiquidityBefore, mintedShareAmt, shareSupplyBefore sdk.Int) {
