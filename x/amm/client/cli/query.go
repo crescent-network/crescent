@@ -30,6 +30,7 @@ func GetQueryCmd() *cobra.Command {
 		NewQueryPoolCmd(),
 		NewQueryAllPositionsCmd(),
 		NewQueryPositionCmd(),
+		NewQueryPositionAssetsCmd(),
 		NewQueryAddLiquiditySimulationCmd(),
 		NewQueryRemoveLiquiditySimulationCmd(),
 		NewQueryCollectibleCoinsCmd(),
@@ -238,6 +239,43 @@ $ %s query %s position 1
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 			res, err := queryClient.Position(cmd.Context(), &types.QueryPositionRequest{
+				PositionId: positionId,
+			})
+			if err != nil {
+				return err
+			}
+			return clientCtx.PrintProto(res)
+		},
+	}
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func NewQueryPositionAssetsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "position-assets [position-id]",
+		Args:  cobra.ExactArgs(1),
+		Short: "Query a position's underlying assets",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query a position's underlying assets.
+
+Example:
+$ %s query %s position-assets 1
+`,
+				version.AppName, types.ModuleName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			positionId, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return fmt.Errorf("invalid position id: %w", err)
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.PositionAssets(cmd.Context(), &types.QueryPositionAssetsRequest{
 				PositionId: positionId,
 			})
 			if err != nil {

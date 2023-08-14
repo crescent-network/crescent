@@ -66,6 +66,14 @@ func (s *TestSuite) CreatePublicFarmingPlan(description string, farmingPoolAddr 
 	return plan
 }
 
+func (s *TestSuite) PositionAssets(positionId uint64) (coin0, coin1 sdk.Coin) {
+	s.T().Helper()
+	var err error
+	coin0, coin1, err = s.App.AMMKeeper.PositionAssets(s.Ctx, positionId)
+	s.Require().NoError(err)
+	return
+}
+
 func (s *TestSuite) CollectibleCoins(positionId uint64) (fee, farmingRewards sdk.Coins) {
 	s.T().Helper()
 	var err error
