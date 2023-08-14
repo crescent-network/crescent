@@ -328,6 +328,10 @@ func findMsgCreateMarketParams(r *rand.Rand, accs []simtypes.Account,
 			if denomA != denomB {
 				if _, found := k.GetMarketIdByDenoms(ctx, denomA, denomB); !found {
 					acc, _ = simtypes.RandomAcc(r, accs)
+					spendable := bk.SpendableCoins(ctx, acc.Address)
+					if !spendable.IsAllGTE(k.GetFees(ctx).MarketCreationFee) {
+						continue
+					}
 					msg = types.NewMsgCreateMarket(acc.Address, denomA, denomB)
 					return acc, msg, true
 				}
