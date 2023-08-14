@@ -14,14 +14,12 @@ func (k Keeper) RunValidations(ctx sdk.Context) {
 		pool := k.MustGetPool(ctx, position.PoolId)
 		poolState := k.MustGetPoolState(ctx, position.PoolId)
 
-		cacheCtx, _ := ctx.CacheContext()
-		ownerAddr := position.MustGetOwnerAddress()
-		_, amt, err := k.RemoveLiquidity(cacheCtx, ownerAddr, ownerAddr, position.Id, position.Liquidity)
+		coin0, coin1, err := k.PositionAssets(ctx, position.Id)
 		if err != nil {
 			panic(err)
 		}
 
-		types.ValidatePositionState(pool, poolState, position, amt)
+		types.ValidatePositionState(pool, poolState, position, sdk.NewCoins(coin0, coin1))
 		return false
 	})
 }
