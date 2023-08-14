@@ -23,6 +23,7 @@ import (
 	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 	farmingkeeper "github.com/crescent-network/crescent/v5/x/farming/keeper"
 	farmingtypes "github.com/crescent-network/crescent/v5/x/farming/types"
+	liquidammtypes "github.com/crescent-network/crescent/v5/x/liquidamm/types"
 	liquiditykeeper "github.com/crescent-network/crescent/v5/x/liquidity/keeper"
 	liquiditytypes "github.com/crescent-network/crescent/v5/x/liquidity/types"
 	lpfarmkeeper "github.com/crescent-network/crescent/v5/x/lpfarm/keeper"
@@ -38,6 +39,7 @@ var StoreUpgrades = store.StoreUpgrades{
 		markertypes.StoreKey,
 		exchangetypes.StoreKey,
 		ammtypes.StoreKey,
+		liquidammtypes.StoreKey,
 	},
 }
 
