@@ -117,6 +117,18 @@ func (s *KeeperTestSuite) TestQueryPublicPosition() {
 				s.Require().Equal(uint64(2), publicPosition.PositionId)
 			},
 		},
+		{
+			"no amm position",
+			&types.QueryPublicPositionRequest{
+				PublicPositionId: 2,
+			},
+			"",
+			func(resp *types.QueryPublicPositionResponse) {
+				publicPosition := resp.PublicPosition
+				s.Require().Equal(uint64(2), publicPosition.Id)
+				s.Require().Equal(uint64(0), publicPosition.PositionId)
+			},
+		},
 	} {
 		s.Run(tc.name, func() {
 			resp, err := s.querier.PublicPosition(sdk.WrapSDKContext(s.Ctx), tc.req)
