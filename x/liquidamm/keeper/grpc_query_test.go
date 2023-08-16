@@ -114,6 +114,7 @@ func (s *KeeperTestSuite) TestQueryPublicPosition() {
 					s.App.BankKeeper.GetSupply(s.Ctx, types.ShareDenom(publicPosition.Id)),
 					publicPosition.TotalShare)
 				s.Require().Equal(sdk.NewInt(43138144377), publicPosition.Liquidity)
+				s.Require().Equal(uint64(2), publicPosition.PositionId)
 			},
 		},
 	} {

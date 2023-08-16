@@ -165,5 +165,6 @@ message PublicPositionResponse {
   uint64 last_rewards_auction_id = 8;
   string liquidity               = 9
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  cosmos.base.v1beta1.Coin total_share = 10 [(gogoproto.nullable) = false];
+  uint64                   position_id = 10; // underlying x/amm position's id
+  cosmos.base.v1beta1.Coin total_share = 11 [(gogoproto.nullable) = false];
 }

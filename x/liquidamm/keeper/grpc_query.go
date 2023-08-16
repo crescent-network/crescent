@@ -86,6 +86,7 @@ func (k Querier) PublicPositions(c context.Context, req *types.QueryPublicPositi
 			LastRewardsAuctionId: publicPosition.LastRewardsAuctionId,
 			Liquidity:            position.Liquidity,
 			TotalShare:           k.bankKeeper.GetSupply(ctx, shareDenom),
+			PositionId:           k.MustGetAMMPosition(ctx, publicPosition).Id,
 		})
 		return nil
 	})
@@ -129,6 +130,7 @@ func (k Querier) PublicPosition(c context.Context, req *types.QueryPublicPositio
 		LastRewardsAuctionId: publicPosition.LastRewardsAuctionId,
 		Liquidity:            ammPosition.Liquidity,
 		TotalShare:           k.bankKeeper.GetSupply(ctx, shareDenom),
+		PositionId:           k.MustGetAMMPosition(ctx, publicPosition).Id,
 	}
 	return &types.QueryPublicPositionResponse{PublicPosition: resp}, nil
 }
