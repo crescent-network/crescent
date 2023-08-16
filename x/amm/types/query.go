@@ -17,6 +17,7 @@ func NewPoolResponse(pool Pool, poolState PoolState, balances sdk.Coins) PoolRes
 		CurrentTick:                poolState.CurrentTick,
 		CurrentPrice:               poolState.CurrentPrice,
 		CurrentLiquidity:           poolState.CurrentLiquidity,
+		TotalLiquidity:             poolState.TotalLiquidity,
 		FeeGrowthGlobal:            poolState.FeeGrowthGlobal,
 		FarmingRewardsGrowthGlobal: poolState.FarmingRewardsGrowthGlobal,
 	}
