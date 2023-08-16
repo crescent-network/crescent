@@ -178,6 +178,9 @@ func (ctx *MatchingContext) ExecuteOrder(
 				remainingQty = sdk.MinDec(remainingQty, qty)
 			}
 		}
+		if !remainingQty.IsNil() && !remainingQty.IsPositive() {
+			break
+		}
 
 		executedQty := executableQty
 		if !remainingQty.IsNil() {
