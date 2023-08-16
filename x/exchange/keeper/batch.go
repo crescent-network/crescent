@@ -29,33 +29,29 @@ func (k Keeper) RunBatchMatching(ctx sdk.Context, market types.Market) (err erro
 		PriceLimit: &bestBuyPrice,
 	}, escrow)
 
-	var lastPrice sdk.Dec
 	marketState := k.MustGetMarketState(ctx, market.Id)
-	defer func() {
-		// If there was an error, exit early.
-		if err != nil {
-			return
-		}
-		// If there was no matching, exit early, too.
-		if lastPrice.IsNil() {
-			return
-		}
-
-		// Apply the match results.
-		memOrders := append(append(([]*types.MemOrder)(nil), buyObs.Orders()...), sellObs.Orders()...)
-		if err = k.finalizeMatching(ctx, market, memOrders, escrow); err != nil {
-			return
-		}
-		marketState.LastPrice = &lastPrice
-		marketState.LastMatchingHeight = ctx.BlockHeight()
-		k.SetMarketState(ctx, market.Id, marketState)
-	}()
-
 	mCtx := types.NewMatchingContext(market, false)
+	var (
+		lastPrice sdk.Dec
+		matched   bool
+	)
 	if marketState.LastPrice == nil {
-		lastPrice = mCtx.RunSinglePriceAuction(buyObs, sellObs)
+		lastPrice, matched = mCtx.RunSinglePriceAuction(buyObs, sellObs)
 	} else {
-		lastPrice = mCtx.BatchMatchOrderBookSides(buyObs, sellObs, *marketState.LastPrice)
+		lastPrice, matched = mCtx.BatchMatchOrderBookSides(buyObs, sellObs, *marketState.LastPrice)
 	}
+	// If there was no matching, exit early.
+	if !matched {
+		return
+	}
+
+	// Apply the match results.
+	memOrders := append(append(([]*types.MemOrder)(nil), buyObs.Orders()...), sellObs.Orders()...)
+	if err = k.finalizeMatching(ctx, market, memOrders, escrow); err != nil {
+		return
+	}
+	marketState.LastPrice = &lastPrice
+	marketState.LastMatchingHeight = ctx.BlockHeight()
+	k.SetMarketState(ctx, market.Id, marketState)
 	return nil
 }
