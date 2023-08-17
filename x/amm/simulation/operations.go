@@ -85,7 +85,7 @@ func SimulateMsgCreatePool(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		simAccount, msg, found := findMsgCreatePoolParams(r, accs, ek, k, ctx)
+		simAccount, msg, found := findMsgCreatePoolParams(r, accs, bk, ek, k, ctx)
 		if !found {
 			return simtypes.NoOpMsg(
 				types.ModuleName, types.TypeMsgCreatePool, "unable to create pool"), nil, nil
@@ -196,7 +196,7 @@ func SimulateMsgCollect(
 }
 
 func findMsgCreatePoolParams(r *rand.Rand, accs []simtypes.Account,
-	ek types.ExchangeKeeper, k keeper.Keeper, ctx sdk.Context) (acc simtypes.Account, msg *types.MsgCreatePool, found bool) {
+	bk types.BankKeeper, ek types.ExchangeKeeper, k keeper.Keeper, ctx sdk.Context) (acc simtypes.Account, msg *types.MsgCreatePool, found bool) {
 	var markets []exchangetypes.Market
 	ek.IterateAllMarkets(ctx, func(market exchangetypes.Market) (stop bool) {
 		markets = append(markets, market)
@@ -206,6 +206,10 @@ func findMsgCreatePoolParams(r *rand.Rand, accs []simtypes.Account,
 	for _, market := range markets {
 		if found := k.LookupPoolByMarket(ctx, market.Id); !found {
 			acc, _ = simtypes.RandomAcc(r, accs)
+			spendable := bk.SpendableCoins(ctx, acc.Address)
+			if !spendable.IsAllGTE(k.GetPoolCreationFee(ctx)) {
+				continue
+			}
 			marketState := ek.MustGetMarketState(ctx, market.Id)
 			var price sdk.Dec
 			if marketState.LastPrice != nil {
