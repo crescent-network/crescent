@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	utils "github.com/crescent-network/crescent/v5/types"
@@ -9,6 +11,7 @@ import (
 )
 
 var _ exchangetypes.OrderSource = OrderSource{}
+var threshold = sdk.SmallestDec()
 
 type OrderSource struct {
 	Keeper
@@ -167,7 +170,9 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 					QuoTruncate(poolState.CurrentLiquidity.ToDec()))
 			poolState.FeeGrowthGlobal = poolState.FeeGrowthGlobal.Add(feeGrowth)
 		} else if amtInDiff.IsNegative() { // sanity check
-			panic(amtInDiff)
+			if result.ExecutedQuantity().GT(threshold) {
+				panic(fmt.Sprintf("amtInDiff is negative: %s", amtInDiff))
+			}
 		}
 
 		// TODO: simplify code

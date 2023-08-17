@@ -115,6 +115,14 @@ func (order *MemOrder) Price() sdk.Dec {
 	return order.price
 }
 
+func (order *MemOrder) Quantity() sdk.Dec {
+	return order.qty
+}
+
+func (order *MemOrder) OpenQuantity() sdk.Dec {
+	return order.openQty
+}
+
 func (order *MemOrder) RemainingDeposit() sdk.Dec {
 	return order.remainingDeposit
 }

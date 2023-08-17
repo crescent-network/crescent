@@ -322,3 +322,20 @@ func (s *KeeperTestSuite) TestNumMMOrdersEdgecase() {
 	// and deleted.
 	s.Require().Equal(uint32(1), numMMOrders)
 }
+
+func (s *KeeperTestSuite) TestSwapEdgecase() {
+	market := s.CreateMarket("ucre", "uusd")
+
+	ordererAddr1 := s.FundedAccount(1, enoughCoins)
+
+	for i := 0; i < 10; i++ {
+		buyPrice := utils.ParseDec("5").Sub(utils.ParseDec("0.01").MulInt64(int64(i + 1)))
+		sellPrice := utils.ParseDec("5").Add(utils.ParseDec("0.01").MulInt64(int64(i + 1)))
+		s.PlaceLimitOrder(market.Id, ordererAddr1, true, buyPrice, sdk.NewDec(1_000000), time.Hour)
+		s.PlaceLimitOrder(market.Id, ordererAddr1, false, sellPrice, sdk.NewDec(1_000000), time.Hour)
+	}
+
+	ordererAddr2 := s.FundedAccount(2, utils.ParseCoins("30_000000uusd"))
+	s.SwapExactAmountIn(
+		ordererAddr2, []uint64{market.Id}, utils.ParseDecCoin("30_000000uusd"), utils.ParseDecCoin("0ucre"), false)
+}
