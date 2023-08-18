@@ -97,6 +97,28 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 	}
 
 	max := false
+	extraAmt0, extraAmt1 := utils.ZeroDec, utils.ZeroDec
+
+	accrueFees := func() {
+		extraAmt0Int := extraAmt0.TruncateInt()
+		extraAmt1Int := extraAmt1.TruncateInt()
+		fees := sdk.Coins{}
+		if extraAmt0Int.IsPositive() {
+			fees = fees.Add(sdk.NewCoin(pool.Denom0, extraAmt0Int))
+		}
+		if extraAmt1Int.IsPositive() {
+			fees = fees.Add(sdk.NewCoin(pool.Denom1, extraAmt1Int))
+		}
+		if poolState.CurrentLiquidity.IsPositive() && !fees.IsZero() {
+			accruedRewards = accruedRewards.Add(fees...)
+			feeGrowth := sdk.NewDecCoinsFromCoins(fees...).
+				MulDecTruncate(types.DecMulFactor).
+				QuoDecTruncate(poolState.CurrentLiquidity.ToDec())
+			poolState.FeeGrowthGlobal = poolState.FeeGrowthGlobal.Add(feeGrowth...)
+		}
+		extraAmt0 = utils.ZeroDec
+		extraAmt1 = utils.ZeroDec
+	}
 	for i, result := range results {
 		orderTick := exchangetypes.TickAtPrice(result.Price())
 
@@ -110,6 +132,7 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 					foundTargetTick = true
 					return true
 				}
+				accrueFees()
 				netLiquidity = k.crossTick(ctx, pool.Id, tick, poolState)
 				poolState.CurrentLiquidity = poolState.CurrentLiquidity.Sub(netLiquidity)
 				poolState.CurrentTick = tick
@@ -127,6 +150,7 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 					foundTargetTick = true
 					return true
 				}
+				accrueFees()
 				netLiquidity := k.crossTick(ctx, pool.Id, tick, poolState)
 				poolState.CurrentLiquidity = poolState.CurrentLiquidity.Add(netLiquidity)
 				poolState.CurrentTick = tick
@@ -161,40 +185,36 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 		}
 		amtInDiff := result.Received().Sub(expectedAmtIn)
 		if amtInDiff.IsPositive() {
-			denomIn := pool.DenomIn(isBuy)
-			fee, _ := sdk.NewDecCoinFromDec(denomIn, amtInDiff).TruncateDecimal()
-			accruedRewards = accruedRewards.Add(fee)
-			feeGrowth := sdk.NewDecCoinFromDec(
-				fee.Denom, fee.Amount.ToDec().
-					MulTruncate(types.DecMulFactor).
-					QuoTruncate(poolState.CurrentLiquidity.ToDec()))
-			poolState.FeeGrowthGlobal = poolState.FeeGrowthGlobal.Add(feeGrowth)
+			if isBuy {
+				extraAmt0 = extraAmt0.Add(amtInDiff)
+			} else {
+				extraAmt1 = extraAmt1.Add(amtInDiff)
+			}
 		} else if amtInDiff.IsNegative() { // sanity check
 			if result.ExecutedQuantity().GT(threshold) {
 				panic(fmt.Sprintf("amtInDiff is negative: %s", amtInDiff))
 			}
 		}
 
-		// TODO: simplify code
 		if result.Fee().IsNegative() { // extra fees
-			denomOut := pool.DenomOut(isBuy)
-			fee := sdk.NewCoin(denomOut, result.Fee().Neg().TruncateInt())
-			accruedRewards = accruedRewards.Add(fee)
-			feeGrowth := sdk.NewDecCoinFromDec(
-				fee.Denom, fee.Amount.ToDec().
-					MulTruncate(types.DecMulFactor).
-					QuoTruncate(poolState.CurrentLiquidity.ToDec()))
-			poolState.FeeGrowthGlobal = poolState.FeeGrowthGlobal.Add(feeGrowth)
+			fee := result.Fee().Neg()
+			if isBuy {
+				extraAmt1 = extraAmt1.Add(fee)
+			} else {
+				extraAmt0 = extraAmt0.Add(fee)
+			}
 		}
 
 		nextTick := exchangetypes.TickAtPrice(nextPrice)
 		if !isBuy && max && nextTick == targetTick {
+			accrueFees()
 			netLiquidity := k.crossTick(ctx, pool.Id, targetTick, poolState)
 			poolState.CurrentLiquidity = poolState.CurrentLiquidity.Add(netLiquidity)
 		}
 		poolState.CurrentPrice = nextPrice
 		poolState.CurrentTick = nextTick
 	}
+	accrueFees()
 	k.SetPoolState(ctx, pool.Id, poolState)
 
 	if err := k.bankKeeper.SendCoins(
