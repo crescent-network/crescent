@@ -175,14 +175,20 @@ func (ctx *MatchingContext) ExecuteOrder(
 			remainingQty = qtyLimit.Sub(res.ExecutedQuantity)
 		}
 		if quoteLimit != nil {
-			qty := quoteLimit.Sub(res.ExecutedQuote).QuoTruncate(level.price)
+			remainingQuote := quoteLimit.Sub(res.ExecutedQuote)
+			if remainingQuote.LT(utils.OneDec) {
+				res.FullyExecuted = true
+				break
+			}
+			qty := remainingQuote.QuoTruncate(level.price)
 			if remainingQty.IsNil() {
 				remainingQty = qty
 			} else {
 				remainingQty = sdk.MinDec(remainingQty, qty)
 			}
 		}
-		if !remainingQty.IsPositive() {
+		if remainingQty.LT(utils.OneDec) {
+			res.FullyExecuted = true
 			break
 		}
 

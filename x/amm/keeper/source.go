@@ -11,7 +11,7 @@ import (
 )
 
 var _ exchangetypes.OrderSource = OrderSource{}
-var threshold = sdk.SmallestDec()
+var threshold = sdk.NewDecWithPrec(1, 16) // XXX
 
 type OrderSource struct {
 	Keeper

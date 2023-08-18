@@ -162,7 +162,7 @@ func (k Keeper) placeLimitOrder(
 		openQty = openQty.Sub(res.ExecutedQuantity)
 	}
 
-	if isBatch || openQty.IsPositive() {
+	if isBatch || openQty.GTE(utils.OneDec) {
 		deadline := ctx.BlockTime().Add(lifespan)
 		depositDenom, _ := types.PayReceiveDenoms(market.BaseDenom, market.QuoteDenom, isBuy)
 		depositCoin := sdk.NewCoin(depositDenom, types.DepositAmount(isBuy, price, openQty).Ceil().TruncateInt())
