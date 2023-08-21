@@ -9,22 +9,25 @@ import (
 )
 
 type MatchingContext struct {
-	baseDenom, quoteDenom      string
-	makerFeeRate, takerFeeRate sdk.Dec
+	baseDenom, quoteDenom                           string
+	makerFeeRate, takerFeeRate, orderSourceFeeRatio sdk.Dec
 }
 
 func NewMatchingContext(market Market, halveFees bool) *MatchingContext {
 	makerFeeRate := market.MakerFeeRate
 	takerFeeRate := market.TakerFeeRate
+	orderSourceFeeRatio := market.OrderSourceFeeRatio
 	if halveFees {
 		makerFeeRate = makerFeeRate.QuoInt64(2)
 		takerFeeRate = takerFeeRate.QuoInt64(2)
+		orderSourceFeeRatio = orderSourceFeeRatio.QuoInt64(2)
 	}
 	return &MatchingContext{
-		baseDenom:    market.BaseDenom,
-		quoteDenom:   market.QuoteDenom,
-		makerFeeRate: makerFeeRate,
-		takerFeeRate: takerFeeRate,
+		baseDenom:           market.BaseDenom,
+		quoteDenom:          market.QuoteDenom,
+		makerFeeRate:        makerFeeRate,
+		takerFeeRate:        takerFeeRate,
+		orderSourceFeeRatio: orderSourceFeeRatio,
 	}
 }
 
@@ -62,12 +65,21 @@ func (ctx *MatchingContext) fillOrder(orderType MemOrderType, isBuy bool, qty, p
 		pays = qty
 		receives = executedQuote
 	}
-	negativeMakerFeeRate := ctx.makerFeeRate.IsNegative()
-	if isMaker && negativeMakerFeeRate {
-		fee = ctx.makerFeeRate.MulTruncate(pays) // is negative
+	var feeRate sdk.Dec
+	if orderType == UserMemOrder {
+		feeRate = ctx.feeRate(isMaker)
+	} else {
+		if isMaker {
+			feeRate = ctx.feeRate(false).Mul(ctx.orderSourceFeeRatio).Neg()
+		} else {
+			feeRate = utils.ZeroDec
+		}
+	}
+	if isMaker && feeRate.IsNegative() {
+		fee = feeRate.MulTruncate(pays)
 		pays = pays.Add(fee)
-	} else if orderType == UserMemOrder {
-		receives, fee = DeductFee(receives, ctx.feeRate(isMaker))
+	} else if !feeRate.IsZero() {
+		receives, fee = DeductFee(receives, feeRate)
 	} else {
 		fee = utils.ZeroDec
 	}

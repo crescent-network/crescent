@@ -29,14 +29,17 @@ func (k Keeper) CreateMarket(
 
 	marketId := k.GetNextMarketIdWithUpdate(ctx)
 	market = types.NewMarket(
-		marketId, baseDenom, quoteDenom, fees.DefaultMakerFeeRate, fees.DefaultTakerFeeRate)
+		marketId, baseDenom, quoteDenom,
+		fees.DefaultMakerFeeRate, fees.DefaultTakerFeeRate, fees.DefaultOrderSourceFeeRatio)
 	k.SetMarket(ctx, market)
 	k.SetMarketByDenomsIndex(ctx, market)
 	k.SetMarketState(ctx, market.Id, types.NewMarketState(nil))
 
 	if err = ctx.EventManager().EmitTypedEvent(&types.EventCreateMarket{
-		Creator:  creatorAddr.String(),
-		MarketId: marketId,
+		Creator:    creatorAddr.String(),
+		BaseDenom:  baseDenom,
+		QuoteDenom: quoteDenom,
+		MarketId:   marketId,
 	}); err != nil {
 		return
 	}

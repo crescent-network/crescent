@@ -142,6 +142,7 @@ func UpgradeHandler(
 		liquidityKeeper.DeleteOutdatedRequests(ctx)
 		defaultMakerFeeRate := exchangeParams.Fees.DefaultMakerFeeRate
 		defaultTakerFeeRate := exchangeParams.Fees.DefaultTakerFeeRate
+		defaultOrderSourceFeeRatio := exchangeParams.Fees.DefaultOrderSourceFeeRatio
 		pairs := map[uint64]liquiditytypes.Pair{}
 		var pairIds []uint64 // For ordered map access
 		if err := liquidityKeeper.IterateAllPairs(ctx, func(pair liquiditytypes.Pair) (stop bool, err error) {
@@ -176,7 +177,7 @@ func UpgradeHandler(
 			// corresponding indexes, too.
 			market := exchangetypes.NewMarket(
 				pair.Id, pair.BaseCoinDenom, pair.QuoteCoinDenom,
-				defaultMakerFeeRate, defaultTakerFeeRate)
+				defaultMakerFeeRate, defaultTakerFeeRate, defaultOrderSourceFeeRatio)
 			exchangeKeeper.SetMarket(ctx, market)
 			exchangeKeeper.SetMarketByDenomsIndex(ctx, market)
 			exchangeKeeper.SetMarketState(ctx, market.Id, exchangetypes.NewMarketState(pair.LastPrice))

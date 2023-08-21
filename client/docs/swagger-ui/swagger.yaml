@@ -12119,6 +12119,8 @@ paths:
                         type: string
                       default_taker_fee_rate:
                         type: string
+                      default_order_source_fee_ratio:
+                        type: string
                   max_order_lifespan:
                     type: string
                   max_order_price_ratio:
@@ -20078,6 +20080,8 @@ definitions:
         type: string
       default_taker_fee_rate:
         type: string
+      default_order_source_fee_ratio:
+        type: string
   crescent.exchange.v1beta1.MarketResponse:
     type: object
     properties:
@@ -20199,6 +20203,8 @@ definitions:
           default_maker_fee_rate:
             type: string
           default_taker_fee_rate:
+            type: string
+          default_order_source_fee_ratio:
             type: string
       max_order_lifespan:
         type: string
@@ -20520,6 +20526,8 @@ definitions:
               default_maker_fee_rate:
                 type: string
               default_taker_fee_rate:
+                type: string
+              default_order_source_fee_ratio:
                 type: string
           max_order_lifespan:
             type: string
