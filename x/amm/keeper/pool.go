@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	"sort"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -58,48 +58,42 @@ func (k Keeper) IteratePoolOrders(ctx sdk.Context, pool types.Pool, isBuy bool, 
 		AmountOf(pool.DenomOut(isBuy)).ToDec()
 	orderLiquidity := poolState.CurrentLiquidity
 	currentSqrtPrice := utils.DecApproxSqrt(poolState.CurrentPrice)
-	q, _ := utils.DivMod(poolState.CurrentTick, int32(pool.TickSpacing))
-	var startTick int32
-	if isBuy {
-		startTick = q * int32(pool.TickSpacing)
-	} else {
-		startTick = (q + 1) * int32(pool.TickSpacing)
-	}
 
 	iterCb := func(tick int32, tickInfo types.TickInfo) (stop bool) {
 		if orderLiquidity.IsPositive() {
+			prevTick := poolState.CurrentTick
 			for {
 				if !reserveBalance.IsPositive() {
 					return true
 				}
 
 				var orderTick int32
-				var qty sdk.Dec
 				if isBuy {
-					i := sort.Search(int((startTick-tick)/int32(pool.TickSpacing)), func(i int) bool {
-						orderTick = startTick - int32(i)*int32(pool.TickSpacing)
-						orderPrice := exchangetypes.PriceAtTick(orderTick)
-						orderSqrtPrice := utils.DecApproxSqrt(orderPrice)
-						qty = sdk.MinDec(
-							reserveBalance.QuoTruncate(orderPrice),
-							types.Amount1DeltaDec(currentSqrtPrice, orderSqrtPrice, orderLiquidity).QuoTruncate(orderPrice))
-						return qty.GTE(pool.MinOrderQuantity)
-					})
-					orderTick = startTick - int32(i)*int32(pool.TickSpacing)
+					x := utils.DecApproxSqrt(orderLiquidity.ToDec().Power(2).Add(pool.MinOrderQuantity.MulInt(orderLiquidity).MulTruncate(currentSqrtPrice).MulInt64(4))).
+						Sub(orderLiquidity.ToDec()).QuoTruncate(pool.MinOrderQuantity.MulInt64(2))
+					x = x.Power(2)
+					orderTick = types.AdjustPriceToTickSpacing(x, pool.TickSpacing, false)
+					if orderTick >= prevTick {
+						orderTick = types.AdjustTickToTickSpacing(prevTick, pool.TickSpacing, false) - int32(pool.TickSpacing)
+					}
+					if orderTick < tick {
+						orderTick = tick
+					}
 				} else {
-					i := sort.Search(int((tick-startTick)/int32(pool.TickSpacing)), func(i int) bool {
-						orderTick = startTick + int32(i)*int32(pool.TickSpacing)
-						orderPrice := exchangetypes.PriceAtTick(orderTick)
-						orderSqrtPrice := utils.DecApproxSqrt(orderPrice)
-						qty = sdk.MinDec(
-							reserveBalance,
-							types.Amount0DeltaRoundingDec(currentSqrtPrice, orderSqrtPrice, orderLiquidity, false))
-						return qty.GTE(pool.MinOrderQuantity)
-					})
-					orderTick = startTick + int32(i)*int32(pool.TickSpacing)
+					x := currentSqrtPrice.MulInt(orderLiquidity).
+						QuoRoundUp(orderLiquidity.ToDec().Sub(pool.MinOrderQuantity.Mul(currentSqrtPrice)))
+					x = x.Power(2)
+					orderTick = types.AdjustPriceToTickSpacing(x, pool.TickSpacing, true)
+					if orderTick <= prevTick { // sanity check
+						panic(fmt.Sprintf("%d <= %d", orderTick, prevTick))
+					}
+					if orderTick > tick {
+						orderTick = tick
+					}
 				}
 				orderPrice := exchangetypes.PriceAtTick(orderTick)
 				orderSqrtPrice := utils.DecApproxSqrt(orderPrice)
+				var qty sdk.Dec
 				if isBuy {
 					qty = sdk.MinDec(
 						reserveBalance.QuoTruncate(orderPrice),
@@ -117,13 +111,12 @@ func (k Keeper) IteratePoolOrders(ctx sdk.Context, pool types.Pool, isBuy bool, 
 					currentSqrtPrice = orderSqrtPrice
 				}
 
-				startTick = orderTick
-				if startTick == tick {
+				if orderTick == tick {
 					break
 				}
+				prevTick = orderTick
 			}
 		} else {
-			startTick = tick
 			currentSqrtPrice = types.SqrtPriceAtTick(tick)
 		}
 		if isBuy {

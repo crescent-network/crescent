@@ -299,11 +299,9 @@ func UpgradeHandler(
 						upperPrice = exchangetypes.PriceAtTick(ammtypes.MaxTick)
 					} else { // the pool is a ranged pool
 						lowerPrice = exchangetypes.PriceAtTick(
-							ammtypes.AdjustTickToTickSpacing(
-								exchangetypes.TickAtPrice(*oldPool.MinPrice), defaultTickSpacing, false))
+							ammtypes.AdjustPriceToTickSpacing(*oldPool.MinPrice, defaultTickSpacing, false))
 						upperPrice = exchangetypes.PriceAtTick(
-							ammtypes.AdjustTickToTickSpacing(
-								exchangetypes.TickAtPrice(*oldPool.MaxPrice), defaultTickSpacing, true))
+							ammtypes.AdjustPriceToTickSpacing(*oldPool.MaxPrice, defaultTickSpacing, true))
 					}
 					if _, _, _, err := ammKeeper.AddLiquidity(
 						ctx, addr, addr, newPoolId, lowerPrice, upperPrice, req.WithdrawnCoins); err != nil {

@@ -24,15 +24,18 @@ func AdjustTickToTickSpacing(tick int32, tickSpacing uint32, roundUp bool) int32
 	return q * ts
 }
 
-// NextTick returns the next tick based on tickSpacing.
-// If up is true, then the next up tick is returned.
-// If up is false, then the next down tick is returned.
-func NextTick(tick int32, tickSpacing uint32, up bool) int32 {
-	tick = AdjustTickToTickSpacing(tick, tickSpacing, !up)
-	if up {
-		return tick + int32(tickSpacing)
+func AdjustPriceToTickSpacing(price sdk.Dec, tickSpacing uint32, roundUp bool) int32 {
+	ts := int32(tickSpacing)
+	tick, valid := exchangetypes.ValidateTickPrice(price)
+	if roundUp {
+		q, _ := utils.DivMod(tick+ts-1, ts)
+		if !valid && tick%ts == 0 {
+			q++
+		}
+		return q * ts
 	}
-	return tick - int32(tickSpacing)
+	q, _ := utils.DivMod(tick, ts)
+	return q * ts
 }
 
 func NewTickInfo(grossLiquidity, netLiquidity sdk.Int) TickInfo {

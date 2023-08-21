@@ -13,7 +13,7 @@ import (
 	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
-func TestAdjustPriceToTickSpacing(t *testing.T) {
+func TestAdjustTickToTickSpacing(t *testing.T) {
 	tickSpacing := uint32(10)
 	for i, tc := range []struct {
 		price    sdk.Dec
