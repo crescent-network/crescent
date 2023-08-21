@@ -34,8 +34,7 @@ func BenchmarkPlaceMarketOrder(b *testing.B) {
 	pool, err := app.AMMKeeper.CreatePool(ctx, creatorAddr, market.Id, utils.ParseDec("5"))
 	require.NoError(b, err)
 	_, _, _, err = app.AMMKeeper.AddLiquidity(
-		ctx, creatorAddr, creatorAddr, pool.Id,
-		exchangetypes.PriceAtTick(types.MinTick), exchangetypes.PriceAtTick(types.MaxTick),
+		ctx, creatorAddr, creatorAddr, pool.Id, types.MinPrice, types.MaxPrice,
 		utils.ParseCoins("10_000000ucre,50_000000uusd"))
 	require.NoError(b, err)
 

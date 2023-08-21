@@ -17,6 +17,9 @@ func (k Keeper) RunBatchMatching(ctx sdk.Context, market types.Market) (err erro
 	if !found { // Nothing to match, exit early
 		return nil
 	}
+	if bestBuyPrice.LT(bestSellPrice) {
+		return nil
+	}
 
 	// Construct order book sides with the price limits we obtained previously.
 	escrow := types.NewEscrow(market.MustGetEscrowAddress())

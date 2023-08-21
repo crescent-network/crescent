@@ -31,7 +31,7 @@ func TestLiquidityForAmounts(t *testing.T) {
 		},
 		{
 			utils.ParseDec("1"),
-			exchangetypes.PriceAtTick(types.MinTick), exchangetypes.PriceAtTick(types.MaxTick),
+			types.MinPrice, types.MaxPrice,
 			sdk.NewInt(100_000000), sdk.NewInt(100_000000),
 			sdk.NewInt(100000000),
 		},

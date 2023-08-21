@@ -6,13 +6,20 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+
+	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
 var _ paramstypes.ParamSet = (*Params)(nil)
 
 const (
-	MinTick = -1260000 // 0.000000000000010000
-	MaxTick = 3600000  // 10000000000000000000000000000000000000000
+	MinTick = -1260000
+	MaxTick = 3600000
+)
+
+var (
+	MinPrice = exchangetypes.PriceAtTick(MinTick) // 0.000000000000010000
+	MaxPrice = exchangetypes.PriceAtTick(MaxTick) // 10000000000000000000000000000000000000000
 )
 
 var (
