@@ -10,7 +10,6 @@ import (
 
 	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/amm/types"
-	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
 func TestLiquidityForAmounts(t *testing.T) {
