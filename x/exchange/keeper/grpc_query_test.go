@@ -413,4 +413,8 @@ func (s *KeeperTestSuite) TestFindBestSwapExactAmountInRoutes() {
 	})
 	s.Require().NoError(err)
 	s.AssertEqual(utils.ParseDecCoin("5942989stake"), resp.Output)
+
+	ordererAddr := s.FundedAccount(2, utils.ParseCoins("20000000uusd"))
+	output, _ := s.SwapExactAmountIn(ordererAddr, resp.Routes, utils.ParseDecCoin("20000000uusd"), resp.Output, false)
+	s.AssertEqual(resp.Output, output)
 }

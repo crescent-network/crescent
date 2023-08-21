@@ -70,9 +70,10 @@ func (k Querier) PublicPositions(c context.Context, req *types.QueryPublicPositi
 	var publicPositions []types.PublicPositionResponse
 	pageRes, err := query.Paginate(publicPositionStore, req.Pagination, func(key, value []byte) error {
 		publicPosition := publicPositionGetter(key, value)
-		position, found := k.GetAMMPosition(ctx, publicPosition)
+		ammPosition, found := k.GetAMMPosition(ctx, publicPosition)
 		if !found {
-			position.Liquidity = utils.ZeroInt
+			ammPosition.Liquidity = utils.ZeroInt
+			ammPosition.Id = 0
 		}
 		shareDenom := types.ShareDenom(publicPosition.Id)
 		publicPositions = append(publicPositions, types.PublicPositionResponse{
@@ -84,8 +85,9 @@ func (k Querier) PublicPositions(c context.Context, req *types.QueryPublicPositi
 			MinBidAmount:         publicPosition.MinBidAmount,
 			FeeRate:              publicPosition.FeeRate,
 			LastRewardsAuctionId: publicPosition.LastRewardsAuctionId,
-			Liquidity:            position.Liquidity,
+			Liquidity:            ammPosition.Liquidity,
 			TotalShare:           k.bankKeeper.GetSupply(ctx, shareDenom),
+			PositionId:           ammPosition.Id,
 		})
 		return nil
 	})
@@ -116,6 +118,7 @@ func (k Querier) PublicPosition(c context.Context, req *types.QueryPublicPositio
 	ammPosition, found := k.GetAMMPosition(ctx, publicPosition)
 	if !found { // sanity check
 		ammPosition.Liquidity = utils.ZeroInt
+		ammPosition.Id = 0
 	}
 	shareDenom := types.ShareDenom(publicPosition.Id)
 	resp := types.PublicPositionResponse{
@@ -129,6 +132,7 @@ func (k Querier) PublicPosition(c context.Context, req *types.QueryPublicPositio
 		LastRewardsAuctionId: publicPosition.LastRewardsAuctionId,
 		Liquidity:            ammPosition.Liquidity,
 		TotalShare:           k.bankKeeper.GetSupply(ctx, shareDenom),
+		PositionId:           ammPosition.Id,
 	}
 	return &types.QueryPublicPositionResponse{PublicPosition: resp}, nil
 }

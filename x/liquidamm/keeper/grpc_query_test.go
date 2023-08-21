@@ -114,6 +114,19 @@ func (s *KeeperTestSuite) TestQueryPublicPosition() {
 					s.App.BankKeeper.GetSupply(s.Ctx, types.ShareDenom(publicPosition.Id)),
 					publicPosition.TotalShare)
 				s.Require().Equal(sdk.NewInt(43138144377), publicPosition.Liquidity)
+				s.Require().Equal(uint64(2), publicPosition.PositionId)
+			},
+		},
+		{
+			"no amm position",
+			&types.QueryPublicPositionRequest{
+				PublicPositionId: 2,
+			},
+			"",
+			func(resp *types.QueryPublicPositionResponse) {
+				publicPosition := resp.PublicPosition
+				s.Require().Equal(uint64(2), publicPosition.Id)
+				s.Require().Equal(uint64(0), publicPosition.PositionId)
 			},
 		},
 	} {

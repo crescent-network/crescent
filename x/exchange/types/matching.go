@@ -79,6 +79,10 @@ func (ctx *MatchingContext) FillOrders(orders []*MemOrder, qty, price sdk.Dec, i
 	if totalExecutableQty.LT(qty) { // sanity check
 		panic("executable quantity is less than quantity")
 	}
+	if len(orders) == 1 { // there's only one order
+		ctx.FillOrder(orders[0], qty, price, isMaker)
+		return
+	}
 	// First, distribute quantity evenly.
 	remainingQty := qty
 	for _, order := range orders {
@@ -171,20 +175,26 @@ func (ctx *MatchingContext) ExecuteOrder(
 			remainingQty = qtyLimit.Sub(res.ExecutedQuantity)
 		}
 		if quoteLimit != nil {
-			qty := quoteLimit.Sub(res.ExecutedQuote).QuoTruncate(level.price)
+			remainingQuote := quoteLimit.Sub(res.ExecutedQuote)
+			if remainingQuote.LT(utils.OneDec) {
+				res.FullyExecuted = true
+				break
+			}
+			qty := remainingQuote.QuoTruncate(level.price)
 			if remainingQty.IsNil() {
 				remainingQty = qty
 			} else {
 				remainingQty = sdk.MinDec(remainingQty, qty)
 			}
 		}
+		if remainingQty.LT(utils.OneDec) {
+			res.FullyExecuted = true
+			break
+		}
 
-		executedQty := executableQty
-		if !remainingQty.IsNil() {
-			executedQty = sdk.MinDec(executedQty, remainingQty)
-			if executedQty.Equal(remainingQty) {
-				res.FullyExecuted = true // used in swap
-			}
+		executedQty := sdk.MinDec(executableQty, remainingQty)
+		if executedQty.Equal(remainingQty) {
+			res.FullyExecuted = true // used in swap
 		}
 
 		matchPrice := level.price
@@ -200,7 +210,7 @@ func (ctx *MatchingContext) ExecuteOrder(
 	return
 }
 
-func (ctx *MatchingContext) RunSinglePriceAuction(buyObs, sellObs *MemOrderBookSide) (matchPrice sdk.Dec) {
+func (ctx *MatchingContext) RunSinglePriceAuction(buyObs, sellObs *MemOrderBookSide) (matchPrice sdk.Dec, matched bool) {
 	buyLevelIdx, sellLevelIdx := 0, 0
 	var buyLastPrice, sellLastPrice sdk.Dec
 	for buyLevelIdx < len(buyObs.levels) && sellLevelIdx < len(sellObs.levels) {
@@ -241,11 +251,12 @@ func (ctx *MatchingContext) RunSinglePriceAuction(buyObs, sellObs *MemOrderBookS
 				sellLevelIdx++
 			}
 		}
+		matched = true
 	}
 	return
 }
 
-func (ctx *MatchingContext) BatchMatchOrderBookSides(buyObs, sellObs *MemOrderBookSide, lastPrice sdk.Dec) (newLastPrice sdk.Dec) {
+func (ctx *MatchingContext) BatchMatchOrderBookSides(buyObs, sellObs *MemOrderBookSide, lastPrice sdk.Dec) (newLastPrice sdk.Dec, matched bool) {
 	// Phase 1: Match orders with price below(or equal to) the last price and
 	// price above(or equal to) the last price.
 	// The execution price is the last price.
@@ -264,10 +275,11 @@ func (ctx *MatchingContext) BatchMatchOrderBookSides(buyObs, sellObs *MemOrderBo
 		if sellFull {
 			sellLevelIdx++
 		}
+		matched = true
 	}
 	// If there's no more levels to match, return earlier.
 	if buyLevelIdx >= len(buyObs.levels) || sellLevelIdx >= len(sellObs.levels) {
-		return lastPrice
+		return lastPrice, matched
 	}
 
 	// Phase 2: Match orders in traditional exchange's manner.
@@ -296,8 +308,9 @@ func (ctx *MatchingContext) BatchMatchOrderBookSides(buyObs, sellObs *MemOrderBo
 		if sellFull {
 			sellLevelIdx++
 		}
+		matched = true
 	}
-	return newLastPrice
+	return newLastPrice, matched
 }
 
 func PayReceiveDenoms(baseDenom, quoteDenom string, isBuy bool) (payDenom, receiveDenom string) {

@@ -236,3 +236,18 @@ func (s *KeeperTestSuite) TestPoolMinOrderQuantity() {
 	}, nil)
 	s.Require().Empty(sellObs.Levels())
 }
+
+func (s *KeeperTestSuite) TestSwapEdgecase1() {
+	market, pool := s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("45.821"))
+
+	lpAddr := s.FundedAccount(1, enoughCoins)
+	s.AddLiquidity(
+		lpAddr, pool.Id, utils.ParseDec("1"), utils.ParseDec("100"),
+		utils.ParseCoins("100000000ucre,1000000000uusd"))
+
+	ordererAddr := s.FundedAccount(2, enoughCoins)
+	s.PlaceLimitOrder(
+		market.Id, ordererAddr, false, utils.ParseDec("45.821"), utils.ParseDec("39636169.911478604318885683"), time.Hour)
+
+	s.SwapExactAmountIn(ordererAddr, []uint64{market.Id}, utils.ParseDecCoin("35987097uusd"), utils.ParseDecCoin("0ucre"), false)
+}

@@ -10471,6 +10471,9 @@ paths:
                       format: uint64
                     liquidity:
                       type: string
+                    position_id:
+                      type: string
+                      format: uint64
                     total_share:
                       type: object
                       properties:
@@ -10645,6 +10648,9 @@ paths:
                     format: uint64
                   liquidity:
                     type: string
+                  position_id:
+                    type: string
+                    format: uint64
                   total_share:
                     type: object
                     properties:
@@ -19485,6 +19491,9 @@ definitions:
         format: uint64
       liquidity:
         type: string
+      position_id:
+        type: string
+        format: uint64
       total_share:
         type: object
         properties:
@@ -19619,6 +19628,9 @@ definitions:
             format: uint64
           liquidity:
             type: string
+          position_id:
+            type: string
+            format: uint64
           total_share:
             type: object
             properties:
@@ -19674,6 +19686,9 @@ definitions:
               format: uint64
             liquidity:
               type: string
+            position_id:
+              type: string
+              format: uint64
             total_share:
               type: object
               properties:
