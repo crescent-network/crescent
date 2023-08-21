@@ -200,10 +200,16 @@ func (k Keeper) PlaceMarketOrder(
 	}
 
 	orderId = k.GetNextOrderIdWithUpdate(ctx)
+	var quoteLimit *sdk.Dec
+	if isBuy {
+		quote := k.bankKeeper.SpendableCoins(ctx, ordererAddr).AmountOf(market.QuoteDenom).ToDec()
+		quoteLimit = &quote
+	}
 	res, err = k.executeOrder(
 		ctx, market, ordererAddr, types.MemOrderBookSideOptions{
 			IsBuy:         !isBuy,
 			QuantityLimit: &qty,
+			QuoteLimit:    quoteLimit,
 		}, false, false)
 	if err != nil {
 		return

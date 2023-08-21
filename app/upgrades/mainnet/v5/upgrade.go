@@ -295,8 +295,8 @@ func UpgradeHandler(
 					newPoolId := newPoolIdByPairId[pairIdByOldPoolId[oldPoolId]]
 					var lowerPrice, upperPrice sdk.Dec
 					if oldPool.Type == liquiditytypes.PoolTypeBasic {
-						lowerPrice = exchangetypes.PriceAtTick(ammtypes.MinTick)
-						upperPrice = exchangetypes.PriceAtTick(ammtypes.MaxTick)
+						lowerPrice = ammtypes.MinPrice
+						upperPrice = ammtypes.MaxPrice
 					} else { // the pool is a ranged pool
 						lowerPrice = exchangetypes.PriceAtTick(
 							ammtypes.AdjustPriceToTickSpacing(*oldPool.MinPrice, defaultTickSpacing, false))

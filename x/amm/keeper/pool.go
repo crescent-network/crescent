@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -69,10 +67,13 @@ func (k Keeper) IteratePoolOrders(ctx sdk.Context, pool types.Pool, isBuy bool, 
 
 				var orderTick int32
 				if isBuy {
-					x := utils.DecApproxSqrt(orderLiquidity.ToDec().Power(2).Add(pool.MinOrderQuantity.MulInt(orderLiquidity).MulTruncate(currentSqrtPrice).MulInt64(4))).
-						Sub(orderLiquidity.ToDec()).QuoTruncate(pool.MinOrderQuantity.MulInt64(2))
-					x = x.Power(2)
-					orderTick = types.AdjustPriceToTickSpacing(x, pool.TickSpacing, false)
+					// L^2 + 4 * MinQty * L * sqrt(P_current)
+					intermediate := orderLiquidity.ToDec().Power(2).Add(
+						pool.MinOrderQuantity.MulInt(orderLiquidity).MulTruncate(currentSqrtPrice).MulInt64(4))
+					orderSqrtPrice := utils.DecApproxSqrt(intermediate).Sub(orderLiquidity.ToDec()).
+						QuoTruncate(pool.MinOrderQuantity.MulInt64(2))
+					orderPrice := orderSqrtPrice.Power(2)
+					orderTick = types.AdjustPriceToTickSpacing(orderPrice, pool.TickSpacing, false)
 					if orderTick >= prevTick {
 						orderTick = types.AdjustTickToTickSpacing(prevTick, pool.TickSpacing, false) - int32(pool.TickSpacing)
 					}
@@ -80,12 +81,12 @@ func (k Keeper) IteratePoolOrders(ctx sdk.Context, pool types.Pool, isBuy bool, 
 						orderTick = tick
 					}
 				} else {
-					x := currentSqrtPrice.MulInt(orderLiquidity).
+					orderSqrtPrice := currentSqrtPrice.MulInt(orderLiquidity).
 						QuoRoundUp(orderLiquidity.ToDec().Sub(pool.MinOrderQuantity.Mul(currentSqrtPrice)))
-					x = x.Power(2)
-					orderTick = types.AdjustPriceToTickSpacing(x, pool.TickSpacing, true)
-					if orderTick <= prevTick { // sanity check
-						panic(fmt.Sprintf("%d <= %d", orderTick, prevTick))
+					orderPrice := orderSqrtPrice.Power(2)
+					orderTick = types.AdjustPriceToTickSpacing(orderPrice, pool.TickSpacing, true)
+					if orderTick <= prevTick {
+						orderTick = types.AdjustTickToTickSpacing(prevTick, pool.TickSpacing, true) + int32(pool.TickSpacing)
 					}
 					if orderTick > tick {
 						orderTick = tick
