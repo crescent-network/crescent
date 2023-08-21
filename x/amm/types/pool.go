@@ -26,7 +26,7 @@ func NewPool(id uint64, marketId uint64, denom0, denom1 string, tickSpacing uint
 		ReserveAddress:   DerivePoolReserveAddress(id).String(),
 		RewardsPool:      DerivePoolRewardsPoolAddress(id).String(),
 		TickSpacing:      tickSpacing,
-		MinOrderQuantity: utils.OneDec, // default is 1
+		MinOrderQuantity: DefaultMinOrderQuantity,
 	}
 }
 
