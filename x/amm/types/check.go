@@ -60,14 +60,13 @@ func ValidatePositionState(pool Pool, poolState PoolState, position Position, am
 			panic(fmt.Errorf("there must be both token0 and token1: %s", amt))
 		}
 		if poolState.CurrentPrice.GTE(utils.DecApproxSqrt(lowerPrice.Mul(upperPrice))) {
-			if t := poolState.CurrentPrice.MulInt(amt0); !t.LTE(amt1.ToDec()) {
+			if t := poolState.CurrentPrice.MulInt(amt0.Sub(utils.OneInt)); !t.LTE(amt1.ToDec()) {
 				panic(fmt.Errorf("must satisfy: %s*%s(=%s) <= %s", poolState.CurrentPrice, amt0, t, amt1))
 			}
 		} else {
-			// XXX
-			//if t := poolState.CurrentPrice.MulInt(amt0); !t.GTE(amt1.ToDec()) {
-			//	panic(fmt.Errorf("must satisfy: %s*%s(=%s) >= %s", poolState.CurrentPrice, amt0, t, amt1))
-			//}
+			if t := poolState.CurrentPrice.MulInt(amt0.Add(utils.OneInt)); !t.GTE(amt1.ToDec()) {
+				panic(fmt.Errorf("must satisfy: %s*%s(=%s) >= %s", poolState.CurrentPrice, amt0, t, amt1))
+			}
 		}
 	}
 
