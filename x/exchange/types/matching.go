@@ -79,6 +79,10 @@ func (ctx *MatchingContext) FillOrders(orders []*MemOrder, qty, price sdk.Dec, i
 	if totalExecutableQty.LT(qty) { // sanity check
 		panic("executable quantity is less than quantity")
 	}
+	if len(orders) == 1 { // there's only one order
+		ctx.FillOrder(orders[0], qty, price, isMaker)
+		return
+	}
 	// First, distribute quantity evenly.
 	remainingQty := qty
 	for _, order := range orders {
@@ -171,23 +175,26 @@ func (ctx *MatchingContext) ExecuteOrder(
 			remainingQty = qtyLimit.Sub(res.ExecutedQuantity)
 		}
 		if quoteLimit != nil {
-			qty := quoteLimit.Sub(res.ExecutedQuote).QuoTruncate(level.price)
+			remainingQuote := quoteLimit.Sub(res.ExecutedQuote)
+			if remainingQuote.LT(utils.OneDec) {
+				res.FullyExecuted = true
+				break
+			}
+			qty := remainingQuote.QuoTruncate(level.price)
 			if remainingQty.IsNil() {
 				remainingQty = qty
 			} else {
 				remainingQty = sdk.MinDec(remainingQty, qty)
 			}
 		}
-		if !remainingQty.IsNil() && !remainingQty.IsPositive() {
+		if remainingQty.LT(utils.OneDec) {
+			res.FullyExecuted = true
 			break
 		}
 
-		executedQty := executableQty
-		if !remainingQty.IsNil() {
-			executedQty = sdk.MinDec(executedQty, remainingQty)
-			if executedQty.Equal(remainingQty) {
-				res.FullyExecuted = true // used in swap
-			}
+		executedQty := sdk.MinDec(executableQty, remainingQty)
+		if executedQty.Equal(remainingQty) {
+			res.FullyExecuted = true // used in swap
 		}
 
 		matchPrice := level.price

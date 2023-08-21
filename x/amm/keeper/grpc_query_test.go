@@ -103,8 +103,8 @@ func (s *KeeperTestSuite) TestQueryAllPools() {
 				pool := resp.Pools[0]
 				s.Require().EqualValues(1, pool.MarketId)
 				s.Require().EqualValues(2, pool.Id)
-				s.AssertEqual(utils.ParseCoin("153579797ucre"), pool.Balance0)
-				s.AssertEqual(utils.ParseCoin("257373998uusd"), pool.Balance1)
+				s.AssertEqual(utils.ParseCoin("153579683ucre"), pool.Balance0)
+				s.AssertEqual(utils.ParseCoin("257373895uusd"), pool.Balance1)
 			},
 		},
 		{
@@ -145,8 +145,8 @@ func (s *KeeperTestSuite) TestQueryPool() {
 			"",
 			func(resp *types.QueryPoolResponse) {
 				s.Require().EqualValues(1, resp.Pool.Id)
-				s.Require().Equal("71751002uatom", resp.Pool.Balance0.String())
-				s.Require().Equal("1390716312uusd", resp.Pool.Balance1.String())
+				s.AssertEqual(utils.ParseCoin("71750980uatom"), resp.Pool.Balance0)
+				s.AssertEqual(utils.ParseCoin("1390716293uusd"), resp.Pool.Balance1)
 				s.Require().Equal("cosmos1srphgsfqllr85ndknjme24txux8m0sz0hhpnnksn2339d3a788rsawjx77", resp.Pool.RewardsPool)
 				s.AssertEqual(utils.ParseDec("1"), resp.Pool.MinOrderQuantity)
 				s.AssertEqual(sdk.NewInt(12470981864), resp.Pool.TotalLiquidity)
@@ -486,8 +486,8 @@ func (s *KeeperTestSuite) TestQueryCollectibleCoins() {
 			},
 			"",
 			func(resp *types.QueryCollectibleCoinsResponse) {
-				s.Require().Equal("24170uatom,62606ucre,945031uusd", resp.Fee.String())
-				s.Require().Equal("8578uatom,8467ucre", resp.FarmingRewards.String())
+				s.AssertEqual(utils.ParseCoins("26706uatom,72663ucre,1094754uusd"), resp.Fee)
+				s.AssertEqual(utils.ParseCoins("8578uatom,8467ucre"), resp.FarmingRewards)
 			},
 		},
 		{
@@ -497,8 +497,8 @@ func (s *KeeperTestSuite) TestQueryCollectibleCoins() {
 			},
 			"",
 			func(resp *types.QueryCollectibleCoinsResponse) {
-				s.Require().Equal("62606ucre,365999uusd", resp.Fee.String())
-				s.Require().Equal("8467ucre", resp.FarmingRewards.String())
+				s.AssertEqual(utils.ParseCoins("72663ucre,440713uusd"), resp.Fee)
+				s.AssertEqual(utils.ParseCoins("8467ucre"), resp.FarmingRewards)
 			},
 		},
 		{
