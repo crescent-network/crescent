@@ -11606,6 +11606,12 @@ paths:
                       type: string
                     escrow_address:
                       type: string
+                    maker_fee_rate:
+                      type: string
+                    taker_fee_rate:
+                      type: string
+                    order_source_fee_ratio:
+                      type: string
                     last_price:
                       type: string
                     last_matching_height:
@@ -11740,6 +11746,12 @@ paths:
                   quote_denom:
                     type: string
                   escrow_address:
+                    type: string
+                  maker_fee_rate:
+                    type: string
+                  taker_fee_rate:
+                    type: string
+                  order_source_fee_ratio:
                     type: string
                   last_price:
                     type: string
@@ -20094,6 +20106,12 @@ definitions:
         type: string
       escrow_address:
         type: string
+      maker_fee_rate:
+        type: string
+      taker_fee_rate:
+        type: string
+      order_source_fee_ratio:
+        type: string
       last_price:
         type: string
       last_matching_height:
@@ -20235,6 +20253,12 @@ definitions:
             quote_denom:
               type: string
             escrow_address:
+              type: string
+            maker_fee_rate:
+              type: string
+            taker_fee_rate:
+              type: string
+            order_source_fee_ratio:
               type: string
             last_price:
               type: string
@@ -20421,6 +20445,12 @@ definitions:
           quote_denom:
             type: string
           escrow_address:
+            type: string
+          maker_fee_rate:
+            type: string
+          taker_fee_rate:
+            type: string
+          order_source_fee_ratio:
             type: string
           last_price:
             type: string
