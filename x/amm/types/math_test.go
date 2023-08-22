@@ -10,7 +10,6 @@ import (
 
 	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/amm/types"
-	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
 func TestLiquidityForAmounts(t *testing.T) {
@@ -31,7 +30,7 @@ func TestLiquidityForAmounts(t *testing.T) {
 		},
 		{
 			utils.ParseDec("1"),
-			exchangetypes.PriceAtTick(types.MinTick), exchangetypes.PriceAtTick(types.MaxTick),
+			types.MinPrice, types.MaxPrice,
 			sdk.NewInt(100_000000), sdk.NewInt(100_000000),
 			sdk.NewInt(100000000),
 		},
