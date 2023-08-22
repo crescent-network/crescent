@@ -16,18 +16,16 @@ type MatchingContext struct {
 func NewMatchingContext(market Market, halveFees bool) *MatchingContext {
 	makerFeeRate := market.MakerFeeRate
 	takerFeeRate := market.TakerFeeRate
-	orderSourceFeeRatio := market.OrderSourceFeeRatio
 	if halveFees {
 		makerFeeRate = makerFeeRate.QuoInt64(2)
 		takerFeeRate = takerFeeRate.QuoInt64(2)
-		orderSourceFeeRatio = orderSourceFeeRatio.QuoInt64(2)
 	}
 	return &MatchingContext{
 		baseDenom:           market.BaseDenom,
 		quoteDenom:          market.QuoteDenom,
 		makerFeeRate:        makerFeeRate,
 		takerFeeRate:        takerFeeRate,
-		orderSourceFeeRatio: orderSourceFeeRatio,
+		orderSourceFeeRatio: market.OrderSourceFeeRatio,
 	}
 }
 
@@ -70,7 +68,7 @@ func (ctx *MatchingContext) fillOrder(orderType MemOrderType, isBuy bool, qty, p
 		feeRate = ctx.feeRate(isMaker)
 	} else {
 		if isMaker {
-			feeRate = ctx.feeRate(false).Mul(ctx.orderSourceFeeRatio).Neg()
+			feeRate = ctx.takerFeeRate.Mul(ctx.orderSourceFeeRatio).Neg()
 		} else {
 			feeRate = utils.ZeroDec
 		}
