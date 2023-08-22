@@ -73,10 +73,10 @@ func (ctx *MatchingContext) fillOrder(orderType MemOrderType, isBuy bool, qty, p
 			feeRate = utils.ZeroDec
 		}
 	}
-	if isMaker && feeRate.IsNegative() {
+	if feeRate.IsNegative() {
 		fee = feeRate.MulTruncate(pays)
 		pays = pays.Add(fee)
-	} else if !feeRate.IsZero() {
+	} else if feeRate.IsPositive() {
 		receives, fee = DeductFee(receives, feeRate)
 	} else {
 		fee = utils.ZeroDec
