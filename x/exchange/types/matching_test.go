@@ -12,7 +12,6 @@ import (
 	"github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
-
 func TestPayReceiveDenoms(t *testing.T) {
 	payDenom, receiveDenom := types.PayReceiveDenoms("ucre", "uusd", true)
 	require.Equal(t, "uusd", payDenom)
@@ -23,7 +22,8 @@ func TestPayReceiveDenoms(t *testing.T) {
 }
 
 func TestFillMemOrderBasic(t *testing.T) {
-	market := types.NewMarket(1, "ucre", "uusd", utils.ParseDec("-0.0015"), utils.ParseDec("0.003"))
+	market := types.NewMarket(
+		1, "ucre", "uusd", utils.ParseDec("-0.0015"), utils.ParseDec("0.003"), utils.ParseDec("0.5"))
 	ctx := types.NewMatchingContext(market, false)
 
 	order := newUserMemOrder(1, true, utils.ParseDec("1.3"), sdk.NewDec(10_000000), sdk.NewDec(9_000000))

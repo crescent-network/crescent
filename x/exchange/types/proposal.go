@@ -62,20 +62,22 @@ func (p MarketParameterChangeProposal) String() string {
 `, p.Title, p.Description))
 	for _, change := range p.Changes {
 		b.WriteString(fmt.Sprintf(`    Market Parameter Change:
-      Market Id:      %d
-      Maker Fee Rate: %s
-      Taker Fee Rate: %s
-`, change.MarketId, change.MakerFeeRate, change.TakerFeeRate))
+      Market Id:              %d
+      Maker Fee Rate:         %s
+      Taker Fee Rate:         %s
+      Order Source Fee Ratio: %s
+`, change.MarketId, change.MakerFeeRate, change.TakerFeeRate, change.OrderSourceFeeRatio))
 	}
 	return b.String()
 }
 
 func NewMarketParameterChange(
-	marketId uint64, makerFeeRate, takerFeeRate sdk.Dec) MarketParameterChange {
+	marketId uint64, makerFeeRate, takerFeeRate, orderSourceRatio sdk.Dec) MarketParameterChange {
 	return MarketParameterChange{
-		MarketId:     marketId,
-		MakerFeeRate: makerFeeRate,
-		TakerFeeRate: takerFeeRate,
+		MarketId:            marketId,
+		MakerFeeRate:        makerFeeRate,
+		TakerFeeRate:        takerFeeRate,
+		OrderSourceFeeRatio: orderSourceRatio,
 	}
 }
 
@@ -83,8 +85,10 @@ func (change MarketParameterChange) Validate() error {
 	if change.MarketId == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "market id must not be 0")
 	}
-	if err := ValidateMakerTakerFeeRates(change.MakerFeeRate, change.TakerFeeRate); err != nil {
+	if err := NewFees(
+		nil, change.MakerFeeRate, change.TakerFeeRate, change.OrderSourceFeeRatio).Validate(); err != nil {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+
 	}
 	return nil
 }

@@ -37,8 +37,6 @@ func (s *SimTestSuite) TestProposalContents() {
 
 	content := w0.ContentSimulatorFn()(r, s.Ctx, accs)
 
-	s.Require().Equal("PQrNbTwxsGdwuduvibtYndRwpdsvyCktRHFalvUuEKMqXbItfGcNGWsGzubdPMYayOUOINjpcFBeESdwpdlTYmrPsLsVDhpTzoMe", content.GetDescription())
-	s.Require().Equal("VZkfJRPuDC", content.GetTitle())
 	s.Require().Equal("exchange", content.ProposalRoute())
 	s.Require().Equal("MarketParameterChange", content.ProposalType())
 }

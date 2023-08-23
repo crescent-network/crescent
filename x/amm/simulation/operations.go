@@ -211,7 +211,7 @@ func findMsgCreatePoolParams(r *rand.Rand, accs []simtypes.Account,
 			if marketState.LastPrice != nil {
 				price = *marketState.LastPrice
 			} else {
-				price = utils.RandomDec(r, utils.ParseDec("0.05"), utils.ParseDec("500"))
+				price = utils.RandomDec(r, utils.ParseDec("0.1"), utils.ParseDec("10"))
 			}
 			msg = types.NewMsgCreatePool(acc.Address, market.Id, price)
 			return acc, msg, true
@@ -235,40 +235,48 @@ func findMsgAddLiquidityParams(
 		for _, pool := range pools {
 			if spendable.AmountOf(pool.Denom0).GT(sdk.NewInt(100_000000)) &&
 				spendable.AmountOf(pool.Denom1).GT(sdk.NewInt(100_000000)) {
-				ts := int32(pool.TickSpacing)
 				poolState := k.MustGetPoolState(ctx, pool.Id)
 				var lowerPrice, upperPrice sdk.Dec
 				if r.Float64() <= 0.2 {
 					lowerPrice = types.MinPrice
 				} else if r.Float64() <= 0.5 {
 					lowerPrice = exchangetypes.PriceAtTick(
-						exchangetypes.TickAtPrice(
-							utils.RandomDec(r,
+						types.AdjustPriceToTickSpacing(
+							utils.RandomDec(
+								r,
 								poolState.CurrentPrice.Mul(utils.ParseDec("0.5")),
-								poolState.CurrentPrice)) / ts * ts)
+								poolState.CurrentPrice),
+							pool.TickSpacing, false))
 				} else {
 					lowerPrice = exchangetypes.PriceAtTick(
-						exchangetypes.TickAtPrice(
-							utils.RandomDec(r,
+						types.AdjustPriceToTickSpacing(
+							utils.RandomDec(
+								r,
 								poolState.CurrentPrice,
-								poolState.CurrentPrice.Mul(utils.ParseDec("1.5")))) / ts * ts)
+								poolState.CurrentPrice.Mul(utils.ParseDec("1.5"))),
+							pool.TickSpacing, false))
 				}
 				if r.Float64() <= 0.2 {
 					upperPrice = types.MaxPrice
 				} else {
 					upperPrice = exchangetypes.PriceAtTick(
-						exchangetypes.TickAtPrice(
-							utils.RandomDec(r,
+						types.AdjustPriceToTickSpacing(
+							utils.RandomDec(
+								r,
 								lowerPrice.Mul(utils.ParseDec("1.01")),
-								poolState.CurrentPrice.Mul(utils.ParseDec("3")))) / ts * ts)
+								poolState.CurrentPrice.Mul(utils.ParseDec("3"))),
+							pool.TickSpacing, true))
 				}
-				desiredAmt := sdk.NewCoins(
-					sdk.NewCoin(
-						pool.Denom0,
-						utils.RandomInt(r, sdk.NewInt(100), sdk.NewInt(100_000000))),
-					sdk.NewCoin(
-						pool.Denom1,
-						utils.RandomInt(r, sdk.NewInt(100), sdk.NewInt(100_000000))))
+				liquidity := utils.RandomInt(r, sdk.NewInt(10000), sdk.NewInt(100_000000))
+				amt0, amt1 := types.AmountsForLiquidity(
+					utils.DecApproxSqrt(poolState.CurrentPrice),
+					utils.DecApproxSqrt(lowerPrice),
+					utils.DecApproxSqrt(upperPrice),
+					liquidity)
+				desiredAmt := sdk.NewCoins(sdk.NewCoin(pool.Denom0, amt0), sdk.NewCoin(pool.Denom1, amt1))
+				if !spendable.IsAllGTE(desiredAmt) {
+					continue
+				}
 				msg = types.NewMsgAddLiquidity(
 					acc.Address, pool.Id, lowerPrice, upperPrice, desiredAmt)
 				return acc, msg, true

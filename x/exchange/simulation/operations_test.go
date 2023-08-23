@@ -91,11 +91,11 @@ func (s *SimTestSuite) TestSimulateMsgPlaceLimitOrder() {
 
 	s.Require().Equal(types.TypeMsgPlaceLimitOrder, msg.Type())
 	s.Require().Equal(types.ModuleName, msg.Route())
-	s.Require().Equal("cosmos1r6vgn9cwpvja7448fg0fgglj63rcs6y84p8egu", msg.Sender)
+	s.Require().Equal("cosmos1se3z6fgrp0hy7feh2dsntqjwnfy8myg3l6h99r", msg.Sender)
 	s.Require().EqualValues(1, msg.MarketId)
 	s.Require().Equal(false, msg.IsBuy)
-	s.AssertEqual(utils.ParseDec("157.11"), msg.Price)
-	s.AssertEqual(utils.ParseDec("75503769"), msg.Quantity)
+	s.AssertEqual(utils.ParseDec("7.6119"), msg.Price)
+	s.AssertEqual(utils.ParseDec("60659250"), msg.Quantity)
 	s.Require().Equal(2*time.Hour, msg.Lifespan)
 }
 
@@ -117,11 +117,11 @@ func (s *SimTestSuite) TestSimulateMsgPlaceMMLimitOrder() {
 
 	s.Require().Equal(types.TypeMsgPlaceMMLimitOrder, msg.Type())
 	s.Require().Equal(types.ModuleName, msg.Route())
-	s.Require().Equal("cosmos1r6vgn9cwpvja7448fg0fgglj63rcs6y84p8egu", msg.Sender)
+	s.Require().Equal("cosmos1se3z6fgrp0hy7feh2dsntqjwnfy8myg3l6h99r", msg.Sender)
 	s.Require().EqualValues(1, msg.MarketId)
 	s.Require().Equal(false, msg.IsBuy)
-	s.AssertEqual(utils.ParseDec("157.11"), msg.Price)
-	s.AssertEqual(utils.ParseDec("75503769"), msg.Quantity)
+	s.AssertEqual(utils.ParseDec("7.6119"), msg.Price)
+	s.AssertEqual(utils.ParseDec("60659250"), msg.Quantity)
 	s.Require().Equal(2*time.Hour, msg.Lifespan)
 }
 

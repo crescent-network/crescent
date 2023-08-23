@@ -22,9 +22,10 @@ var (
 
 var (
 	DefaultFees = Fees{
-		MarketCreationFee:   sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000)),
-		DefaultMakerFeeRate: sdk.NewDecWithPrec(-15, 4), // -0.15%
-		DefaultTakerFeeRate: sdk.NewDecWithPrec(3, 3),   // 0.3%
+		MarketCreationFee:          sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000)),
+		DefaultMakerFeeRate:        sdk.NewDecWithPrec(-15, 4), // -0.15%
+		DefaultTakerFeeRate:        sdk.NewDecWithPrec(3, 3),   // 0.3%
+		DefaultOrderSourceFeeRatio: sdk.NewDecWithPrec(5, 1),   // 50%
 	}
 	DefaultMaxOrderLifespan          = 24 * time.Hour
 	DefaultMaxOrderPriceRatio        = sdk.NewDecWithPrec(1, 1) // 10%
@@ -84,17 +85,6 @@ func (params Params) Validate() error {
 		if err := field.validateFunc(field.val); err != nil {
 			return err
 		}
-	}
-	return nil
-}
-
-func (fees Fees) Validate() error {
-	if err := fees.MarketCreationFee.Validate(); err != nil {
-		return fmt.Errorf("invalid market creation fee: %w", err)
-	}
-	if err := ValidateMakerTakerFeeRates(
-		fees.DefaultMakerFeeRate, fees.DefaultTakerFeeRate); err != nil {
-		return err
 	}
 	return nil
 }
