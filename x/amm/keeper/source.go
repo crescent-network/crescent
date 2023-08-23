@@ -59,6 +59,7 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 	reserveAddr := pool.MustGetReserveAddress()
 	poolState := k.MustGetPoolState(ctx, pool.Id)
 	accruedRewards := sdk.NewCoins()
+	initialPrice := poolState.CurrentPrice
 
 	// TODO: check if results are sorted?
 	isBuy := results[0].IsBuy()
@@ -223,5 +224,5 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 	}
 
 	types.ValidatePoolPriceAfterMatching(
-		isBuy, pool.TickSpacing, results[len(results)-1].Price(), poolState.CurrentPrice)
+		isBuy, results[len(results)-1].Price(), poolState.CurrentPrice, initialPrice)
 }

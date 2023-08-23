@@ -21,16 +21,14 @@ func ValidateAddLiquidityResult(
 	}
 }
 
-func ValidatePoolPriceAfterMatching(isBuy bool, tickSpacing uint32, lastPrice, currentPrice sdk.Dec) {
+func ValidatePoolPriceAfterMatching(isBuy bool, lastPrice, currentPrice, initialPrice sdk.Dec) {
 	if isBuy { // price decreased
-		priceAbove := exchangetypes.PriceAtTick(exchangetypes.TickAtPrice(lastPrice) + int32(tickSpacing))
-		if !(lastPrice.LTE(currentPrice) && currentPrice.LTE(priceAbove)) {
-			panic(fmt.Errorf("must satisfy: %s <= %s <= %s", lastPrice, currentPrice, priceAbove))
+		if !(lastPrice.LTE(currentPrice) && currentPrice.LTE(initialPrice)) {
+			panic(fmt.Errorf("must satisfy: %s <= %s <= %s", lastPrice, currentPrice, initialPrice))
 		}
 	} else {
-		priceBelow := exchangetypes.PriceAtTick(exchangetypes.TickAtPrice(lastPrice) - int32(tickSpacing))
-		if !(priceBelow.LTE(currentPrice) && currentPrice.LTE(lastPrice)) {
-			panic(fmt.Errorf("must satisfy: %s <= %s <= %s", priceBelow, currentPrice, lastPrice))
+		if !(initialPrice.LTE(currentPrice) && currentPrice.LTE(lastPrice)) {
+			panic(fmt.Errorf("must satisfy: %s <= %s <= %s", initialPrice, currentPrice, lastPrice))
 		}
 	}
 }
