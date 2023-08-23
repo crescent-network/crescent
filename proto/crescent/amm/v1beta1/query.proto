@@ -182,16 +182,18 @@ message PoolResponse {
   uint32                   tick_spacing       = 7;
   string                   min_order_quantity = 8
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
-  int32  current_tick  = 9;
-  string current_price = 10
+  string min_order_quote = 9
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
-  string current_liquidity = 11
+  int32  current_tick  = 10;
+  string current_price = 11
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string current_liquidity = 12
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  string total_liquidity = 12
+  string total_liquidity = 13
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  repeated cosmos.base.v1beta1.DecCoin fee_growth_global = 13
+  repeated cosmos.base.v1beta1.DecCoin fee_growth_global = 14
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
-  repeated cosmos.base.v1beta1.DecCoin farming_rewards_growth_global = 14
+  repeated cosmos.base.v1beta1.DecCoin farming_rewards_growth_global = 15
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
 }
 

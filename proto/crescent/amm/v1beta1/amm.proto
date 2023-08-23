@@ -18,6 +18,8 @@ message Pool {
   uint32 tick_spacing       = 7;
   string min_order_quantity = 8
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string min_order_quote = 9
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 }
 
 message PoolState {

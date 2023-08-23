@@ -27,6 +27,7 @@ func NewPool(id uint64, marketId uint64, denom0, denom1 string, tickSpacing uint
 		RewardsPool:      DerivePoolRewardsPoolAddress(id).String(),
 		TickSpacing:      tickSpacing,
 		MinOrderQuantity: DefaultMinOrderQuantity,
+		MinOrderQuote:    DefaultMinOrderQuote,
 	}
 }
 
@@ -79,6 +80,9 @@ func (pool Pool) Validate() error {
 	}
 	if pool.MinOrderQuantity.IsNegative() {
 		return fmt.Errorf("min order quantity must not be negative: %s", pool.MinOrderQuantity)
+	}
+	if pool.MinOrderQuote.IsNegative() {
+		return fmt.Errorf("min order quote must not be negative: %s", pool.MinOrderQuote)
 	}
 	return nil
 }

@@ -25,10 +25,15 @@ func HandlePoolParameterChangeProposal(ctx sdk.Context, k Keeper, p *types.PoolP
 		if change.MinOrderQuantity != nil {
 			pool.MinOrderQuantity = *change.MinOrderQuantity
 		}
+		if change.MinOrderQuote != nil {
+			pool.MinOrderQuote = *change.MinOrderQuote
+		}
 		k.SetPool(ctx, pool)
 		if err := ctx.EventManager().EmitTypedEvent(&types.EventPoolParameterChanged{
-			PoolId:      change.PoolId,
-			TickSpacing: change.TickSpacing,
+			PoolId:           change.PoolId,
+			TickSpacing:      change.TickSpacing,
+			MinOrderQuantity: change.MinOrderQuantity,
+			MinOrderQuote:    change.MinOrderQuote,
 		}); err != nil {
 			return err
 		}

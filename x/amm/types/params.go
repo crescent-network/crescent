@@ -42,6 +42,7 @@ var (
 	// so that small amount of rewards can be handled correctly.
 	DecMulFactor            = sdk.NewDecFromInt(sdk.NewIntWithDecimal(1, 12))
 	DefaultMinOrderQuantity = sdk.NewDec(1)
+	DefaultMinOrderQuote    = sdk.NewDec(1)
 )
 
 func IsAllowedTickSpacing(tickSpacing uint32) bool {
