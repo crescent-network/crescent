@@ -142,6 +142,7 @@ func UpgradeHandler(
 		liquidityKeeper.DeleteOutdatedRequests(ctx)
 		defaultMakerFeeRate := exchangeParams.Fees.DefaultMakerFeeRate
 		defaultTakerFeeRate := exchangeParams.Fees.DefaultTakerFeeRate
+		defaultOrderSourceFeeRatio := exchangeParams.Fees.DefaultOrderSourceFeeRatio
 		pairs := map[uint64]liquiditytypes.Pair{}
 		var pairIds []uint64 // For ordered map access
 		if err := liquidityKeeper.IterateAllPairs(ctx, func(pair liquiditytypes.Pair) (stop bool, err error) {
@@ -176,7 +177,7 @@ func UpgradeHandler(
 			// corresponding indexes, too.
 			market := exchangetypes.NewMarket(
 				pair.Id, pair.BaseCoinDenom, pair.QuoteCoinDenom,
-				defaultMakerFeeRate, defaultTakerFeeRate)
+				defaultMakerFeeRate, defaultTakerFeeRate, defaultOrderSourceFeeRatio)
 			exchangeKeeper.SetMarket(ctx, market)
 			exchangeKeeper.SetMarketByDenomsIndex(ctx, market)
 			exchangeKeeper.SetMarketState(ctx, market.Id, exchangetypes.NewMarketState(pair.LastPrice))
@@ -295,15 +296,13 @@ func UpgradeHandler(
 					newPoolId := newPoolIdByPairId[pairIdByOldPoolId[oldPoolId]]
 					var lowerPrice, upperPrice sdk.Dec
 					if oldPool.Type == liquiditytypes.PoolTypeBasic {
-						lowerPrice = exchangetypes.PriceAtTick(ammtypes.MinTick)
-						upperPrice = exchangetypes.PriceAtTick(ammtypes.MaxTick)
+						lowerPrice = ammtypes.MinPrice
+						upperPrice = ammtypes.MaxPrice
 					} else { // the pool is a ranged pool
 						lowerPrice = exchangetypes.PriceAtTick(
-							ammtypes.AdjustTickToTickSpacing(
-								exchangetypes.TickAtPrice(*oldPool.MinPrice), defaultTickSpacing, false))
+							ammtypes.AdjustPriceToTickSpacing(*oldPool.MinPrice, defaultTickSpacing, false))
 						upperPrice = exchangetypes.PriceAtTick(
-							ammtypes.AdjustTickToTickSpacing(
-								exchangetypes.TickAtPrice(*oldPool.MaxPrice), defaultTickSpacing, true))
+							ammtypes.AdjustPriceToTickSpacing(*oldPool.MaxPrice, defaultTickSpacing, true))
 					}
 					if _, _, _, err := ammKeeper.AddLiquidity(
 						ctx, addr, addr, newPoolId, lowerPrice, upperPrice, req.WithdrawnCoins); err != nil {

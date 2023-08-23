@@ -363,7 +363,7 @@ func findMsgPlaceLimitOrderParams(
 				price = types.PriceAtTick(
 					types.TickAtPrice(*marketState.LastPrice) + int32(r.Intn(1000)) - 500)
 			} else {
-				price = utils.RandomDec(r, utils.ParseDec("0.05"), utils.ParseDec("500"))
+				price = utils.RandomDec(r, utils.ParseDec("0.1"), utils.ParseDec("10"))
 				price = types.PriceAtTick(types.TickAtPrice(price))
 			}
 			if r.Float64() <= 0.5 { // 50% chance to sell
@@ -412,7 +412,7 @@ func findMsgPlaceMMLimitOrderParams(
 				price = types.PriceAtTick(
 					types.TickAtPrice(*marketState.LastPrice) + int32(r.Intn(1000)) - 500)
 			} else {
-				price = utils.RandomDec(r, utils.ParseDec("0.05"), utils.ParseDec("500"))
+				price = utils.RandomDec(r, utils.ParseDec("0.1"), utils.ParseDec("10"))
 				price = types.PriceAtTick(types.TickAtPrice(price))
 			}
 			if r.Float64() <= 0.5 { // 50% chance to sell

@@ -28,10 +28,12 @@ func GenFees(r *rand.Rand) types.Fees {
 		// negative maker fee rate
 		makerFeeRate = utils.RandomDec(r, takerFeeRate.Neg(), utils.ParseDec("0"))
 	}
+	orderSourceFeeRatio := sdk.NewDecWithPrec(r.Int63n(101), 2) // 0%, 1%, 2%, ..., 99%, 100%
 	return types.Fees{
-		MarketCreationFee:   types.DefaultFees.MarketCreationFee,
-		DefaultMakerFeeRate: makerFeeRate,
-		DefaultTakerFeeRate: takerFeeRate,
+		MarketCreationFee:          types.DefaultFees.MarketCreationFee,
+		DefaultMakerFeeRate:        makerFeeRate,
+		DefaultTakerFeeRate:        takerFeeRate,
+		DefaultOrderSourceFeeRatio: orderSourceFeeRatio,
 	}
 }
 

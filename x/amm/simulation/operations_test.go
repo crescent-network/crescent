@@ -83,7 +83,7 @@ func (s *SimTestSuite) TestSimulateMsgCreatePool() {
 	s.Require().Equal(types.ModuleName, msg.Route())
 	s.Require().Equal("cosmos1dj7jl7a84qaj7566qaa4uxj7d28vvr304204ha", msg.Sender)
 	s.Require().EqualValues(5, msg.MarketId)
-	s.Require().Equal("254.938225934828752998", msg.Price.String())
+	s.AssertEqual(utils.ParseDec("6.585228379443441869"), msg.Price)
 }
 
 func (s *SimTestSuite) TestSimulateMsgAddLiquidity() {
@@ -120,9 +120,9 @@ func (s *SimTestSuite) TestSimulateMsgAddLiquidity() {
 	s.Require().Equal(types.ModuleName, msg.Route())
 	s.Require().Equal("cosmos1ea66m0hr892xhmtjzq7s76vq8cdcmnqgewvtsy", msg.Sender)
 	s.Require().EqualValues(2, msg.PoolId)
-	s.Require().Equal("144.000000000000000000", msg.LowerPrice.String())
-	s.Require().Equal("584.000000000000000000", msg.UpperPrice.String())
-	s.Require().Equal("27329649denom1,57336327denom3", msg.DesiredAmount.String())
+	s.AssertEqual(utils.ParseDec("144"), msg.LowerPrice)
+	s.AssertEqual(utils.ParseDec("584.5"), msg.UpperPrice)
+	s.AssertEqual(utils.ParseCoins("569259denom1,111578257denom3"), msg.DesiredAmount)
 }
 
 func (s *SimTestSuite) TestSimulateMsgRemoveLiquidity() {

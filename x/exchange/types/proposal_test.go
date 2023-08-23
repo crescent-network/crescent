@@ -13,8 +13,8 @@ import (
 func ExampleMarketParameterChange_String() {
 	p := types.NewMarketParameterChangeProposal(
 		"Title", "Description", []types.MarketParameterChange{
-			types.NewMarketParameterChange(1, utils.ParseDec("0.001"), utils.ParseDec("0.002")),
-			types.NewMarketParameterChange(2, utils.ParseDec("-0.0015"), utils.ParseDec("0.003")),
+			types.NewMarketParameterChange(1, utils.ParseDec("0.001"), utils.ParseDec("0.002"), utils.ParseDec("0.5")),
+			types.NewMarketParameterChange(2, utils.ParseDec("-0.0015"), utils.ParseDec("0.003"), utils.ParseDec("0.5")),
 		})
 	fmt.Println(p.String())
 
@@ -24,13 +24,15 @@ func ExampleMarketParameterChange_String() {
 	//   Description: Description
 	//   Changes:
 	//     Market Parameter Change:
-	//       Market Id:      1
-	//       Maker Fee Rate: 0.001000000000000000
-	//       Taker Fee Rate: 0.002000000000000000
+	//       Market Id:              1
+	//       Maker Fee Rate:         0.001000000000000000
+	//       Taker Fee Rate:         0.002000000000000000
+	//       Order Source Fee Ratio: 0.500000000000000000
 	//     Market Parameter Change:
-	//       Market Id:      2
-	//       Maker Fee Rate: -0.001500000000000000
-	//       Taker Fee Rate: 0.003000000000000000
+	//       Market Id:              2
+	//       Maker Fee Rate:         -0.001500000000000000
+	//       Taker Fee Rate:         0.003000000000000000
+	//       Order Source Fee Ratio: 0.500000000000000000
 }
 
 func TestMarketParameterChangeProposal_ValidateBasic(t *testing.T) {
@@ -63,7 +65,7 @@ func TestMarketParameterChangeProposal_ValidateBasic(t *testing.T) {
 			p := types.NewMarketParameterChangeProposal(
 				"Title", "Description", []types.MarketParameterChange{
 					types.NewMarketParameterChange(
-						1, utils.ParseDec("0.001"), utils.ParseDec("0.003")),
+						1, utils.ParseDec("0.001"), utils.ParseDec("0.003"), utils.ParseDec("0.5")),
 				})
 			require.Equal(t, types.ProposalTypeMarketParameterChange, p.ProposalType())
 			tc.malleate(p)
@@ -86,55 +88,67 @@ func TestMarketParameterChange_Validate(t *testing.T) {
 		{
 			"happy case",
 			types.NewMarketParameterChange(
-				1, utils.ParseDec("0.001"), utils.ParseDec("0.003")),
+				1, utils.ParseDec("0.001"), utils.ParseDec("0.003"), utils.ParseDec("0.5")),
 			"",
 		},
 		{
 			"invalid market id",
 			types.NewMarketParameterChange(
-				0, utils.ParseDec("0.001"), utils.ParseDec("0.003")),
+				0, utils.ParseDec("0.001"), utils.ParseDec("0.003"), utils.ParseDec("0.5")),
 			"market id must not be 0: invalid request",
 		},
 		{
 			"too high maker fee rate",
 			types.NewMarketParameterChange(
-				1, utils.ParseDec("1.01"), utils.ParseDec("0.003")),
+				1, utils.ParseDec("1.01"), utils.ParseDec("0.003"), utils.ParseDec("0.5")),
 			"maker fee rate must be in range [-0.003000000000000000, 1]: 1.010000000000000000: invalid request",
 		},
 		{
 			"too low maker fee rate",
 			types.NewMarketParameterChange(
-				1, utils.ParseDec("-1.01"), utils.ParseDec("0.003")),
+				1, utils.ParseDec("-1.01"), utils.ParseDec("0.003"), utils.ParseDec("0.5")),
 			"maker fee rate must be in range [-0.003000000000000000, 1]: -1.010000000000000000: invalid request",
 		},
 		{
 			"negative taker fee rate",
 			types.NewMarketParameterChange(
-				1, utils.ParseDec("0.001"), utils.ParseDec("-0.001")),
+				1, utils.ParseDec("0.001"), utils.ParseDec("-0.001"), utils.ParseDec("0.5")),
 			"taker fee rate must be in range [0, 1]: -0.001000000000000000: invalid request",
 		},
 		{
 			"too high taker fee rate",
 			types.NewMarketParameterChange(
-				1, utils.ParseDec("0.001"), utils.ParseDec("1.01")),
+				1, utils.ParseDec("0.001"), utils.ParseDec("1.01"), utils.ParseDec("0.5")),
 			"taker fee rate must be in range [0, 1]: 1.010000000000000000: invalid request",
+		},
+		{
+			"too high order source fee ratio",
+			types.NewMarketParameterChange(
+				1, utils.ParseDec("0.001"), utils.ParseDec("0.003"), utils.ParseDec("1.1")),
+			"order source fee ratio must be in range [0, 1]: 1.100000000000000000: invalid request",
+		},
+		{
+			"too low order source fee ratio",
+			types.NewMarketParameterChange(
+				1, utils.ParseDec("0.001"), utils.ParseDec("0.003"), utils.ParseDec("-0.1")),
+			"order source fee ratio must be in range [0, 1]: -0.100000000000000000: invalid request",
 		},
 		{
 			"-(maker fee rate) > taker fee rate",
 			types.NewMarketParameterChange(
-				1, utils.ParseDec("-0.003"), utils.ParseDec("0.001")),
+				1, utils.ParseDec("-0.003"), utils.ParseDec("0.001"), utils.ParseDec("0.5")),
 			"maker fee rate must be in range [-0.001000000000000000, 1]: -0.003000000000000000: invalid request",
 		},
 		{
 			"-(maker fee rate) <= taker fee rate",
 			types.NewMarketParameterChange(
-				1, utils.ParseDec("-0.001"), utils.ParseDec("0.001")),
+				1, utils.ParseDec("-0.001"), utils.ParseDec("0.001"), utils.ParseDec("0.5")),
 			"",
 		},
 		{
 			"maker fee rate > taker fee rate",
 			types.NewMarketParameterChange(
-				1, utils.ParseDec("0.002"), utils.ParseDec("0.001")),
+				1, utils.ParseDec("0.002"), utils.ParseDec("0.001"), utils.ParseDec("0.5")),
 			"",
 		},
 	} {

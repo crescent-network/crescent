@@ -12,8 +12,10 @@ option go_package                      = "github.com/crescent-network/crescent/v
 option (gogoproto.goproto_getters_all) = false;
 
 message EventCreateMarket {
-  string creator   = 1;
-  uint64 market_id = 2;
+  string creator     = 1;
+  string base_denom  = 2;
+  string quote_denom = 3;
+  uint64 market_id   = 4;
 }
 
 message EventPlaceLimitOrder {
@@ -134,5 +136,7 @@ message EventMarketParameterChanged {
   string maker_fee_rate = 2
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
   string taker_fee_rate = 3
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string order_source_fee_ratio = 4
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 }

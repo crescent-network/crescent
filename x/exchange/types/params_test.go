@@ -59,11 +59,18 @@ func TestParams_Validate(t *testing.T) {
 			"taker fee rate must be in range [0, 1]: -0.001000000000000000",
 		},
 		{
-			"too low default taker fee rate",
+			"too high default order source fee ratio",
 			func(params *types.Params) {
-				params.Fees.DefaultTakerFeeRate = utils.ParseDec("-0.001")
+				params.Fees.DefaultOrderSourceFeeRatio = utils.ParseDec("1.1")
 			},
-			"taker fee rate must be in range [0, 1]: -0.001000000000000000",
+			"order source fee ratio must be in range [0, 1]: 1.100000000000000000",
+		},
+		{
+			"too low default order source fee ratio",
+			func(params *types.Params) {
+				params.Fees.DefaultOrderSourceFeeRatio = utils.ParseDec("-0.001")
+			},
+			"order source fee ratio must be in range [0, 1]: -0.001000000000000000",
 		},
 		{
 			"negative max order lifespan",

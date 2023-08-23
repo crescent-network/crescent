@@ -105,7 +105,8 @@ func TestMemOrder_HasPriorityOver(t *testing.T) {
 func TestGroupMemOrdersByMsgHeight(t *testing.T) {
 	r := rand.New(rand.NewSource(1))
 	market := types.NewMarket(
-		1, "ucre", "uusd", types.DefaultFees.DefaultMakerFeeRate, types.DefaultFees.DefaultTakerFeeRate)
+		1, "ucre", "uusd",
+		types.DefaultFees.DefaultMakerFeeRate, types.DefaultFees.DefaultTakerFeeRate, types.DefaultFees.DefaultOrderSourceFeeRatio)
 	deadline := utils.ParseTime("2023-06-01T00:00:00Z")
 	orderSourceOrdererAddr := utils.TestAddress(100)
 	source := types.NewMockOrderSource("source")

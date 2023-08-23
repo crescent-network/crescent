@@ -11606,6 +11606,12 @@ paths:
                       type: string
                     escrow_address:
                       type: string
+                    maker_fee_rate:
+                      type: string
+                    taker_fee_rate:
+                      type: string
+                    order_source_fee_ratio:
+                      type: string
                     last_price:
                       type: string
                     last_matching_height:
@@ -11740,6 +11746,12 @@ paths:
                   quote_denom:
                     type: string
                   escrow_address:
+                    type: string
+                  maker_fee_rate:
+                    type: string
+                  taker_fee_rate:
+                    type: string
+                  order_source_fee_ratio:
                     type: string
                   last_price:
                     type: string
@@ -12118,6 +12130,8 @@ paths:
                       default_maker_fee_rate:
                         type: string
                       default_taker_fee_rate:
+                        type: string
+                      default_order_source_fee_ratio:
                         type: string
                   max_order_lifespan:
                     type: string
@@ -20147,6 +20161,8 @@ definitions:
         type: string
       default_taker_fee_rate:
         type: string
+      default_order_source_fee_ratio:
+        type: string
   crescent.exchange.v1beta1.MarketResponse:
     type: object
     properties:
@@ -20158,6 +20174,12 @@ definitions:
       quote_denom:
         type: string
       escrow_address:
+        type: string
+      maker_fee_rate:
+        type: string
+      taker_fee_rate:
+        type: string
+      order_source_fee_ratio:
         type: string
       last_price:
         type: string
@@ -20269,6 +20291,8 @@ definitions:
             type: string
           default_taker_fee_rate:
             type: string
+          default_order_source_fee_ratio:
+            type: string
       max_order_lifespan:
         type: string
       max_order_price_ratio:
@@ -20298,6 +20322,12 @@ definitions:
             quote_denom:
               type: string
             escrow_address:
+              type: string
+            maker_fee_rate:
+              type: string
+            taker_fee_rate:
+              type: string
+            order_source_fee_ratio:
               type: string
             last_price:
               type: string
@@ -20485,6 +20515,12 @@ definitions:
             type: string
           escrow_address:
             type: string
+          maker_fee_rate:
+            type: string
+          taker_fee_rate:
+            type: string
+          order_source_fee_ratio:
+            type: string
           last_price:
             type: string
           last_matching_height:
@@ -20589,6 +20625,8 @@ definitions:
               default_maker_fee_rate:
                 type: string
               default_taker_fee_rate:
+                type: string
+              default_order_source_fee_ratio:
                 type: string
           max_order_lifespan:
             type: string

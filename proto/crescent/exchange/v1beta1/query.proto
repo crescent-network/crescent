@@ -100,10 +100,16 @@ message QueryOrderBookResponse {
 }
 
 message MarketResponse {
-  uint64 id                   = 1;
-  string base_denom           = 2;
-  string quote_denom          = 3;
-  string escrow_address       = 4;
-  string last_price           = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
-  int64  last_matching_height = 6;
+  uint64 id             = 1;
+  string base_denom     = 2;
+  string quote_denom    = 3;
+  string escrow_address = 4;
+  string maker_fee_rate = 5
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string taker_fee_rate = 6
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string order_source_fee_ratio = 7
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string last_price           = 8 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+  int64  last_matching_height = 9;
 }

@@ -5,8 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
-
-	utils "github.com/crescent-network/crescent/v5/types"
 )
 
 func DeriveMarketEscrowAddress(marketId uint64) sdk.AccAddress {
@@ -14,14 +12,15 @@ func DeriveMarketEscrowAddress(marketId uint64) sdk.AccAddress {
 }
 
 func NewMarket(
-	marketId uint64, baseDenom, quoteDenom string, makerFeeRate, takerFeeRate sdk.Dec) Market {
+	marketId uint64, baseDenom, quoteDenom string, makerFeeRate, takerFeeRate, orderSourceFeeRatio sdk.Dec) Market {
 	return Market{
-		Id:            marketId,
-		BaseDenom:     baseDenom,
-		QuoteDenom:    quoteDenom,
-		EscrowAddress: DeriveMarketEscrowAddress(marketId).String(),
-		MakerFeeRate:  makerFeeRate,
-		TakerFeeRate:  takerFeeRate,
+		Id:                  marketId,
+		BaseDenom:           baseDenom,
+		QuoteDenom:          quoteDenom,
+		EscrowAddress:       DeriveMarketEscrowAddress(marketId).String(),
+		MakerFeeRate:        makerFeeRate,
+		TakerFeeRate:        takerFeeRate,
+		OrderSourceFeeRatio: orderSourceFeeRatio,
 	}
 }
 
@@ -41,22 +40,9 @@ func (market Market) Validate() error {
 	if _, err := sdk.AccAddressFromBech32(market.EscrowAddress); err != nil {
 		return fmt.Errorf("invalid escrow address: %w", err)
 	}
-	if market.TakerFeeRate.IsNegative() {
-		return fmt.Errorf("taker fee rate must not be negative: %s", market.TakerFeeRate)
-	}
-	if market.TakerFeeRate.GT(utils.OneDec) {
-		return fmt.Errorf("taker fee rate must not exceed 1.0: %s", market.TakerFeeRate)
-	}
-	if market.MakerFeeRate.IsNegative() {
-		negMakerFeeRate := market.MakerFeeRate.Neg()
-		if negMakerFeeRate.GT(utils.OneDec) {
-			return fmt.Errorf("minus maker fee rate must not exceed 1.0: %s", market.MakerFeeRate)
-		}
-		if market.TakerFeeRate.LT(negMakerFeeRate) {
-			return fmt.Errorf("minus maker fee rate must not exceed %s", market.TakerFeeRate)
-		}
-	} else if market.MakerFeeRate.GT(utils.OneDec) {
-		return fmt.Errorf("maker fee rate must not exceed 1.0:% s", market.MakerFeeRate)
+	if err := NewFees(
+		nil, market.MakerFeeRate, market.TakerFeeRate, market.OrderSourceFeeRatio).Validate(); err != nil {
+		return err
 	}
 	return nil
 }
