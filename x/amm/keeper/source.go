@@ -38,13 +38,11 @@ func (k OrderSource) ConstructMemOrderBookSide(
 	accQty := utils.ZeroDec
 	accQuote := utils.ZeroDec
 	numPriceLevels := 0
-	//fmt.Println("construct", opts.IsBuy, k.MustGetPoolState(ctx, pool.Id).CurrentPrice)
 	k.IteratePoolOrders(ctx, pool, opts.IsBuy, func(price, qty sdk.Dec) (stop bool) {
 		if opts.ReachedLimit(price, accQty, accQuote, numPriceLevels) {
 			return true
 		}
 		createOrder(reserveAddr, price, qty)
-		//fmt.Println(opts.IsBuy, price, qty)
 		accQty = accQty.Add(qty)
 		accQuote = accQuote.Add(exchangetypes.QuoteAmount(!opts.IsBuy, price, qty))
 		numPriceLevels++
