@@ -59,12 +59,19 @@ func TestMarket_Validate(t *testing.T) {
 		{
 			"too low maker fee rate",
 			func(market *types.Market) {
-				market.MakerFeeRate = utils.ParseDec("-1.1")
+				market.MakerFeeRate = utils.ParseDec("-0.0015")
 			},
-			"maker fee rate must be in range [-0.003000000000000000, 1]: -1.100000000000000000",
+			"maker fee rate must be in range [0, 1]: -0.001500000000000000",
 		},
 		{
-			"negative taker fee rate",
+			"too high maker fee rate",
+			func(market *types.Market) {
+				market.MakerFeeRate = utils.ParseDec("1.1")
+			},
+			"maker fee rate must be in range [0, 1]: 1.100000000000000000",
+		},
+		{
+			"too low taker fee rate",
 			func(market *types.Market) {
 				market.TakerFeeRate = utils.ParseDec("-0.0015")
 			},
@@ -77,25 +84,10 @@ func TestMarket_Validate(t *testing.T) {
 			},
 			"taker fee rate must be in range [0, 1]: 1.100000000000000000",
 		},
-		{
-			"too high maker fee rate",
-			func(market *types.Market) {
-				market.MakerFeeRate = utils.ParseDec("1.1")
-			},
-			"maker fee rate must be in range [-0.003000000000000000, 1]: 1.100000000000000000",
-		},
-		{
-			"minus maker fee rate higher than taker fee rate",
-			func(market *types.Market) {
-				market.MakerFeeRate = utils.ParseDec("-0.004")
-				market.TakerFeeRate = utils.ParseDec("0.003")
-			},
-			"maker fee rate must be in range [-0.003000000000000000, 1]: -0.004000000000000000",
-		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			market := types.NewMarket(
-				1, "ucre", "uusd", utils.ParseDec("-0.0015"), utils.ParseDec("0.003"), utils.ParseDec("0.5"))
+				1, "ucre", "uusd", utils.ParseDec("0.0015"), utils.ParseDec("0.003"), utils.ParseDec("0.5"))
 			tc.malleate(&market)
 			err := market.Validate()
 			if tc.expectedErr == "" {

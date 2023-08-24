@@ -13,6 +13,7 @@ import (
 var _ paramstypes.ParamSet = (*Params)(nil)
 
 var (
+	KeyMarketCreationFee  = []byte("MarketCreationFee")
 	KeyFees               = []byte("Fees")
 	KeyMaxOrderLifespan   = []byte("MaxOrderLifespan")
 	KeyMaxOrderPriceRatio = []byte("MaxOrderPriceRatio")
@@ -21,11 +22,11 @@ var (
 )
 
 var (
-	DefaultFees = Fees{
-		MarketCreationFee:          sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000)),
-		DefaultMakerFeeRate:        sdk.NewDecWithPrec(-15, 4), // -0.15%
-		DefaultTakerFeeRate:        sdk.NewDecWithPrec(3, 3),   // 0.3%
-		DefaultOrderSourceFeeRatio: sdk.NewDecWithPrec(5, 1),   // 50%
+	DefaultMarketCreationFee = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000))
+	DefaultFees              = Fees{
+		DefaultMakerFeeRate:        sdk.NewDecWithPrec(15, 4), // 0.15%
+		DefaultTakerFeeRate:        sdk.NewDecWithPrec(3, 3),  // 0.3%
+		DefaultOrderSourceFeeRatio: sdk.NewDecWithPrec(5, 1),  // 50%
 	}
 	DefaultMaxOrderLifespan          = 24 * time.Hour
 	DefaultMaxOrderPriceRatio        = sdk.NewDecWithPrec(1, 1) // 10%
@@ -41,9 +42,10 @@ func ParamKeyTable() paramstypes.KeyTable {
 }
 
 func NewParams(
-	fees Fees, maxOrderLifespan time.Duration, maxOrderPriceRatio sdk.Dec,
+	marketCreationFee sdk.Coins, fees Fees, maxOrderLifespan time.Duration, maxOrderPriceRatio sdk.Dec,
 	maxSwapRoutesLen, maxNumMMOrders uint32) Params {
 	return Params{
+		MarketCreationFee:  marketCreationFee,
 		Fees:               fees,
 		MaxOrderLifespan:   maxOrderLifespan,
 		MaxOrderPriceRatio: maxOrderPriceRatio,
@@ -55,13 +57,14 @@ func NewParams(
 // DefaultParams returns a default params for the module.
 func DefaultParams() Params {
 	return NewParams(
-		DefaultFees, DefaultMaxOrderLifespan, DefaultMaxOrderPriceRatio,
+		DefaultMarketCreationFee, DefaultFees, DefaultMaxOrderLifespan, DefaultMaxOrderPriceRatio,
 		DefaultMaxSwapRoutesLen, DefaultMaxNumMMOrders)
 }
 
 // ParamSetPairs implements ParamSet.
 func (params *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 	return paramstypes.ParamSetPairs{
+		paramstypes.NewParamSetPair(KeyMarketCreationFee, &params.MarketCreationFee, validateMarketCreationFee),
 		paramstypes.NewParamSetPair(KeyFees, &params.Fees, validateFees),
 		paramstypes.NewParamSetPair(KeyMaxOrderLifespan, &params.MaxOrderLifespan, validateMaxOrderLifespan),
 		paramstypes.NewParamSetPair(KeyMaxOrderPriceRatio, &params.MaxOrderPriceRatio, validateMaxOrderPriceRatio),
@@ -76,6 +79,7 @@ func (params Params) Validate() error {
 		val          interface{}
 		validateFunc func(i interface{}) error
 	}{
+		{params.MarketCreationFee, validateMarketCreationFee},
 		{params.Fees, validateFees},
 		{params.MaxOrderLifespan, validateMaxOrderLifespan},
 		{params.MaxOrderPriceRatio, validateMaxOrderPriceRatio},
@@ -89,12 +93,23 @@ func (params Params) Validate() error {
 	return nil
 }
 
+func validateMarketCreationFee(i interface{}) error {
+	v, ok := i.(sdk.Coins)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	if err := v.Validate(); err != nil {
+		return fmt.Errorf("invalid market creation fee: %w", err)
+	}
+	return nil
+}
+
 func validateFees(i interface{}) error {
 	v, ok := i.(Fees)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
-	return v.Validate()
+	return ValidateFees(v.DefaultMakerFeeRate, v.DefaultTakerFeeRate, v.DefaultOrderSourceFeeRatio)
 }
 
 func validateMaxOrderLifespan(i interface{}) error {

@@ -40,8 +40,8 @@ func (market Market) Validate() error {
 	if _, err := sdk.AccAddressFromBech32(market.EscrowAddress); err != nil {
 		return fmt.Errorf("invalid escrow address: %w", err)
 	}
-	if err := NewFees(
-		nil, market.MakerFeeRate, market.TakerFeeRate, market.OrderSourceFeeRatio).Validate(); err != nil {
+	if err := ValidateFees(
+		market.MakerFeeRate, market.TakerFeeRate, market.OrderSourceFeeRatio); err != nil {
 		return err
 	}
 	return nil

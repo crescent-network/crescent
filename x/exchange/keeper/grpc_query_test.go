@@ -109,7 +109,7 @@ func (s *KeeperTestSuite) TestQueryMarket() {
 			"",
 			func(resp *types.QueryMarketResponse) {
 				s.Require().EqualValues(2, resp.Market.Id)
-				s.AssertEqual(utils.ParseDec("-0.0015"), resp.Market.MakerFeeRate)
+				s.AssertEqual(utils.ParseDec("0.0015"), resp.Market.MakerFeeRate)
 				s.AssertEqual(utils.ParseDec("0.003"), resp.Market.TakerFeeRate)
 				s.AssertEqual(utils.ParseDec("0.5"), resp.Market.OrderSourceFeeRatio)
 			},
