@@ -202,10 +202,17 @@ func ExamplePoolParameterChangeProposal_String() {
 	//       Pool Id:            1
 	//       Tick Spacing:       5
 	//       Min Order Quantity: <nil>
+	//       Min Order Quote:    <nil>
 	//     Pool Parameter Change:
 	//       Pool Id:            2
 	//       Tick Spacing:       10
 	//       Min Order Quantity: 100.000000000000000000
+	//       Min Order Quote:    <nil>
+	//     Pool Parameter Change:
+	//       Pool Id:            2
+	//       Tick Spacing:       10
+	//       Min Order Quantity: <nil>
+	//       Min Order Quote:    1000.000000000000000000
 }
 
 func ExamplePublicFarmingPlanProposal_String() {
