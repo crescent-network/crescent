@@ -55,45 +55,34 @@ func (k Keeper) IteratePoolOrders(ctx sdk.Context, pool types.Pool, isBuy bool, 
 	reserveBalance := k.bankKeeper.SpendableCoins(ctx, pool.MustGetReserveAddress()).
 		AmountOf(pool.DenomOut(isBuy)).ToDec()
 	orderLiquidity := poolState.CurrentLiquidity
-	currentSqrtPrice := utils.DecApproxSqrt(poolState.CurrentPrice)
+	currentPrice := poolState.CurrentPrice
 
 	iterCb := func(tick int32, tickInfo types.TickInfo) (stop bool) {
 		if orderLiquidity.IsPositive() {
-			prevTick := poolState.CurrentTick
 			for {
 				if !reserveBalance.IsPositive() {
 					return true
 				}
-
-				var orderTick int32
+				var (
+					orderTick int32
+					valid     bool
+				)
 				if isBuy {
-					// L^2 + 4 * MinQty * L * sqrt(P_current)
-					intermediate := orderLiquidity.ToDec().Power(2).Add(
-						pool.MinOrderQuantity.MulInt(orderLiquidity).MulTruncate(currentSqrtPrice).MulInt64(4))
-					orderSqrtPrice := utils.DecApproxSqrt(intermediate).Sub(orderLiquidity.ToDec()).
-						QuoTruncate(pool.MinOrderQuantity.MulInt64(2))
-					orderPrice := orderSqrtPrice.Power(2)
-					orderTick = types.AdjustPriceToTickSpacing(orderPrice, pool.TickSpacing, false)
-					if orderTick >= prevTick {
-						orderTick = types.AdjustTickToTickSpacing(prevTick, pool.TickSpacing, false) - int32(pool.TickSpacing)
-					}
-					if orderTick < tick {
+					orderTick, valid = NextOrderTick(
+						true, orderLiquidity, currentPrice, pool.MinOrderQuantity, pool.MinOrderQuote, pool.TickSpacing)
+					if !valid || orderTick < tick {
 						orderTick = tick
 					}
 				} else {
-					orderSqrtPrice := currentSqrtPrice.MulInt(orderLiquidity).
-						QuoRoundUp(orderLiquidity.ToDec().Sub(pool.MinOrderQuantity.Mul(currentSqrtPrice)))
-					orderPrice := orderSqrtPrice.Power(2)
-					orderTick = types.AdjustPriceToTickSpacing(orderPrice, pool.TickSpacing, true)
-					if orderTick <= prevTick {
-						orderTick = types.AdjustTickToTickSpacing(prevTick, pool.TickSpacing, true) + int32(pool.TickSpacing)
-					}
-					if orderTick > tick {
+					orderTick, valid = NextOrderTick(
+						false, orderLiquidity, currentPrice, pool.MinOrderQuantity, pool.MinOrderQuote, pool.TickSpacing)
+					if !valid || orderTick > tick {
 						orderTick = tick
 					}
 				}
 				orderPrice := exchangetypes.PriceAtTick(orderTick)
 				orderSqrtPrice := utils.DecApproxSqrt(orderPrice)
+				currentSqrtPrice := utils.DecApproxSqrt(currentPrice)
 				var qty sdk.Dec
 				if isBuy {
 					qty = sdk.MinDec(
@@ -109,16 +98,14 @@ func (k Keeper) IteratePoolOrders(ctx sdk.Context, pool types.Pool, isBuy bool, 
 						return true
 					}
 					reserveBalance = reserveBalance.Sub(exchangetypes.DepositAmount(isBuy, orderPrice, qty))
-					currentSqrtPrice = orderSqrtPrice
+					currentPrice = orderPrice
 				}
-
 				if orderTick == tick {
 					break
 				}
-				prevTick = orderTick
 			}
 		} else {
-			currentSqrtPrice = types.SqrtPriceAtTick(tick)
+			currentPrice = exchangetypes.PriceAtTick(tick)
 		}
 		if isBuy {
 			orderLiquidity = orderLiquidity.Sub(tickInfo.NetLiquidity)
@@ -132,4 +119,42 @@ func (k Keeper) IteratePoolOrders(ctx sdk.Context, pool types.Pool, isBuy bool, 
 	} else {
 		k.IterateTickInfosAbove(ctx, pool.Id, poolState.CurrentTick, iterCb)
 	}
+}
+
+func NextOrderTick(
+	isBuy bool, liquidity sdk.Int, currentPrice, minOrderQty, minOrderQuote sdk.Dec, tickSpacing uint32) (tick int32, valid bool) {
+	currentSqrtPrice := utils.DecApproxSqrt(currentPrice)
+	liquidityDec := liquidity.ToDec()
+	if isBuy {
+		// 1. Check min order qty
+		// L^2 + 4 * MinQty * L * sqrt(P_current)
+		intermediate := liquidityDec.Power(2).Add(
+			minOrderQty.Mul(liquidityDec).MulTruncate(currentSqrtPrice).MulInt64(4))
+		orderSqrtPrice := utils.DecApproxSqrt(intermediate).Sub(liquidityDec).QuoTruncate(minOrderQty.MulInt64(2))
+		if !orderSqrtPrice.IsPositive() || orderSqrtPrice.GTE(currentSqrtPrice) {
+			return 0, false
+		}
+		// 2. Check min order quote
+		orderSqrtPrice2 := currentSqrtPrice.Mul(liquidityDec).Sub(minOrderQuote).QuoTruncate(liquidityDec)
+		if !orderSqrtPrice2.IsPositive() || orderSqrtPrice2.GTE(currentSqrtPrice) {
+			return 0, false
+		}
+		orderPrice := sdk.MinDec(orderSqrtPrice, orderSqrtPrice2).Power(2)
+		tick = types.AdjustPriceToTickSpacing(orderPrice, tickSpacing, false)
+		return tick, true
+	}
+	// 1. Check min order qty
+	orderSqrtPrice := currentSqrtPrice.Mul(liquidityDec).
+		QuoRoundUp(liquidityDec.Sub(minOrderQty.Mul(currentSqrtPrice)))
+	if !orderSqrtPrice.IsPositive() || orderSqrtPrice.LTE(currentSqrtPrice) {
+		return 0, false
+	}
+	// 2. Check min order quote
+	orderSqrtPrice2 := minOrderQuote.Mul(currentSqrtPrice).QuoRoundUp(liquidityDec).Add(currentSqrtPrice)
+	if !orderSqrtPrice2.IsPositive() || orderSqrtPrice2.LTE(currentSqrtPrice) {
+		return 0, false
+	}
+	orderPrice := sdk.MaxDec(orderSqrtPrice, orderSqrtPrice2).Power(2)
+	tick = types.AdjustPriceToTickSpacing(orderPrice, tickSpacing, true)
+	return tick, true
 }
