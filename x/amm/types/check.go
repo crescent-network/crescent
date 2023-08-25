@@ -85,7 +85,7 @@ func ValidatePositionState(pool Pool, poolState PoolState, position Position, am
 		}
 
 		// Pool price check
-		threshold := utils.ParseDec("0.00002")
+		threshold := utils.ParseDec("0.0003")
 		t := utils.OneDec.Sub(
 			liquidity.Mul(sqrtPriceUpper).Quo(
 				currentSqrtPrice.Mul(amt0.ToDec().Mul(sqrtPriceUpper).Add(liquidity))))

@@ -10,16 +10,20 @@ import (
 // TODO: remove after enough testing
 func ValidateOrderResult(memOrder *MemOrder) {
 	if memOrder.isBuy {
-		price := memOrder.PaidWithoutFee().Sub(utils.SmallestDec).QuoTruncate(memOrder.ReceivedWithoutFee()).
-			Sub(utils.SmallestDec)
-		if price.GT(memOrder.price) {
-			panic(fmt.Errorf("match price %s > order price %s", price, memOrder.price))
+		if memOrder.ReceivedWithoutFee().IsPositive() {
+			price := memOrder.PaidWithoutFee().Sub(utils.SmallestDec).QuoTruncate(memOrder.ReceivedWithoutFee()).
+				Sub(utils.SmallestDec)
+			if price.GT(memOrder.price) {
+				panic(fmt.Errorf("match price %s > order price %s", price, memOrder.price))
+			}
 		}
 	} else {
-		price := memOrder.ReceivedWithoutFee().Add(utils.SmallestDec).QuoRoundUp(memOrder.PaidWithoutFee()).
-			Add(utils.SmallestDec)
-		if price.LT(memOrder.price) {
-			panic(fmt.Errorf("match price %s < order price %s", price, memOrder.price))
+		if memOrder.PaidWithoutFee().IsPositive() {
+			price := memOrder.ReceivedWithoutFee().Add(utils.SmallestDec).QuoRoundUp(memOrder.PaidWithoutFee()).
+				Add(utils.SmallestDec)
+			if price.LT(memOrder.price) {
+				panic(fmt.Errorf("match price %s < order price %s", price, memOrder.price))
+			}
 		}
 	}
 }
