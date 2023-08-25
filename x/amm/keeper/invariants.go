@@ -112,13 +112,13 @@ func CanCollectInvariant(k Keeper) sdk.Invariant {
 			fee, farmingRewards, err := k.CollectibleCoins(ctx, position.Id)
 			if err != nil {
 				msg += fmt.Sprintf(
-					"\tcannot calculate collectible coins for position %d\n", position.Id)
+					"\tcannot calculate collectible coins for position %d: %s\n", position.Id, err)
 				cnt++
 				return false
 			}
 			if err := k.Collect(ctx, ownerAddr, ownerAddr, position.Id, fee.Add(farmingRewards...)); err != nil {
 				msg += fmt.Sprintf(
-					"\tcannot collect rewards from position %d\n", position.Id)
+					"\tcannot collect rewards from position %d: %s\n", position.Id, err)
 				cnt++
 				return false
 			}
