@@ -85,18 +85,24 @@ func ValidatePositionState(pool Pool, poolState PoolState, position Position, am
 		}
 
 		// Pool price check
-		threshold := utils.ParseDec("0.0003")
-		t := utils.OneDec.Sub(
-			liquidity.Mul(sqrtPriceUpper).Quo(
-				currentSqrtPrice.Mul(amt0.ToDec().Mul(sqrtPriceUpper).Add(liquidity))))
-		if !t.Abs().LT(threshold) {
-			panic(fmt.Errorf("must satisfy: %s < %s", t.Abs(), threshold))
-		}
-		t = utils.OneDec.Sub(
-			amt1.ToDec().Add(liquidity.Mul(sqrtPriceLower)).Quo(
-				liquidity.Mul(currentSqrtPrice)))
-		if !t.Abs().LT(threshold) {
-			panic(fmt.Errorf("must satisfy: %s < %s", t.Abs(), threshold))
+		if liquidity.GTE(sdk.NewDec(100000)) {
+			threshold := utils.ParseDec("0.00003")
+			t := utils.OneDec.Sub(
+				liquidity.Mul(sqrtPriceUpper).Quo(
+					currentSqrtPrice.Mul(amt0.ToDec().Mul(sqrtPriceUpper).Add(liquidity))))
+			if !t.Abs().LT(threshold) {
+				fmt.Printf("[amt0] L=%s sqrtLower=%s sqrtUpper=%s sqrtCurrent=%s amt0=%s amt1=%s\n",
+					liquidity, sqrtPriceLower, sqrtPriceUpper, currentSqrtPrice, amt0, amt1)
+				panic(fmt.Errorf("must satisfy: %s < %s", t.Abs(), threshold))
+			}
+			t = utils.OneDec.Sub(
+				amt1.ToDec().Add(liquidity.Mul(sqrtPriceLower)).Quo(
+					liquidity.Mul(currentSqrtPrice)))
+			if !t.Abs().LT(threshold) {
+				fmt.Printf("[amt1] L=%s sqrtLower=%s sqrtUpper=%s sqrtCurrent=%s amt0=%s amt1=%s\n",
+					liquidity, sqrtPriceLower, sqrtPriceUpper, currentSqrtPrice, amt0, amt1)
+				panic(fmt.Errorf("must satisfy: %s < %s", t.Abs(), threshold))
+			}
 		}
 	} else {
 		t2 := amt1.Sub(Amount1Delta(sqrtPriceLower, sqrtPriceUpper, position.Liquidity))

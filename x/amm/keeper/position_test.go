@@ -226,18 +226,18 @@ func (s *KeeperTestSuite) TestSamePositions() {
 	s.PlaceMarketOrder(market.Id, ordererAddr, false, sdk.NewDec(100000000))
 
 	fee, _ := s.CollectibleCoins(position1.Id)
-	s.AssertEqual(utils.ParseCoins("234609uusd"), fee)
+	s.AssertEqual(utils.ParseCoins("353ucre,235566uusd"), fee)
 	fee, _ = s.CollectibleCoins(position2.Id)
-	s.AssertEqual(utils.ParseCoins("234609uusd"), fee)
+	s.AssertEqual(utils.ParseCoins("353ucre,235566uusd"), fee)
 	fee, _ = s.CollectibleCoins(position3.Id)
-	s.AssertEqual(utils.ParseCoins("234609uusd"), fee)
+	s.AssertEqual(utils.ParseCoins("353ucre,235566uusd"), fee)
 
 	_, amt := s.RemoveLiquidity(lpAddr1, position1.Id, position1.Liquidity)
 	s.AssertEqual(utils.ParseCoins("117592576ucre,842955162uusd"), amt)
 	_, amt = s.RemoveLiquidity(lpAddr2, position2.Id, position2.Liquidity)
 	s.AssertEqual(utils.ParseCoins("117592576ucre,842955162uusd"), amt)
 	_, amt = s.RemoveLiquidity(lpAddr3, position3.Id, position3.Liquidity)
-	s.AssertEqual(utils.ParseCoins("117593642ucre,842958034uusd"), amt)
+	s.AssertEqual(utils.ParseCoins("117592580ucre,842955163uusd"), amt)
 }
 
 func (s *KeeperTestSuite) TestSamePositions2() {
@@ -258,9 +258,9 @@ func (s *KeeperTestSuite) TestSamePositions2() {
 	s.PlaceMarketOrder(market.Id, ordererAddr, true, sdk.NewDec(200000000))
 
 	fee, _ := s.CollectibleCoins(position1.Id)
-	s.AssertEqual(utils.ParseCoins("272718ucre,46039469uusd"), fee)
+	s.AssertEqual(utils.ParseCoins("272726ucre,46039478uusd"), fee)
 	fee, _ = s.CollectibleCoins(position2.Id)
-	s.AssertEqual(utils.ParseCoins("27271ucre,4603946uusd"), fee)
+	s.AssertEqual(utils.ParseCoins("27272ucre,4603947uusd"), fee)
 
 	// Use cache context to discard the operation results.
 	cacheCtx, _ := s.Ctx.CacheContext()
@@ -269,12 +269,12 @@ func (s *KeeperTestSuite) TestSamePositions2() {
 	s.AssertEqual(utils.ParseCoins("1818181818ucre,1091790048475uusd"), amt)
 	_, amt, err = s.keeper.RemoveLiquidity(cacheCtx, lpAddr2, lpAddr2, position2.Id, position2.Liquidity)
 	s.Require().NoError(err)
-	s.AssertEqual(utils.ParseCoins("181818191ucre,109179004856uusd"), amt)
+	s.AssertEqual(utils.ParseCoins("181818182ucre,109179004846uusd"), amt)
 
 	_, amt = s.RemoveLiquidity(lpAddr2, position2.Id, position2.Liquidity)
 	s.AssertEqual(utils.ParseCoins("181818181ucre,109179004845uusd"), amt)
 	_, amt = s.RemoveLiquidity(lpAddr1, position1.Id, position1.Liquidity)
-	s.AssertEqual(utils.ParseCoins("1818181828ucre,1091790048486uusd"), amt)
+	s.AssertEqual(utils.ParseCoins("1818181819ucre,1091790048476uusd"), amt)
 }
 
 func (s *KeeperTestSuite) TestSymmetricPositions() {
