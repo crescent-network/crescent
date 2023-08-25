@@ -27,14 +27,16 @@ func (k Keeper) ConstructMemOrderBookSide(
 	})
 	for _, name := range k.sourceNames {
 		source := k.sources[name]
-		source.ConstructMemOrderBookSide(ctx, market, func(ordererAddr sdk.AccAddress, price, qty sdk.Dec) {
+		if err := source.ConstructMemOrderBookSide(ctx, market, func(ordererAddr sdk.AccAddress, price, qty, openQty sdk.Dec) {
 			deposit := types.DepositAmount(opts.IsBuy, price, qty)
 			if escrow != nil {
 				payDenom, _ := types.PayReceiveDenoms(market.BaseDenom, market.QuoteDenom, opts.IsBuy)
 				escrow.Lock(ordererAddr, sdk.NewDecCoinFromDec(payDenom, deposit))
 			}
-			obs.AddOrder(types.NewOrderSourceMemOrder(ordererAddr, opts.IsBuy, price, qty, source))
-		}, opts)
+			obs.AddOrder(types.NewOrderSourceMemOrder(ordererAddr, opts.IsBuy, price, qty, openQty, source))
+		}, opts); err != nil {
+			panic(err)
+		}
 	}
 	if opts.MaxNumPriceLevels > 0 {
 		obs.Limit(opts.MaxNumPriceLevels)
@@ -139,7 +141,9 @@ func (k Keeper) finalizeMatching(ctx sdk.Context, market types.Market, orders []
 			totalExecQty := utils.ZeroDec
 			ordererAddrs, m := types.GroupMemOrdersByOrderer(results) // TODO: bit redundant
 			for _, ordererAddr := range ordererAddrs {
-				source.AfterOrdersExecuted(ctx, market, ordererAddr, results)
+				if err := source.AfterOrdersExecuted(ctx, market, ordererAddr, results); err != nil {
+					return err
+				}
 				var (
 					isBuy         bool
 					totalPaid     sdk.Dec

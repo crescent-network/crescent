@@ -93,7 +93,7 @@ func (s *KeeperTestSuite) TestPlaceBatchLimitOrder() {
 	ordererBalances2Diff, _ = ordererBalances2After.SafeSub(ordererBalances2Before)
 	s.Require().Equal("9970000ucre,-50700000uusd", ordererBalances1Diff.String())
 	// Maker
-	s.Require().Equal("-9985000ucre,50700000uusd", ordererBalances2Diff.String())
+	s.Require().Equal("-10000000ucre,50623950uusd", ordererBalances2Diff.String())
 }
 
 func (s *KeeperTestSuite) TestPlaceMMLimitOrder() {
@@ -154,16 +154,16 @@ func (s *KeeperTestSuite) TestOrderMatching() {
 	s.PlaceLimitOrder(
 		market.Id, bobAddr, false, utils.ParseDec("98"), sdk.NewDec(1500), time.Hour)
 
-	s.AssertEqual(utils.ParseCoins("1001500ucre,704150uusd"), s.App.BankKeeper.GetAllBalances(s.Ctx, aliceAddr))
+	s.AssertEqual(utils.ParseCoins("1001497ucre,704000uusd"), s.App.BankKeeper.GetAllBalances(s.Ctx, aliceAddr))
 	s.AssertEqual(utils.ParseCoins("998500ucre,1149051uusd"), s.App.BankKeeper.GetAllBalances(s.Ctx, bobAddr))
-	s.AssertEqual(utils.ParseCoins("146799uusd"), s.App.BankKeeper.GetAllBalances(s.Ctx, market.MustGetEscrowAddress()))
+	s.AssertEqual(utils.ParseCoins("3ucre,146949uusd"), s.App.BankKeeper.GetAllBalances(s.Ctx, market.MustGetEscrowAddress()))
 
 	s.PlaceLimitOrder(
 		market.Id, bobAddr, false, utils.ParseDec("96"), sdk.NewDec(1500), time.Hour)
 
-	s.AssertEqual(utils.ParseCoins("1003000ucre,704443uusd"), s.App.BankKeeper.GetAllBalances(s.Ctx, aliceAddr))
+	s.AssertEqual(utils.ParseCoins("1002994ucre,704000uusd"), s.App.BankKeeper.GetAllBalances(s.Ctx, aliceAddr))
 	s.AssertEqual(utils.ParseCoins("997000ucre,1295111uusd"), s.App.BankKeeper.GetAllBalances(s.Ctx, bobAddr))
-	s.AssertEqual(utils.ParseCoins("446uusd"), s.App.BankKeeper.GetAllBalances(s.Ctx, market.MustGetEscrowAddress()))
+	s.AssertEqual(utils.ParseCoins("6ucre,889uusd"), s.App.BankKeeper.GetAllBalances(s.Ctx, market.MustGetEscrowAddress()))
 }
 
 func (s *KeeperTestSuite) TestMinMaxPrice() {

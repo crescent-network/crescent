@@ -26,7 +26,7 @@ func TestParams_Validate(t *testing.T) {
 		{
 			"invalid market creation fee",
 			func(params *types.Params) {
-				params.Fees.MarketCreationFee = sdk.Coins{sdk.NewInt64Coin("ucre", 0)}
+				params.MarketCreationFee = sdk.Coins{sdk.NewInt64Coin("ucre", 0)}
 			},
 			"invalid market creation fee: coin 0ucre amount is not positive",
 		},
@@ -35,14 +35,14 @@ func TestParams_Validate(t *testing.T) {
 			func(params *types.Params) {
 				params.Fees.DefaultMakerFeeRate = utils.ParseDec("1.01")
 			},
-			"maker fee rate must be in range [-0.003000000000000000, 1]: 1.010000000000000000",
+			"maker fee rate must be in range [0, 1]: 1.010000000000000000",
 		},
 		{
 			"too low default maker fee rate",
 			func(params *types.Params) {
 				params.Fees.DefaultMakerFeeRate = utils.ParseDec("-1.01")
 			},
-			"maker fee rate must be in range [-0.003000000000000000, 1]: -1.010000000000000000",
+			"maker fee rate must be in range [0, 1]: -1.010000000000000000",
 		},
 		{
 			"too high default taker fee rate",

@@ -101,25 +101,25 @@ func TestMarketParameterChange_Validate(t *testing.T) {
 			"too high maker fee rate",
 			types.NewMarketParameterChange(
 				1, utils.ParseDec("1.01"), utils.ParseDec("0.003"), utils.ParseDec("0.5")),
-			"maker fee rate must be in range [-0.003000000000000000, 1]: 1.010000000000000000: invalid request",
+			"maker fee rate must be in range [0, 1]: 1.010000000000000000: invalid request",
 		},
 		{
 			"too low maker fee rate",
 			types.NewMarketParameterChange(
-				1, utils.ParseDec("-1.01"), utils.ParseDec("0.003"), utils.ParseDec("0.5")),
-			"maker fee rate must be in range [-0.003000000000000000, 1]: -1.010000000000000000: invalid request",
-		},
-		{
-			"negative taker fee rate",
-			types.NewMarketParameterChange(
-				1, utils.ParseDec("0.001"), utils.ParseDec("-0.001"), utils.ParseDec("0.5")),
-			"taker fee rate must be in range [0, 1]: -0.001000000000000000: invalid request",
+				1, utils.ParseDec("-0.001"), utils.ParseDec("0.003"), utils.ParseDec("0.5")),
+			"maker fee rate must be in range [0, 1]: -0.001000000000000000: invalid request",
 		},
 		{
 			"too high taker fee rate",
 			types.NewMarketParameterChange(
 				1, utils.ParseDec("0.001"), utils.ParseDec("1.01"), utils.ParseDec("0.5")),
 			"taker fee rate must be in range [0, 1]: 1.010000000000000000: invalid request",
+		},
+		{
+			"too low taker fee rate",
+			types.NewMarketParameterChange(
+				1, utils.ParseDec("0.001"), utils.ParseDec("-0.001"), utils.ParseDec("0.5")),
+			"taker fee rate must be in range [0, 1]: -0.001000000000000000: invalid request",
 		},
 		{
 			"too high order source fee ratio",
@@ -132,18 +132,6 @@ func TestMarketParameterChange_Validate(t *testing.T) {
 			types.NewMarketParameterChange(
 				1, utils.ParseDec("0.001"), utils.ParseDec("0.003"), utils.ParseDec("-0.1")),
 			"order source fee ratio must be in range [0, 1]: -0.100000000000000000: invalid request",
-		},
-		{
-			"-(maker fee rate) > taker fee rate",
-			types.NewMarketParameterChange(
-				1, utils.ParseDec("-0.003"), utils.ParseDec("0.001"), utils.ParseDec("0.5")),
-			"maker fee rate must be in range [-0.001000000000000000, 1]: -0.003000000000000000: invalid request",
-		},
-		{
-			"-(maker fee rate) <= taker fee rate",
-			types.NewMarketParameterChange(
-				1, utils.ParseDec("-0.001"), utils.ParseDec("0.001"), utils.ParseDec("0.5")),
-			"",
 		},
 		{
 			"maker fee rate > taker fee rate",
