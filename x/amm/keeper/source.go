@@ -98,13 +98,11 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 	}
 
 	max := false
-	reserveBalances := k.bankKeeper.SpendableCoins(ctx, reserveAddr)
-	balance0, balance1 := reserveBalances.AmountOf(pool.Denom0), reserveBalances.AmountOf(pool.Denom1)
 	extraAmt0, extraAmt1 := utils.ZeroDec, utils.ZeroDec
 
 	accrueFees := func() {
-		extraAmt0Int := utils.MinInt(balance0, extraAmt0.TruncateInt())
-		extraAmt1Int := utils.MinInt(balance1, extraAmt1.TruncateInt())
+		extraAmt0Int := extraAmt0.TruncateInt()
+		extraAmt1Int := extraAmt1.TruncateInt()
 		fees := sdk.Coins{}
 		if extraAmt0Int.IsPositive() {
 			fees = fees.Add(sdk.NewCoin(pool.Denom0, extraAmt0Int))
@@ -118,8 +116,6 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 				MulDecTruncate(types.DecMulFactor).
 				QuoDecTruncate(poolState.CurrentLiquidity.ToDec())
 			poolState.FeeGrowthGlobal = poolState.FeeGrowthGlobal.Add(feeGrowth...)
-			balance0 = balance0.Sub(extraAmt0Int)
-			balance1 = balance1.Sub(extraAmt1Int)
 		}
 		extraAmt0 = utils.ZeroDec
 		extraAmt1 = utils.ZeroDec
@@ -170,7 +166,7 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 		currentSqrtPrice := utils.DecApproxSqrt(poolState.CurrentPrice)
 		var nextSqrtPrice, nextPrice sdk.Dec
 		max = false
-		if i < len(results)-1 || result.ExecutedQuantity().Equal(result.Quantity()) {
+		if i < len(results)-1 || result.ExecutableQuantity().LTE(utils.SmallestDec) {
 			nextSqrtPrice = utils.DecApproxSqrt(result.Price())
 			nextPrice = result.Price()
 			max = true

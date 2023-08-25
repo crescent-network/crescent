@@ -98,7 +98,7 @@ func (ctx *MatchingContext) FillOrders(orders []*MemOrder, qty, price sdk.Dec, i
 	for _, order := range orders {
 		executableQty := order.ExecutableQuantity()
 		if executableQty.IsZero() { // sanity check
-			continue
+			panic("executable quantity is zero")
 		}
 		executedQty := executableQty.MulTruncate(qty).QuoTruncate(totalExecutableQty)
 		if executedQty.IsPositive() {

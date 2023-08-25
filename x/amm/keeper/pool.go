@@ -91,7 +91,7 @@ func (k Keeper) IteratePoolOrders(ctx sdk.Context, pool types.Pool, isBuy bool, 
 					qty = types.Amount0DeltaRoundingDec(currentSqrtPrice, orderSqrtPrice, orderLiquidity, false)
 					openQty = sdk.MinDec(reserveBalance, qty)
 				}
-				if openQty.GTE(pool.MinOrderQuantity) || orderTick == tick {
+				if openQty.IsPositive() && (openQty.GTE(pool.MinOrderQuantity) || orderTick == tick) {
 					if cb(orderPrice, qty, openQty) {
 						return true
 					}
