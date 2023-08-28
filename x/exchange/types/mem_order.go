@@ -64,15 +64,15 @@ func NewUserMemOrder(order Order) *MemOrder {
 }
 
 func NewOrderSourceMemOrder(
-	ordererAddr sdk.AccAddress, isBuy bool, price, qty sdk.Dec, source OrderSource) *MemOrder {
+	ordererAddr sdk.AccAddress, isBuy bool, price, qty, openQty sdk.Dec, source OrderSource) *MemOrder {
 	return &MemOrder{
 		typ:              OrderSourceMemOrder,
 		ordererAddr:      ordererAddr,
 		isBuy:            isBuy,
 		price:            price,
 		qty:              qty,
-		openQty:          qty,
-		remainingDeposit: DepositAmount(isBuy, price, qty),
+		openQty:          openQty,
+		remainingDeposit: DepositAmount(isBuy, price, openQty),
 		executedQty:      utils.ZeroDec,
 		paid:             utils.ZeroDec,
 		received:         utils.ZeroDec,

@@ -85,10 +85,9 @@ func (change MarketParameterChange) Validate() error {
 	if change.MarketId == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "market id must not be 0")
 	}
-	if err := NewFees(
-		nil, change.MakerFeeRate, change.TakerFeeRate, change.OrderSourceFeeRatio).Validate(); err != nil {
+	if err := ValidateFees(
+		change.MakerFeeRate, change.TakerFeeRate, change.OrderSourceFeeRatio); err != nil {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
-
 	}
 	return nil
 }

@@ -21,13 +21,13 @@ func (k Keeper) CreateMarket(
 		return market, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "market already exists: %d", marketId)
 	}
 
-	fees := k.GetFees(ctx)
 	if err = k.bankKeeper.SendCoinsFromAccountToModule(
-		ctx, creatorAddr, types.ModuleName, fees.MarketCreationFee); err != nil {
+		ctx, creatorAddr, types.ModuleName, k.GetMarketCreationFee(ctx)); err != nil {
 		return market, sdkerrors.Wrap(err, "insufficient market creation fee")
 	}
 
 	marketId := k.GetNextMarketIdWithUpdate(ctx)
+	fees := k.GetFees(ctx)
 	market = types.NewMarket(
 		marketId, baseDenom, quoteDenom,
 		fees.DefaultMakerFeeRate, fees.DefaultTakerFeeRate, fees.DefaultOrderSourceFeeRatio)

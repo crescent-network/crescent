@@ -12,7 +12,7 @@ import (
 func (s *TestSuite) CreateMarket(baseDenom, quoteDenom string) exchangetypes.Market {
 	s.T().Helper()
 	creatorAddr := utils.TestAddress(1000000)
-	creationFee := s.App.ExchangeKeeper.GetFees(s.Ctx).MarketCreationFee
+	creationFee := s.App.ExchangeKeeper.GetMarketCreationFee(s.Ctx)
 	if !s.GetAllBalances(creatorAddr).IsAllGTE(creationFee) {
 		s.FundAccount(creatorAddr, creationFee)
 	}

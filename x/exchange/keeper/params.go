@@ -19,6 +19,15 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	k.paramSpace.SetParamSet(ctx, &params)
 }
 
+func (k Keeper) GetMarketCreationFee(ctx sdk.Context) (fee sdk.Coins) {
+	k.paramSpace.Get(ctx, types.KeyMarketCreationFee, &fee)
+	return
+}
+
+func (k Keeper) SetMarketCreationFee(ctx sdk.Context, fee sdk.Coins) {
+	k.paramSpace.Set(ctx, types.KeyMarketCreationFee, fee)
+}
+
 func (k Keeper) GetFees(ctx sdk.Context) (fees types.Fees) {
 	k.paramSpace.Get(ctx, types.KeyFees, &fees)
 	return

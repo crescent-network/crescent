@@ -12,7 +12,7 @@ import (
 func (s *TestSuite) CreatePool(marketId uint64, price sdk.Dec) ammtypes.Pool {
 	s.T().Helper()
 	creatorAddr := utils.TestAddress(1000001)
-	creationFee := s.App.ExchangeKeeper.GetFees(s.Ctx).MarketCreationFee
+	creationFee := s.App.AMMKeeper.GetPoolCreationFee(s.Ctx)
 	if !s.GetAllBalances(creatorAddr).IsAllGTE(creationFee) {
 		s.FundAccount(creatorAddr, creationFee)
 	}

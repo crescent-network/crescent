@@ -28,34 +28,35 @@ func (k OrderSource) Name() string {
 func (k OrderSource) ConstructMemOrderBookSide(
 	ctx sdk.Context, market exchangetypes.Market,
 	createOrder exchangetypes.CreateOrderFunc,
-	opts exchangetypes.MemOrderBookSideOptions) {
+	opts exchangetypes.MemOrderBookSideOptions) error {
 	pool, found := k.GetPoolByMarket(ctx, market.Id)
 	if !found {
-		return // no pool found
+		return nil // no pool found
 	}
 
 	reserveAddr := pool.MustGetReserveAddress()
 	accQty := utils.ZeroDec
 	accQuote := utils.ZeroDec
 	numPriceLevels := 0
-	k.IteratePoolOrders(ctx, pool, opts.IsBuy, func(price, qty sdk.Dec) (stop bool) {
+	k.IteratePoolOrders(ctx, pool, opts.IsBuy, func(price, qty, openQty sdk.Dec) (stop bool) {
 		if opts.ReachedLimit(price, accQty, accQuote, numPriceLevels) {
 			return true
 		}
-		createOrder(reserveAddr, price, qty)
+		createOrder(reserveAddr, price, qty, openQty)
 		accQty = accQty.Add(qty)
 		accQuote = accQuote.Add(exchangetypes.QuoteAmount(!opts.IsBuy, price, qty))
 		numPriceLevels++
 		return false
 	})
+	return nil
 }
 
-func (k OrderSource) AfterOrdersExecuted(ctx sdk.Context, _ exchangetypes.Market, ordererAddr sdk.AccAddress, results []*exchangetypes.MemOrder) {
+func (k OrderSource) AfterOrdersExecuted(ctx sdk.Context, _ exchangetypes.Market, ordererAddr sdk.AccAddress, results []*exchangetypes.MemOrder) error {
 	pool := k.MustGetPoolByReserveAddress(ctx, ordererAddr)
-	k.AfterPoolOrdersExecuted(ctx, pool, results)
+	return k.AfterPoolOrdersExecuted(ctx, pool, results)
 }
 
-func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, results []*exchangetypes.MemOrder) {
+func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, results []*exchangetypes.MemOrder) error {
 	reserveAddr := pool.MustGetReserveAddress()
 	poolState := k.MustGetPoolState(ctx, pool.Id)
 	accruedRewards := sdk.NewCoins()
@@ -123,6 +124,7 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 		orderTick := exchangetypes.TickAtPrice(result.Price())
 
 		if isBuy && max && poolState.CurrentTick == targetTick {
+			accrueFees()
 			netLiquidity := k.crossTick(ctx, pool.Id, targetTick, poolState)
 			poolState.CurrentLiquidity = poolState.CurrentLiquidity.Sub(netLiquidity)
 			foundTargetTick = false
@@ -165,7 +167,7 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 		currentSqrtPrice := utils.DecApproxSqrt(poolState.CurrentPrice)
 		var nextSqrtPrice, nextPrice sdk.Dec
 		max = false
-		if i < len(results)-1 || result.ExecutableQuantity().LTE(utils.SmallestDec) {
+		if i < len(results)-1 || result.Quantity().Sub(result.ExecutedQuantity()).LTE(utils.SmallestDec) {
 			nextSqrtPrice = utils.DecApproxSqrt(result.Price())
 			nextPrice = result.Price()
 			max = true
@@ -219,6 +221,7 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 
 	if err := k.bankKeeper.SendCoins(
 		ctx, reserveAddr, pool.MustGetRewardsPoolAddress(), accruedRewards); err != nil {
-		panic(err)
+		return err
 	}
+	return nil
 }

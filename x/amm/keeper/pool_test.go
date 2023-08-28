@@ -140,12 +140,12 @@ func (s *KeeperTestSuite) TestPoolOrders() {
 			lpAddr := s.FundedAccount(1, utils.ParseCoins("10000_000000ucre,10000_000000uusd"))
 			tc.addLiquidity(pool, lpAddr)
 			var buyOrders, sellOrders []order
-			s.App.AMMKeeper.IteratePoolOrders(s.Ctx, pool, true, func(price, qty sdk.Dec) (stop bool) {
-				buyOrders = append(buyOrders, order{price, qty})
+			s.App.AMMKeeper.IteratePoolOrders(s.Ctx, pool, true, func(price, qty, openQty sdk.Dec) (stop bool) {
+				buyOrders = append(buyOrders, order{price, openQty})
 				return false
 			})
-			s.App.AMMKeeper.IteratePoolOrders(s.Ctx, pool, false, func(price, qty sdk.Dec) (stop bool) {
-				sellOrders = append(sellOrders, order{price, qty})
+			s.App.AMMKeeper.IteratePoolOrders(s.Ctx, pool, false, func(price, qty, openQty sdk.Dec) (stop bool) {
+				sellOrders = append(sellOrders, order{price, openQty})
 				return false
 			})
 			s.Require().Len(buyOrders, len(tc.buyOrders))
