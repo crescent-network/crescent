@@ -21,11 +21,16 @@ func (k Keeper) CreatePublicPosition(
 	lowerTick := exchangetypes.TickAtPrice(lowerPrice)
 	upperTick := exchangetypes.TickAtPrice(upperPrice)
 
+	if found := k.LookupPublicPositionByParams(ctx, poolId, lowerTick, upperTick); found {
+		return publicPosition, types.ErrPublicPositionExists
+	}
+
 	publicPositionId := k.GetNextPublicPositionIdWithUpdate(ctx)
 	publicPosition = types.NewPublicPosition(
 		publicPositionId, pool.Id, lowerTick, upperTick, minBidAmt, feeRate)
 	k.SetPublicPosition(ctx, publicPosition)
 	k.SetPublicPositionsByPoolIndex(ctx, publicPosition)
+	k.SetPublicPositionByParamsIndex(ctx, publicPosition)
 
 	if err := ctx.EventManager().EmitTypedEvent(&types.EventPublicPositionCreated{
 		PublicPositionId: publicPosition.Id,
