@@ -103,8 +103,8 @@ func (s *KeeperTestSuite) TestQueryAllPools() {
 				pool := resp.Pools[0]
 				s.Require().EqualValues(1, pool.MarketId)
 				s.Require().EqualValues(2, pool.Id)
-				s.AssertEqual(utils.ParseCoin("153579683ucre"), pool.Balance0)
-				s.AssertEqual(utils.ParseCoin("257373895uusd"), pool.Balance1)
+				s.AssertEqual(utils.ParseCoin("153579684ucre"), pool.Balance0)
+				s.AssertEqual(utils.ParseCoin("257373896uusd"), pool.Balance1)
 			},
 		},
 		{
@@ -536,7 +536,7 @@ func (s *KeeperTestSuite) TestQueryCollectibleCoins() {
 			},
 			"",
 			func(resp *types.QueryCollectibleCoinsResponse) {
-				s.AssertEqual(utils.ParseCoins("26706uatom,72663ucre,1094754uusd"), resp.Fee)
+				s.AssertEqual(utils.ParseCoins("24181uatom,62704ucre,945127uusd"), resp.Fee)
 				s.AssertEqual(utils.ParseCoins("8578uatom,8467ucre"), resp.FarmingRewards)
 			},
 		},
@@ -547,7 +547,7 @@ func (s *KeeperTestSuite) TestQueryCollectibleCoins() {
 			},
 			"",
 			func(resp *types.QueryCollectibleCoinsResponse) {
-				s.AssertEqual(utils.ParseCoins("72663ucre,440713uusd"), resp.Fee)
+				s.AssertEqual(utils.ParseCoins("62704ucre,366086uusd"), resp.Fee)
 				s.AssertEqual(utils.ParseCoins("8467ucre"), resp.FarmingRewards)
 			},
 		},

@@ -125,6 +125,7 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 		orderTick := exchangetypes.TickAtPrice(result.Price())
 
 		if isBuy && max && poolState.CurrentTick == targetTick {
+			accrueFees()
 			netLiquidity := k.crossTick(ctx, pool.Id, targetTick, poolState)
 			poolState.CurrentLiquidity = poolState.CurrentLiquidity.Sub(netLiquidity)
 			foundTargetTick = false
@@ -167,7 +168,7 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 		currentSqrtPrice := utils.DecApproxSqrt(poolState.CurrentPrice)
 		var nextSqrtPrice, nextPrice sdk.Dec
 		max = false
-		if i < len(results)-1 || result.ExecutableQuantity().LTE(utils.SmallestDec) {
+		if i < len(results)-1 || result.Quantity().Sub(result.ExecutedQuantity()).LTE(utils.SmallestDec) {
 			nextSqrtPrice = utils.DecApproxSqrt(result.Price())
 			nextPrice = result.Price()
 			max = true

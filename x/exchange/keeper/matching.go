@@ -20,7 +20,7 @@ func (k Keeper) ConstructMemOrderBookSide(
 		for _, order := range orders {
 			obs.AddOrder(types.NewUserMemOrder(order))
 			accQty = accQty.Add(order.OpenQuantity)
-			accQuote = accQuote.Add(types.QuoteAmount(opts.IsBuy, order.Price, order.OpenQuantity))
+			accQuote = accQuote.Add(types.QuoteAmount(!opts.IsBuy, order.Price, order.OpenQuantity))
 		}
 		numPriceLevels++
 		return false
@@ -28,7 +28,7 @@ func (k Keeper) ConstructMemOrderBookSide(
 	for _, name := range k.sourceNames {
 		source := k.sources[name]
 		if err := source.ConstructMemOrderBookSide(ctx, market, func(ordererAddr sdk.AccAddress, price, qty, openQty sdk.Dec) {
-			deposit := types.DepositAmount(opts.IsBuy, price, qty)
+			deposit := types.DepositAmount(opts.IsBuy, price, openQty)
 			if escrow != nil {
 				payDenom, _ := types.PayReceiveDenoms(market.BaseDenom, market.QuoteDenom, opts.IsBuy)
 				escrow.Lock(ordererAddr, sdk.NewDecCoinFromDec(payDenom, deposit))
@@ -39,6 +39,7 @@ func (k Keeper) ConstructMemOrderBookSide(
 		}
 	}
 	if opts.MaxNumPriceLevels > 0 {
+		// TODO: can refund?
 		obs.Limit(opts.MaxNumPriceLevels)
 	}
 	return obs
