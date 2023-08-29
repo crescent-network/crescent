@@ -62,8 +62,15 @@ func UpgradeHandler(
 		// Set new module parameters.
 		markerKeeper.SetParams(ctx, markertypes.DefaultParams())
 		exchangeParams := exchangetypes.DefaultParams()
+		exchangeParams.MarketCreationFee = sdk.NewCoins(sdk.NewInt64Coin("ucre", 2000_000000))
+		exchangeParams.Fees = exchangetypes.NewFees(
+			sdk.NewDecWithPrec(1, 3), // Maker: 0.1%
+			sdk.NewDecWithPrec(2, 3), // Taker: 0.2%
+			sdk.NewDecWithPrec(8, 1)) // Order source: Taker * 80%
 		exchangeKeeper.SetParams(ctx, exchangeParams)
 		ammParams := ammtypes.DefaultParams()
+		ammParams.PoolCreationFee = sdk.NewCoins(sdk.NewInt64Coin("ucre", 1000_000000))
+		ammParams.PrivateFarmingPlanCreationFee = sdk.NewCoins(sdk.NewInt64Coin("ucre", 1000_000000))
 		ammKeeper.SetParams(ctx, ammParams)
 
 		// Migrate farming plans and staked coins to the new amm module.
