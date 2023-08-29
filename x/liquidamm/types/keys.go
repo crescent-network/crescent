@@ -2,8 +2,10 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 
 	utils "github.com/crescent-network/crescent/v5/types"
+	ammtypes "github.com/crescent-network/crescent/v5/x/amm/types"
 )
 
 const (
@@ -22,12 +24,13 @@ const (
 
 // keys for the store prefixes
 var (
-	LastPublicPositionIdKey             = []byte{0x81}
-	LastRewardsAuctionEndTimeKey        = []byte{0x82}
-	PublicPositionKeyPrefix             = []byte{0x83}
-	PublicPositionsByPoolIndexKeyPrefix = []byte{0x84}
-	RewardsAuctionKeyPrefix             = []byte{0x85}
-	BidKeyPrefix                        = []byte{0x86}
+	LastPublicPositionIdKey              = []byte{0x81}
+	LastRewardsAuctionEndTimeKey         = []byte{0x82}
+	PublicPositionKeyPrefix              = []byte{0x83}
+	PublicPositionsByPoolIndexKeyPrefix  = []byte{0x84}
+	PublicPositionByParamsIndexKeyPrefix = []byte{0x85}
+	RewardsAuctionKeyPrefix              = []byte{0x86}
+	BidKeyPrefix                         = []byte{0x87}
 )
 
 // GetPublicPositionKey returns the store key to retrieve the public position object
@@ -45,6 +48,16 @@ func GetPublicPositionsByPoolIndexKey(poolId, publicPositionId uint64) []byte {
 
 func GetPublicPositionsByPoolIteratorPrefix(poolId uint64) []byte {
 	return utils.Key(PublicPositionsByPoolIndexKeyPrefix, sdk.Uint64ToBigEndian(poolId))
+}
+
+func GetPublicPositionByParamsIndexKey(
+	ownerAddr sdk.AccAddress, poolId uint64, lowerTick, upperTick int32) []byte {
+	return utils.Key(
+		PublicPositionByParamsIndexKeyPrefix,
+		address.MustLengthPrefix(ownerAddr),
+		sdk.Uint64ToBigEndian(poolId),
+		ammtypes.TickToBytes(lowerTick),
+		ammtypes.TickToBytes(upperTick))
 }
 
 // GetRewardsAuctionKey returns the store key to retrieve the rewards auction object

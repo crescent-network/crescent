@@ -105,6 +105,18 @@ func (k Keeper) SetPublicPositionsByPoolIndex(ctx sdk.Context, publicPosition ty
 	store.Set(types.GetPublicPositionsByPoolIndexKey(publicPosition.PoolId, publicPosition.Id), []byte{})
 }
 
+func (k Keeper) SetPublicPositionByParamsIndex(ctx sdk.Context, publicPosition types.PublicPosition) {
+	store := ctx.KVStore(k.storeKey)
+	store.Set(types.GetPublicPositionByParamsIndexKey(
+		k.GetModuleAddress(), publicPosition.PoolId, publicPosition.LowerTick, publicPosition.UpperTick), []byte{})
+}
+
+func (k Keeper) LookupPublicPositionByParams(ctx sdk.Context, poolId uint64, lowerTick, upperTick int32) (found bool) {
+	store := ctx.KVStore(k.storeKey)
+	return store.Has(types.GetPublicPositionByParamsIndexKey(
+		k.GetModuleAddress(), poolId, lowerTick, upperTick))
+}
+
 // GetNextRewardsAuctionEndTime returns the last rewards auction end time.
 func (k Keeper) GetNextRewardsAuctionEndTime(ctx sdk.Context) (t time.Time, found bool) {
 	store := ctx.KVStore(k.storeKey)
