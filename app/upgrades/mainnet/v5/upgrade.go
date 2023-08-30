@@ -122,16 +122,17 @@ func UpgradeHandler(
 		// Unfarm all coins from all farmers.
 		// This will remove all farmers' positions and withdraw their rewards
 		// from the rewards pool.
+		var positions []lpfarmtypes.Position
 		lpFarmKeeper.IterateAllPositions(ctx, func(position lpfarmtypes.Position) (stop bool) {
-			farmerAddr := sdk.MustAccAddressFromBech32(position.Farmer)
-			coin := sdk.NewCoin(position.Denom, position.FarmingAmount)
-			if _, err = lpFarmKeeper.Unfarm(ctx, farmerAddr, coin); err != nil {
-				return true
-			}
+			positions = append(positions, position)
 			return false
 		})
-		if err != nil {
-			return nil, err
+		for _, position := range positions {
+			farmerAddr := sdk.MustAccAddressFromBech32(position.Farmer)
+			coin := sdk.NewCoin(position.Denom, position.FarmingAmount)
+			if _, err := lpFarmKeeper.Unfarm(ctx, farmerAddr, coin); err != nil {
+				return nil, err
+			}
 		}
 		// Send remaining rewards(due to decimal truncation) in the rewards
 		// pool to the community pool.
@@ -152,10 +153,14 @@ func UpgradeHandler(
 		defaultOrderSourceFeeRatio := exchangeParams.Fees.DefaultOrderSourceFeeRatio
 		pairs := map[uint64]liquiditytypes.Pair{}
 		var pairIds []uint64 // For ordered map access
-		if err := liquidityKeeper.IterateAllPairs(ctx, func(pair liquiditytypes.Pair) (stop bool, err error) {
+		_ = liquidityKeeper.IterateAllPairs(ctx, func(pair liquiditytypes.Pair) (stop bool, err error) {
 			// Cache pairs for later iteration.
 			pairs[pair.Id] = pair
 			pairIds = append(pairIds, pair.Id)
+			return false, nil
+		})
+		for _, pairId := range pairIds {
+			pair := pairs[pairId]
 
 			// Cancel all the orders. Note that the x/upgrade begin blocker is
 			// the first begin blocker to run, so orders that should be deleted in
@@ -169,7 +174,7 @@ func UpgradeHandler(
 				}
 				return false, nil
 			}); err != nil {
-				return true, err
+				return nil, err
 			}
 
 			// If there's a coin inside a pair which has no supply in bank module,
@@ -177,7 +182,7 @@ func UpgradeHandler(
 			// Note, however, if the pool exists then we can safely assume that
 			// a market with the same id with the pool's pair id exists.
 			if !bankKeeper.HasSupply(ctx, pair.BaseCoinDenom) || !bankKeeper.HasSupply(ctx, pair.QuoteCoinDenom) {
-				return false, nil
+				continue
 			}
 
 			// Save a new market with the same id as the pair's id and set
@@ -188,9 +193,6 @@ func UpgradeHandler(
 			exchangeKeeper.SetMarket(ctx, market)
 			exchangeKeeper.SetMarketByDenomsIndex(ctx, market)
 			exchangeKeeper.SetMarketState(ctx, market.Id, exchangetypes.NewMarketState(pair.LastPrice))
-			return false, nil
-		}); err != nil {
-			return nil, err
 		}
 
 		// Create a new pool for each market if the market's corresponding pair
