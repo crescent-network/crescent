@@ -192,11 +192,11 @@ func (s *KeeperTestSuite) TestQueryRewardsAuctions() {
 				auction := resp.RewardsAuctions[0]
 				s.Require().EqualValues(1, auction.Id)
 				s.Require().Equal(types.AuctionStatusFinished, auction.Status)
-				s.Require().Equal(utils.ParseCoin("1307216496lashare1"), auction.WinningBid.Share)
+				s.Require().Equal(utils.ParseCoin("1307216496sb1"), auction.WinningBid.Share)
 				auction = resp.RewardsAuctions[1]
 				s.Require().EqualValues(2, auction.Id)
 				s.Require().Equal(types.AuctionStatusStarted, auction.Status)
-				s.Require().Equal(utils.ParseCoin("814642164lashare1"), auction.WinningBid.Share)
+				s.Require().Equal(utils.ParseCoin("814642164sb1"), auction.WinningBid.Share)
 			},
 		},
 		{

@@ -112,20 +112,20 @@ func TestMsgBurnShare(t *testing.T) {
 		{
 			"invalid share",
 			func(msg *types.MsgBurnShare) {
-				msg.Share = utils.ParseCoin("0lashare1")
+				msg.Share = utils.ParseCoin("0sb1")
 			},
-			"share amount must be positive: 0lashare1: invalid request",
+			"share amount must be positive: 0sb1: invalid request",
 		},
 		{
 			"invalid share denom",
 			func(msg *types.MsgBurnShare) {
-				msg.Share = utils.ParseCoin("10000lashare2")
+				msg.Share = utils.ParseCoin("10000sb2")
 			},
-			"share denom must be lashare1: invalid request",
+			"share denom must be sb1: invalid request",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			msg := types.NewMsgBurnShare(utils.TestAddress(0), 1, utils.ParseCoin("1000000lashare1"))
+			msg := types.NewMsgBurnShare(utils.TestAddress(0), 1, utils.ParseCoin("1000000sb1"))
 			tc.malleate(msg)
 			require.Equal(t, types.TypeMsgBurnShare, msg.Type())
 			require.Equal(t, types.RouterKey, msg.Route())
@@ -178,20 +178,20 @@ func TestMsgPlaceBid(t *testing.T) {
 		{
 			"invalid share",
 			func(msg *types.MsgPlaceBid) {
-				msg.Share = utils.ParseCoin("0lashare1")
+				msg.Share = utils.ParseCoin("0sb1")
 			},
-			"share amount must be positive: 0lashare1: invalid request",
+			"share amount must be positive: 0sb1: invalid request",
 		},
 		{
 			"invalid share denom",
 			func(msg *types.MsgPlaceBid) {
-				msg.Share = utils.ParseCoin("10000lashare2")
+				msg.Share = utils.ParseCoin("10000sb2")
 			},
-			"share denom must be lashare1: invalid request",
+			"share denom must be sb1: invalid request",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			msg := types.NewMsgPlaceBid(utils.TestAddress(0), 1, 1, utils.ParseCoin("1000000lashare1"))
+			msg := types.NewMsgPlaceBid(utils.TestAddress(0), 1, 1, utils.ParseCoin("1000000sb1"))
 			tc.malleate(msg)
 			require.Equal(t, types.TypeMsgPlaceBid, msg.Type())
 			require.Equal(t, types.RouterKey, msg.Route())
