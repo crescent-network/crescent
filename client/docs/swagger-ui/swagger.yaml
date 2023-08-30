@@ -13558,6 +13558,75 @@ paths:
           format: uint64
       tags:
         - Query
+  '/crescent/amm/v1beta1/positions/{position_id}/assets':
+    get:
+      operationId: PositionAssets
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              coin0:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+                description: >-
+                  Coin defines a token with a denomination and an amount.
+
+
+                  NOTE: The amount field is an Int which implements the custom
+                  method
+
+                  signatures required by gogoproto.
+              coin1:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+                description: >-
+                  Coin defines a token with a denomination and an amount.
+
+
+                  NOTE: The amount field is an Int which implements the custom
+                  method
+
+                  signatures required by gogoproto.
+        default:
+          description: An unexpected error response
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: position_id
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - Query
   /crescent/amm/v1beta1/simulation/add_liquidity:
     get:
       operationId: AddLiquiditySimulation
@@ -21507,6 +21576,33 @@ definitions:
                 method
 
                 signatures required by gogoproto.
+  crescent.amm.v1beta1.QueryPositionAssetsResponse:
+    type: object
+    properties:
+      coin0:
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
+      coin1:
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
   crescent.amm.v1beta1.QueryPositionResponse:
     type: object
     properties:

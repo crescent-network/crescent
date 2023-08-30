@@ -29,6 +29,9 @@ service Query {
   rpc Position(QueryPositionRequest) returns (QueryPositionResponse) {
     option (google.api.http).get = "/crescent/amm/v1beta1/positions/{position_id}";
   }
+  rpc PositionAssets(QueryPositionAssetsRequest) returns (QueryPositionAssetsResponse) {
+    option (google.api.http).get = "/crescent/amm/v1beta1/positions/{position_id}/assets";
+  }
   rpc AddLiquiditySimulation(QueryAddLiquiditySimulationRequest) returns (QueryAddLiquiditySimulationResponse) {
     option (google.api.http).get = "/crescent/amm/v1beta1/simulation/add_liquidity";
   }
@@ -94,6 +97,15 @@ message QueryPositionRequest {
 
 message QueryPositionResponse {
   PositionResponse position = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryPositionAssetsRequest {
+  uint64 position_id = 1;
+}
+
+message QueryPositionAssetsResponse {
+  cosmos.base.v1beta1.Coin coin0 = 1 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin coin1 = 2 [(gogoproto.nullable) = false];
 }
 
 message QueryAddLiquiditySimulationRequest {

@@ -21,7 +21,6 @@ const (
 	DefaultWeightMsgMMOrder          int = 0
 	DefaultWeightMsgCancelOrder      int = 0
 	DefaultWeightMsgCancelAllOrders  int = 0
-	DefaultWeightMsgCancelMMOrder    int = 0
 
 	// Deprecated claim module
 	DefaultWeightMsgClaim int = 0
