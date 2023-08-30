@@ -34,10 +34,10 @@ func (s *TestSuite) BurnShare(senderAddr sdk.AccAddress, publicPositionId uint64
 	return
 }
 
-func (s *TestSuite) PlaceBid(bidderAddr sdk.AccAddress, positionId, auctionId uint64, share sdk.Coin) (bid liquidammtypes.Bid) {
+func (s *TestSuite) PlaceBid(bidderAddr sdk.AccAddress, publicPositionId, auctionId uint64, share sdk.Coin) (bid liquidammtypes.Bid) {
 	s.T().Helper()
 	var err error
-	bid, err = s.App.LiquidAMMKeeper.PlaceBid(s.Ctx, bidderAddr, positionId, auctionId, share)
+	bid, err = s.App.LiquidAMMKeeper.PlaceBid(s.Ctx, bidderAddr, publicPositionId, auctionId, share)
 	s.Require().NoError(err)
 	return
 }

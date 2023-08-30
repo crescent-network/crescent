@@ -144,7 +144,7 @@ func SimulateMsgRemoveLiquidity(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		simAccount, msg, found := findMsgPlaceRemoveLiquidityParams(r, accs, k, ctx)
+		simAccount, msg, found := findMsgRemoveLiquidityParams(r, accs, k, ctx)
 		if !found {
 			return simtypes.NoOpMsg(
 				types.ModuleName, types.TypeMsgRemoveLiquidity, "unable to remove liquidity"), nil, nil
@@ -286,7 +286,7 @@ func findMsgAddLiquidityParams(
 	return acc, msg, false
 }
 
-func findMsgPlaceRemoveLiquidityParams(
+func findMsgRemoveLiquidityParams(
 	r *rand.Rand, accs []simtypes.Account,
 	k keeper.Keeper, ctx sdk.Context) (acc simtypes.Account, msg *types.MsgRemoveLiquidity, found bool) {
 	accs = utils.ShuffleSimAccounts(r, accs)
