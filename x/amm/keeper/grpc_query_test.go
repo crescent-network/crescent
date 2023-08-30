@@ -317,6 +317,56 @@ func (s *KeeperTestSuite) TestQueryPosition() {
 	}
 }
 
+func (s *KeeperTestSuite) TestQueryPositionAssets() {
+	s.SetupSampleScenario()
+
+	for _, tc := range []struct {
+		name        string
+		req         *types.QueryPositionAssetsRequest
+		expectedErr string
+		postRun     func(resp *types.QueryPositionAssetsResponse)
+	}{
+		{
+			"happy case",
+			&types.QueryPositionAssetsRequest{
+				PositionId: 1,
+			},
+			"",
+			func(resp *types.QueryPositionAssetsResponse) {
+				s.AssertEqual(utils.ParseCoin("133675209ucre"), resp.Coin0)
+				s.AssertEqual(utils.ParseCoin("257373895uusd"), resp.Coin1)
+			},
+		},
+		{
+			"position not found",
+			&types.QueryPositionAssetsRequest{
+				PositionId: 0,
+			},
+			"rpc error: code = NotFound desc = position not found",
+			nil,
+		},
+		{
+			"position not found 2",
+			&types.QueryPositionAssetsRequest{
+				PositionId: 5,
+			},
+			"rpc error: code = NotFound desc = position not found",
+			nil,
+		},
+	} {
+		s.Run(tc.name, func() {
+			ctx, _ := s.Ctx.CacheContext()
+			resp, err := s.querier.PositionAssets(sdk.WrapSDKContext(ctx), tc.req)
+			if tc.expectedErr == "" {
+				s.Require().NoError(err)
+				tc.postRun(resp)
+			} else {
+				s.Require().EqualError(err, tc.expectedErr)
+			}
+		})
+	}
+}
+
 func (s *KeeperTestSuite) TestQueryAddLiquiditySimulation() {
 	s.SetupSampleScenario()
 

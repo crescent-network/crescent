@@ -163,6 +163,22 @@ func (k Querier) Position(c context.Context, req *types.QueryPositionRequest) (*
 	return &types.QueryPositionResponse{Position: types.NewPositionResponse(position)}, nil
 }
 
+func (k Querier) PositionAssets(c context.Context, req *types.QueryPositionAssetsRequest) (*types.QueryPositionAssetsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+	position, found := k.GetPosition(ctx, req.PositionId)
+	if !found {
+		return nil, status.Error(codes.NotFound, "position not found")
+	}
+	coin0, coin1, err := k.Keeper.PositionAssets(ctx, position.Id)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+	return &types.QueryPositionAssetsResponse{Coin0: coin0, Coin1: coin1}, nil
+}
+
 func (k Querier) AddLiquiditySimulation(c context.Context, req *types.QueryAddLiquiditySimulationRequest) (*types.QueryAddLiquiditySimulationResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")

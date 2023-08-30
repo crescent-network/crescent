@@ -184,6 +184,21 @@ func (k Keeper) Collect(
 	return nil
 }
 
+func (k Keeper) PositionAssets(ctx sdk.Context, positionId uint64) (coin0, coin1 sdk.Coin, err error) {
+	position, found := k.GetPosition(ctx, positionId)
+	if !found {
+		return coin0, coin1, sdkerrors.Wrap(sdkerrors.ErrNotFound, "position not found")
+	}
+	pool := k.MustGetPool(ctx, position.PoolId)
+	ctx, _ = ctx.CacheContext()
+	_, amt0, amt1 := k.modifyPosition(
+		ctx, pool, position.MustGetOwnerAddress(), position.LowerTick, position.UpperTick, position.Liquidity.Neg())
+	amt0, amt1 = amt0.Neg(), amt1.Neg()
+	coin0 = sdk.NewCoin(pool.Denom0, amt0)
+	coin1 = sdk.NewCoin(pool.Denom1, amt1)
+	return
+}
+
 func (k Keeper) CollectibleCoins(ctx sdk.Context, positionId uint64) (fee, farmingRewards sdk.Coins, err error) {
 	position, found := k.GetPosition(ctx, positionId)
 	if !found {
