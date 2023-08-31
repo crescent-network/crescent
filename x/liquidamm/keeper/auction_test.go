@@ -22,18 +22,18 @@ func (s *KeeperTestSuite) TestPlaceBid() {
 
 	bidderAddr1 := utils.TestAddress(2)
 	s.MintShare(bidderAddr1, publicPosition.Id, utils.ParseCoins("100_000000ucre,500_000000uusd"), true)
-	s.PlaceBid(bidderAddr1, publicPosition.Id, auction.Id, utils.ParseCoin("100000lashare1"))
+	s.PlaceBid(bidderAddr1, publicPosition.Id, auction.Id, utils.ParseCoin("100000sb1"))
 	s.NextBlock()
 
 	s.AdvanceRewardsAuctions()
 
 	auction, _ = s.keeper.GetLastRewardsAuction(s.Ctx, publicPosition.Id)
 
-	s.PlaceBid(bidderAddr1, publicPosition.Id, auction.Id, utils.ParseCoin("100000lashare1"))
+	s.PlaceBid(bidderAddr1, publicPosition.Id, auction.Id, utils.ParseCoin("100000sb1"))
 
 	bidderAddr2 := utils.TestAddress(3)
 	s.MintShare(bidderAddr2, publicPosition.Id, utils.ParseCoins("100_000000ucre,500_000000uusd"), true)
-	s.PlaceBid(bidderAddr2, publicPosition.Id, auction.Id, utils.ParseCoin("200000lashare1"))
+	s.PlaceBid(bidderAddr2, publicPosition.Id, auction.Id, utils.ParseCoin("200000sb1"))
 	s.NextBlock()
 
 	s.Require().Len(s.keeper.GetAllBids(s.Ctx), 2)
@@ -49,25 +49,25 @@ func (s *KeeperTestSuite) TestPlaceBid() {
 		{
 			"happy case",
 			types.NewMsgPlaceBid(
-				bidderAddr3, publicPosition.Id, auction.Id, utils.ParseCoin("300000lashare1")),
+				bidderAddr3, publicPosition.Id, auction.Id, utils.ParseCoin("300000sb1")),
 			"",
 		},
 		{
 			"minimum bid amount",
 			types.NewMsgPlaceBid(
-				bidderAddr3, publicPosition.Id, auction.Id, utils.ParseCoin("100lashare1")),
+				bidderAddr3, publicPosition.Id, auction.Id, utils.ParseCoin("100sb1")),
 			"share amount must not be smaller than 10000: invalid request",
 		},
 		{
 			"smaller than winning bid",
 			types.NewMsgPlaceBid(
-				bidderAddr3, publicPosition.Id, auction.Id, utils.ParseCoin("150000lashare1")),
+				bidderAddr3, publicPosition.Id, auction.Id, utils.ParseCoin("150000sb1")),
 			"share amount must be greater than winning bid's share 200000: insufficient bid amount",
 		},
 		{
 			"finished auction",
 			types.NewMsgPlaceBid(
-				bidderAddr3, publicPosition.Id, auction.Id-1, utils.ParseCoin("300000lashare1")),
+				bidderAddr3, publicPosition.Id, auction.Id-1, utils.ParseCoin("300000sb1")),
 			"rewards auction is not started: invalid request",
 		},
 	} {
@@ -146,14 +146,14 @@ func (s *KeeperTestSuite) TestPlaceBid_Refund() {
 
 	auction, found := s.keeper.GetLastRewardsAuction(s.Ctx, publicPosition.Id)
 	s.Require().True(found)
-	s.PlaceBid(bidderAddr1, publicPosition.Id, auction.Id, utils.ParseCoin("100000lashare1"))
+	s.PlaceBid(bidderAddr1, publicPosition.Id, auction.Id, utils.ParseCoin("100000sb1"))
 	s.NextBlock()
 
 	balancesBefore := s.GetAllBalances(bidderAddr1)
-	s.PlaceBid(bidderAddr1, publicPosition.Id, auction.Id, utils.ParseCoin("200000lashare1"))
+	s.PlaceBid(bidderAddr1, publicPosition.Id, auction.Id, utils.ParseCoin("200000sb1"))
 	s.NextBlock()
 	balancesAfter := s.GetAllBalances(bidderAddr1)
-	s.Require().Equal("100000lashare1", balancesBefore.Sub(balancesAfter).String())
+	s.Require().Equal("100000sb1", balancesBefore.Sub(balancesAfter).String())
 }
 
 func (s *KeeperTestSuite) TestAfterRewardsAllocated() {
@@ -177,18 +177,18 @@ func (s *KeeperTestSuite) TestAfterRewardsAllocated() {
 	s.MintShare(bidderAddr2, publicPosition.Id, utils.ParseCoins("100_000000ucre,500_000000uusd"), true)
 	s.MintShare(bidderAddr3, publicPosition.Id, utils.ParseCoins("100_000000ucre,500_000000uusd"), true)
 	// Previous share balance
-	s.Require().Equal("4357388321lashare1", s.GetBalance(bidderAddr1, "lashare1").String())
-	s.Require().Equal("4357388321lashare1", s.GetBalance(bidderAddr2, "lashare1").String())
-	s.PlaceBid(bidderAddr1, publicPosition.Id, auction.Id, utils.ParseCoin("100000lashare1"))
-	s.PlaceBid(bidderAddr2, publicPosition.Id, auction.Id, utils.ParseCoin("200000lashare1"))
-	s.PlaceBid(bidderAddr3, publicPosition.Id, auction.Id, utils.ParseCoin("300000lashare1"))
+	s.Require().Equal("4357388321sb1", s.GetBalance(bidderAddr1, "sb1").String())
+	s.Require().Equal("4357388321sb1", s.GetBalance(bidderAddr2, "sb1").String())
+	s.PlaceBid(bidderAddr1, publicPosition.Id, auction.Id, utils.ParseCoin("100000sb1"))
+	s.PlaceBid(bidderAddr2, publicPosition.Id, auction.Id, utils.ParseCoin("200000sb1"))
+	s.PlaceBid(bidderAddr3, publicPosition.Id, auction.Id, utils.ParseCoin("300000sb1"))
 
 	s.NextBlock()
 	s.AdvanceRewardsAuctions()
 
 	// Ensure that two bidders got their shares back to their balances
-	s.Require().Equal("4357388321lashare1", s.GetBalance(bidderAddr1, "lashare1").String())
-	s.Require().Equal("4357388321lashare1", s.GetBalance(bidderAddr2, "lashare1").String())
+	s.Require().Equal("4357388321sb1", s.GetBalance(bidderAddr1, "sb1").String())
+	s.Require().Equal("4357388321sb1", s.GetBalance(bidderAddr2, "sb1").String())
 	s.Require().True(s.GetBalance(bidderAddr3, "uatom").Amount.GT(sdk.NewInt(1)))
 
 	// One more epoch should be advanced
@@ -196,7 +196,7 @@ func (s *KeeperTestSuite) TestAfterRewardsAllocated() {
 	s.AdvanceRewardsAuctions()
 
 	// Ensure liquidity per share increased due to the auction result
-	removedLiquidity, _, _ := s.BurnShare(minterAddr, publicPosition.Id, s.GetBalance(minterAddr, "lashare1"))
+	removedLiquidity, _, _ := s.BurnShare(minterAddr, publicPosition.Id, s.GetBalance(minterAddr, "sb1"))
 	s.Require().True(removedLiquidity.GT(liquidity))
 }
 
@@ -233,7 +233,7 @@ func (s *KeeperTestSuite) TestRewardsAuction_RewardsAndFees() {
 	bidderAddr1 := utils.TestAddress(2)
 	s.MintShare(bidderAddr1, publicPosition.Id, utils.ParseCoins("100_000000ucre,500_000000uusd"), true)
 	auction, _ := s.keeper.GetLastRewardsAuction(s.Ctx, publicPosition.Id)
-	s.PlaceBid(bidderAddr1, publicPosition.Id, auction.Id, utils.ParseCoin("100000lashare1"))
+	s.PlaceBid(bidderAddr1, publicPosition.Id, auction.Id, utils.ParseCoin("100000sb1"))
 	s.NextBlock()
 
 	position := s.keeper.MustGetAMMPosition(s.Ctx, publicPosition)
