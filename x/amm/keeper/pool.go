@@ -91,12 +91,14 @@ func (k Keeper) IteratePoolOrders(ctx sdk.Context, pool types.Pool, isBuy bool, 
 					qty = types.Amount0DeltaRoundingDec(currentSqrtPrice, orderSqrtPrice, orderLiquidity, false)
 					openQty = sdk.MinDec(reserveBalance, qty)
 				}
-				if openQty.IsPositive() && (openQty.GTE(pool.MinOrderQuantity) || orderTick == tick) {
+				if openQty.IsPositive() && (orderTick == tick || (openQty.GTE(pool.MinOrderQuantity))) {
 					if cb(orderPrice, qty, openQty) {
 						return true
 					}
 					reserveBalance = reserveBalance.Sub(exchangetypes.DepositAmount(isBuy, orderPrice, qty))
 					currentPrice = orderPrice
+				} else { // No more possible order price
+					break
 				}
 				if orderTick == tick {
 					break
@@ -129,30 +131,36 @@ func NextOrderTick(
 		intermediate := liquidityDec.Power(2).Add(
 			minOrderQty.Mul(liquidityDec).MulTruncate(currentSqrtPrice).MulInt64(4))
 		orderSqrtPrice := utils.DecApproxSqrt(intermediate).Sub(liquidityDec).QuoTruncate(minOrderQty.MulInt64(2))
-		if !orderSqrtPrice.IsPositive() || orderSqrtPrice.GTE(currentSqrtPrice) {
+		if !orderSqrtPrice.IsPositive() {
 			return 0, false
 		}
 		// 2. Check min order quote
 		orderSqrtPrice2 := currentSqrtPrice.Mul(liquidityDec).Sub(minOrderQuote).QuoTruncate(liquidityDec)
-		if !orderSqrtPrice2.IsPositive() || orderSqrtPrice2.GTE(currentSqrtPrice) {
+		if !orderSqrtPrice2.IsPositive() {
 			return 0, false
 		}
 		orderPrice := sdk.MinDec(orderSqrtPrice, orderSqrtPrice2).Power(2)
+		if orderPrice.GTE(currentPrice) {
+			return 0, false
+		}
 		tick = types.AdjustPriceToTickSpacing(orderPrice, tickSpacing, false)
 		return tick, true
 	}
 	// 1. Check min order qty
 	orderSqrtPrice := currentSqrtPrice.Mul(liquidityDec).
 		QuoRoundUp(liquidityDec.Sub(minOrderQty.Mul(currentSqrtPrice)))
-	if !orderSqrtPrice.IsPositive() || orderSqrtPrice.LTE(currentSqrtPrice) {
+	if !orderSqrtPrice.IsPositive() {
 		return 0, false
 	}
 	// 2. Check min order quote
 	orderSqrtPrice2 := minOrderQuote.Mul(currentSqrtPrice).QuoRoundUp(liquidityDec).Add(currentSqrtPrice)
-	if !orderSqrtPrice2.IsPositive() || orderSqrtPrice2.LTE(currentSqrtPrice) {
+	if !orderSqrtPrice2.IsPositive() {
 		return 0, false
 	}
 	orderPrice := sdk.MaxDec(orderSqrtPrice, orderSqrtPrice2).Power(2)
+	if orderPrice.LTE(currentPrice) {
+		return 0, false
+	}
 	tick = types.AdjustPriceToTickSpacing(orderPrice, tickSpacing, true)
 	return tick, true
 }
