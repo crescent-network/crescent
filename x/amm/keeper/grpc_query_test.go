@@ -915,10 +915,10 @@ func (s *KeeperTestSuite) TestQueryOrderBookEdgecase() {
 	})
 	s.Require().NoError(err)
 	expected := []exchangetypes.OrderBookPriceLevel{
-		{utils.ParseDec("0.000000000002420000"), utils.ParseDec("210247167454518.426965889361986342")},
-		{utils.ParseDec("0.000000000002425000"), utils.ParseDec("106646637502197.215845362922175345")},
-		{utils.ParseDec("0.000000000002430000"), utils.ParseDec("106317311667972.575612265795090924")},
-		{utils.ParseDec("0.000000000002435000"), utils.ParseDec("105989677315106.625670065116473178")},
+		{P: utils.ParseDec("0.000000000002420000"), Q: utils.ParseDec("210247167454518.426965889361986342")},
+		{P: utils.ParseDec("0.000000000002425000"), Q: utils.ParseDec("106646637502197.215845362922175345")},
+		{P: utils.ParseDec("0.000000000002430000"), Q: utils.ParseDec("106317311667972.575612265795090924")},
+		{P: utils.ParseDec("0.000000000002435000"), Q: utils.ParseDec("105989677315106.625670065116473178")},
 	}
 	s.Require().GreaterOrEqual(len(resp.OrderBooks[0].Sells), len(expected))
 	for i, level := range expected {
@@ -926,10 +926,10 @@ func (s *KeeperTestSuite) TestQueryOrderBookEdgecase() {
 		s.AssertEqual(level.Q, resp.OrderBooks[0].Sells[i].Q)
 	}
 	expected = []exchangetypes.OrderBookPriceLevel{
-		{utils.ParseDec("0.000000000002410000"), utils.ParseDec("4041069947696.441682987551867219")},
-		{utils.ParseDec("0.000000000002405000"), utils.ParseDec("107756725726365.156645322245322245")},
-		{utils.ParseDec("0.000000000002400000"), utils.ParseDec("108093523942782.413913333333333333")},
-		{utils.ParseDec("0.000000000002395000"), utils.ParseDec("108432080322133.934602087682672233")},
+		{P: utils.ParseDec("0.000000000002410000"), Q: utils.ParseDec("4041069947696.441682987551867219")},
+		{P: utils.ParseDec("0.000000000002405000"), Q: utils.ParseDec("107756725726365.156645322245322245")},
+		{P: utils.ParseDec("0.000000000002400000"), Q: utils.ParseDec("108093523942782.413913333333333333")},
+		{P: utils.ParseDec("0.000000000002395000"), Q: utils.ParseDec("108432080322133.934602087682672233")},
 	}
 	s.Require().GreaterOrEqual(len(resp.OrderBooks[0].Buys), len(expected))
 	for i, level := range expected {
@@ -957,7 +957,7 @@ func (s *KeeperTestSuite) TestQueryOrderBookEdgecase2() {
 	})
 	s.Require().NoError(err)
 	expected := []exchangetypes.OrderBookPriceLevel{
-		{utils.ParseDec("1000000000000000000000000000000000000.000000000000000000"), utils.ParseDec("9.014670721835706842")},
+		{P: utils.ParseDec("1000000000000000000000000000000000000.000000000000000000"), Q: utils.ParseDec("9.014670721835706842")},
 	}
 	s.Require().GreaterOrEqual(len(resp.OrderBooks[0].Sells), len(expected))
 	for i, level := range expected {
