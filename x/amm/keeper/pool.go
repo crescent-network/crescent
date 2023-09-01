@@ -140,10 +140,13 @@ func NextOrderTick(
 			return 0, false
 		}
 		orderPrice := sdk.MinDec(orderSqrtPrice, orderSqrtPrice2).Power(2)
-		if orderPrice.GTE(currentPrice) {
+		if orderPrice.GT(currentPrice) {
 			return 0, false
 		}
 		tick = types.AdjustPriceToTickSpacing(orderPrice, tickSpacing, false)
+		if orderPrice.Equal(currentPrice) { // This implies PriceAtTick(tick) == currentPrice
+			tick -= int32(tickSpacing)
+		}
 		return tick, true
 	}
 	// 1. Check min order qty
@@ -158,9 +161,12 @@ func NextOrderTick(
 		return 0, false
 	}
 	orderPrice := sdk.MaxDec(orderSqrtPrice, orderSqrtPrice2).Power(2)
-	if orderPrice.LTE(currentPrice) {
+	if orderPrice.LT(currentPrice) {
 		return 0, false
 	}
 	tick = types.AdjustPriceToTickSpacing(orderPrice, tickSpacing, true)
+	if orderPrice.Equal(currentPrice) { // This implies PriceAtTick(tick) == currentPrice
+		tick += int32(tickSpacing)
+	}
 	return tick, true
 }
