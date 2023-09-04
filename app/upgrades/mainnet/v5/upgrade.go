@@ -152,6 +152,7 @@ func UpgradeHandler(
 		defaultOrderSourceFeeRatio := exchangeParams.Fees.DefaultOrderSourceFeeRatio
 		pairs := map[uint64]liquiditytypes.Pair{}
 		var pairIds []uint64 // For ordered map access
+		var lastMarketId uint64
 		if err := liquidityKeeper.IterateAllPairs(ctx, func(pair liquiditytypes.Pair) (stop bool, err error) {
 			// Cache pairs for later iteration.
 			pairs[pair.Id] = pair
@@ -188,10 +189,12 @@ func UpgradeHandler(
 			exchangeKeeper.SetMarket(ctx, market)
 			exchangeKeeper.SetMarketByDenomsIndex(ctx, market)
 			exchangeKeeper.SetMarketState(ctx, market.Id, exchangetypes.NewMarketState(pair.LastPrice))
+			lastMarketId = pair.Id
 			return false, nil
 		}); err != nil {
 			return nil, err
 		}
+		exchangeKeeper.SetLastMarketId(ctx, lastMarketId)
 
 		// Create a new pool for each market if the market's corresponding pair
 		// had at least one active pool.
