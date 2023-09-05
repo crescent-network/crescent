@@ -112,7 +112,8 @@ func (s *KeeperTestSuite) TestPlaceMMLimitOrder() {
 		s.Ctx, market.Id, ordererAddr1, true, utils.ParseDec("5.1"), sdk.NewDec(10_00000), time.Hour)
 	s.Require().EqualError(err, "16 > 15: number of MM orders exceeded the limit")
 
-	s.PlaceMarketOrder(market.Id, ordererAddr2, false, sdk.NewDec(30_000000))
+	s.PlaceLimitOrder(
+		market.Id, ordererAddr2, false, utils.ParseDec("4.9"), sdk.NewDec(30_000000), 0)
 
 	s.PlaceMMLimitOrder(
 		market.Id, ordererAddr1, true, utils.ParseDec("4.9"), sdk.NewDec(10_00000), time.Hour)
@@ -134,7 +135,8 @@ func (s *KeeperTestSuite) TestPlaceMMBatchLimitOrder() {
 		s.Ctx, market.Id, ordererAddr1, true, utils.ParseDec("5.1"), sdk.NewDec(10_00000), time.Hour)
 	s.Require().EqualError(err, "16 > 15: number of MM orders exceeded the limit")
 
-	s.PlaceMarketOrder(market.Id, ordererAddr2, false, sdk.NewDec(30_000000))
+	s.PlaceLimitOrder(
+		market.Id, ordererAddr2, false, utils.ParseDec("4.9"), sdk.NewDec(30_000000), 0)
 	s.NextBlock()
 
 	s.PlaceMMBatchLimitOrder(
@@ -246,7 +248,8 @@ func (s *KeeperTestSuite) TestFairMatching() {
 	_, order2, _ := s.PlaceLimitOrder(
 		market.Id, ordererAddr2, true, utils.ParseDec("1.2"), sdk.NewDec(5000), 0)
 
-	s.PlaceMarketOrder(market.Id, ordererAddr3, false, sdk.NewDec(9000))
+	s.PlaceLimitOrder(
+		market.Id, ordererAddr3, false, utils.ParseDec("1.1"), sdk.NewDec(9000), 0)
 
 	order1, _ = s.keeper.GetOrder(s.Ctx, order1.Id)
 	order2, _ = s.keeper.GetOrder(s.Ctx, order2.Id)
@@ -257,9 +260,9 @@ func (s *KeeperTestSuite) TestFairMatching() {
 	s.NextBlock()
 
 	_, order1, _ = s.PlaceLimitOrder(
-		market.Id, ordererAddr1, true, utils.ParseDec("0.3"), sdk.NewDec(7000), 0)
+		market.Id, ordererAddr1, true, utils.ParseDec("1.1"), sdk.NewDec(7000), 0)
 	_, order2, _ = s.PlaceLimitOrder(
-		market.Id, ordererAddr2, true, utils.ParseDec("0.3"), sdk.NewDec(3000), 0)
+		market.Id, ordererAddr2, true, utils.ParseDec("1.1"), sdk.NewDec(3000), 0)
 
 	s.PlaceMarketOrder(market.Id, ordererAddr3, false, sdk.NewDec(101))
 
@@ -286,7 +289,8 @@ func (s *KeeperTestSuite) TestDecQuantity() {
 	_, order2, _ := s.PlaceLimitOrder(
 		market.Id, ordererAddr2, true, utils.ParseDec("0.14076"), sdk.NewDec(3000), time.Hour)
 
-	s.PlaceMarketOrder(market.Id, ordererAddr3, false, sdk.NewDec(1001))
+	s.PlaceLimitOrder(
+		market.Id, ordererAddr3, false, utils.ParseDec("0.14"), sdk.NewDec(1001), 0)
 
 	order1, _ = s.keeper.GetOrder(s.Ctx, order1.Id)
 	order2, _ = s.keeper.GetOrder(s.Ctx, order2.Id)
