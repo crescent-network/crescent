@@ -28,7 +28,7 @@ func (s *KeeperTestSuite) TestRewardsGrowthGlobalInvariant() {
 	s.NextBlock()
 
 	ordererAddr := s.FundedAccount(2, enoughCoins)
-	s.PlaceMarketOrder(market.Id, ordererAddr, true, sdk.NewDec(200_000000))
+	s.PlaceLimitOrder(market.Id, ordererAddr, true, utils.ParseDec("1"), sdk.NewDec(200_000000), 0)
 	s.PlaceMarketOrder(market.Id, ordererAddr, false, sdk.NewDec(500_000000))
 
 	_, broken := keeper.RewardsGrowthGlobalInvariant(s.keeper)(s.Ctx)
@@ -53,7 +53,7 @@ func (s *KeeperTestSuite) TestRewardsGrowthOutsideInvariant() {
 		}, utils.ParseTime("2023-01-01T00:00:00Z"), utils.ParseTime("2024-01-01T00:00:00Z"))
 	lpAddr := s.FundedAccount(1, enoughCoins)
 	s.AddLiquidity(
-		lpAddr, pool.Id, utils.ParseDec("0.4"), utils.ParseDec("0.6"),
+		lpAddr, pool.Id, utils.ParseDec("0.47"), utils.ParseDec("0.53"),
 		utils.ParseCoins("100_000000ucre,50_000000uusd"))
 	s.AddLiquidity(
 		lpAddr, pool.Id, utils.ParseDec("0.001"), utils.ParseDec("1000"),
@@ -62,8 +62,10 @@ func (s *KeeperTestSuite) TestRewardsGrowthOutsideInvariant() {
 	s.NextBlock()
 
 	ordererAddr := s.FundedAccount(2, enoughCoins)
-	s.PlaceMarketOrder(market.Id, ordererAddr, true, sdk.NewDec(200_000000))
-	s.PlaceMarketOrder(market.Id, ordererAddr, false, sdk.NewDec(500_000000))
+	s.PlaceLimitOrder(market.Id, ordererAddr, true, utils.ParseDec("1"), sdk.NewDec(200_000000), 0)
+	s.PlaceMarketOrder(market.Id, ordererAddr, false, sdk.NewDec(200_000000))
+	s.PlaceMarketOrder(market.Id, ordererAddr, false, sdk.NewDec(200_000000))
+	s.PlaceMarketOrder(market.Id, ordererAddr, false, sdk.NewDec(200_000000))
 
 	_, broken := keeper.RewardsGrowthOutsideInvariant(s.keeper)(s.Ctx)
 	s.Require().False(broken)
@@ -80,6 +82,9 @@ func (s *KeeperTestSuite) TestRewardsGrowthOutsideInvariant() {
 
 func (s *KeeperTestSuite) TestCanCollectInvariant() {
 	market, pool := s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("0.5"))
+	marketState := s.App.ExchangeKeeper.MustGetMarketState(s.Ctx, market.Id)
+	marketState.LastPrice = utils.ParseDecP("0.5")
+	s.App.ExchangeKeeper.SetMarketState(s.Ctx, market.Id, marketState)
 	farmingPoolAddr := s.FundedAccount(0, enoughCoins)
 	s.CreatePublicFarmingPlan(
 		"Farming plan", farmingPoolAddr, farmingPoolAddr, []types.FarmingRewardAllocation{
@@ -160,7 +165,7 @@ func (s *KeeperTestSuite) TestPoolCurrentLiquidityInvariant() {
 		utils.ParseCoins("1000_000000ucre,500_000000uusd"))
 
 	ordererAddr := s.FundedAccount(2, enoughCoins)
-	s.PlaceMarketOrder(market.Id, ordererAddr, true, sdk.NewDec(200_000000))
+	s.PlaceLimitOrder(market.Id, ordererAddr, true, utils.ParseDec("1"), sdk.NewDec(200_000000), 0)
 
 	_, broken := keeper.PoolCurrentLiquidityInvariant(s.keeper)(s.Ctx)
 	s.Require().False(broken)

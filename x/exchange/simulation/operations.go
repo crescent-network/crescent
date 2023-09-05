@@ -439,6 +439,10 @@ func findMsgPlaceMarketOrderParams(
 	accs = utils.ShuffleSimAccounts(r, accs)
 	var markets []types.Market
 	k.IterateAllMarkets(ctx, func(market types.Market) (stop bool) {
+		marketState := k.MustGetMarketState(ctx, market.Id)
+		if marketState.LastPrice == nil { // skip markets with no last price
+			return false
+		}
 		markets = append(markets, market)
 		return false
 	})
