@@ -71,7 +71,7 @@ Example Response
       "liquidity": "0",
       "position_id": "0",
       "total_share": {
-        "denom": "lashare1",
+        "denom": "sb1",
         "amount": "0"
       }
     }
@@ -109,7 +109,7 @@ Example Response
     "liquidity": "0",
     "position_id": "0",
     "total_share": {
-      "denom": "lashare1",
+      "denom": "sb1",
       "amount": "0"
     }
   }
@@ -203,7 +203,7 @@ Example Response
       "rewards_auction_id": "1",
       "bidder": "cre1zaavvzxez0elundtn32qnk9lkm8kmcszxclz6p",
       "share": {
-        "denom": "lashare1",
+        "denom": "sb1",
         "amount": "1000000"
       }
     }

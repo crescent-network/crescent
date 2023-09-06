@@ -30,7 +30,7 @@ Note that [jq](https://stedolan.github.io/jq/) is recommended to be installed as
 
 ## MintShare
 
-Mint liquid farm share for auto compounding rewards. The module mints the corresponding amount of `LACoin` and sends it to the farmer when the execution is complete.
+Mint liquid farm share for auto compounding rewards. The module mints the corresponding amount of `sbCoin` and sends it to the farmer when the execution is complete.
 
 Usage
 
@@ -74,7 +74,7 @@ crescentd tx liquidamm mint-share 1 100000000uatom,500000000uusd \
 # Query all the registered public position objects
 crescentd q liquidamm public-positions -o json | jq
 #
-# Query account balances to see if Alice has lacoin.
+# Query account balances to see if Alice has sb coin.
 crescentd q bank balances cre1zaavvzxez0elundtn32qnk9lkm8kmcszxclz6p -o json | jq
 ```
 
@@ -96,7 +96,7 @@ burn-share [public-position-id] [share]
 Example
 
 ```bash
-crescentd tx liquidamm burn-share 1 10000000000lashare1 \
+crescentd tx liquidamm burn-share 1 10000000000sb1 \
 --chain-id localnet \
 --from alice \
 #
@@ -108,7 +108,7 @@ crescentd q bank balances cre1zaavvzxez0elundtn32qnk9lkm8kmcszxclz6p -o json | j
 
 ## PlaceBid
 
-Place a bid for a rewards auction. Bidders estimate how much rewards for the next epoch will be accumulated and place their bids accordingly with LA coin amount.
+Place a bid for a rewards auction. Bidders estimate how much rewards for the next epoch will be accumulated and place their bids accordingly with sb coin amount.
 
 Usage
 
@@ -125,7 +125,7 @@ place-bid [public-position-id] [auction-id] [share]
 Example
 
 ```bash
-crescentd tx liquidamm place-bid 1 1 10000000lashare1 \
+crescentd tx liquidamm place-bid 1 1 10000000sb1 \
 --chain-id localnet \
 --from alice \
 

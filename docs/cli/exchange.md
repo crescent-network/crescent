@@ -105,7 +105,6 @@ crescentd q exchange orders --makret-id 1 -o json | jq
 # Query all orders of particular orderer
 crescentd q exchange orders --orderer cre1zaavvzxez0elundtn32qnk9lkm8kmcszxclz6p -o json | jq
 ```
-```
 
 ## PlaceBatchLimitOrder
 
@@ -148,7 +147,6 @@ crescentd q exchange orders --makret-id 1 -o json | jq
 # Query all orders of particular orderer
 crescentd q exchange orders --orderer cre1zaavvzxez0elundtn32qnk9lkm8kmcszxclz6p -o json | jq
 ```
-```
 
 ## PlaceMMLimitOrder
 
@@ -190,7 +188,6 @@ crescentd q exchange orders --makret-id 1 -o json | jq
 
 # Query all orders of particular orderer
 crescentd q exchange orders --orderer cre1zaavvzxez0elundtn32qnk9lkm8kmcszxclz6p -o json | jq
-```
 ```
 
 ## PlaceMMBatchLimitOrder
