@@ -12,13 +12,13 @@ import (
 )
 
 func TestPool_DenomIn(t *testing.T) {
-	pool := types.NewPool(1, 2, "ucre", "uusd", 10)
+	pool := types.NewPool(1, 2, "ucre", "uusd", 10, sdk.NewDec(1), sdk.NewDec(1))
 	require.Equal(t, "ucre", pool.DenomIn(true))
 	require.Equal(t, "uusd", pool.DenomIn(false))
 }
 
 func TestPool_DenomOut(t *testing.T) {
-	pool := types.NewPool(1, 2, "ucre", "uusd", 10)
+	pool := types.NewPool(1, 2, "ucre", "uusd", 10, sdk.NewDec(1), sdk.NewDec(1))
 	require.Equal(t, "uusd", pool.DenomOut(true))
 	require.Equal(t, "ucre", pool.DenomOut(false))
 }
@@ -107,7 +107,7 @@ func TestPool_Validate(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			pool := types.NewPool(1, 2, "ucre", "uusd", 10)
+			pool := types.NewPool(1, 2, "ucre", "uusd", 10, sdk.NewDec(1), sdk.NewDec(1))
 			tc.malleate(&pool)
 			err := pool.Validate()
 			if tc.expectedErr == "" {

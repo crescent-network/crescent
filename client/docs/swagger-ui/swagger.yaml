@@ -12545,6 +12545,10 @@ paths:
                   default_tick_spacing:
                     type: integer
                     format: int64
+                  default_min_order_quantity:
+                    type: string
+                  default_min_order_quote:
+                    type: string
                   private_farming_plan_creation_fee:
                     type: array
                     items:
@@ -20758,6 +20762,10 @@ definitions:
       default_tick_spacing:
         type: integer
         format: int64
+      default_min_order_quantity:
+        type: string
+      default_min_order_quote:
+        type: string
       private_farming_plan_creation_fee:
         type: array
         items:
@@ -21456,6 +21464,10 @@ definitions:
           default_tick_spacing:
             type: integer
             format: int64
+          default_min_order_quantity:
+            type: string
+          default_min_order_quote:
+            type: string
           private_farming_plan_creation_fee:
             type: array
             items:
