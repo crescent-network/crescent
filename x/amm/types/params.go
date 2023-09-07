@@ -25,6 +25,8 @@ var (
 var (
 	KeyPoolCreationFee               = []byte("PoolCreationFee")
 	KeyDefaultTickSpacing            = []byte("DefaultTickSpacing")
+	KeyDefaultMinOrderQuantity       = []byte("DefaultMinOrderQuantity")
+	KeyDefaultMinOrderQuote          = []byte("DefaultMinOrderQuote")
 	KeyPrivateFarmingPlanCreationFee = []byte("PrivateFarmingPlanCreationFee")
 	KeyMaxNumPrivateFarmingPlans     = []byte("MaxNumPrivateFarmingPlans")
 	KeyMaxFarmingBlockTime           = []byte("MaxFarmingBlockTime")
@@ -33,6 +35,8 @@ var (
 var (
 	DefaultPoolCreationFee               = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000))
 	DefaultDefaultTickSpacing            = uint32(50)
+	DefaultDefaultMinOrderQuantity       = sdk.NewDec(1)
+	DefaultDefaultMinOrderQuote          = sdk.NewDec(1)
 	DefaultPrivateFarmingPlanCreationFee = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000))
 	DefaultMaxNumPrivateFarmingPlans     = uint32(50)
 	DefaultMaxFarmingBlockTime           = 10 * time.Second
@@ -40,9 +44,7 @@ var (
 	AllowedTickSpacings = []uint32{1, 5, 10, 50}
 	// DecMulFactor is multiplied to fee and farming rewards growth variables
 	// so that small amount of rewards can be handled correctly.
-	DecMulFactor            = sdk.NewDecFromInt(sdk.NewIntWithDecimal(1, 12))
-	DefaultMinOrderQuantity = sdk.NewDec(1)
-	DefaultMinOrderQuote    = sdk.NewDec(1)
+	DecMulFactor = sdk.NewDecFromInt(sdk.NewIntWithDecimal(1, 12))
 )
 
 func IsAllowedTickSpacing(tickSpacing uint32) bool {
@@ -73,6 +75,8 @@ func DefaultParams() Params {
 	return Params{
 		PoolCreationFee:               DefaultPoolCreationFee,
 		DefaultTickSpacing:            DefaultDefaultTickSpacing,
+		DefaultMinOrderQuantity:       DefaultDefaultMinOrderQuantity,
+		DefaultMinOrderQuote:          DefaultDefaultMinOrderQuote,
 		PrivateFarmingPlanCreationFee: DefaultPrivateFarmingPlanCreationFee,
 		MaxNumPrivateFarmingPlans:     DefaultMaxNumPrivateFarmingPlans,
 		MaxFarmingBlockTime:           DefaultMaxFarmingBlockTime,
@@ -84,6 +88,8 @@ func (params *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 	return paramstypes.ParamSetPairs{
 		paramstypes.NewParamSetPair(KeyPoolCreationFee, &params.PoolCreationFee, validatePoolCreationFee),
 		paramstypes.NewParamSetPair(KeyDefaultTickSpacing, &params.DefaultTickSpacing, validateDefaultTickSpacing),
+		paramstypes.NewParamSetPair(KeyDefaultMinOrderQuantity, &params.DefaultMinOrderQuantity, validateDefaultMinOrderQuantity),
+		paramstypes.NewParamSetPair(KeyDefaultMinOrderQuote, &params.DefaultMinOrderQuote, validateDefaultMinOrderQuote),
 		paramstypes.NewParamSetPair(KeyPrivateFarmingPlanCreationFee, &params.PrivateFarmingPlanCreationFee, validatePrivateFarmingPlanCreationFee),
 		paramstypes.NewParamSetPair(KeyMaxNumPrivateFarmingPlans, &params.MaxNumPrivateFarmingPlans, validateMaxNumPrivateFarmingPlans),
 		paramstypes.NewParamSetPair(KeyMaxFarmingBlockTime, &params.MaxFarmingBlockTime, validateMaxFarmingBlockTime),
@@ -98,6 +104,8 @@ func (params Params) Validate() error {
 	}{
 		{params.PoolCreationFee, validatePoolCreationFee},
 		{params.DefaultTickSpacing, validateDefaultTickSpacing},
+		{params.DefaultMinOrderQuantity, validateDefaultMinOrderQuantity},
+		{params.DefaultMinOrderQuote, validateDefaultMinOrderQuote},
 		{params.PrivateFarmingPlanCreationFee, validatePrivateFarmingPlanCreationFee},
 		{params.MaxNumPrivateFarmingPlans, validateMaxNumPrivateFarmingPlans},
 		{params.MaxFarmingBlockTime, validateMaxFarmingBlockTime},
@@ -127,6 +135,28 @@ func validateDefaultTickSpacing(i interface{}) error {
 	}
 	if !IsAllowedTickSpacing(v) {
 		return fmt.Errorf("tick spacing %d is not allowed", v)
+	}
+	return nil
+}
+
+func validateDefaultMinOrderQuantity(i interface{}) error {
+	v, ok := i.(sdk.Dec)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	if v.IsNegative() {
+		return fmt.Errorf("default min order quantity must not be negative: %s", v)
+	}
+	return nil
+}
+
+func validateDefaultMinOrderQuote(i interface{}) error {
+	v, ok := i.(sdk.Dec)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	if v.IsNegative() {
+		return fmt.Errorf("default min order quote must not be negative: %s", v)
 	}
 	return nil
 }

@@ -17,7 +17,9 @@ func DerivePoolRewardsPoolAddress(poolId uint64) sdk.AccAddress {
 	return address.Module(ModuleName, []byte(fmt.Sprintf("PoolRewardsPool/%d", poolId)))
 }
 
-func NewPool(id uint64, marketId uint64, denom0, denom1 string, tickSpacing uint32) Pool {
+func NewPool(
+	id uint64, marketId uint64, denom0, denom1 string, tickSpacing uint32,
+	minOrderQty, minOrderQuote sdk.Dec) Pool {
 	return Pool{
 		Id:               id,
 		MarketId:         marketId,
@@ -26,8 +28,8 @@ func NewPool(id uint64, marketId uint64, denom0, denom1 string, tickSpacing uint
 		ReserveAddress:   DerivePoolReserveAddress(id).String(),
 		RewardsPool:      DerivePoolRewardsPoolAddress(id).String(),
 		TickSpacing:      tickSpacing,
-		MinOrderQuantity: DefaultMinOrderQuantity,
-		MinOrderQuote:    DefaultMinOrderQuote,
+		MinOrderQuantity: minOrderQty,
+		MinOrderQuote:    minOrderQuote,
 	}
 }
 
