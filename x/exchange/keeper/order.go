@@ -210,11 +210,19 @@ func (k Keeper) PlaceMarketOrder(
 		quoteLimit *sdk.Dec
 		priceLimit sdk.Dec
 	)
+	spendable := k.bankKeeper.SpendableCoins(ctx, ordererAddr)
 	if isBuy {
-		quote := k.bankKeeper.SpendableCoins(ctx, ordererAddr).AmountOf(market.QuoteDenom).ToDec()
+		quote := spendable.AmountOf(market.QuoteDenom).ToDec()
 		quoteLimit = &quote
 		priceLimit = marketState.LastPrice.Mul(utils.OneDec.Add(maxPriceRatio))
 	} else {
+		base := spendable.AmountOf(market.BaseDenom).ToDec()
+		if qty.GT(base) {
+			err = sdkerrors.Wrapf(
+				sdkerrors.ErrInsufficientFunds, "%s%s is smaller than %s%s",
+				base.TruncateInt(), market.BaseDenom, qty, market.BaseDenom)
+			return
+		}
 		priceLimit = marketState.LastPrice.Mul(utils.OneDec.Sub(maxPriceRatio))
 	}
 	res, err = k.executeOrder(

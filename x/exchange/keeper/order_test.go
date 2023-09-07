@@ -343,3 +343,16 @@ func (s *KeeperTestSuite) TestSwapEdgecase() {
 	s.SwapExactAmountIn(
 		ordererAddr2, []uint64{market.Id}, utils.ParseDecCoin("30_000000uusd"), utils.ParseDecCoin("0ucre"), false)
 }
+
+func (s *KeeperTestSuite) TestPlaceMarketOrder_SellInsufficientFunds() {
+	market := s.CreateMarket("ucre", "uusd")
+
+	// Create last price.
+	ordererAddr1 := s.FundedAccount(1, utils.ParseCoins("5_000000uusd"))
+	ordererAddr2 := s.FundedAccount(2, utils.ParseCoins("1_200000ucre"))
+	s.PlaceLimitOrder(market.Id, ordererAddr1, true, utils.ParseDec("5"), sdk.NewDec(1_000000), time.Hour)
+	s.PlaceLimitOrder(market.Id, ordererAddr2, false, utils.ParseDec("5"), sdk.NewDec(1_000000), time.Hour)
+
+	_, _, err := s.keeper.PlaceMarketOrder(s.Ctx, market.Id, ordererAddr2, false, sdk.NewDec(500000))
+	s.Require().EqualError(err, "200000ucre is smaller than 500000.000000000000000000ucre: insufficient funds")
+}
