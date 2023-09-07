@@ -23,6 +23,7 @@ parent:
     * [MsgRemoveLiquidity](03_messages.md#msgremoveliquidity)
     * [MsgCollect](03_messages.md#msgcollect)
     * [MsgCreatePrivateFarmingPlan](03_messages.md#msgcreateprivatefarmingplan)
+    * [MsgTerminatePrivateFarmingPlan](03_messages.md#msgterminateprivatefarmingplan)
 4. [Begin-Block](04_begin_block.md)
 5. [Events](05_events.md)
     * [Begin-Block](05_events.md#begin-block)

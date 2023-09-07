@@ -1,10 +1,8 @@
-<!-- order: 0 title: Liquidity Overview parent: title: "liquidamm" -->
+<!-- order: 0 title: LiquidAMM Overview parent: title: "liquidamm" -->
 
-# `liquidfarming`
+# `liquidamm`
 
 ## Abstract
-
-This document specifies the `liquidfarming` module that provides a functionality for farmers to have another option to use with their liquidity pool coins in Crescent Network.
 
 ## Contents
 
