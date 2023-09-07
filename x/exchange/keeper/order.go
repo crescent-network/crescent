@@ -198,16 +198,29 @@ func (k Keeper) PlaceMarketOrder(
 		err = sdkerrors.Wrap(sdkerrors.ErrNotFound, "market not found")
 		return
 	}
+	marketState := k.MustGetMarketState(ctx, market.Id)
+	if marketState.LastPrice == nil {
+		err = sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "market has no last price")
+		return
+	}
+	maxPriceRatio := k.GetMaxOrderPriceRatio(ctx)
 
 	orderId = k.GetNextOrderIdWithUpdate(ctx)
-	var quoteLimit *sdk.Dec
+	var (
+		quoteLimit *sdk.Dec
+		priceLimit sdk.Dec
+	)
 	if isBuy {
 		quote := k.bankKeeper.SpendableCoins(ctx, ordererAddr).AmountOf(market.QuoteDenom).ToDec()
 		quoteLimit = &quote
+		priceLimit = marketState.LastPrice.Mul(utils.OneDec.Add(maxPriceRatio))
+	} else {
+		priceLimit = marketState.LastPrice.Mul(utils.OneDec.Sub(maxPriceRatio))
 	}
 	res, err = k.executeOrder(
 		ctx, market, ordererAddr, types.MemOrderBookSideOptions{
 			IsBuy:         !isBuy,
+			PriceLimit:    &priceLimit,
 			QuantityLimit: &qty,
 			QuoteLimit:    quoteLimit,
 		}, false, false)

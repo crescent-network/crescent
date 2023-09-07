@@ -82,7 +82,7 @@ func TestRewardsAuction_Validate(t *testing.T) {
 			auction := types.NewRewardsAuction(
 				1, 2, utils.ParseTime("2023-05-01T00:00:00Z"), utils.ParseTime("2023-05-01T01:00:00Z"),
 				types.AuctionStatusStarted)
-			winningBid := types.NewBid(1, 2, utils.TestAddress(1), utils.ParseCoin("10000lashare1"))
+			winningBid := types.NewBid(1, 2, utils.TestAddress(1), utils.ParseCoin("10000sb1"))
 			auction.SetWinningBid(&winningBid)
 			auction.SetRewards(utils.ParseCoins("100000uatom"))
 			auction.SetFees(utils.ParseCoins("300uatom"))
@@ -132,20 +132,20 @@ func TestBidValidate(t *testing.T) {
 		{
 			"invalid share",
 			func(bid *types.Bid) {
-				bid.Share = utils.ParseCoin("0lashare1")
+				bid.Share = utils.ParseCoin("0sb1")
 			},
-			"share amount must be positive: 0lashare1",
+			"share amount must be positive: 0sb1",
 		},
 		{
 			"invalid share denom",
 			func(bid *types.Bid) {
-				bid.Share = utils.ParseCoin("10000lashare2")
+				bid.Share = utils.ParseCoin("10000sb2")
 			},
-			"share denom must be lashare1",
+			"share denom must be sb1",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			bid := types.NewBid(1, 2, utils.TestAddress(1), utils.ParseCoin("10000lashare1"))
+			bid := types.NewBid(1, 2, utils.TestAddress(1), utils.ParseCoin("10000sb1"))
 			tc.malleate(&bid)
 			err := bid.Validate()
 			if tc.expectedErr == "" {

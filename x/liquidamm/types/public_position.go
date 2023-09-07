@@ -12,11 +12,11 @@ import (
 )
 
 const (
-	ShareDenomPrefix = "lashare"
+	ShareDenomPrefix = "sb"
 )
 
 var (
-	shareDenomRe = regexp.MustCompile(`^lashare([1-9]\d*)$`)
+	shareDenomRe = regexp.MustCompile(`^sb([1-9]\d*)$`)
 )
 
 // DeriveBidReserveAddress creates the reserve address for bids

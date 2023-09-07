@@ -38,7 +38,7 @@ func (s *KeeperTestSuite) TestMintShare() {
 				utils.ParseCoins("100_000000ucre,500_000000uusd"),
 			),
 			func(resp *types.MsgMintShareResponse) {
-				s.Require().Equal(utils.ParseCoin("4357388321lashare1"), resp.MintedShare)
+				s.Require().Equal(utils.ParseCoin("4357388321sb1"), resp.MintedShare)
 				s.Require().Equal(sdk.NewInt(4357388321), resp.Liquidity)
 				s.Require().Equal(utils.ParseCoins("90686676ucre,500000000uusd"), resp.Amount)
 			},
@@ -104,7 +104,7 @@ func (s *KeeperTestSuite) TestBurnShare() {
 	}{
 		{
 			"happy case",
-			types.NewMsgBurnShare(minterAddr, publicPosition.Id, utils.ParseCoin("100000lashare1")),
+			types.NewMsgBurnShare(minterAddr, publicPosition.Id, utils.ParseCoin("100000sb1")),
 			func(resp *types.MsgBurnShareResponse) {
 				s.Require().Equal(sdk.NewInt(100000), resp.RemovedLiquidity)
 				s.Require().Equal(utils.ParseCoins("2081ucre,11474uusd"), resp.Amount)
@@ -116,7 +116,7 @@ func (s *KeeperTestSuite) TestBurnShare() {
 			types.NewMsgBurnShare(
 				minterAddr,
 				2,
-				utils.ParseCoin("100000lashare2"),
+				utils.ParseCoin("100000sb2"),
 			),
 			nil,
 			"public position not found: not found",
@@ -149,8 +149,8 @@ func (s *KeeperTestSuite) TestBurnShare_Complex_WithRewards() {
 	s.NextBlock()
 
 	// Ensure that the minters have received the minted share
-	s.Require().Equal("4357388321lashare1", s.GetBalance(minterAddr1, "lashare1").String())
-	s.Require().Equal("8714776642lashare1", s.GetBalance(minterAddr2, "lashare1").String())
+	s.Require().Equal("4357388321sb1", s.GetBalance(minterAddr1, "sb1").String())
+	s.Require().Equal("8714776642sb1", s.GetBalance(minterAddr2, "sb1").String())
 
 	s.AdvanceRewardsAuctions()
 
@@ -162,8 +162,8 @@ func (s *KeeperTestSuite) TestBurnShare_Complex_WithRewards() {
 	bidderAddr2 := utils.TestAddress(4)
 	s.MintShare(bidderAddr1, publicPosition.Id, utils.ParseCoins("100_000000ucre,500_000000uusd"), true)
 	s.MintShare(bidderAddr2, publicPosition.Id, utils.ParseCoins("200_000000ucre,1000_000000uusd"), true)
-	s.PlaceBid(bidderAddr1, publicPosition.Id, auction.Id, utils.ParseCoin("100000lashare1"))
-	s.PlaceBid(bidderAddr2, publicPosition.Id, auction.Id, utils.ParseCoin("200000lashare1"))
+	s.PlaceBid(bidderAddr1, publicPosition.Id, auction.Id, utils.ParseCoin("100000sb1"))
+	s.PlaceBid(bidderAddr2, publicPosition.Id, auction.Id, utils.ParseCoin("200000sb1"))
 	s.NextBlock()
 
 	s.AdvanceRewardsAuctions()
@@ -172,7 +172,7 @@ func (s *KeeperTestSuite) TestBurnShare_Complex_WithRewards() {
 	publicPosition, _ = s.keeper.GetPublicPosition(s.Ctx, publicPosition.Id)
 	auction, found = s.keeper.GetPreviousRewardsAuction(s.Ctx, publicPosition)
 	s.Require().True(found)
-	s.Require().Equal("200000lashare1", auction.WinningBid.Share.String())
+	s.Require().Equal("200000sb1", auction.WinningBid.Share.String())
 
 	// Ensure bidderAddr2 has received rewards
 	s.Require().True(s.GetBalance(bidderAddr2, "uatom").Amount.GT(sdk.NewInt(1)))
@@ -185,8 +185,8 @@ func (s *KeeperTestSuite) TestBurnShare_Complex_WithRewards() {
 	auction, _ = s.keeper.GetLastRewardsAuction(s.Ctx, publicPosition.Id)
 	s.MintShare(bidderAddr3, publicPosition.Id, utils.ParseCoins("100_000000ucre,500_000000uusd"), true)
 	s.MintShare(bidderAddr4, publicPosition.Id, utils.ParseCoins("300_000000ucre,1500_000000uusd"), true)
-	s.PlaceBid(bidderAddr3, publicPosition.Id, auction.Id, utils.ParseCoin("100000lashare1"))
-	s.PlaceBid(bidderAddr4, publicPosition.Id, auction.Id, utils.ParseCoin("300000lashare1"))
+	s.PlaceBid(bidderAddr3, publicPosition.Id, auction.Id, utils.ParseCoin("100000sb1"))
+	s.PlaceBid(bidderAddr4, publicPosition.Id, auction.Id, utils.ParseCoin("300000sb1"))
 
 	s.AdvanceRewardsAuctions()
 
@@ -194,12 +194,12 @@ func (s *KeeperTestSuite) TestBurnShare_Complex_WithRewards() {
 	publicPosition, _ = s.keeper.GetPublicPosition(s.Ctx, publicPosition.Id)
 	auction, found = s.keeper.GetPreviousRewardsAuction(s.Ctx, publicPosition)
 	s.Require().True(found)
-	s.Require().Equal("300000lashare1", auction.WinningBid.Share.String())
+	s.Require().Equal("300000sb1", auction.WinningBid.Share.String())
 
 	// Ensure bidderAddr4 has received farming rewards
 	s.Require().True(s.GetBalance(bidderAddr4, "uatom").Amount.GT(sdk.NewInt(1)))
 
 	// Burn all shares
-	s.BurnShare(minterAddr1, publicPosition.Id, s.GetBalance(minterAddr1, "lashare1"))
-	s.BurnShare(minterAddr2, publicPosition.Id, s.GetBalance(minterAddr2, "lashare1"))
+	s.BurnShare(minterAddr1, publicPosition.Id, s.GetBalance(minterAddr1, "sb1"))
+	s.BurnShare(minterAddr2, publicPosition.Id, s.GetBalance(minterAddr2, "sb1"))
 }

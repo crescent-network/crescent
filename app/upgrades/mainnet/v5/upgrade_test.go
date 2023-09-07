@@ -68,4 +68,12 @@ func (s *UpgradeTestSuite) TestUpgradeV5() {
 	poolState := s.App.AMMKeeper.MustGetPoolState(s.Ctx, pool.Id)
 	s.AssertEqual(sdk.NewInt(2341640785), poolState.TotalLiquidity)
 	s.AssertEqual(sdk.NewInt(2341640785), poolState.CurrentLiquidity)
+
+	// Check if creating new market overwrites existing markets.
+	s.Require().Equal(uint64(1), s.App.ExchangeKeeper.GetLastMarketId(s.Ctx))
+	market := s.CreateMarket("uusd", "ucre")
+	s.Require().Equal(uint64(2), market.Id)
+	market, _ = s.App.ExchangeKeeper.GetMarket(s.Ctx, 1)
+	s.Require().Equal("ucre", market.BaseDenom)
+	s.Require().Equal("uusd", market.QuoteDenom)
 }

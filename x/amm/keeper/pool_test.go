@@ -199,3 +199,27 @@ func (s *KeeperTestSuite) TestSwapEdgecase1() {
 
 	s.SwapExactAmountIn(ordererAddr, []uint64{market.Id}, utils.ParseDecCoin("35987097uusd"), utils.ParseDecCoin("0ucre"), false)
 }
+
+func (s *KeeperTestSuite) TestPoolOrdersEdgecase() {
+	// Check if there's no infinite loop in IteratePoolOrders.
+	market, pool := s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("0.000000089916180444"))
+	marketState := s.App.ExchangeKeeper.MustGetMarketState(s.Ctx, market.Id)
+	marketState.LastPrice = utils.ParseDecP("0.000000089795000000")
+	s.App.ExchangeKeeper.SetMarketState(s.Ctx, market.Id, marketState)
+
+	lpAddr := s.FundedAccount(1, enoughCoins)
+	s.AddLiquidity(
+		lpAddr, pool.Id, types.MinPrice, types.MaxPrice,
+		utils.ParseCoins("13010176813853779ucre,1169825406uusd"))
+
+	obs := s.App.ExchangeKeeper.ConstructMemOrderBookSide(s.Ctx, market, exchangetypes.MemOrderBookSideOptions{
+		IsBuy:             false,
+		MaxNumPriceLevels: 1,
+	}, nil)
+	s.Require().Len(obs.Levels(), 1)
+	obs = s.App.ExchangeKeeper.ConstructMemOrderBookSide(s.Ctx, market, exchangetypes.MemOrderBookSideOptions{
+		IsBuy:             true,
+		MaxNumPriceLevels: 1,
+	}, nil)
+	s.Require().Len(obs.Levels(), 1)
+}

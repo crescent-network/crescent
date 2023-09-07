@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -116,8 +115,8 @@ func (s *KeeperTestSuite) TestOrderGas() {
 	}
 	ordererAddr := s.FundedAccount(2, enoughCoins)
 	gasConsumedBefore := s.Ctx.GasMeter().GasConsumed()
-	s.PlaceMarketOrder(market.Id, ordererAddr, true, sdk.NewDec(50_000000))
-	fmt.Println(s.Ctx.GasMeter().GasConsumed() - gasConsumedBefore)
+	s.PlaceLimitOrder(market.Id, ordererAddr, true, utils.ParseDec("150.5"), sdk.NewDec(50_000000), 0)
+	s.Require().Less(s.Ctx.GasMeter().GasConsumed()-gasConsumedBefore, uint64(200000))
 }
 
 func (s *KeeperTestSuite) TestCurrentLiquidityEdgecase() {
@@ -134,7 +133,7 @@ func (s *KeeperTestSuite) TestCurrentLiquidityEdgecase() {
 	ordererAddr := s.FundedAccount(2, enoughCoins)
 	s.PlaceLimitOrder(market.Id, ordererAddr, true, utils.ParseDec("4.99"), sdk.NewDec(5988301+1), time.Hour)
 
-	s.PlaceMarketOrder(market.Id, ordererAddr, false, sdk.NewDec(5979313+5988301*2+1000))
+	s.PlaceLimitOrder(market.Id, ordererAddr, false, utils.ParseDec("4.8"), sdk.NewDec(5979313+5988301*2+1000), 0)
 	_, broken := keeper.PoolCurrentLiquidityInvariant(s.keeper)(s.Ctx)
 	s.Require().False(broken)
 }

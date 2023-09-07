@@ -327,6 +327,10 @@ func findMsgCreateMarketParams(r *rand.Rand, accs []simtypes.Account,
 			if denomA != denomB {
 				if _, found := k.GetMarketIdByDenoms(ctx, denomA, denomB); !found {
 					acc, _ = simtypes.RandomAcc(r, accs)
+					spendable := bk.SpendableCoins(ctx, acc.Address)
+					if !spendable.IsAllGTE(k.GetMarketCreationFee(ctx)) {
+						continue
+					}
 					msg = types.NewMsgCreateMarket(acc.Address, denomA, denomB)
 					return acc, msg, true
 				}
@@ -435,6 +439,10 @@ func findMsgPlaceMarketOrderParams(
 	accs = utils.ShuffleSimAccounts(r, accs)
 	var markets []types.Market
 	k.IterateAllMarkets(ctx, func(market types.Market) (stop bool) {
+		marketState := k.MustGetMarketState(ctx, market.Id)
+		if marketState.LastPrice == nil { // skip markets with no last price
+			return false
+		}
 		markets = append(markets, market)
 		return false
 	})

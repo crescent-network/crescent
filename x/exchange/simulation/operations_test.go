@@ -129,7 +129,10 @@ func (s *SimTestSuite) TestSimulateMsgPlaceMarketOrder() {
 	r := rand.New(rand.NewSource(0))
 	accs := s.getTestingAccounts(r, 50)
 
-	s.CreateMarket("denom1", "denom2")
+	market := s.CreateMarket("denom1", "denom2")
+	marketState := s.keeper.MustGetMarketState(s.Ctx, market.Id)
+	marketState.LastPrice = utils.ParseDecP("1.2")
+	s.keeper.SetMarketState(s.Ctx, market.Id, marketState)
 
 	op := simulation.SimulateMsgPlaceMarketOrder(
 		s.App.AccountKeeper, s.App.BankKeeper, s.keeper)

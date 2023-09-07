@@ -41,6 +41,8 @@ func MidBlocker(ctx sdk.Context, k keeper.Keeper) {
 				k.Logger(ctx).Error("failed to run batch matching", "error", err)
 			} else {
 				writeCache()
+				// Pass events emitted inside cached context to the original context.
+				ctx.EventManager().EmitEvents(cacheCtx.EventManager().Events())
 			}
 		}()
 	}

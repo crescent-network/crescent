@@ -70,6 +70,8 @@ func UpgradeHandler(
 		exchangeKeeper.SetParams(ctx, exchangeParams)
 		ammParams := ammtypes.DefaultParams()
 		ammParams.PoolCreationFee = sdk.NewCoins(sdk.NewInt64Coin("ucre", 1000_000000))
+		ammParams.DefaultMinOrderQuantity = sdk.NewDec(10000)
+		ammParams.DefaultMinOrderQuote = sdk.NewDec(10000)
 		ammParams.PrivateFarmingPlanCreationFee = sdk.NewCoins(sdk.NewInt64Coin("ucre", 1000_000000))
 		ammKeeper.SetParams(ctx, ammParams)
 
@@ -152,6 +154,7 @@ func UpgradeHandler(
 		defaultOrderSourceFeeRatio := exchangeParams.Fees.DefaultOrderSourceFeeRatio
 		pairs := map[uint64]liquiditytypes.Pair{}
 		var pairIds []uint64 // For ordered map access
+		var lastMarketId uint64
 		if err := liquidityKeeper.IterateAllPairs(ctx, func(pair liquiditytypes.Pair) (stop bool, err error) {
 			// Cache pairs for later iteration.
 			pairs[pair.Id] = pair
@@ -188,14 +191,18 @@ func UpgradeHandler(
 			exchangeKeeper.SetMarket(ctx, market)
 			exchangeKeeper.SetMarketByDenomsIndex(ctx, market)
 			exchangeKeeper.SetMarketState(ctx, market.Id, exchangetypes.NewMarketState(pair.LastPrice))
+			lastMarketId = pair.Id
 			return false, nil
 		}); err != nil {
 			return nil, err
 		}
+		exchangeKeeper.SetLastMarketId(ctx, lastMarketId)
 
 		// Create a new pool for each market if the market's corresponding pair
 		// had at least one active pool.
 		defaultTickSpacing := ammParams.DefaultTickSpacing
+		defaultMinOrderQty := ammParams.DefaultMinOrderQuantity
+		defaultMinOrderQuote := ammParams.DefaultMinOrderQuote
 		newPoolIdByPairId := map[uint64]uint64{}
 		pairIdByOldPoolId := map[uint64]uint64{}
 		oldPoolsById := map[uint64]liquiditytypes.Pool{}
@@ -241,7 +248,8 @@ func UpgradeHandler(
 				newPoolId := ammKeeper.GetNextPoolIdWithUpdate(ctx)
 				marketId := pairId // We used the same ids as pairs for markets.
 				newPool := ammtypes.NewPool(
-					newPoolId, marketId, pair.BaseCoinDenom, pair.QuoteCoinDenom, defaultTickSpacing)
+					newPoolId, marketId, pair.BaseCoinDenom, pair.QuoteCoinDenom, defaultTickSpacing,
+					defaultMinOrderQty, defaultMinOrderQuote)
 				ammKeeper.SetPool(ctx, newPool)
 				// Set corresponding indexes.
 				ammKeeper.SetPoolByMarketIndex(ctx, newPool)
