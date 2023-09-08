@@ -9,7 +9,8 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	liquiditytypes "github.com/crescent-network/crescent/v5/x/liquidity/types"
+	ammtypes "github.com/crescent-network/crescent/v5/x/amm/types"
+	liquidammtypes "github.com/crescent-network/crescent/v5/x/liquidamm/types"
 	lpfarmtypes "github.com/crescent-network/crescent/v5/x/lpfarm/types"
 )
 
@@ -98,13 +99,14 @@ type DistrKeeper interface {
 	WithdrawDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (sdk.Coins, error)
 }
 
-// Liquidity expected liquidity keeper (noalias)
-type LiquidityKeeper interface {
-	GetPair(ctx sdk.Context, id uint64) (pair liquiditytypes.Pair, found bool)
-	GetPool(ctx sdk.Context, id uint64) (pool liquiditytypes.Pool, found bool)
-	GetPoolBalances(ctx sdk.Context, pool liquiditytypes.Pool) (rx sdk.Coin, ry sdk.Coin)
-	GetPoolCoinSupply(ctx sdk.Context, pool liquiditytypes.Pool) sdk.Int
-	IterateAllPools(ctx sdk.Context, cb func(pool liquiditytypes.Pool) (stop bool, err error)) error
+type AMMKeeper interface {
+	IteratePositionsByOwner(ctx sdk.Context, ownerAddr sdk.AccAddress, cb func(position ammtypes.Position) (stop bool))
+	PositionAssets(ctx sdk.Context, positionId uint64) (coin0, coin1 sdk.Coin, err error)
+}
+
+type LiquidAMMKeeper interface {
+	IterateAllPublicPositions(ctx sdk.Context, cb func(publicPosition liquidammtypes.PublicPosition) (stop bool))
+	MustGetAMMPosition(ctx sdk.Context, publicPosition liquidammtypes.PublicPosition) ammtypes.Position
 }
 
 // LPFarmKeeper defines expected lpfarm keeper

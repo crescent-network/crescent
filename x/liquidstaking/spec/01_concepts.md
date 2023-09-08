@@ -15,9 +15,9 @@ Liquid validators are determined through governance process. They must be define
 The module acknowledges voting power of all voters by aggregating the core activities that is related to the bToken. These are the following core activities:
 
 - Balance of `bToken`
-- Balance of `PoolCoin(s)` that includes `bToken`
+- Balance of amm positions that includes `bToken`
 - Farming position of `bToken`
-- Farming position of `PoolCoin(s)` that include `bToken`
+- Farming position of public positions that include `bToken`
 
 ## Rebalancing
 

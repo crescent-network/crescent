@@ -8,7 +8,8 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	utils "github.com/crescent-network/crescent/v5/types"
-	liquiditytypes "github.com/crescent-network/crescent/v5/x/liquidity/types"
+	ammtypes "github.com/crescent-network/crescent/v5/x/amm/types"
+	liquidammtypes "github.com/crescent-network/crescent/v5/x/liquidamm/types"
 	"github.com/crescent-network/crescent/v5/x/liquidstaking/types"
 	lpfarmtypes "github.com/crescent-network/crescent/v5/x/lpfarm/types"
 )
@@ -34,17 +35,70 @@ func (k Keeper) GetVoterBalanceByDenom(ctx sdk.Context, votes govtypes.Votes) ma
 	return denomAddrBalanceMap
 }
 
-// GetBTokenSharePerPoolCoinMap creates bTokenSharePerPoolCoinMap of pool coins which is containing target denom to calculate target denom value of farming positions
-func (k Keeper) GetBTokenSharePerPoolCoinMap(ctx sdk.Context, targetDenom string) map[string]sdk.Dec {
-	bTokenSharePerPoolCoinMap := map[string]sdk.Dec{}
-	_ = k.liquidityKeeper.IterateAllPools(ctx, func(pool liquiditytypes.Pool) (stop bool, err error) {
-		bTokenSharePerPoolCoin := k.TokenSharePerPoolCoin(ctx, targetDenom, pool.PoolCoinDenom)
-		if bTokenSharePerPoolCoin.IsPositive() {
-			bTokenSharePerPoolCoinMap[pool.PoolCoinDenom] = bTokenSharePerPoolCoin
+func (k Keeper) TokenAmountFromAMMPositions(ctx sdk.Context, addr sdk.AccAddress, targetDenom string) sdk.Int {
+	tokenAmount := utils.ZeroInt
+
+	k.ammKeeper.IteratePositionsByOwner(ctx, addr, func(position ammtypes.Position) (stop bool) {
+		coin0, coin1, err := k.ammKeeper.PositionAssets(ctx, position.Id)
+		if err != nil {
+			k.Logger(ctx).Error("failed to get position assets", "error", err)
+			return false
 		}
-		return false, nil
+		if coin0.Denom == targetDenom {
+			tokenAmount = tokenAmount.Add(coin0.Amount)
+		} else if coin1.Denom == targetDenom {
+			tokenAmount = tokenAmount.Add(coin1.Amount)
+		}
+		return false
 	})
-	return bTokenSharePerPoolCoinMap
+
+	return tokenAmount
+}
+
+// GetBTokenSharePerPublicPositionShareMap creates a map of public position
+// share which contains targetDenom to calculate target denom value of public positions
+func (k Keeper) GetBTokenSharePerPublicPositionShareMap(ctx sdk.Context, targetDenom string) map[string]sdk.Dec {
+	m := map[string]sdk.Dec{}
+	k.liquidAMMKeeper.IterateAllPublicPositions(ctx, func(publicPosition liquidammtypes.PublicPosition) (stop bool) {
+		shareDenom := liquidammtypes.ShareDenom(publicPosition.Id)
+		bTokenSharePerPublicPositionShare := k.BTokenSharePerPublicPositionShare(ctx, publicPosition, targetDenom)
+		if bTokenSharePerPublicPositionShare.IsPositive() {
+			m[shareDenom] = bTokenSharePerPublicPositionShare
+		}
+		return false
+	})
+	return m
+}
+
+func (k Keeper) BTokenSharePerPublicPositionShare(ctx sdk.Context, publicPosition liquidammtypes.PublicPosition, targetDenom string) sdk.Dec {
+	shareDenom := liquidammtypes.ShareDenom(publicPosition.Id)
+
+	ammPosition := k.liquidAMMKeeper.MustGetAMMPosition(ctx, publicPosition)
+	coin0, coin1, err := k.ammKeeper.PositionAssets(ctx, ammPosition.Id)
+	if err != nil {
+		// TODO: panic instead?
+		return utils.ZeroDec
+	}
+	if coin0.Denom != targetDenom && coin1.Denom != targetDenom {
+		// The pool doesn't have target denom in its assets.
+		return utils.ZeroDec
+	}
+
+	publicPositionShareSupply := k.bankKeeper.GetSupply(ctx, shareDenom).Amount
+	if !publicPositionShareSupply.IsPositive() {
+		// No liquidity in the public position.
+		return utils.ZeroDec
+	}
+
+	bTokenSharePerPublicPositionShare := utils.ZeroDec
+	if coin0.Denom == targetDenom {
+		bTokenSharePerPublicPositionShare = coin0.Amount.ToDec().
+			QuoTruncate(publicPositionShareSupply.ToDec())
+	} else if coin1.Denom == targetDenom {
+		bTokenSharePerPublicPositionShare = coin1.Amount.ToDec().
+			QuoTruncate(publicPositionShareSupply.ToDec())
+	}
+	return bTokenSharePerPublicPositionShare
 }
 
 // TokenAmountFromFarmingPositions returns worth of staked tokens amount of exist farming positions including queued of the addr
@@ -62,40 +116,6 @@ func (k Keeper) TokenAmountFromFarmingPositions(ctx sdk.Context, addr sdk.AccAdd
 	})
 
 	return tokenAmount
-}
-
-// TokenSharePerPoolCoin returns token share of the target denom of a pool coin
-func (k Keeper) TokenSharePerPoolCoin(ctx sdk.Context, targetDenom, poolCoinDenom string) sdk.Dec {
-	poolId, err := liquiditytypes.ParsePoolCoinDenom(poolCoinDenom)
-	if err != nil {
-		// If poolCoinDenom is not a valid pool coin denom, just return zero.
-		return sdk.ZeroDec()
-	}
-	pool, found := k.liquidityKeeper.GetPool(ctx, poolId)
-	if !found {
-		return sdk.ZeroDec()
-	}
-
-	pair, found := k.liquidityKeeper.GetPair(ctx, pool.PairId)
-	if !found {
-		return sdk.ZeroDec()
-	}
-
-	rx, ry := k.liquidityKeeper.GetPoolBalances(ctx, pool)
-	poolCoinSupply := k.liquidityKeeper.GetPoolCoinSupply(ctx, pool)
-	if !poolCoinSupply.IsPositive() {
-		return sdk.ZeroDec()
-	}
-	bTokenSharePerPoolCoin := sdk.ZeroDec()
-	if pair.QuoteCoinDenom == targetDenom {
-		bTokenSharePerPoolCoin = rx.Amount.ToDec().QuoTruncate(poolCoinSupply.ToDec())
-	} else if pair.BaseCoinDenom == targetDenom {
-		bTokenSharePerPoolCoin = ry.Amount.ToDec().QuoTruncate(poolCoinSupply.ToDec())
-	}
-	if !bTokenSharePerPoolCoin.IsPositive() {
-		return sdk.ZeroDec()
-	}
-	return bTokenSharePerPoolCoin
 }
 
 func (k Keeper) GetVotingPower(ctx sdk.Context, addr sdk.AccAddress) types.VotingPower {
@@ -157,7 +177,7 @@ func (k Keeper) CalcLiquidStakingVotingPower(ctx sdk.Context, addr sdk.AccAddres
 	}
 
 	bTokenAmount := sdk.ZeroInt()
-	bTokenSharePerPoolCoinMap := k.GetBTokenSharePerPoolCoinMap(ctx, liquidBondDenom)
+	bTokenSharePerPublicPositionShareMap := k.GetBTokenSharePerPublicPositionShareMap(ctx, liquidBondDenom)
 
 	balances := k.bankKeeper.SpendableCoins(ctx, addr)
 	for _, coin := range balances {
@@ -167,12 +187,17 @@ func (k Keeper) CalcLiquidStakingVotingPower(ctx sdk.Context, addr sdk.AccAddres
 		}
 
 		// check if the denom is pool coin
-		if bTokenSharePerPoolCoin, ok := bTokenSharePerPoolCoinMap[coin.Denom]; ok {
-			bTokenAmount = bTokenAmount.Add(utils.GetShareValue(coin.Amount, bTokenSharePerPoolCoin))
+		if bTokenSharePerPublicPositionShare, ok := bTokenSharePerPublicPositionShareMap[coin.Denom]; ok {
+			bTokenAmount = bTokenAmount.Add(utils.GetShareValue(coin.Amount, bTokenSharePerPublicPositionShare))
 		}
 	}
 
-	tokenAmount := k.TokenAmountFromFarmingPositions(ctx, addr, liquidBondDenom, bTokenSharePerPoolCoinMap)
+	tokenAmount := k.TokenAmountFromAMMPositions(ctx, addr, liquidBondDenom)
+	if tokenAmount.IsPositive() {
+		bTokenAmount = bTokenAmount.Add(tokenAmount)
+	}
+
+	tokenAmount = k.TokenAmountFromFarmingPositions(ctx, addr, liquidBondDenom, bTokenSharePerPublicPositionShareMap)
 	if tokenAmount.IsPositive() {
 		bTokenAmount = bTokenAmount.Add(tokenAmount)
 	}
@@ -206,7 +231,7 @@ func (k Keeper) SetLiquidStakingVotingPowers(ctx sdk.Context, votes govtypes.Vot
 
 	// get the map of balance amount of voter by denom
 	voterBalanceByDenom := k.GetVoterBalanceByDenom(ctx, votes)
-	bTokenSharePerPoolCoinMap := k.GetBTokenSharePerPoolCoinMap(ctx, liquidBondDenom)
+	bTokenSharePerPublicPositionShareMap := k.GetBTokenSharePerPublicPositionShareMap(ctx, liquidBondDenom)
 	bTokenOwnMap := make(utils.StrIntMap)
 
 	// sort denom keys of voterBalanceByDenom for deterministic iteration
@@ -227,10 +252,10 @@ func (k Keeper) SetLiquidStakingVotingPowers(ctx sdk.Context, votes govtypes.Vot
 			continue
 		}
 
-		// if the denom is pool coin, get bToken share and add owned bToken on bTokenOwnMap
-		if bTokenSharePerPoolCoin, ok := bTokenSharePerPoolCoinMap[denom]; ok {
+		// if the denom is public position share, get bToken share and add owned bToken on bTokenOwnMap
+		if bTokenSharePerPublicPositionShare, ok := bTokenSharePerPublicPositionShareMap[denom]; ok {
 			for voter, balance := range voterBalanceByDenom[denom] {
-				bTokenOwnMap.AddOrSet(voter, utils.GetShareValue(balance, bTokenSharePerPoolCoin))
+				bTokenOwnMap.AddOrSet(voter, utils.GetShareValue(balance, bTokenSharePerPublicPositionShare))
 			}
 		}
 	}
@@ -241,7 +266,11 @@ func (k Keeper) SetLiquidStakingVotingPowers(ctx sdk.Context, votes govtypes.Vot
 		if err != nil {
 			continue
 		}
-		tokenAmount := k.TokenAmountFromFarmingPositions(ctx, voter, liquidBondDenom, bTokenSharePerPoolCoinMap)
+		tokenAmount := k.TokenAmountFromAMMPositions(ctx, voter, liquidBondDenom)
+		if tokenAmount.IsPositive() {
+			bTokenOwnMap.AddOrSet(vote.Voter, tokenAmount)
+		}
+		tokenAmount = k.TokenAmountFromFarmingPositions(ctx, voter, liquidBondDenom, bTokenSharePerPublicPositionShareMap)
 		if tokenAmount.IsPositive() {
 			bTokenOwnMap.AddOrSet(vote.Voter, tokenAmount)
 		}
