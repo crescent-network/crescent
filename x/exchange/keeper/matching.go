@@ -117,6 +117,11 @@ func (k Keeper) finalizeMatching(ctx sdk.Context, market types.Market, orders []
 				executableQty := order.ExecutableQuantity()
 				if order.IsBuy && executableQty.TruncateDec().IsZero() ||
 					!order.IsBuy && executableQty.MulTruncate(order.Price).TruncateDec().IsZero() {
+					if err := ctx.EventManager().EmitTypedEvent(&types.EventOrderCompleted{
+						OrderId: order.Id,
+					}); err != nil {
+						return err
+					}
 					if err := k.cancelOrder(ctx, market, order); err != nil {
 						return err
 					}
