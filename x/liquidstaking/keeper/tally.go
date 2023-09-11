@@ -73,7 +73,11 @@ func (k Keeper) GetBTokenSharePerPublicPositionShareMap(ctx sdk.Context, targetD
 func (k Keeper) BTokenSharePerPublicPositionShare(ctx sdk.Context, publicPosition liquidammtypes.PublicPosition, targetDenom string) sdk.Dec {
 	shareDenom := liquidammtypes.ShareDenom(publicPosition.Id)
 
-	ammPosition := k.liquidAMMKeeper.MustGetAMMPosition(ctx, publicPosition)
+	ammPosition, found := k.liquidAMMKeeper.GetAMMPosition(ctx, publicPosition)
+	if !found {
+		// The public position is not initialized(gained liquidity) yet.
+		return utils.ZeroDec
+	}
 	coin0, coin1, err := k.ammKeeper.PositionAssets(ctx, ammPosition.Id)
 	if err != nil {
 		// TODO: panic instead?

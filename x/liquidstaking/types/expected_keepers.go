@@ -106,7 +106,7 @@ type AMMKeeper interface {
 
 type LiquidAMMKeeper interface {
 	IterateAllPublicPositions(ctx sdk.Context, cb func(publicPosition liquidammtypes.PublicPosition) (stop bool))
-	MustGetAMMPosition(ctx sdk.Context, publicPosition liquidammtypes.PublicPosition) ammtypes.Position
+	GetAMMPosition(ctx sdk.Context, publicPosition liquidammtypes.PublicPosition) (position ammtypes.Position, found bool)
 }
 
 // LPFarmKeeper defines expected lpfarm keeper
