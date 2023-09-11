@@ -16,7 +16,7 @@ var (
 // Default parameters
 var (
 	DefaultRewardsAuctionDuration      = time.Hour
-	DefaultMaxNumRecentRewardsAuctions = uint32(10)
+	DefaultMaxNumRecentRewardsAuctions = uint32(24)
 )
 
 var _ paramstypes.ParamSet = (*Params)(nil)
