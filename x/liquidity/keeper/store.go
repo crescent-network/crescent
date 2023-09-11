@@ -72,6 +72,11 @@ func (k Keeper) SetPairIndex(ctx sdk.Context, baseCoinDenom, quoteCoinDenom stri
 	store.Set(types.GetPairIndexKey(baseCoinDenom, quoteCoinDenom), bz)
 }
 
+func (k Keeper) DeletePairIndex(ctx sdk.Context, baseCoinDenom, quoteCoinDenom string) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.GetPairIndexKey(baseCoinDenom, quoteCoinDenom))
+}
+
 // SetPairLookupIndex stores a pair lookup index for given denoms.
 func (k Keeper) SetPairLookupIndex(ctx sdk.Context, denomA string, denomB string, pairId uint64) {
 	store := ctx.KVStore(k.storeKey)
