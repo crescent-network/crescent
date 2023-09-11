@@ -30,7 +30,7 @@ Note that [jq](https://stedolan.github.io/jq/) is recommended to be installed as
 
 ## MintShare
 
-Mint liquid farm share for auto compounding rewards. The module mints the corresponding amount of `sbCoin` and sends it to the farmer when the execution is complete.
+Mint public position share for auto compounding rewards. The module mints the corresponding amount of `sbCoin` and sends it to the sender when the execution is complete.
 
 Usage
 
@@ -39,14 +39,14 @@ mint-share [public-position-id] [desired-amount]
 ```
 
 | **Argument**       | **Description**                         |
-| :----------------- | :-------------------------------------- |
-| public-position-id | liquid farm id                          |
+|:-------------------|:----------------------------------------|
+| public-position-id | public position id                      |
 | desired-amount     | deposit amounts of base and quote coins |
 
 Example
 
 ```bash
-# In order to fully test the module in your local network, liquidFarm must be set up by governance proposal. 
+# In order to fully test the module in your local network, public positions must be set up by governance proposal.
 #
 # For example, 
 
@@ -88,10 +88,10 @@ Usage
 burn-share [public-position-id] [share]
 ```
 
-| **Argument**       | **Description**                    |
-| :----------------- | :--------------------------------- |
-| public-position-id | liquid farm id                     |
-| share              | desired amount of burning share    |
+| **Argument**       | **Description**                 |
+|:-------------------|:--------------------------------|
+| public-position-id | public position id              |
+| share              | desired amount of burning share |
 
 Example
 
@@ -116,11 +116,11 @@ Usage
 place-bid [public-position-id] [auction-id] [share]
 ```
 
-| **Argument**        | **Description**        |
-| :------------------ | :--------------------- |
-| public-position-id  | liquid farm id         |
-| auction-id          | auction id             |
-| share               | bid amount for auction |
+| **Argument**       | **Description**        |
+|:-------------------|:-----------------------|
+| public-position-id | public position id     |
+| auction-id         | auction id             |
+| share              | bid amount for auction |
 
 Example
 
@@ -243,7 +243,7 @@ crescentd query liquidamm bids 1 1 -o json | jq
 
 ## Rewards
 
-Query current farming rewards for the particular liquid farm
+Query current rewards for the particular public position
 
 Usage
 
