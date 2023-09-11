@@ -1,0 +1,66 @@
+syntax = "proto3";
+
+package crescent.amm.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package                      = "github.com/crescent-network/crescent/v5/x/amm/types";
+option (gogoproto.goproto_getters_all) = false;
+
+message Pool {
+  uint64 id                 = 1;
+  uint64 market_id          = 2;
+  string denom0             = 3;
+  string denom1             = 4;
+  string reserve_address    = 5;
+  string rewards_pool       = 6;
+  uint32 tick_spacing       = 7;
+  string min_order_quantity = 8
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string min_order_quote = 9
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+}
+
+message PoolState {
+  int32  current_tick  = 1;
+  string current_price = 2
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string current_liquidity = 3
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string total_liquidity = 4
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.DecCoin fee_growth_global = 5
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.DecCoin farming_rewards_growth_global = 6
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
+}
+
+message Position {
+  uint64 id         = 1;
+  uint64 pool_id    = 2;
+  string owner      = 3;
+  int32  lower_tick = 4;
+  int32  upper_tick = 5;
+  string liquidity  = 6
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.DecCoin last_fee_growth_inside = 7
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.Coin owed_fee = 8
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.DecCoin last_farming_rewards_growth_inside = 9
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.Coin owed_farming_rewards = 10
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+}
+
+message TickInfo {
+  string gross_liquidity = 1
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string net_liquidity = 2
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.DecCoin fee_growth_outside = 3
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.DecCoin farming_rewards_growth_outside = 4
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
+}

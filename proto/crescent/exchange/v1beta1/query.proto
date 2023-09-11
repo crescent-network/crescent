@@ -1,0 +1,115 @@
+syntax = "proto3";
+
+package crescent.exchange.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "crescent/exchange/v1beta1/exchange.proto";
+import "crescent/exchange/v1beta1/params.proto";
+import "crescent/exchange/v1beta1/order_book.proto";
+
+option go_package                      = "github.com/crescent-network/crescent/v5/x/exchange/types";
+option (gogoproto.goproto_getters_all) = false;
+
+service Query {
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/crescent/exchange/v1beta1/params";
+  }
+  rpc AllMarkets(QueryAllMarketsRequest) returns (QueryAllMarketsResponse) {
+    option (google.api.http).get = "/crescent/exchange/v1beta1/markets";
+  }
+  rpc Market(QueryMarketRequest) returns (QueryMarketResponse) {
+    option (google.api.http).get = "/crescent/exchange/v1beta1/markets/{market_id}";
+  }
+  rpc AllOrders(QueryAllOrdersRequest) returns (QueryAllOrdersResponse) {
+    option (google.api.http).get = "/crescent/exchange/v1beta1/orders";
+  }
+  rpc Order(QueryOrderRequest) returns (QueryOrderResponse) {
+    option (google.api.http).get = "/crescent/exchange/v1beta1/orders/{order_id}";
+  }
+  rpc BestSwapExactAmountInRoutes(QueryBestSwapExactAmountInRoutesRequest)
+      returns (QueryBestSwapExactAmountInRoutesResponse) {
+    option (google.api.http).get = "/crescent/exchange/v1beta1/best_swap_exact_amount_in_routes";
+  }
+  rpc OrderBook(QueryOrderBookRequest) returns (QueryOrderBookResponse) {
+    option (google.api.http).get = "/crescent/exchange/v1beta1/markets/{market_id}/order_book";
+  }
+}
+
+message QueryParamsRequest {}
+
+message QueryParamsResponse {
+  Params params = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryAllMarketsRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllMarketsResponse {
+  repeated MarketResponse                markets    = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryMarketRequest {
+  uint64 market_id = 1;
+}
+
+message QueryMarketResponse {
+  MarketResponse market = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryAllOrdersRequest {
+  string                                orderer    = 1;
+  uint64                                market_id  = 2;
+  cosmos.base.query.v1beta1.PageRequest pagination = 3;
+}
+
+message QueryAllOrdersResponse {
+  repeated Order                         orders     = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryOrderRequest {
+  uint64 order_id = 1;
+}
+
+message QueryOrderResponse {
+  Order order = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryBestSwapExactAmountInRoutesRequest {
+  string input        = 1;
+  string output_denom = 2;
+}
+
+message QueryBestSwapExactAmountInRoutesResponse {
+  repeated uint64             routes  = 1;
+  cosmos.base.v1beta1.DecCoin output  = 2 [(gogoproto.nullable) = false];
+  repeated SwapRouteResult    results = 3 [(gogoproto.nullable) = false];
+}
+
+message QueryOrderBookRequest {
+  uint64 market_id = 1;
+}
+
+message QueryOrderBookResponse {
+  repeated OrderBook order_books = 1 [(gogoproto.nullable) = false];
+}
+
+message MarketResponse {
+  uint64 id             = 1;
+  string base_denom     = 2;
+  string quote_denom    = 3;
+  string escrow_address = 4;
+  string maker_fee_rate = 5
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string taker_fee_rate = 6
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string order_source_fee_ratio = 7
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string last_price           = 8 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+  int64  last_matching_height = 9;
+}

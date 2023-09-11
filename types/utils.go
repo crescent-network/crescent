@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/exp/constraints"
+
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -51,6 +53,15 @@ func DateRangesOverlap(startTimeA, endTimeA, startTimeB, endTimeB time.Time) boo
 // End time is exclusive and start time is inclusive.
 func DateRangeIncludes(startTime, endTime, targetTime time.Time) bool {
 	return endTime.After(targetTime) && !startTime.After(targetTime)
+}
+
+// ParseInt parses and returns sdk.Int from string.
+func ParseInt(s string) sdk.Int {
+	i, ok := sdk.NewIntFromString(strings.ReplaceAll(s, "_", ""))
+	if !ok {
+		panic(fmt.Sprintf("invalid integer: %s", s))
+	}
+	return i
 }
 
 // ParseDec is a shortcut for sdk.MustNewDecFromStr.
@@ -115,17 +126,19 @@ func DecApproxEqual(a, b sdk.Dec) bool {
 	if b.GT(a) {
 		a, b = b, a
 	}
+	if a.IsZero() && b.IsZero() {
+		return true
+	}
 	return a.Sub(b).Quo(a).LTE(sdk.NewDecWithPrec(1, 3))
 }
 
 // DecApproxSqrt returns an approximate estimation of x's square root.
-func DecApproxSqrt(x sdk.Dec) (r sdk.Dec) {
-	var err error
-	r, err = x.ApproxSqrt()
+func DecApproxSqrt(x sdk.Dec) sdk.Dec {
+	r, err := x.ApproxSqrt()
 	if err != nil {
 		panic(err)
 	}
-	return
+	return r
 }
 
 // RandomInt returns a random integer in the half-open interval [min, max).
@@ -233,4 +246,47 @@ func LengthPrefixString(s string) []byte {
 	bz := []byte(s)
 	bzLen := len(bz)
 	return append([]byte{byte(bzLen)}, bz...)
+}
+
+func DivMod[T constraints.Integer](x, y T) (q, r T) {
+	r = (x%y + y) % y
+	q = (x - r) / y
+	return
+}
+
+// MinInt works like sdk.MinInt, but without allocations.
+func MinInt(a, b sdk.Int) sdk.Int {
+	if a.LT(b) {
+		return a
+	}
+	return b
+}
+
+func Uint32ToBigEndian(i uint32) []byte {
+	b := make([]byte, 4)
+	binary.BigEndian.PutUint32(b, i)
+	return b
+}
+
+func BigEndianToUint32(bz []byte) uint32 {
+	if len(bz) == 0 {
+		return 0
+	}
+	return binary.BigEndian.Uint32(bz)
+}
+
+func Filter[E any](s []E, f func(E) bool) []E {
+	var r []E
+	for _, x := range s {
+		if f(x) {
+			r = append(r, x)
+		}
+	}
+	return r
+}
+
+func Shuffle[E any](r *rand.Rand, s []E) {
+	r.Shuffle(len(s), func(i, j int) {
+		s[i], s[j] = s[j], s[i]
+	})
 }

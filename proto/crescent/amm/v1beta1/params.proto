@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package crescent.amm.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "google/protobuf/duration.proto";
+
+option go_package                      = "github.com/crescent-network/crescent/v5/x/amm/types";
+option (gogoproto.goproto_getters_all) = false;
+
+message Params {
+  repeated cosmos.base.v1beta1.Coin pool_creation_fee = 1
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+  uint32 default_tick_spacing       = 2;
+  string default_min_order_quantity = 3
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string default_min_order_quote = 4
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.Coin private_farming_plan_creation_fee = 5
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+  uint32                   max_num_private_farming_plans = 6;
+  google.protobuf.Duration max_farming_block_time = 7 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
+}

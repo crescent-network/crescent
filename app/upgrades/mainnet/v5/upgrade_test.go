@@ -3,78 +3,77 @@ package v5_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/suite"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	chain "github.com/crescent-network/crescent/v5/app"
+	"github.com/crescent-network/crescent/v5/app/testutil"
 	v5 "github.com/crescent-network/crescent/v5/app/upgrades/mainnet/v5"
-	"github.com/crescent-network/crescent/v5/cmd/crescentd/cmd"
 	utils "github.com/crescent-network/crescent/v5/types"
 	liquiditytypes "github.com/crescent-network/crescent/v5/x/liquidity/types"
+	lpfarmtypes "github.com/crescent-network/crescent/v5/x/lpfarm/types"
 )
 
 type UpgradeTestSuite struct {
-	suite.Suite
-	ctx sdk.Context
-	app *chain.App
-}
-
-func (s *UpgradeTestSuite) SetupTest() {
-	cmd.GetConfig()
-	s.app = chain.Setup(false)
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{
-		Height: 1,
-		Time:   utils.ParseTime("2023-03-01T00:00:00Z"),
-	})
+	testutil.TestSuite
 }
 
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(UpgradeTestSuite))
 }
 
-const testUpgradeHeight = 10
-
 func (s *UpgradeTestSuite) TestUpgradeV5() {
-	testCases := []struct {
-		title   string
-		before  func()
-		after   func()
-		expPass bool
-	}{
-		{
-			"v5 upgrade liquidity",
-			func() {},
-			func() {
-				liquidityParams := s.app.LiquidityKeeper.GetParams(s.ctx)
-				s.Require().EqualValues(
-					liquidityParams.MaxNumMarketMakingOrdersPerPair, liquiditytypes.DefaultMaxNumMarketMakingOrdersPerPair)
-			},
-			true,
-		},
-	}
+	enoughCoins := utils.ParseCoins(
+		"1000000000000000ucre,1000000000000000uusd,1000000000000000uatom,1000000000000000stake")
+	creatorAddr := s.FundedAccount(1, enoughCoins)
+	acc := s.App.AccountKeeper.GetAccount(s.Ctx, creatorAddr)
+	_ = acc.SetSequence(1)
+	_ = acc.SetPubKey(ed25519.GenPrivKey().PubKey())
+	s.App.AccountKeeper.SetAccount(s.Ctx, acc)
+	pair, err := s.App.LiquidityKeeper.CreatePair(s.Ctx, liquiditytypes.NewMsgCreatePair(
+		creatorAddr, "ucre", "uusd"))
+	s.Require().NoError(err)
+	pair.LastPrice = utils.ParseDecP("5")
+	s.App.LiquidityKeeper.SetPair(s.Ctx, pair)
+	oldPool1, err := s.App.LiquidityKeeper.CreatePool(s.Ctx, liquiditytypes.NewMsgCreatePool(
+		creatorAddr, pair.Id, utils.ParseCoins("100_000000ucre,500_000000uusd")))
+	s.Require().NoError(err)
+	s.AssertEqual(utils.ParseDec("223606797.749978969640917367"), s.App.LPFarmKeeper.PoolRewardWeight(s.Ctx, oldPool1, pair))
+	oldPool2, err := s.App.LiquidityKeeper.CreateRangedPool(s.Ctx, liquiditytypes.NewMsgCreateRangedPool(
+		creatorAddr, pair.Id, utils.ParseCoins("100_000000ucre,500_000000uusd"),
+		utils.ParseDec("4"), utils.ParseDec("6"), utils.ParseDec("5")))
+	s.Require().NoError(err)
+	s.AssertEqual(utils.ParseDec("2118033995.149877930999785779"), s.App.LPFarmKeeper.PoolRewardWeight(s.Ctx, oldPool2, pair))
+	lpfarmPlan, err := s.App.LPFarmKeeper.CreatePrivatePlan(s.Ctx, creatorAddr, "", []lpfarmtypes.RewardAllocation{
+		lpfarmtypes.NewPairRewardAllocation(pair.Id, utils.ParseCoins("100_000000uatom")),
+	}, utils.ParseTime("2023-01-01T00:00:00Z"), utils.ParseTime("2024-01-01T00:00:00Z"))
+	s.Require().NoError(err)
+	s.FundAccount(lpfarmPlan.GetFarmingPoolAddress(), enoughCoins)
+	s.NextBlock()
 
-	for _, tc := range testCases {
-		s.Run(tc.title, func() {
-			s.SetupTest()
+	// Set the upgrade plan.
+	upgradeHeight := s.Ctx.BlockHeight() + 1
+	upgradePlan := upgradetypes.Plan{Name: v5.UpgradeName, Height: upgradeHeight}
+	s.Require().NoError(s.App.UpgradeKeeper.ScheduleUpgrade(s.Ctx, upgradePlan))
+	_, havePlan := s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
+	s.Require().True(havePlan)
 
-			tc.before()
+	// Let the upgrade happen.
+	s.NextBlock()
 
-			s.ctx = s.ctx.WithBlockHeight(testUpgradeHeight - 1)
-			plan := upgradetypes.Plan{Name: v5.UpgradeName, Height: testUpgradeHeight}
-			err := s.app.UpgradeKeeper.ScheduleUpgrade(s.ctx, plan)
-			s.Require().NoError(err)
-			_, exists := s.app.UpgradeKeeper.GetUpgradePlan(s.ctx)
-			s.Require().True(exists)
+	pool, found := s.App.AMMKeeper.GetPool(s.Ctx, 1)
+	s.Require().True(found)
+	poolState := s.App.AMMKeeper.MustGetPoolState(s.Ctx, pool.Id)
+	s.AssertEqual(sdk.NewInt(2341640785), poolState.TotalLiquidity)
+	s.AssertEqual(sdk.NewInt(2341640785), poolState.CurrentLiquidity)
 
-			s.ctx = s.ctx.WithBlockHeight(testUpgradeHeight)
-			s.Require().NotPanics(func() {
-				s.app.BeginBlocker(s.ctx, abci.RequestBeginBlock{})
-			})
-
-			tc.after()
-		})
-	}
+	// Check if creating new market overwrites existing markets.
+	s.Require().Equal(uint64(1), s.App.ExchangeKeeper.GetLastMarketId(s.Ctx))
+	market := s.CreateMarket("uusd", "ucre")
+	s.Require().Equal(uint64(2), market.Id)
+	market, _ = s.App.ExchangeKeeper.GetMarket(s.Ctx, 1)
+	s.Require().Equal("ucre", market.BaseDenom)
+	s.Require().Equal("uusd", market.QuoteDenom)
 }

@@ -22,7 +22,7 @@ type Querier struct {
 
 var _ types.QueryServer = Querier{}
 
-// Params queries the parameters of the lending module.
+// Params queries the parameters of the module.
 func (k Querier) Params(c context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	var params types.Params
@@ -134,7 +134,7 @@ func (k Querier) Positions(c context.Context, req *types.QueryPositionsRequest) 
 	keyPrefix := types.GetPositionsByFarmerKeyPrefix(farmerAddr)
 	positionStore := prefix.NewStore(store, keyPrefix)
 	var positions []types.Position
-	pageReq, err := query.Paginate(positionStore, req.Pagination, func(key, value []byte) error {
+	pageRes, err := query.Paginate(positionStore, req.Pagination, func(key, value []byte) error {
 		var position types.Position
 		if err := k.cdc.Unmarshal(value, &position); err != nil {
 			return err
@@ -145,7 +145,7 @@ func (k Querier) Positions(c context.Context, req *types.QueryPositionsRequest) 
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
-	return &types.QueryPositionsResponse{Positions: positions, Pagination: pageReq}, nil
+	return &types.QueryPositionsResponse{Positions: positions, Pagination: pageRes}, nil
 }
 
 func (k Querier) Position(c context.Context, req *types.QueryPositionRequest) (*types.QueryPositionResponse, error) {

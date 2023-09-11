@@ -6,7 +6,7 @@ import (
 
 func (s *KeeperTestSuite) TestImportExportGenesis() {
 	s.nextBlock()
-	
+
 	genState := s.keeper.ExportGenesis(s.ctx)
 	bz := s.app.AppCodec().MustMarshalJSON(genState)
 

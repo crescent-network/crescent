@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package cosmos.budget.v1beta1;
+
+import "google/protobuf/any.proto";
+import "gogoproto/gogo.proto";
+import "tendermint/budget/v1beta1/budget.proto";
+import "tendermint/budget/v1beta1/query.proto";
+import "google/protobuf/timestamp.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package            = "github.com/crescent-network/crescent/v5/x/budget/types";
+option (gogoproto.equal_all) = true;
+
+// GenesisState defines the budget module's genesis state.
+message GenesisState {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // params defines all the parameters for the budget module
+  Params params = 1 [(gogoproto.nullable) = false];
+
+  // budget_records defines the budget records used for genesis state
+  repeated BudgetRecord budget_records = 2
+      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"budget_records\""];
+}
+
+// BudgetRecord records the state of each budget after genesis import or export.
+message BudgetRecord {
+  // name defines the name of the budget
+  string name = 1 [(gogoproto.moretags) = "yaml:\"name\""];
+
+  // total_collected_coins specifies the total collected coins in a budget ever since the budget is created
+  repeated cosmos.base.v1beta1.Coin total_collected_coins = 2 [
+    (gogoproto.moretags)     = "yaml:\"total_collected_coins\"",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.nullable)     = false
+  ];
+}

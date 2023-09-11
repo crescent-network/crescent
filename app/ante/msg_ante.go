@@ -6,12 +6,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	claimtypes "github.com/crescent-network/crescent/v5/x/claim/types"
+	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 	farmingtypes "github.com/crescent-network/crescent/v5/x/farming/types"
+	liquidfarmingtypes "github.com/crescent-network/crescent/v5/x/liquidfarming/types"
+	liquiditytypes "github.com/crescent-network/crescent/v5/x/liquidity/types"
 )
 
 // initial deposit must be greater than or equal to 50% of the minimum deposit
@@ -38,8 +42,7 @@ func (d MsgFilterDecorator) AnteHandle(
 	if !d.enabled {
 		return next(ctx, tx, simulate)
 	}
-	msgs := tx.GetMsgs()
-	if err = d.ValidateMsgs(ctx, msgs); err != nil {
+	if err = d.ValidateMsgs(ctx, tx.GetMsgs()); err != nil {
 		return ctx, err
 	}
 
@@ -47,13 +50,15 @@ func (d MsgFilterDecorator) AnteHandle(
 }
 
 func (d MsgFilterDecorator) ValidateMsgs(ctx sdk.Context, msgs []sdk.Msg) error {
+	numMsg, numBatchMsg := 0, 0
 	var minInitialDeposit sdk.Coins
 	validateMsg := func(msg sdk.Msg, nested bool) error {
-		// mempool(check tx) level msg filter
-		if ctx.IsCheckTx() {
-			switch msg := msg.(type) {
-			// prevent messages with insufficient initial deposit amount
-			case *govtypes.MsgSubmitProposal:
+		numMsg++
+		switch msg := msg.(type) {
+		// prevent gov messages with insufficient initial deposit amount
+		case *govtypes.MsgSubmitProposal:
+			// mempool(check tx) level msg filter
+			if ctx.IsCheckTx() {
 				if minInitialDeposit.Empty() {
 					depositParams := d.govKeeper.GetDepositParams(ctx)
 					minInitialDeposit = CalcMinInitialDeposit(depositParams.MinDeposit, minInitialDepositFraction)
@@ -63,31 +68,31 @@ func (d MsgFilterDecorator) ValidateMsgs(ctx sdk.Context, msgs []sdk.Msg) error 
 					return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "insufficient initial deposit amount - required: %v", minInitialDeposit)
 				}
 			}
-		}
 
-		// deliver tx level msg filter
-		switch msg := msg.(type) {
-		// deprecated msgs
-		case *claimtypes.MsgClaim,
-			*farmingtypes.MsgCreateFixedAmountPlan,
-			*farmingtypes.MsgCreateRatioPlan,
-			*farmingtypes.MsgStake,
-			*farmingtypes.MsgUnstake,
-			*farmingtypes.MsgHarvest,
-			*farmingtypes.MsgRemovePlan,
-			*farmingtypes.MsgAdvanceEpoch:
-			return fmt.Errorf("%s is deprecated msg type", sdk.MsgTypeURL(msg))
+		// tracking mixed batch msg with regular msg
+		case *exchangetypes.MsgPlaceBatchLimitOrder,
+			*exchangetypes.MsgPlaceMMBatchLimitOrder,
+			*exchangetypes.MsgCancelOrder:
+			numMsg--
+			numBatchMsg++
+
 		// block double nested MsgExec
 		case *authz.MsgExec:
 			if nested {
 				return fmt.Errorf("double nested %s is not allowed", sdk.MsgTypeURL(msg))
 			}
+		default:
+			// block deprecated module's msgs
+			if legacyMsg, ok := msg.(legacytx.LegacyMsg); ok {
+				switch legacyMsg.Route() {
+				case liquiditytypes.RouterKey,
+					liquidfarmingtypes.RouterKey,
+					farmingtypes.RouterKey,
+					claimtypes.RouterKey:
+					return fmt.Errorf("%s is deprecated msg type", sdk.MsgTypeURL(msg))
+				}
+			}
 		}
-
-		// TODO: on next PR
-		// - add other deprecated msg types
-		// - prevent authz nested midblock, batch msgs
-		// - prevent multi msgs midblock, batch msgs with normal msg
 
 		return nil
 	}
@@ -107,6 +112,7 @@ func (d MsgFilterDecorator) ValidateMsgs(ctx sdk.Context, msgs []sdk.Msg) error 
 	}
 
 	for _, m := range msgs {
+		// validate authz nested msgs
 		if authzMsg, ok := m.(*authz.MsgExec); ok {
 			if err := validateAuthz(authzMsg); err != nil {
 				return err
@@ -119,6 +125,12 @@ func (d MsgFilterDecorator) ValidateMsgs(ctx sdk.Context, msgs []sdk.Msg) error 
 			return err
 		}
 	}
+
+	// block mixed batch msg with regular msg
+	if numBatchMsg > 0 && numMsg > 0 {
+		return fmt.Errorf("cannot mix batch msg and regular msg in one tx")
+	}
+
 	return nil
 }
 

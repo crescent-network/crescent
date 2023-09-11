@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package crescent.exchange.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "crescent/exchange/v1beta1/exchange.proto";
+import "crescent/exchange/v1beta1/params.proto";
+
+option go_package                      = "github.com/crescent-network/crescent/v5/x/exchange/types";
+option (gogoproto.goproto_getters_all) = false;
+
+message GenesisState {
+  Params                     params                = 1 [(gogoproto.nullable) = false];
+  uint64                     last_market_id        = 2;
+  uint64                     last_order_id         = 3;
+  repeated MarketRecord      market_records        = 4 [(gogoproto.nullable) = false];
+  repeated Order             orders                = 5 [(gogoproto.nullable) = false];
+  repeated NumMMOrdersRecord num_mm_orders_records = 6
+      [(gogoproto.nullable) = false, (gogoproto.customname) = "NumMMOrdersRecords"];
+}
+
+message MarketRecord {
+  Market      market = 1 [(gogoproto.nullable) = false];
+  MarketState state  = 2 [(gogoproto.nullable) = false];
+}
+
+message NumMMOrdersRecord {
+  string orderer       = 1;
+  uint64 market_id     = 2;
+  uint32 num_mm_orders = 3 [(gogoproto.customname) = "NumMMOrders"];
+}

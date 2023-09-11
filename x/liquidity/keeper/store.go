@@ -29,6 +29,11 @@ func (k Keeper) SetLastPairId(ctx sdk.Context, id uint64) {
 	store.Set(types.LastPairIdKey, bz)
 }
 
+func (k Keeper) DeleteLastPairId(ctx sdk.Context) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.LastPairIdKey)
+}
+
 // GetPair returns pair object for the given pair id.
 func (k Keeper) GetPair(ctx sdk.Context, id uint64) (pair types.Pair, found bool) {
 	store := ctx.KVStore(k.storeKey)
@@ -73,6 +78,12 @@ func (k Keeper) SetPairLookupIndex(ctx sdk.Context, denomA string, denomB string
 	store.Set(types.GetPairsByDenomsIndexKey(denomA, denomB, pairId), []byte{})
 }
 
+func (k Keeper) DeletePairLookupIndex(ctx sdk.Context, pair types.Pair) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.GetPairsByDenomsIndexKey(pair.BaseCoinDenom, pair.QuoteCoinDenom, pair.Id))
+	store.Delete(types.GetPairsByDenomsIndexKey(pair.QuoteCoinDenom, pair.BaseCoinDenom, pair.Id))
+}
+
 // IterateAllPairs iterates over all the stored pairs and performs a callback function.
 // Stops iteration when callback returns true.
 func (k Keeper) IterateAllPairs(ctx sdk.Context, cb func(pair types.Pair) (stop bool, err error)) error {
@@ -102,6 +113,11 @@ func (k Keeper) GetAllPairs(ctx sdk.Context) (pairs []types.Pair) {
 	return pairs
 }
 
+func (k Keeper) DeletePair(ctx sdk.Context, pairId uint64) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.GetPairKey(pairId))
+}
+
 // GetLastPoolId returns the last pool id.
 func (k Keeper) GetLastPoolId(ctx sdk.Context) (id uint64) {
 	store := ctx.KVStore(k.storeKey)
@@ -121,6 +137,11 @@ func (k Keeper) SetLastPoolId(ctx sdk.Context, id uint64) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: id})
 	store.Set(types.LastPoolIdKey, bz)
+}
+
+func (k Keeper) DeleteLastPoolId(ctx sdk.Context) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.LastPoolIdKey)
 }
 
 // GetPool returns pool object for the given pool id.
@@ -161,10 +182,20 @@ func (k Keeper) SetPoolByReserveIndex(ctx sdk.Context, pool types.Pool) {
 	store.Set(types.GetPoolByReserveAddressIndexKey(pool.GetReserveAddress()), bz)
 }
 
+func (k Keeper) DeletePoolByReserveIndex(ctx sdk.Context, pool types.Pool) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.GetPoolByReserveAddressIndexKey(pool.GetReserveAddress()))
+}
+
 // SetPoolsByPairIndex stores a pool by pair index key.
 func (k Keeper) SetPoolsByPairIndex(ctx sdk.Context, pool types.Pool) {
 	store := ctx.KVStore(k.storeKey)
 	store.Set(types.GetPoolsByPairIndexKey(pool.PairId, pool.Id), []byte{})
+}
+
+func (k Keeper) DeletePoolsByPairIndex(ctx sdk.Context, pool types.Pool) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.GetPoolsByPairIndexKey(pool.PairId, pool.Id))
 }
 
 // IterateAllPools iterates over all the stored pools and performs a callback function.
@@ -223,6 +254,11 @@ func (k Keeper) GetPoolsByPair(ctx sdk.Context, pairId uint64) (pools []types.Po
 		return false, nil
 	})
 	return
+}
+
+func (k Keeper) DeletePool(ctx sdk.Context, poolId uint64) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.GetPoolKey(poolId))
 }
 
 // GetDepositRequest returns the particular deposit request.

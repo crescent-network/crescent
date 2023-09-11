@@ -1,0 +1,80 @@
+syntax = "proto3";
+
+package crescent.amm.v1beta1;
+
+import "google/protobuf/timestamp.proto";
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "crescent/amm/v1beta1/farming.proto";
+
+option go_package                      = "github.com/crescent-network/crescent/v5/x/amm/types";
+option (gogoproto.goproto_getters_all) = false;
+
+message EventCreatePool {
+  string creator   = 1;
+  uint64 market_id = 2;
+  string price   = 3 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  uint64 pool_id = 4;
+}
+
+message EventAddLiquidity {
+  string owner       = 1;
+  uint64 pool_id     = 2;
+  string lower_price = 3
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string upper_price = 4
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  uint64 position_id = 5;
+  string liquidity   = 6
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.Coin amount = 7
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+}
+
+message EventRemoveLiquidity {
+  string owner       = 1;
+  uint64 position_id = 2;
+  string liquidity   = 3
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.Coin amount = 4
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+}
+
+message EventCollect {
+  string   owner                           = 1;
+  uint64   position_id                     = 2;
+  repeated cosmos.base.v1beta1.Coin amount = 3
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+}
+
+message EventCreatePrivateFarmingPlan {
+  string                           creator              = 1;
+  string                           description          = 2;
+  string                           termination_address  = 3;
+  repeated FarmingRewardAllocation reward_allocations   = 4 [(gogoproto.nullable) = false];
+  google.protobuf.Timestamp        start_time           = 5 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+  google.protobuf.Timestamp        end_time             = 6 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+  uint64                           farming_plan_id      = 7;
+  string                           farming_pool_address = 8;
+}
+
+message EventCreatePublicFarmingPlan {
+  string                           description          = 1;
+  string                           farming_pool_address = 2;
+  string                           termination_address  = 3;
+  repeated FarmingRewardAllocation reward_allocations   = 4 [(gogoproto.nullable) = false];
+  google.protobuf.Timestamp        start_time           = 5 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+  google.protobuf.Timestamp        end_time             = 6 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+  uint64                           farming_plan_id      = 7;
+}
+
+message EventFarmingPlanTerminated {
+  uint64 farming_plan_id = 1;
+}
+
+message EventPoolParameterChanged {
+  uint64 pool_id            = 1;
+  uint32 tick_spacing       = 2;
+  string min_order_quantity = 3 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+  string min_order_quote    = 4 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+}

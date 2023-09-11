@@ -24,6 +24,14 @@
       }
     },
     {
+      "url": "./tmp-swagger-gen/tendermint/budget/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "BudgetParams"
+        }
+      }
+    },
+    {
       "url": "./tmp-swagger-gen/crescent/liquidstaking/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
@@ -73,7 +81,24 @@
       "operationIds": {
         "rename": {
           "Params": "LiquidFarmingParams",
-          "Rewards": "LiquidFarmingRewards"
+          "Rewards": "LiquidFarmingRewards",
+          "Bids": "LiquidFarmingBids",
+          "ExchangeRate": "LiquidFarmingExchangeRate",
+          "RewardsAuction": "LiquidFarmingRewardsAuction",
+          "RewardsAuctions": "LiquidFarmingRewardsAuctions"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/crescent/liquidamm/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "LiquidAMMParams",
+          "Rewards": "LiquidAMMRewards",
+          "Bids": "LiquidAMMBids",
+          "ExchangeRate": "LiquidAMMExchangeRate",
+          "RewardsAuction": "LiquidAMMRewardsAuction",
+          "RewardsAuctions": "LiquidAMMRewardsAuctions"
         }
       }
     },
@@ -83,6 +108,26 @@
         "rename": {
           "Params": "MarkerParams",
           "LastBlockTime": "MarkerLastBlockTime"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/crescent/exchange/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "ExchangeParams",
+          "Order": "ExchangeOrder"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/crescent/amm/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "AMMParams",
+          "Pools": "AMMPools",
+          "Positions": "AMMPositions",
+          "Position": "APPPosition"
         }
       }
     }

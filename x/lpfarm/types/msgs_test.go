@@ -3,12 +3,22 @@ package types_test
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/lpfarm/types"
 )
+
+func TestBlockPrivatePlanPairRewardAllocation(t *testing.T) {
+	msg := types.NewMsgCreatePrivatePlan(
+		utils.TestAddress(1), "Farming plan", []types.RewardAllocation{
+			types.NewPairRewardAllocation(1, utils.ParseCoins("100_000000stake")),
+		}, utils.ParseTime("2023-01-01T00:00:00Z"), utils.ParseTime("2024-01-01T00:00:00Z"))
+	err := msg.ValidateBasic()
+	require.EqualError(t, err, "pair reward allocation for 1 is disabled: invalid request")
+}
 
 func TestMsgFarm(t *testing.T) {
 	for _, tc := range []struct {

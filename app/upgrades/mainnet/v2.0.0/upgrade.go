@@ -5,8 +5,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	budgetkeeper "github.com/tendermint/budget/x/budget/keeper"
-	budgettypes "github.com/tendermint/budget/x/budget/types"
+
+	budgetkeeper "github.com/crescent-network/crescent/v5/x/budget/keeper"
+	budgettypes "github.com/crescent-network/crescent/v5/x/budget/types"
 
 	utils "github.com/crescent-network/crescent/v5/types"
 	liquiditykeeper "github.com/crescent-network/crescent/v5/x/liquidity/keeper"

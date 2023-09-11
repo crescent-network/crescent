@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+package cosmos.budget.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/crescent-network/crescent/v5/x/budget/types";
+
+// Params defines the parameters for the budget module.
+message Params {
+  option (gogoproto.goproto_stringer) = false;
+  // The universal epoch length in number of blocks
+  // A collection of budgets is executed with this epoch_blocks parameter
+  uint32 epoch_blocks = 1 [(gogoproto.moretags) = "yaml:\"epoch_blocks\""];
+
+  // Budgets parameter can be added, modified, and deleted through
+  // parameter change governance proposal
+  repeated Budget budgets = 2 [(gogoproto.moretags) = "yaml:\"budgets\"", (gogoproto.nullable) = false];
+}
+
+// Budget defines a budget object.
+message Budget {
+  option (gogoproto.goproto_getters)  = false;
+  option (gogoproto.goproto_stringer) = false;
+
+  // name defines the name of the budget
+  string name = 1 [(gogoproto.moretags) = "yaml:\"name\""];
+
+  // rate specifies the distributing amount by ratio of total budget source
+  string rate = 2 [
+    (gogoproto.moretags)   = "yaml:\"rate\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
+
+  // source_address defines the bech32-encoded address that source of the budget
+  string source_address = 3 [(gogoproto.moretags) = "yaml:\"source_address\""];
+
+  // destination_address defines the bech32-encoded address of the budget pool to distribute
+  string destination_address = 4 [(gogoproto.moretags) = "yaml:\"destination_address\""];
+
+  // start_time specifies the start time of the budget
+  google.protobuf.Timestamp start_time = 5
+      [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"start_time\""];
+
+  // end_time specifies the end time of the budget
+  google.protobuf.Timestamp end_time = 6
+      [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"end_time\""];
+}
+
+// TotalCollectedCoins defines total collected coins with relevant metadata.
+message TotalCollectedCoins {
+  option (gogoproto.goproto_getters) = false;
+
+  // total_collected_coins specifies the total collected coins in a budget ever since the budget is created
+  repeated cosmos.base.v1beta1.Coin total_collected_coins = 1 [
+    (gogoproto.moretags)     = "yaml:\"total_collected_coins\"",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.nullable)     = false
+  ];
+}

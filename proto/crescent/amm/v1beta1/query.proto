@@ -1,0 +1,242 @@
+syntax = "proto3";
+
+package crescent.amm.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "crescent/amm/v1beta1/amm.proto";
+import "crescent/amm/v1beta1/farming.proto";
+import "crescent/amm/v1beta1/params.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+
+option go_package                      = "github.com/crescent-network/crescent/v5/x/amm/types";
+option (gogoproto.goproto_getters_all) = false;
+
+service Query {
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/crescent/amm/v1beta1/params";
+  }
+  rpc AllPools(QueryAllPoolsRequest) returns (QueryAllPoolsResponse) {
+    option (google.api.http).get = "/crescent/amm/v1beta1/pools";
+  }
+  rpc Pool(QueryPoolRequest) returns (QueryPoolResponse) {
+    option (google.api.http).get = "/crescent/amm/v1beta1/pools/{pool_id}";
+  }
+  rpc AllPositions(QueryAllPositionsRequest) returns (QueryAllPositionsResponse) {
+    option (google.api.http).get = "/crescent/amm/v1beta1/positions";
+  }
+  rpc Position(QueryPositionRequest) returns (QueryPositionResponse) {
+    option (google.api.http).get = "/crescent/amm/v1beta1/positions/{position_id}";
+  }
+  rpc PositionAssets(QueryPositionAssetsRequest) returns (QueryPositionAssetsResponse) {
+    option (google.api.http).get = "/crescent/amm/v1beta1/positions/{position_id}/assets";
+  }
+  rpc AddLiquiditySimulation(QueryAddLiquiditySimulationRequest) returns (QueryAddLiquiditySimulationResponse) {
+    option (google.api.http).get = "/crescent/amm/v1beta1/simulation/add_liquidity";
+  }
+  rpc RemoveLiquiditySimulation(QueryRemoveLiquiditySimulationRequest)
+      returns (QueryRemoveLiquiditySimulationResponse) {
+    option (google.api.http).get = "/crescent/amm/v1beta1/simulation/remove_liquidity";
+  }
+  rpc CollectibleCoins(QueryCollectibleCoinsRequest) returns (QueryCollectibleCoinsResponse) {
+    option (google.api.http).get = "/crescent/amm/v1beta1/collectible_coins";
+  }
+  rpc AllTickInfos(QueryAllTickInfosRequest) returns (QueryAllTickInfosResponse) {
+    option (google.api.http).get = "/crescent/amm/v1beta1/pools/{pool_id}/tick_infos";
+  }
+  rpc TickInfo(QueryTickInfoRequest) returns (QueryTickInfoResponse) {
+    option (google.api.http).get = "/crescent/amm/v1beta1/pools/{pool_id}/tick_infos/{tick}";
+  }
+  rpc AllFarmingPlans(QueryAllFarmingPlansRequest) returns (QueryAllFarmingPlansResponse) {
+    option (google.api.http).get = "/crescent/amm/v1beta1/farming_plans";
+  }
+  rpc FarmingPlan(QueryFarmingPlanRequest) returns (QueryFarmingPlanResponse) {
+    option (google.api.http).get = "/crescent/amm/v1beta1/farming_plans/{plan_id}";
+  }
+}
+
+message QueryParamsRequest {}
+
+message QueryParamsResponse {
+  Params params = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryAllPoolsRequest {
+  uint64                                market_id  = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+message QueryAllPoolsResponse {
+  repeated PoolResponse                  pools      = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryPoolRequest {
+  uint64 pool_id = 1;
+}
+
+message QueryPoolResponse {
+  PoolResponse pool = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryAllPositionsRequest {
+  uint64                                pool_id    = 1;
+  string                                owner      = 2;
+  cosmos.base.query.v1beta1.PageRequest pagination = 3;
+}
+
+message QueryAllPositionsResponse {
+  repeated PositionResponse              positions  = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryPositionRequest {
+  uint64 position_id = 1;
+}
+
+message QueryPositionResponse {
+  PositionResponse position = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryPositionAssetsRequest {
+  uint64 position_id = 1;
+}
+
+message QueryPositionAssetsResponse {
+  cosmos.base.v1beta1.Coin coin0 = 1 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin coin1 = 2 [(gogoproto.nullable) = false];
+}
+
+message QueryAddLiquiditySimulationRequest {
+  uint64 pool_id        = 1;
+  string lower_price    = 2;
+  string upper_price    = 3;
+  string desired_amount = 4;
+}
+
+message QueryAddLiquiditySimulationResponse {
+  string liquidity = 1
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.Coin amount = 2
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+}
+
+message QueryRemoveLiquiditySimulationRequest {
+  uint64 position_id = 1;
+  string liquidity   = 2;
+}
+
+message QueryRemoveLiquiditySimulationResponse {
+  repeated cosmos.base.v1beta1.Coin amount = 1
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+}
+
+message QueryCollectibleCoinsRequest {
+  string owner       = 1;
+  uint64 position_id = 2;
+}
+
+message QueryCollectibleCoinsResponse {
+  repeated cosmos.base.v1beta1.Coin fee = 1
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.Coin farming_rewards = 2
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+}
+
+message QueryAllTickInfosRequest {
+  uint64                                pool_id    = 1;
+  string                                lower_tick = 2;
+  string                                upper_tick = 3;
+  cosmos.base.query.v1beta1.PageRequest pagination = 4;
+}
+
+message QueryAllTickInfosResponse {
+  repeated TickInfoResponse              tick_infos = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryTickInfoRequest {
+  uint64 pool_id = 1;
+  int32  tick    = 2;
+}
+
+message QueryTickInfoResponse {
+  TickInfoResponse tick_info = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryAllFarmingPlansRequest {
+  string                                is_private    = 1;
+  string                                is_terminated = 2;
+  cosmos.base.query.v1beta1.PageRequest pagination    = 3;
+}
+
+message QueryAllFarmingPlansResponse {
+  repeated FarmingPlan                   farming_plans = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination    = 2;
+}
+
+message QueryFarmingPlanRequest {
+  uint64 plan_id = 1;
+}
+
+message QueryFarmingPlanResponse {
+  FarmingPlan farming_plan = 1 [(gogoproto.nullable) = false];
+}
+
+message PoolResponse {
+  uint64                   id                 = 1;
+  uint64                   market_id          = 2;
+  cosmos.base.v1beta1.Coin balance0           = 3 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin balance1           = 4 [(gogoproto.nullable) = false];
+  string                   reserve_address    = 5;
+  string                   rewards_pool       = 6;
+  uint32                   tick_spacing       = 7;
+  string                   min_order_quantity = 8
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string min_order_quote = 9
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  int32  current_tick  = 10;
+  string current_price = 11
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string current_liquidity = 12
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string total_liquidity = 13
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.DecCoin fee_growth_global = 14
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.DecCoin farming_rewards_growth_global = 15
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
+}
+
+message PositionResponse {
+  uint64 id          = 1;
+  uint64 pool_id     = 2;
+  string owner       = 3;
+  string lower_price = 4
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string upper_price = 5
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string liquidity = 6
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.DecCoin last_fee_growth_inside = 7
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.Coin owed_fee = 8
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.DecCoin last_farming_rewards_growth_inside = 9
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.Coin owed_farming_rewards = 10
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+}
+
+message TickInfoResponse {
+  int32  tick            = 1;
+  string gross_liquidity = 2
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string net_liquidity = 3
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.DecCoin fee_growth_outside = 4
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.DecCoin farming_rewards_growth_outside = 5
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
+}

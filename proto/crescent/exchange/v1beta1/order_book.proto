@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package crescent.exchange.v1beta1;
+
+import "gogoproto/gogo.proto";
+
+option go_package                      = "github.com/crescent-network/crescent/v5/x/exchange/types";
+option (gogoproto.goproto_getters_all) = false;
+
+message OrderBook {
+  string price_interval = 1
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  repeated OrderBookPriceLevel sells = 2 [(gogoproto.nullable) = false];
+  repeated OrderBookPriceLevel buys  = 3 [(gogoproto.nullable) = false];
+}
+
+message OrderBookPriceLevel {
+  // p denotes price
+  string p = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  // q denotes quantity
+  string q = 2 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+}

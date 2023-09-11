@@ -62,6 +62,13 @@ func (s *SimTestSuite) TestSimulateMsgCreatePrivatePlan() {
 	accs := s.getTestingAccounts(r, 1)
 
 	s.app.LiquidityKeeper.SetPair(s.ctx, liquiditytypes.NewPair(1, "denom1", "denom2"))
+	creatorAddr := accs[0].Address
+	depositCoins := utils.ParseCoins("100_000000denom1,100_000000denom2")
+	s.Require().NoError(
+		chain.FundAccount(s.app.BankKeeper, s.ctx, creatorAddr, depositCoins))
+	_, err := s.app.LiquidityKeeper.CreatePool(s.ctx, liquiditytypes.NewMsgCreatePool(
+		creatorAddr, 1, depositCoins))
+	s.Require().NoError(err)
 
 	op := simulation.SimulateMsgCreatePrivatePlan(
 		s.app.AccountKeeper, s.app.BankKeeper, s.app.LiquidityKeeper, s.app.LPFarmKeeper)
@@ -78,10 +85,10 @@ func (s *SimTestSuite) TestSimulateMsgCreatePrivatePlan() {
 	s.Require().Equal("cosmos1tp4es44j4vv8m59za3z0tm64dkmlnm8wg2frhc", msg.Creator)
 	s.Require().Equal("Farming Plan", msg.Description)
 	s.Require().Equal([]types.RewardAllocation{
-		types.NewPairRewardAllocation(1, utils.ParseCoins("169567170stake")),
+		types.NewDenomRewardAllocation("pool1", utils.ParseCoins("505033207stake")),
 	}, msg.RewardAllocations)
 	s.Require().Equal(utils.ParseTime("2022-01-02T00:00:00Z"), msg.StartTime)
-	s.Require().Equal(utils.ParseTime("2022-01-06T00:00:00Z"), msg.EndTime)
+	s.Require().Equal(utils.ParseTime("2022-01-05T00:00:00Z"), msg.EndTime)
 }
 
 func (s *SimTestSuite) TestSimulateMsgTerminatePrivatePlan() {

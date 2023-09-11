@@ -85,6 +85,12 @@ func (req CreatePlanRequest) Validate() error {
 	if err := dummyPlan.Validate(); err != nil {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
+	for _, rewardAlloc := range req.RewardAllocations {
+		if rewardAlloc.PairId > 0 {
+			return sdkerrors.Wrapf(
+				sdkerrors.ErrInvalidRequest, "pair reward allocation for %d is disabled", rewardAlloc.PairId)
+		}
+	}
 	return nil
 }
 

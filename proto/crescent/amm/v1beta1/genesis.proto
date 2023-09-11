@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package crescent.amm.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "crescent/amm/v1beta1/amm.proto";
+import "crescent/amm/v1beta1/farming.proto";
+import "crescent/amm/v1beta1/params.proto";
+
+option go_package                      = "github.com/crescent-network/crescent/v5/x/amm/types";
+option (gogoproto.goproto_getters_all) = false;
+
+message GenesisState {
+  Params                  params                    = 1 [(gogoproto.nullable) = false];
+  uint64                  last_pool_id              = 2;
+  uint64                  last_position_id          = 3;
+  repeated PoolRecord     pool_records              = 4 [(gogoproto.nullable) = false];
+  repeated Position       positions                 = 5 [(gogoproto.nullable) = false];
+  repeated TickInfoRecord tick_info_records         = 6 [(gogoproto.nullable) = false];
+  uint64                  last_farming_plan_id      = 7;
+  uint32                  num_private_farming_plans = 8;
+  repeated FarmingPlan    farming_plans             = 9 [(gogoproto.nullable) = false];
+}
+
+message PoolRecord {
+  Pool      pool  = 1 [(gogoproto.nullable) = false];
+  PoolState state = 2 [(gogoproto.nullable) = false];
+}
+
+message TickInfoRecord {
+  uint64   pool_id   = 1;
+  int32    tick      = 2;
+  TickInfo tick_info = 3 [(gogoproto.nullable) = false];
+}

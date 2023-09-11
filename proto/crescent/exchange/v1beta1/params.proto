@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package crescent.exchange.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/duration.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package                      = "github.com/crescent-network/crescent/v5/x/exchange/types";
+option (gogoproto.goproto_getters_all) = false;
+
+message Params {
+  repeated cosmos.base.v1beta1.Coin market_creation_fee = 1
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+  Fees                     fees               = 2 [(gogoproto.nullable) = false];
+  google.protobuf.Duration max_order_lifespan = 3 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
+  // max_order_price_ratio defines the ratio of the maximum possible order price compared to the market's last price
+  string max_order_price_ratio = 4
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  uint32 max_swap_routes_len = 5;
+  uint32 max_num_mm_orders   = 6 [(gogoproto.customname) = "MaxNumMMOrders"];
+}
+
+message Fees {
+  string default_maker_fee_rate = 1
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string default_taker_fee_rate = 2
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string default_order_source_fee_ratio = 3
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+}

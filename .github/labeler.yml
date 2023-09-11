@@ -8,6 +8,8 @@
   - x/liquidstaking/**/*
 "x/liquidfarming":
   - x/liquidfarming/**/*
+"x/liquidamm":
+  - x/liquidamm/**/*
 "x/mint":
   - x/mint/**/*
 "x/marketmaker":
@@ -16,6 +18,12 @@
   - x/lpfarm/**/*
 "x/marker":
   - x/marker/**/*
+"x/budget":
+  - x/budget/**/*
+"x/exchange":
+  - x/exchange/**/*
+"x/amm":
+  - x/amm/**/*
 "documentation":
   - docs/**/*
 "build":

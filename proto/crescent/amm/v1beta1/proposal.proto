@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package crescent.amm.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "crescent/amm/v1beta1/farming.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package                      = "github.com/crescent-network/crescent/v5/x/amm/types";
+option (gogoproto.goproto_getters_all) = false;
+
+message PublicFarmingPlanProposal {
+  option (gogoproto.goproto_stringer)                        = false;
+  string                                  title              = 1;
+  string                                  description        = 2;
+  repeated CreatePublicFarmingPlanRequest create_requests    = 3 [(gogoproto.nullable) = false];
+  repeated TerminateFarmingPlanRequest    terminate_requests = 4 [(gogoproto.nullable) = false];
+}
+
+message CreatePublicFarmingPlanRequest {
+  string                           description          = 1;
+  string                           farming_pool_address = 2;
+  string                           termination_address  = 3;
+  repeated FarmingRewardAllocation reward_allocations   = 4 [(gogoproto.nullable) = false];
+  google.protobuf.Timestamp        start_time           = 5 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+  google.protobuf.Timestamp        end_time             = 6 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+}
+
+message TerminateFarmingPlanRequest {
+  uint64 farming_plan_id = 1;
+}
+
+message PoolParameterChangeProposal {
+  option (gogoproto.goproto_stringer)      = false;
+  string                       title       = 1;
+  string                       description = 2;
+  repeated PoolParameterChange changes     = 3 [(gogoproto.nullable) = false];
+}
+
+message PoolParameterChange {
+  uint64 pool_id            = 1;
+  uint32 tick_spacing       = 2;
+  string min_order_quantity = 3 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+  string min_order_quote    = 4 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+}

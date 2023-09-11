@@ -5,7 +5,6 @@ package app
 import (
 	"encoding/json"
 	"fmt"
-	"math/rand"
 	"os"
 	"testing"
 
@@ -29,14 +28,17 @@ import (
 	ibctransfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	ibchost "github.com/cosmos/ibc-go/v3/modules/core/24-host"
 	"github.com/stretchr/testify/require"
-	budgettypes "github.com/tendermint/budget/x/budget/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
+	ammtypes "github.com/crescent-network/crescent/v5/x/amm/types"
+	budgettypes "github.com/crescent-network/crescent/v5/x/budget/types"
 	claimtypes "github.com/crescent-network/crescent/v5/x/claim/types"
+	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 	farmingtypes "github.com/crescent-network/crescent/v5/x/farming/types"
+	liquidammtypes "github.com/crescent-network/crescent/v5/x/liquidamm/types"
 	liquiditytypes "github.com/crescent-network/crescent/v5/x/liquidity/types"
 	liquidstakingtypes "github.com/crescent-network/crescent/v5/x/liquidstaking/types"
 	lpfarmtypes "github.com/crescent-network/crescent/v5/x/lpfarm/types"
@@ -198,6 +200,9 @@ func TestAppImportExport(t *testing.T) {
 		{app.keys[claimtypes.StoreKey], newApp.keys[claimtypes.StoreKey], [][]byte{}},
 		{app.keys[marketmakertypes.StoreKey], newApp.keys[marketmakertypes.StoreKey], [][]byte{}},
 		{app.keys[lpfarmtypes.StoreKey], newApp.keys[lpfarmtypes.StoreKey], [][]byte{}},
+		{app.keys[exchangetypes.StoreKey], newApp.keys[exchangetypes.StoreKey], [][]byte{}},
+		{app.keys[ammtypes.StoreKey], newApp.keys[ammtypes.StoreKey], [][]byte{}},
+		{app.keys[liquidammtypes.StoreKey], newApp.keys[liquidammtypes.StoreKey], [][]byte{}},
 		{app.keys[ibchost.StoreKey], newApp.keys[ibchost.StoreKey], [][]byte{}},
 		{app.keys[ibctransfertypes.StoreKey], newApp.keys[ibctransfertypes.StoreKey], [][]byte{}},
 	}
@@ -306,12 +311,12 @@ func TestAppStateDeterminism(t *testing.T) {
 	config.AllInvariants = false
 	config.ChainID = helpers.SimAppChainID
 
-	numSeeds := 3
-	numTimesToRunPerSeed := 5
+	numSeeds := config.NumBlocks / 10
+	numTimesToRunPerSeed := 2
 	appHashList := make([]json.RawMessage, numTimesToRunPerSeed)
 
 	for i := 0; i < numSeeds; i++ {
-		config.Seed = rand.Int63()
+		config.Seed = config.Seed + int64(i)
 
 		for j := 0; j < numTimesToRunPerSeed; j++ {
 			var logger log.Logger

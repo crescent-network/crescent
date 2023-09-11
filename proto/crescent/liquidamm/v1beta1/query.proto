@@ -1,0 +1,170 @@
+syntax = "proto3";
+
+package crescent.liquidamm.v1beta1;
+
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "crescent/liquidamm/v1beta1/liquidamm.proto";
+import "crescent/liquidamm/v1beta1/params.proto";
+
+option go_package = "github.com/crescent-network/crescent/v5/x/liquidamm/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // Params returns parameters of the module
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/crescent/liquidamm/v1beta1/params";
+  }
+
+  // PublicPositions returns all public positions registered in module
+  rpc PublicPositions(QueryPublicPositionsRequest) returns (QueryPublicPositionsResponse) {
+    option (google.api.http).get = "/crescent/liquidamm/v1beta1/public_positions";
+  }
+
+  // PublicPosition returns the specific public position
+  rpc PublicPosition(QueryPublicPositionRequest) returns (QueryPublicPositionResponse) {
+    option (google.api.http).get = "/crescent/liquidamm/v1beta1/public_positions/{public_position_id}";
+  }
+
+  // RewardsAuctions returns all rewards auctions that correspond to the given pool id
+  rpc RewardsAuctions(QueryRewardsAuctionsRequest) returns (QueryRewardsAuctionsResponse) {
+    option (google.api.http).get = "/crescent/liquidamm/v1beta1/public_positions/{public_position_id}/rewards_auctions";
+  }
+
+  // RewardsAuction returns the specific rewards auction
+  rpc RewardsAuction(QueryRewardsAuctionRequest) returns (QueryRewardsAuctionResponse) {
+    option (google.api.http).get =
+        "/crescent/liquidamm/v1beta1/public_positions/{public_position_id}/rewards_auctions/{auction_id}";
+  }
+
+  // Bids returns all bids for the rewards auction
+  rpc Bids(QueryBidsRequest) returns (QueryBidsResponse) {
+    option (google.api.http).get =
+        "/crescent/liquidamm/v1beta1/public_positions/{public_position_id}/rewards_auctions/{auction_id}/bids";
+  }
+
+  // Rewards returns all accumulated rewards for the public position
+  rpc Rewards(QueryRewardsRequest) returns (QueryRewardsResponse) {
+    option (google.api.http).get = "/crescent/liquidamm/v1beta1/public_positions/{public_position_id}/rewards";
+  }
+
+  // ExchangeRate returns exchange rates (mint rate and burn rate) for the public position
+  rpc ExchangeRate(QueryExchangeRateRequest) returns (QueryExchangeRateResponse) {
+    option (google.api.http).get = "/crescent/liquidamm/v1beta1/public_positions/{public_position_id}/exchange_rate";
+  }
+}
+
+// QueryParamsRequest is request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  Params params = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryPublicPositionsRequest is the request type for the Query/PublicPositions RPC method.
+message QueryPublicPositionsRequest {
+  uint64                                pool_id    = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QueryPublicPositionsResponse is response type for the Query/PublicPositions RPC method.
+message QueryPublicPositionsResponse {
+  repeated PublicPositionResponse        public_positions = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination       = 2;
+}
+
+// QueryPublicPositionRequest is the request type for the Query/PublicPosition RPC method.
+message QueryPublicPositionRequest {
+  uint64 public_position_id = 1;
+}
+
+// QueryPublicPositionResponse is response type for the Query/PublicPosition RPC method.
+message QueryPublicPositionResponse {
+  PublicPositionResponse public_position = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryRewardsAuctionsRequest is request type for the Query/RewardsAuctions RPC method.
+message QueryRewardsAuctionsRequest {
+  uint64                                public_position_id = 1;
+  string                                status             = 2;
+  cosmos.base.query.v1beta1.PageRequest pagination         = 3;
+}
+
+// QueryRewardsAuctionsResponse is response type for the Query/RewardsAuctions RPC method.
+message QueryRewardsAuctionsResponse {
+  repeated RewardsAuction                rewards_auctions = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination       = 2;
+}
+
+// QueryRewardsAuctionRequest is request type for the Query/RewardsAuction RPC method.
+message QueryRewardsAuctionRequest {
+  uint64 public_position_id = 1;
+  uint64 auction_id         = 2;
+}
+
+// QueryRewardsAuctionResponse is response type for the Query/RewardsAuction RPC method.
+message QueryRewardsAuctionResponse {
+  RewardsAuction rewards_auction = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryBidsRequest is request type for the Query/Bids RPC method.
+message QueryBidsRequest {
+  uint64                                public_position_id = 1;
+  uint64                                auction_id         = 2;
+  cosmos.base.query.v1beta1.PageRequest pagination         = 3;
+}
+
+// QueryBidsResponse is response type for the Query/Bids RPC method.
+message QueryBidsResponse {
+  repeated Bid                           bids       = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryRewardsRequest is request type for the Query/Rewards RPC method.
+message QueryRewardsRequest {
+  uint64 public_position_id = 1;
+}
+
+// QueryRewardsResponse is response type for the Query/Rewards RPC method.
+message QueryRewardsResponse {
+  repeated cosmos.base.v1beta1.Coin rewards = 1
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+}
+
+// QueryExchangeRateRequest is request type for the Query/ExchangeRate RPC method.
+message QueryExchangeRateRequest {
+  uint64 public_position_id = 1;
+}
+
+// QueryExchangeRateResponse is response type for the Query/ExchangeRate RPC method.
+message QueryExchangeRateResponse {
+  string mint_rate = 1
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string burn_rate = 2
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+}
+
+//
+// Custom response messages
+//
+
+// PublicPositionResponse is response type for the Query/PublicPosition RPC method.
+message PublicPositionResponse {
+  uint64 id         = 1;
+  uint64 pool_id    = 2;
+  int32  lower_tick = 3;
+  int32  upper_tick = 4;
+  // bid_reserve_address specifies the account that reserves bidding amounts placed by bidders
+  string bid_reserve_address = 5;
+  string min_bid_amount      = 6
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string fee_rate = 7 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  uint64 last_rewards_auction_id = 8;
+  string liquidity               = 9
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  uint64                   position_id = 10; // underlying x/amm position's id
+  cosmos.base.v1beta1.Coin total_share = 11 [(gogoproto.nullable) = false];
+}

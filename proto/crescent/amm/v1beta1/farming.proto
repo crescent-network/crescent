@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package crescent.amm.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package                      = "github.com/crescent-network/crescent/v5/x/amm/types";
+option (gogoproto.goproto_getters_all) = false;
+
+message FarmingPlan {
+  uint64                           id                   = 1;
+  string                           description          = 2;
+  string                           farming_pool_address = 3;
+  string                           termination_address  = 4;
+  repeated FarmingRewardAllocation reward_allocations   = 5 [(gogoproto.nullable) = false];
+  google.protobuf.Timestamp        start_time           = 6 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+  google.protobuf.Timestamp        end_time             = 7 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+  bool                             is_private           = 8;
+  bool                             is_terminated        = 9;
+}
+
+message FarmingRewardAllocation {
+  uint64   pool_id                                  = 1;
+  repeated cosmos.base.v1beta1.Coin rewards_per_day = 2
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+}
