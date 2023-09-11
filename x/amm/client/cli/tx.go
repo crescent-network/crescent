@@ -315,15 +315,23 @@ Where proposal.json contains:
 
 {
   "title": "Pool parameter change",
-  "description": "Change tick spacing",
+  "description": "Change pool parameters",
   "changes": [
     {
       "pool_id": "1",
-      "tick_spacing": 10
+      "tick_spacing": 10,
+      "min_order_quantity": "10000",
+      "min_order_quote": "10000"
     },
     {
 	  "pool_id": "2",
-      "tick_spacing": 5
+      "tick_spacing": 5,
+      "min_order_quantity": "1000000",
+      "min_order_quote": "1000000"
+    },
+    {
+      "pool_id": "3",
+      "min_order_quantity": "10000"
     }
   ]
 }

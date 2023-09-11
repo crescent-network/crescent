@@ -433,12 +433,14 @@ Where proposal.json contains:
     {
       "market_id": "1",
       "maker_fee_rate"": "0.0005",
-      "taker_fee_rate": "0.001"
+      "taker_fee_rate": "0.001",
+      "order_source_ratio": "0.5"
     },
     {
       "market_id": "2",
       "maker_fee_rate"": "-0.001",
-      "taker_fee_rate": "0.002"
+      "taker_fee_rate": "0.002",
+      "order_source_ratio": "0.8"
     }
   ]
 }
