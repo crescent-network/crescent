@@ -127,6 +127,10 @@ message EventOrderSourceOrdersFilled {
   cosmos.base.v1beta1.DecCoin received = 7 [(gogoproto.nullable) = false];
 }
 
+message EventOrderCompleted {
+  uint64 order_id = 1;
+}
+
 message EventOrderExpired {
   uint64 order_id = 1;
 }
