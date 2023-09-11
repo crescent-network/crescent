@@ -248,3 +248,59 @@ func (s *KeeperTestSuite) TestRewardsAuction_RewardsAndFees() {
 	s.Require().True(auction.Rewards.IsEqual(deducted.Add(fees...)))
 	s.Require().True(auction.Fees.IsEqual(fees))
 }
+
+func (s *KeeperTestSuite) TestMaxNumRecentRewardsAuctions() {
+	s.keeper.SetMaxNumRecentRewardsAuctions(s.Ctx, 5)
+
+	market1 := s.CreateMarket("ucre", "uusd")
+	pool1 := s.CreatePool(market1.Id, utils.ParseDec("5"))
+	publicPosition1 := s.CreatePublicPosition(
+		pool1.Id, utils.ParseDec("4.5"), utils.ParseDec("5.5"),
+		sdk.NewInt(10000), utils.ParseDec("0.003"))
+	market2 := s.CreateMarket("uusd", "ucre")
+	pool2 := s.CreatePool(market2.Id, utils.ParseDec("0.2"))
+	publicPosition2 := s.CreatePublicPosition(
+		pool2.Id, utils.ParseDec("0.1"), utils.ParseDec("0.3"),
+		sdk.NewInt(10000), utils.ParseDec("0.003"))
+
+	s.NextBlock()
+
+	minterAddr := utils.TestAddress(1)
+	s.MintShare(minterAddr, publicPosition1.Id, utils.ParseCoins("100_000000ucre,500_000000uusd"), true)
+	s.MintShare(minterAddr, publicPosition2.Id, utils.ParseCoins("100_000000ucre,500_000000uusd"), true)
+	s.NextBlock()
+
+	for i := 0; i < 10; i++ {
+		s.AdvanceRewardsAuctions()
+	}
+
+	cnt := 0
+	s.keeper.IterateRewardsAuctionsByPublicPosition(s.Ctx, publicPosition1.Id, func(auction types.RewardsAuction) (stop bool) {
+		cnt++
+		return false
+	})
+	s.Require().Equal(5+1, cnt) // 5 recent auctions + 1 current auction
+	cnt = 0
+	s.keeper.IterateRewardsAuctionsByPublicPosition(s.Ctx, publicPosition2.Id, func(auction types.RewardsAuction) (stop bool) {
+		cnt++
+		return false
+	})
+	s.Require().Equal(5+1, cnt)
+
+	// Check again
+	for i := 0; i < 10; i++ {
+		s.AdvanceRewardsAuctions()
+	}
+	cnt = 0
+	s.keeper.IterateRewardsAuctionsByPublicPosition(s.Ctx, publicPosition1.Id, func(auction types.RewardsAuction) (stop bool) {
+		cnt++
+		return false
+	})
+	s.Require().Equal(5+1, cnt) // 5 recent auctions + 1 current auction
+	cnt = 0
+	s.keeper.IterateRewardsAuctionsByPublicPosition(s.Ctx, publicPosition2.Id, func(auction types.RewardsAuction) (stop bool) {
+		cnt++
+		return false
+	})
+	s.Require().Equal(5+1, cnt)
+}

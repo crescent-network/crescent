@@ -5,6 +5,9 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/exp/maps"
+	"golang.org/x/exp/slices"
+
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -371,6 +374,7 @@ func UpgradeHandler(
 				return nil, err
 			}
 			liquidityKeeper.DeletePair(ctx, pairId)
+			liquidityKeeper.DeletePairIndex(ctx, pair.BaseCoinDenom, pair.QuoteCoinDenom)
 			liquidityKeeper.DeletePairLookupIndex(ctx, pair)
 		}
 		liquidityKeeper.DeleteLastPairId(ctx)
@@ -552,6 +556,42 @@ func UpgradeHandler(
 		})
 		if !ok {
 			panic("legacy historical rewards exists")
+		}
+
+		// Set default market/pool parameters for the upgrade.
+		changedPairIds := maps.Keys(ParamChanges)
+		slices.Sort(changedPairIds)
+		for _, pairId := range changedPairIds {
+			if ParamChanges[pairId].MakerFeeRate != nil || ParamChanges[pairId].TakerFeeRate != nil {
+				market, found := exchangeKeeper.GetMarket(ctx, pairId) // marketId == pairId
+				if !found {                                            // maybe in test
+					continue
+				}
+				if ParamChanges[pairId].MakerFeeRate != nil {
+					market.MakerFeeRate = *ParamChanges[pairId].MakerFeeRate
+				}
+				if ParamChanges[pairId].TakerFeeRate != nil {
+					market.TakerFeeRate = *ParamChanges[pairId].TakerFeeRate
+				}
+				exchangeKeeper.SetMarket(ctx, market)
+			}
+			if ParamChanges[pairId].TickSpacing != nil || ParamChanges[pairId].MinOrderQuantity != nil || ParamChanges[pairId].MinOrderQuote != nil {
+				poolId, ok := newPoolIdByPairId[pairId]
+				if !ok { // maybe in test
+					continue
+				}
+				pool := ammKeeper.MustGetPool(ctx, poolId)
+				if ParamChanges[pairId].TickSpacing != nil {
+					pool.TickSpacing = *ParamChanges[pairId].TickSpacing
+				}
+				if ParamChanges[pairId].MinOrderQuantity != nil {
+					pool.MinOrderQuantity = *ParamChanges[pairId].MinOrderQuantity
+				}
+				if ParamChanges[pairId].MinOrderQuote != nil {
+					pool.MinOrderQuote = *ParamChanges[pairId].MinOrderQuote
+				}
+				ammKeeper.SetPool(ctx, pool)
+			}
 		}
 
 		return vm, nil
