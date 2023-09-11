@@ -148,5 +148,15 @@ func (s *UpgradeTestSuite) TestUpgradeV5Params() {
 		} else {
 			s.Require().EqualValues(uint32(50), pool.TickSpacing) // default
 		}
+		if change.MinOrderQuantity != nil {
+			s.Require().EqualValues(*change.MinOrderQuantity, pool.MinOrderQuantity)
+		} else {
+			s.Require().EqualValues(sdk.NewDec(10000), pool.MinOrderQuantity) // default
+		}
+		if change.MinOrderQuote != nil {
+			s.Require().EqualValues(*change.MinOrderQuote, pool.MinOrderQuote)
+		} else {
+			s.Require().EqualValues(sdk.NewDec(10000), pool.MinOrderQuote) // default
+		}
 	}
 }

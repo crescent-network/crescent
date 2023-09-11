@@ -5,15 +5,17 @@ import (
 )
 
 type ParamChange struct {
-	MakerFeeRate *sdk.Dec
-	TakerFeeRate *sdk.Dec
-	TickSpacing  *uint32
+	MakerFeeRate     *sdk.Dec
+	TakerFeeRate     *sdk.Dec
+	TickSpacing      *uint32
+	MinOrderQuantity *sdk.Dec
+	MinOrderQuote    *sdk.Dec
 }
 
 var ParamChanges = map[uint64]ParamChange{} // pairId => ParamChange
 
 var (
-	marketParamChanges = []struct {
+	feeRateChanges = []struct {
 		MakerFeeRate  sdk.Dec
 		TakerFeeRate  sdk.Dec
 		TargetPairIds []uint64
@@ -34,7 +36,7 @@ var (
 			},
 		},
 	}
-	poolParamChanges = []struct {
+	tickSpacingChanges = []struct {
 		TickSpacing   uint32
 		TargetPairIds []uint64
 	}{
@@ -72,23 +74,81 @@ var (
 			},
 		},
 	}
+	minOrderQtyChanges = []struct {
+		MinOrderQuantity sdk.Dec
+		TargetPairIds    []uint64
+	}{
+		{
+			MinOrderQuantity: sdk.NewDecFromInt(sdk.NewIntWithDecimal(1, 16)),
+			TargetPairIds: []uint64{
+				8,  // WETH.grv/bCRE
+				12, // WETH.grv/USDC.grv
+				14, // WETH.axl/bCRE
+				15, // WETH.axl/USDC.axl
+				17, // WETH.axl/WETH.grv
+				26, // INJ/bCRE
+				36, // EVMOS/bCRE
+				40, // OKT/bCRE
+				41, // stEVMOS/bCRE
+				42, // stEVMOS/EVMOS
+				45, // CANTO/bCRE
+			},
+		},
+		{
+			MinOrderQuantity: sdk.NewDecFromInt(sdk.NewIntWithDecimal(1, 6)),
+			TargetPairIds: []uint64{
+				39, // WBTC.grv/USDC.grv
+				51, // CRO/bCRE
+			},
+		},
+	}
+	minOrderQuoteChanges = []struct {
+		MinOrderQuote sdk.Dec
+		TargetPairIds []uint64
+	}{
+		{
+			MinOrderQuote: sdk.NewDecFromInt(sdk.NewIntWithDecimal(1, 16)),
+			TargetPairIds: []uint64{
+				7,  // GRAV/WETH.grv
+				11, // USDC.grv/WETH.grv
+				17, // WETH.axl/WETH.grv
+				42, // stEVMOS/EVMOS
+			},
+		},
+	}
 )
 
 func init() {
-	for _, marketParamChange := range marketParamChanges {
-		marketParamChange := marketParamChange // copy
-		for _, pairId := range marketParamChange.TargetPairIds {
+	for _, feeRateChange := range feeRateChanges {
+		feeRateChange := feeRateChange // copy
+		for _, pairId := range feeRateChange.TargetPairIds {
 			change := ParamChanges[pairId]
-			change.MakerFeeRate = &marketParamChange.MakerFeeRate
-			change.TakerFeeRate = &marketParamChange.TakerFeeRate
+			change.MakerFeeRate = &feeRateChange.MakerFeeRate
+			change.TakerFeeRate = &feeRateChange.TakerFeeRate
 			ParamChanges[pairId] = change
 		}
 	}
-	for _, poolParamChange := range poolParamChanges {
-		poolParamChange := poolParamChange
-		for _, pairId := range poolParamChange.TargetPairIds {
+	for _, tickSpacingChange := range tickSpacingChanges {
+		tickSpacingChange := tickSpacingChange
+		for _, pairId := range tickSpacingChange.TargetPairIds {
 			change := ParamChanges[pairId]
-			change.TickSpacing = &poolParamChange.TickSpacing
+			change.TickSpacing = &tickSpacingChange.TickSpacing
+			ParamChanges[pairId] = change
+		}
+	}
+	for _, minOrderQtyChange := range minOrderQtyChanges {
+		minOrderQtyChange := minOrderQtyChange
+		for _, pairId := range minOrderQtyChange.TargetPairIds {
+			change := ParamChanges[pairId]
+			change.MinOrderQuantity = &minOrderQtyChange.MinOrderQuantity
+			ParamChanges[pairId] = change
+		}
+	}
+	for _, minOrderQuoteChange := range minOrderQuoteChanges {
+		minOrderQuoteChange := minOrderQuoteChange
+		for _, pairId := range minOrderQuoteChange.TargetPairIds {
+			change := ParamChanges[pairId]
+			change.MinOrderQuote = &minOrderQuoteChange.MinOrderQuote
 			ParamChanges[pairId] = change
 		}
 	}

@@ -567,17 +567,29 @@ func UpgradeHandler(
 				if !found {                                            // maybe in test
 					continue
 				}
-				market.MakerFeeRate = *ParamChanges[pairId].MakerFeeRate
-				market.TakerFeeRate = *ParamChanges[pairId].TakerFeeRate
+				if ParamChanges[pairId].MakerFeeRate != nil {
+					market.MakerFeeRate = *ParamChanges[pairId].MakerFeeRate
+				}
+				if ParamChanges[pairId].TakerFeeRate != nil {
+					market.TakerFeeRate = *ParamChanges[pairId].TakerFeeRate
+				}
 				exchangeKeeper.SetMarket(ctx, market)
 			}
-			if ParamChanges[pairId].TickSpacing != nil {
+			if ParamChanges[pairId].TickSpacing != nil || ParamChanges[pairId].MinOrderQuantity != nil || ParamChanges[pairId].MinOrderQuote != nil {
 				poolId, ok := newPoolIdByPairId[pairId]
 				if !ok { // maybe in test
 					continue
 				}
 				pool := ammKeeper.MustGetPool(ctx, poolId)
-				pool.TickSpacing = *ParamChanges[pairId].TickSpacing
+				if ParamChanges[pairId].TickSpacing != nil {
+					pool.TickSpacing = *ParamChanges[pairId].TickSpacing
+				}
+				if ParamChanges[pairId].MinOrderQuantity != nil {
+					pool.MinOrderQuantity = *ParamChanges[pairId].MinOrderQuantity
+				}
+				if ParamChanges[pairId].MinOrderQuote != nil {
+					pool.MinOrderQuote = *ParamChanges[pairId].MinOrderQuote
+				}
 				ammKeeper.SetPool(ctx, pool)
 			}
 		}
