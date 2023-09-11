@@ -306,8 +306,11 @@ func (s *KeeperTestSuite) TestDecQuantity() {
 	s.PlaceMarketOrder(market.Id, ordererAddr3, false, sdk.NewDec(10000))
 	orderer3BalancesAfter := s.GetAllBalances(ordererAddr3)
 
+	// order2 remaining deposit = 380uusd
+	// order2 executable quantity ~= 2699.6305768
+	// order2 executable quantity * 0.14076 ~= 379.9999999
 	diff, _ := orderer3BalancesAfter.SafeSub(orderer3BalancesBefore)
-	s.AssertEqual(sdk.NewInt(380), diff.AmountOf("uusd")) // 2699.7*0.14076=380.009722
+	s.AssertEqual(sdk.NewInt(379), diff.AmountOf("uusd"))
 }
 
 func (s *KeeperTestSuite) TestNumMMOrdersEdgecase() {

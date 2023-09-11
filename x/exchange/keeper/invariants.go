@@ -75,6 +75,11 @@ func OrderStateInvariant(k Keeper) sdk.Invariant {
 				msg += fmt.Sprintf("\torder %d should have been deleted since it has no executable quantity\n", order.Id)
 				cnt++
 			}
+			if !order.RemainingDeposit.TruncateDec().Equal(order.RemainingDeposit) {
+				msg += fmt.Sprintf("\torder %d should have integer remaining deposit but has %s\n",
+					order.Id, order.RemainingDeposit)
+				cnt++
+			}
 			return false
 		})
 		broken := cnt != 0
