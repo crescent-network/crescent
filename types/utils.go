@@ -126,6 +126,9 @@ func DecApproxEqual(a, b sdk.Dec) bool {
 	if b.GT(a) {
 		a, b = b, a
 	}
+	if a.IsZero() && b.IsZero() {
+		return true
+	}
 	return a.Sub(b).Quo(a).LTE(sdk.NewDecWithPrec(1, 3))
 }
 

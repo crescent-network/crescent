@@ -11,7 +11,7 @@ SetAdditionalVotingPowers calculates the voter's voting power who owns `bToken` 
 - Farming position of bToken
 - Farming position of PoolCoins that include bToken
 
-The calculation is dependent on `x/liquidity` and `x/farming` modules and the farming position considers both staking and queued staking amounts.
+The calculation is dependent on `x/amm`, `x/liquidamm` and `x/lpfarm` modules.
 
 The calculated voting power is added, deducted, or overwritten with `AdditionalVotingPowers` inside the tally logic of `cosmos-sdk/x/gov` module. It is called in `govHooks.SetAdditionalVotingPowers`. 
 
