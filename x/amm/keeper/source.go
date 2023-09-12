@@ -42,8 +42,8 @@ func (k OrderSource) ConstructMemOrderBookSide(
 	accQuote := utils.ZeroDec
 	numPriceLevels := 0
 	k.IteratePoolOrders(ctx, pool, opts.IsBuy, func(price, qty, openQty sdk.Dec) (stop bool) {
-		if opts.IsBuy && price.LT(minPrice) ||
-			!opts.IsBuy && price.GT(maxPrice) {
+		if (opts.IsBuy && price.LT(minPrice)) ||
+			(!opts.IsBuy && price.GT(maxPrice)) {
 			return true
 		}
 		if opts.ReachedLimit(price, accQty, accQuote, numPriceLevels) {
