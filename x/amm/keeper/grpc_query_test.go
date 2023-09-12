@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	utils "github.com/crescent-network/crescent/v5/types"
@@ -906,6 +908,8 @@ func (s *KeeperTestSuite) TestQueryOrderBookEdgecase() {
 	market, pool := s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("0.000000000002410188"))
 
 	lpAddr := s.FundedAccount(1, enoughCoins)
+	s.MakeLastPrice(market.Id, lpAddr, utils.ParseDec("0.0000000000024102"))
+
 	s.AddLiquidityByLiquidity(
 		lpAddr, pool.Id, types.MinPrice, types.MaxPrice,
 		sdk.NewInt(160843141868))
@@ -943,6 +947,8 @@ func (s *KeeperTestSuite) TestQueryOrderBookEdgecase2() {
 	market, pool := s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("1"))
 
 	lpAddr := s.FundedAccount(1, enoughCoins)
+	s.MakeLastPrice(market.Id, lpAddr, utils.ParseDec("1"))
+
 	s.AddLiquidityByLiquidity(
 		lpAddr, pool.Id, types.MinPrice, types.MaxPrice, sdk.NewInt(10))
 
@@ -953,4 +959,64 @@ func (s *KeeperTestSuite) TestQueryOrderBookEdgecase2() {
 	s.Require().NoError(err)
 	// Due to too low liquidity, order book is not displayed.
 	s.Require().Empty(resp.OrderBooks)
+}
+
+func (s *KeeperTestSuite) TestQueryOrderBookEdgecase3() {
+	market := s.CreateMarket("ucre", "uusd")
+
+	lpAddr := s.FundedAccount(1, enoughCoins)
+	s.MakeLastPrice(market.Id, lpAddr, utils.ParseDec("5"))
+
+	// pool price != last price
+	pool := s.CreatePool(market.Id, utils.ParseDec("1000"))
+
+	s.AddLiquidityByLiquidity(
+		lpAddr, pool.Id, types.MinPrice, types.MaxPrice, sdk.NewInt(1000))
+
+	s.PlaceLimitOrder(market.Id, lpAddr, true, utils.ParseDec("4.99"), sdk.NewDec(3_000000), time.Hour)
+	s.PlaceLimitOrder(market.Id, lpAddr, true, utils.ParseDec("4.98"), sdk.NewDec(2_000000), time.Hour)
+	s.PlaceLimitOrder(market.Id, lpAddr, true, utils.ParseDec("4.97"), sdk.NewDec(1_000000), time.Hour)
+
+	querier := exchangekeeper.Querier{Keeper: s.App.ExchangeKeeper}
+	resp, err := querier.OrderBook(sdk.WrapSDKContext(s.Ctx), &exchangetypes.QueryOrderBookRequest{
+		MarketId: market.Id,
+	})
+	s.Require().NoError(err)
+	ob := resp.OrderBooks[0]
+	s.Require().Empty(ob.Sells)
+	expected := []exchangetypes.OrderBookPriceLevel{
+		{P: utils.ParseDec("941"), Q: utils.ParseDec("1.006432838818128160")},
+		{P: utils.ParseDec("4.99"), Q: utils.ParseDec("3_000000")},
+		{P: utils.ParseDec("4.98"), Q: utils.ParseDec("2_000000")},
+		{P: utils.ParseDec("4.97"), Q: utils.ParseDec("1_000000")},
+	}
+	s.Require().GreaterOrEqual(len(ob.Buys), len(expected))
+	for i, level := range expected {
+		s.AssertEqual(level.P, ob.Buys[i].P)
+		s.AssertEqual(level.Q, ob.Buys[i].Q)
+	}
+
+	ob = resp.OrderBooks[1]
+	s.Require().Empty(ob.Sells)
+	expected = []exchangetypes.OrderBookPriceLevel{
+		{P: utils.ParseDec("941"), Q: utils.ParseDec("1.006432838818128160")},
+		{P: utils.ParseDec("4.9"), Q: utils.ParseDec("6_000000")},
+	}
+	s.Require().GreaterOrEqual(len(ob.Buys), len(expected))
+	for i, level := range expected {
+		s.AssertEqual(level.P, ob.Buys[i].P)
+		s.AssertEqual(level.Q, ob.Buys[i].Q)
+	}
+
+	ob = resp.OrderBooks[2]
+	s.Require().Empty(ob.Sells)
+	expected = []exchangetypes.OrderBookPriceLevel{
+		{P: utils.ParseDec("941"), Q: utils.ParseDec("1.006432838818128160")},
+		{P: utils.ParseDec("4"), Q: utils.ParseDec("6_000000")},
+	}
+	s.Require().GreaterOrEqual(len(ob.Buys), len(expected))
+	for i, level := range expected {
+		s.AssertEqual(level.P, ob.Buys[i].P)
+		s.AssertEqual(level.Q, ob.Buys[i].Q)
+	}
 }
