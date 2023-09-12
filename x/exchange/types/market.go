@@ -5,6 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
+
+	utils "github.com/crescent-network/crescent/v5/types"
 )
 
 func DeriveMarketEscrowAddress(marketId uint64) sdk.AccAddress {
@@ -77,4 +79,10 @@ func (marketState MarketState) Validate() error {
 			marketState.LastPrice, marketState.LastMatchingHeight)
 	}
 	return nil
+}
+
+func OrderPriceLimit(lastPrice, maxOrderPriceRatio sdk.Dec) (minPrice, maxPrice sdk.Dec) {
+	minPrice = lastPrice.Mul(utils.OneDec.Sub(maxOrderPriceRatio))
+	maxPrice = lastPrice.Mul(utils.OneDec.Add(maxOrderPriceRatio))
+	return
 }

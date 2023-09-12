@@ -1,8 +1,10 @@
 package types_test
 
 import (
+	"fmt"
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
 	utils "github.com/crescent-network/crescent/v5/types"
@@ -134,6 +136,28 @@ func TestMarketState_Validate(t *testing.T) {
 			} else {
 				require.EqualError(t, err, tc.expectedErr)
 			}
+		})
+	}
+}
+
+func TestOrderPriceLimit(t *testing.T) {
+	for i, tc := range []struct {
+		lastPrice, maxOrderPriceRatio sdk.Dec
+		minPrice, maxPrice            sdk.Dec
+	}{
+		{
+			utils.ParseDec("1"), utils.ParseDec("0.1"),
+			utils.ParseDec("0.9"), utils.ParseDec("1.1"),
+		},
+		{
+			utils.ParseDec("5"), utils.ParseDec("0.1"),
+			utils.ParseDec("4.5"), utils.ParseDec("5.5"),
+		},
+	} {
+		t.Run(fmt.Sprint(i), func(t *testing.T) {
+			minPrice, maxPrice := types.OrderPriceLimit(tc.lastPrice, tc.maxOrderPriceRatio)
+			require.True(sdk.DecEq(t, tc.minPrice, minPrice))
+			require.True(sdk.DecEq(t, tc.maxPrice, maxPrice))
 		})
 	}
 }

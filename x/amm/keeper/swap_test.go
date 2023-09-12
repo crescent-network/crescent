@@ -14,6 +14,8 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 
 	market1 := s.CreateMarket("ucre", "uusd")
 	market2 := s.CreateMarket("uatom", "ucre")
+	s.MakeLastPrice(market1.Id, creatorAddr, utils.ParseDec("5"))
+	s.MakeLastPrice(market2.Id, creatorAddr, utils.ParseDec("2"))
 
 	pool1 := s.CreatePool(market1.Id, utils.ParseDec("5"))
 	s.AddLiquidity(
@@ -35,11 +37,14 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 }
 
 func (s *KeeperTestSuite) TestQueryBestSwapExactAmountInRoutes() {
-	_, pool1 := s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("9.7"))
-	_, pool2 := s.CreateMarketAndPool("uatom", "ucre", utils.ParseDec("1.04"))
-	_, pool3 := s.CreateMarketAndPool("uatom", "uusd", utils.ParseDec("10.3"))
-
+	market1, pool1 := s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("9.7"))
+	market2, pool2 := s.CreateMarketAndPool("uatom", "ucre", utils.ParseDec("1.04"))
+	market3, pool3 := s.CreateMarketAndPool("uatom", "uusd", utils.ParseDec("10.3"))
 	creatorAddr := s.FundedAccount(0, enoughCoins)
+	s.MakeLastPrice(market1.Id, creatorAddr, utils.ParseDec("9.7"))
+	s.MakeLastPrice(market2.Id, creatorAddr, utils.ParseDec("1.04"))
+	s.MakeLastPrice(market3.Id, creatorAddr, utils.ParseDec("10.3"))
+
 	s.AddLiquidity(creatorAddr, pool1.Id, utils.ParseDec("9.5"), utils.ParseDec("10"),
 		utils.ParseCoins("1000_000000ucre,10000_000000uusd"))
 	s.AddLiquidity(creatorAddr, pool2.Id, utils.ParseDec("1"), utils.ParseDec("1.2"),

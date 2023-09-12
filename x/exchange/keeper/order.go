@@ -136,8 +136,7 @@ func (k Keeper) placeLimitOrder(
 	marketState := k.MustGetMarketState(ctx, market.Id)
 	if marketState.LastPrice != nil {
 		maxPriceRatio := k.GetMaxOrderPriceRatio(ctx)
-		minPrice := marketState.LastPrice.Mul(utils.OneDec.Sub(maxPriceRatio))
-		maxPrice := marketState.LastPrice.Mul(utils.OneDec.Add(maxPriceRatio))
+		minPrice, maxPrice := types.OrderPriceLimit(*marketState.LastPrice, maxPriceRatio)
 		if isBuy && price.GT(maxPrice) {
 			err = sdkerrors.Wrapf(types.ErrOrderPriceOutOfRange, "price is higher than the limit %s", maxPrice)
 			return
@@ -204,6 +203,7 @@ func (k Keeper) PlaceMarketOrder(
 		return
 	}
 	maxPriceRatio := k.GetMaxOrderPriceRatio(ctx)
+	minPrice, maxPrice := types.OrderPriceLimit(*marketState.LastPrice, maxPriceRatio)
 
 	orderId = k.GetNextOrderIdWithUpdate(ctx)
 	var (
@@ -214,7 +214,7 @@ func (k Keeper) PlaceMarketOrder(
 	if isBuy {
 		quote := spendable.AmountOf(market.QuoteDenom).ToDec()
 		quoteLimit = &quote
-		priceLimit = marketState.LastPrice.Mul(utils.OneDec.Add(maxPriceRatio))
+		priceLimit = maxPrice
 	} else {
 		base := spendable.AmountOf(market.BaseDenom).ToDec()
 		if qty.GT(base) {
@@ -223,7 +223,7 @@ func (k Keeper) PlaceMarketOrder(
 				base.TruncateInt(), market.BaseDenom, qty, market.BaseDenom)
 			return
 		}
-		priceLimit = marketState.LastPrice.Mul(utils.OneDec.Sub(maxPriceRatio))
+		priceLimit = minPrice
 	}
 	res, err = k.executeOrder(
 		ctx, market, ordererAddr, types.MemOrderBookSideOptions{

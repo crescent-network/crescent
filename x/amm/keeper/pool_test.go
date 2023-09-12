@@ -189,6 +189,7 @@ func (s *KeeperTestSuite) TestSwapEdgecase1() {
 	market, pool := s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("45.821"))
 
 	lpAddr := s.FundedAccount(1, enoughCoins)
+	s.MakeLastPrice(market.Id, lpAddr, utils.ParseDec("45.821"))
 	s.AddLiquidity(
 		lpAddr, pool.Id, utils.ParseDec("1"), utils.ParseDec("100"),
 		utils.ParseCoins("100000000ucre,1000000000uusd"))

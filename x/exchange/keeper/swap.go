@@ -18,6 +18,7 @@ func (k Keeper) SwapExactAmountIn(
 	}
 	halveFees := len(routes) > 1
 	currentIn := input
+	maxPriceRatio := k.GetMaxOrderPriceRatio(ctx)
 	for _, marketId := range routes {
 		if !currentIn.Amount.IsPositive() {
 			return output, nil, sdkerrors.Wrap(types.ErrSwapNotEnoughInput, currentIn.String())
@@ -33,17 +34,25 @@ func (k Keeper) SwapExactAmountIn(
 		if !found {
 			return output, nil, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "market %d not found", marketId)
 		}
+		marketState := k.MustGetMarketState(ctx, marketId)
+		if marketState.LastPrice == nil {
+			return output, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "market %d has no last price", marketId)
+		}
+		minPrice, maxPrice := types.OrderPriceLimit(*marketState.LastPrice, maxPriceRatio)
 		var (
 			isBuy                bool
 			qtyLimit, quoteLimit *sdk.Dec
+			priceLimit           sdk.Dec
 		)
 		switch currentIn.Denom {
 		case market.BaseDenom:
 			isBuy = false
 			qtyLimit = &currentIn.Amount
+			priceLimit = minPrice
 		case market.QuoteDenom:
 			isBuy = true
 			quoteLimit = &currentIn.Amount
+			priceLimit = maxPrice
 		default:
 			return output, nil, sdkerrors.Wrapf(
 				sdkerrors.ErrInvalidRequest, "denom %s not in market %d", currentIn.Denom, market.Id)
@@ -51,6 +60,7 @@ func (k Keeper) SwapExactAmountIn(
 		res, err := k.executeOrder(
 			ctx, market, ordererAddr, types.MemOrderBookSideOptions{
 				IsBuy:         !isBuy,
+				PriceLimit:    &priceLimit,
 				QuantityLimit: qtyLimit,
 				QuoteLimit:    quoteLimit,
 			}, halveFees, simulate)
@@ -101,6 +111,10 @@ func (k Keeper) FindAllRoutes(ctx sdk.Context, fromDenom, toDenom string, maxRou
 	for ; iter.Valid(); iter.Next() {
 		baseDenom, quoteDenom := types.ParseMarketByDenomsIndexKey(iter.Key())
 		marketId := sdk.BigEndianToUint64(iter.Value())
+		marketState := k.MustGetMarketState(ctx, marketId)
+		if marketState.LastPrice == nil { // Skip markets with no last price
+			continue
+		}
 		if _, ok := denomMap[baseDenom]; !ok {
 			denomMap[baseDenom] = map[string][]uint64{}
 		}
