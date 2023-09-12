@@ -906,14 +906,9 @@ func (s *KeeperTestSuite) TestQueryOrderBookEdgecase() {
 	market, pool := s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("0.000000000002410188"))
 
 	lpAddr := s.FundedAccount(1, enoughCoins)
-	amt0, amt1 := types.AmountsForLiquidity(
-		utils.DecApproxSqrt(utils.ParseDec("0.000000000002410188")),
-		utils.DecApproxSqrt(types.MinPrice),
-		utils.DecApproxSqrt(types.MaxPrice),
-		sdk.NewInt(160843141868))
-	s.AddLiquidity(
+	s.AddLiquidityByLiquidity(
 		lpAddr, pool.Id, types.MinPrice, types.MaxPrice,
-		sdk.NewCoins(sdk.NewCoin(pool.Denom0, amt0), sdk.NewCoin(pool.Denom1, amt1)))
+		sdk.NewInt(160843141868))
 
 	querier := exchangekeeper.Querier{Keeper: s.App.ExchangeKeeper}
 	resp, err := querier.OrderBook(sdk.WrapSDKContext(s.Ctx), &exchangetypes.QueryOrderBookRequest{
@@ -948,27 +943,14 @@ func (s *KeeperTestSuite) TestQueryOrderBookEdgecase2() {
 	market, pool := s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("1"))
 
 	lpAddr := s.FundedAccount(1, enoughCoins)
-	amt0, amt1 := types.AmountsForLiquidity(
-		utils.DecApproxSqrt(utils.ParseDec("1")),
-		utils.DecApproxSqrt(types.MinPrice),
-		utils.DecApproxSqrt(types.MaxPrice),
-		sdk.NewInt(10))
-	s.AddLiquidity(
-		lpAddr, pool.Id, types.MinPrice, types.MaxPrice,
-		sdk.NewCoins(sdk.NewCoin(pool.Denom0, amt0), sdk.NewCoin(pool.Denom1, amt1)))
+	s.AddLiquidityByLiquidity(
+		lpAddr, pool.Id, types.MinPrice, types.MaxPrice, sdk.NewInt(10))
 
 	querier := exchangekeeper.Querier{Keeper: s.App.ExchangeKeeper}
 	resp, err := querier.OrderBook(sdk.WrapSDKContext(s.Ctx), &exchangetypes.QueryOrderBookRequest{
 		MarketId: market.Id,
 	})
 	s.Require().NoError(err)
-	expected := []exchangetypes.OrderBookPriceLevel{
-		{P: utils.ParseDec("1000000000000000000000000000000000000.000000000000000000"), Q: utils.ParseDec("9.014670721835706842")},
-	}
-	s.Require().GreaterOrEqual(len(resp.OrderBooks[0].Sells), len(expected))
-	for i, level := range expected {
-		s.AssertEqual(level.P, resp.OrderBooks[0].Sells[i].P)
-		s.AssertEqual(level.Q, resp.OrderBooks[0].Sells[i].Q)
-	}
-	s.Require().Empty(resp.OrderBooks[0].Buys)
+	// Due to too low liquidity, order book is not displayed.
+	s.Require().Empty(resp.OrderBooks)
 }
