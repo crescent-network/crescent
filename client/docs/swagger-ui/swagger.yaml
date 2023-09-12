@@ -11502,6 +11502,8 @@ paths:
                     market_id:
                       type: string
                       format: uint64
+                    executed_quantity:
+                      type: string
                     input:
                       type: object
                       properties:
@@ -20442,6 +20444,8 @@ definitions:
             market_id:
               type: string
               format: uint64
+            executed_quantity:
+              type: string
             input:
               type: object
               properties:
@@ -20637,6 +20641,8 @@ definitions:
       market_id:
         type: string
         format: uint64
+      executed_quantity:
+        type: string
       input:
         type: object
         properties:

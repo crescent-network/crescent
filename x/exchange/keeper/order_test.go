@@ -334,6 +334,7 @@ func (s *KeeperTestSuite) TestSwapEdgecase() {
 	market := s.CreateMarket("ucre", "uusd")
 
 	ordererAddr1 := s.FundedAccount(1, enoughCoins)
+	s.MakeLastPrice(market.Id, ordererAddr1, utils.ParseDec("5"))
 
 	for i := 0; i < 10; i++ {
 		buyPrice := utils.ParseDec("5").Sub(utils.ParseDec("0.01").MulInt64(int64(i + 1)))
@@ -358,4 +359,55 @@ func (s *KeeperTestSuite) TestPlaceMarketOrder_SellInsufficientFunds() {
 
 	_, _, err := s.keeper.PlaceMarketOrder(s.Ctx, market.Id, ordererAddr2, false, sdk.NewDec(500000))
 	s.Require().EqualError(err, "200000ucre is smaller than 500000.000000000000000000ucre: insufficient funds")
+}
+
+func (s *KeeperTestSuite) TestMaxOrderPriceRatio() {
+	market := s.CreateMarket("ucre", "uusd")
+
+	ordererAddr1 := s.FundedAccount(1, enoughCoins)
+	ordererAddr2 := s.FundedAccount(2, enoughCoins)
+
+	s.PlaceLimitOrder(market.Id, ordererAddr1, true, utils.ParseDec("5"), sdk.NewDec(1_000000), time.Hour)
+	s.PlaceLimitOrder(market.Id, ordererAddr2, false, utils.ParseDec("5"), sdk.NewDec(1_000000), time.Hour)
+
+	marketState := s.keeper.MustGetMarketState(s.Ctx, market.Id)
+	s.Require().Equal(int64(1), marketState.LastMatchingHeight)
+	s.AssertEqual(utils.ParseDec("5"), *marketState.LastPrice)
+
+	// 5.6 > 5 * 1.1 (not allowed for buy orders)
+	_, _, _, err := s.keeper.PlaceLimitOrder(
+		s.Ctx, market.Id, ordererAddr1, true, utils.ParseDec("5.6"), sdk.NewDec(1_000000), time.Hour)
+	s.Require().EqualError(err, "price is higher than the limit 5.500000000000000000: order price out of range")
+	// 4 < 5 * 0.9 (allowed for buy orders)
+	s.PlaceLimitOrder(
+		market.Id, ordererAddr1, true, utils.ParseDec("4"), sdk.NewDec(1_000000), time.Hour)
+
+	// 4.4 < 5 * 0.9 (not allowed for sell orders)
+	_, _, _, err = s.keeper.PlaceLimitOrder(
+		s.Ctx, market.Id, ordererAddr2, false, utils.ParseDec("4.4"), sdk.NewDec(1_000000), time.Hour)
+	s.Require().EqualError(err, "price is lower than the limit 4.500000000000000000: order price out of range")
+	// 6 > 5 * 1.1 (allowed for sell orders)
+	s.PlaceLimitOrder(
+		market.Id, ordererAddr2, false, utils.ParseDec("6"), sdk.NewDec(1_000000), time.Hour)
+
+	s.PlaceLimitOrder(
+		market.Id, ordererAddr1, true, utils.ParseDec("4.5"), sdk.NewDec(1_000000), time.Hour)
+	s.PlaceLimitOrder(
+		market.Id, ordererAddr2, false, utils.ParseDec("5.5"), sdk.NewDec(1_000000), time.Hour)
+
+	_, res := s.PlaceMarketOrder(market.Id, ordererAddr1, true, sdk.NewDec(2_000000))
+	s.Require().True(res.Executed())
+	// Order at 6 not matched because of MaxOrderPriceRatio
+	s.AssertEqual(utils.ParseDec("5.5"), res.LastPrice)
+	s.AssertEqual(sdk.NewDec(1_000000), res.ExecutedQuantity)
+
+	// Reset last price to 5
+	s.PlaceLimitOrder(market.Id, ordererAddr1, true, utils.ParseDec("5"), sdk.NewDec(1_000000), time.Hour)
+	s.PlaceLimitOrder(market.Id, ordererAddr2, false, utils.ParseDec("5"), sdk.NewDec(1_000000), time.Hour)
+
+	_, res = s.PlaceMarketOrder(market.Id, ordererAddr2, false, sdk.NewDec(2_000000))
+	s.Require().True(res.Executed())
+	// Order at 4 not matched because of MaxOrderPriceRatio
+	s.AssertEqual(utils.ParseDec("4.5"), res.LastPrice)
+	s.AssertEqual(sdk.NewDec(1_000000), res.ExecutedQuantity)
 }

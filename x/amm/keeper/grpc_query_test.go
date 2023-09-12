@@ -13,8 +13,11 @@ import (
 func (s *KeeperTestSuite) SetupSampleScenario() {
 	s.T().Helper()
 
+	mmAddr := s.FundedAccount(100, enoughCoins)
 	creUsdMarket := s.CreateMarket("ucre", "uusd")
 	atomUsdMarket := s.CreateMarket("uatom", "uusd")
+	s.MakeLastPrice(creUsdMarket.Id, mmAddr, utils.ParseDec("5"))
+	s.MakeLastPrice(atomUsdMarket.Id, mmAddr, utils.ParseDec("10"))
 	// pool id != market id
 	atomUsdPool := s.CreatePool(atomUsdMarket.Id, utils.ParseDec("10"))
 	creUsdPool := s.CreatePool(creUsdMarket.Id, utils.ParseDec("5"))
@@ -66,7 +69,10 @@ func (s *KeeperTestSuite) SetupSampleScenario() {
 		utils.ParseDecCoin("20_000000uatom"), utils.ParseDecCoin("38_000000ucre"), false)
 	s.SwapExactAmountIn(
 		ordererAddr, []uint64{creUsdMarket.Id, atomUsdMarket.Id},
-		utils.ParseDecCoin("100_000000ucre"), utils.ParseDecCoin("45_000000uatom"), false)
+		utils.ParseDecCoin("50_000000ucre"), utils.ParseDecCoin("20_000000uatom"), false)
+	s.SwapExactAmountIn(
+		ordererAddr, []uint64{creUsdMarket.Id, atomUsdMarket.Id},
+		utils.ParseDecCoin("50_000000ucre"), utils.ParseDecCoin("20_000000uatom"), false)
 }
 
 func (s *KeeperTestSuite) TestQueryParams() {
@@ -105,7 +111,7 @@ func (s *KeeperTestSuite) TestQueryAllPools() {
 				pool := resp.Pools[0]
 				s.Require().EqualValues(1, pool.MarketId)
 				s.Require().EqualValues(2, pool.Id)
-				s.AssertEqual(utils.ParseCoin("153579684ucre"), pool.Balance0)
+				s.AssertEqual(utils.ParseCoin("153579685ucre"), pool.Balance0)
 				s.AssertEqual(utils.ParseCoin("257373896uusd"), pool.Balance1)
 			},
 		},
@@ -147,8 +153,8 @@ func (s *KeeperTestSuite) TestQueryPool() {
 			"",
 			func(resp *types.QueryPoolResponse) {
 				s.Require().EqualValues(1, resp.Pool.Id)
-				s.AssertEqual(utils.ParseCoin("71750980uatom"), resp.Pool.Balance0)
-				s.AssertEqual(utils.ParseCoin("1390716293uusd"), resp.Pool.Balance1)
+				s.AssertEqual(utils.ParseCoin("71750979uatom"), resp.Pool.Balance0)
+				s.AssertEqual(utils.ParseCoin("1390716291uusd"), resp.Pool.Balance1)
 				s.Require().Equal("cosmos1srphgsfqllr85ndknjme24txux8m0sz0hhpnnksn2339d3a788rsawjx77", resp.Pool.RewardsPool)
 				s.AssertEqual(utils.ParseDec("1"), resp.Pool.MinOrderQuantity)
 				s.AssertEqual(sdk.NewInt(12470981864), resp.Pool.TotalLiquidity)
@@ -538,7 +544,7 @@ func (s *KeeperTestSuite) TestQueryCollectibleCoins() {
 			},
 			"",
 			func(resp *types.QueryCollectibleCoinsResponse) {
-				s.AssertEqual(utils.ParseCoins("24181uatom,62704ucre,945127uusd"), resp.Fee)
+				s.AssertEqual(utils.ParseCoins("24181uatom,62703ucre,945127uusd"), resp.Fee)
 				s.AssertEqual(utils.ParseCoins("8578uatom,8467ucre"), resp.FarmingRewards)
 			},
 		},
@@ -549,7 +555,7 @@ func (s *KeeperTestSuite) TestQueryCollectibleCoins() {
 			},
 			"",
 			func(resp *types.QueryCollectibleCoinsResponse) {
-				s.AssertEqual(utils.ParseCoins("62704ucre,366086uusd"), resp.Fee)
+				s.AssertEqual(utils.ParseCoins("62703ucre,366086uusd"), resp.Fee)
 				s.AssertEqual(utils.ParseCoins("8467ucre"), resp.FarmingRewards)
 			},
 		},

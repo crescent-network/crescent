@@ -90,3 +90,9 @@ func (s *TestSuite) SwapExactAmountIn(
 	s.Require().NoError(err)
 	return
 }
+
+func (s *TestSuite) MakeLastPrice(marketId uint64, ordererAddr sdk.AccAddress, lastPrice sdk.Dec) {
+	s.T().Helper()
+	s.PlaceLimitOrder(marketId, ordererAddr, true, lastPrice, sdk.NewDec(10000), time.Hour)
+	s.PlaceLimitOrder(marketId, ordererAddr, false, lastPrice, sdk.NewDec(10000), time.Hour)
+}
