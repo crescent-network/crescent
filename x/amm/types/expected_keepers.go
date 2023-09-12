@@ -29,6 +29,7 @@ type BankKeeper interface {
 }
 
 type ExchangeKeeper interface {
+	GetMaxOrderPriceRatio(ctx sdk.Context) sdk.Dec
 	GetMarket(ctx sdk.Context, marketId uint64) (market exchangetypes.Market, found bool)
 	LookupMarket(ctx sdk.Context, marketId uint64) (found bool)
 	IterateAllMarkets(ctx sdk.Context, cb func(market exchangetypes.Market) (stop bool))

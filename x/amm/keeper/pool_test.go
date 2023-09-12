@@ -224,3 +224,24 @@ func (s *KeeperTestSuite) TestPoolOrdersEdgecase() {
 	}, nil)
 	s.Require().Len(obs.Levels(), 1)
 }
+
+func (s *KeeperTestSuite) TestPoolOrderMaxOrderPriceRatio() {
+	market := s.CreateMarket("ucre", "uusd")
+
+	mmAddr := s.FundedAccount(1, enoughCoins)
+	s.MakeLastPrice(market.Id, mmAddr, utils.ParseDec("5"))
+
+	// last price != pool price
+	pool := s.CreatePool(market.Id, utils.ParseDec("100"))
+
+	s.AddLiquidityByLiquidity(
+		mmAddr, pool.Id, utils.ParseDec("50"), utils.ParseDec("200"),
+		sdk.NewInt(1000000))
+
+	ordererAddr := s.FundedAccount(2, enoughCoins)
+	s.PlaceLimitOrder(
+		market.Id, ordererAddr, false, utils.ParseDec("5.05"), sdk.NewDec(100_000000), 0)
+
+	s.AssertEqual(utils.ParseDec("90"), s.keeper.MustGetPoolState(s.Ctx, pool.Id).CurrentPrice)
+	s.AssertEqual(utils.ParseDec("90"), *s.App.ExchangeKeeper.MustGetMarketState(s.Ctx, market.Id).LastPrice)
+}
