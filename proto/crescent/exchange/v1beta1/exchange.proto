@@ -51,8 +51,10 @@ enum OrderType {
 }
 
 message SwapRouteResult {
-  uint64                      market_id = 1;
-  cosmos.base.v1beta1.DecCoin input     = 2 [(gogoproto.nullable) = false];
-  cosmos.base.v1beta1.DecCoin output    = 3 [(gogoproto.nullable) = false];
-  cosmos.base.v1beta1.DecCoin fee       = 4 [(gogoproto.nullable) = false];
+  uint64 market_id         = 1;
+  string executed_quantity = 2
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  cosmos.base.v1beta1.DecCoin input  = 3 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.DecCoin output = 4 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.DecCoin fee    = 5 [(gogoproto.nullable) = false];
 }

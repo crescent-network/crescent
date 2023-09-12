@@ -75,10 +75,11 @@ func (k Keeper) SwapExactAmountIn(
 			}
 		}
 		results = append(results, types.SwapRouteResult{
-			MarketId: marketId,
-			Input:    currentIn,
-			Output:   output,
-			Fee:      res.Fee,
+			MarketId:         marketId,
+			ExecutedQuantity: res.ExecutedQuantity,
+			Input:            currentIn,
+			Output:           output,
+			Fee:              res.Fee,
 		})
 		currentIn = output
 	}
