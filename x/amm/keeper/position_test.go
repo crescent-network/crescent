@@ -162,3 +162,39 @@ func (s *KeeperTestSuite) TestPositionAssets_ZeroLiquidity() {
 	s.AssertEqual(utils.ParseCoin("0ucre"), coin0)
 	s.AssertEqual(utils.ParseCoin("0uusd"), coin1)
 }
+
+func (s *KeeperTestSuite) TestRemoveSmallLiquidity() {
+	_, pool := s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("5"))
+
+	lpAddr1 := s.FundedAccount(1, enoughCoins)
+
+	position, _, amt := s.AddLiquidity(
+		lpAddr1, pool.Id, utils.ParseDec("4"), utils.ParseDec("6"),
+		utils.ParseCoins("10000ucre,50000uusd"))
+	s.AssertEqual(sdk.NewInt(211803), position.Liquidity)
+	s.AssertEqual(utils.ParseCoins("8253ucre,50000uusd"), amt)
+
+	// This will prevent removing the last liquidity from position1 to withdraw
+	// all remaining reserves.
+	lpAddr2 := s.FundedAccount(2, enoughCoins)
+	s.AddLiquidity(
+		lpAddr2, pool.Id, utils.ParseDec("3"), utils.ParseDec("7"),
+		utils.ParseCoins("10000ucre,50000uusd"))
+
+	// Removing very small amount of liquidity may cause withdrawing no assets
+	// at all.
+	position, amt = s.RemoveLiquidity(lpAddr1, position.Id, sdk.NewInt(1))
+	s.AssertEqual(sdk.NewInt(211802), position.Liquidity)
+	s.AssertEqual(sdk.Coins{}, amt)
+
+	// Thus, removing all liquidity by removing small amount many times
+	// may cause a loss in assets.
+	for {
+		position, amt = s.RemoveLiquidity(
+			lpAddr1, position.Id, utils.MinInt(sdk.NewInt(4), position.Liquidity))
+		s.AssertEqual(sdk.Coins{}, amt)
+		if position.Liquidity.IsZero() {
+			break
+		}
+	}
+}

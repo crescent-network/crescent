@@ -226,9 +226,11 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 	accrueFees()
 	k.SetPoolState(ctx, pool.Id, poolState)
 
-	if err := k.bankKeeper.SendCoins(
-		ctx, reserveAddr, pool.MustGetRewardsPoolAddress(), accruedRewards); err != nil {
-		return err
+	if accruedRewards.IsAllPositive() {
+		if err := k.bankKeeper.SendCoins(
+			ctx, reserveAddr, pool.MustGetRewardsPoolAddress(), accruedRewards); err != nil {
+			return err
+		}
 	}
 	return nil
 }
