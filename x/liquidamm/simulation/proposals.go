@@ -51,7 +51,7 @@ func SimulatePublicPositionCreateProposalContent(ammK types.AMMKeeper, k keeper.
 		upperPrice := exchangetypes.PriceAtTick(
 			ammtypes.AdjustTickToTickSpacing(
 				exchangetypes.TickAtPrice(poolState.CurrentPrice.Mul(utils.ParseDec("1.25"))), pool.TickSpacing, true))
-		minBidAmt := utils.RandomInt(r, sdk.NewInt(10000), sdk.NewInt(1000000))
+		minBidAmt := utils.SimRandomInt(r, sdk.NewInt(10000), sdk.NewInt(1000000))
 		if found := k.LookupPublicPositionByParams(
 			ctx, pool.Id, exchangetypes.TickAtPrice(lowerPrice), exchangetypes.TickAtPrice(upperPrice)); found {
 			return nil

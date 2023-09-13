@@ -197,6 +197,7 @@ func findMsgBurnShareParams(
 		if len(shares) > 0 {
 			share := shares[r.Intn(len(shares))]
 			publicPositionId, _ := types.ParseShareDenom(share.Denom)
+			share.Amount = utils.SimRandomInt(r, sdk.NewInt(1), share.Amount)
 			msg = types.NewMsgBurnShare(acc.Address, publicPositionId, share)
 			return acc, msg, true
 		}

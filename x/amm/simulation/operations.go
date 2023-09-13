@@ -242,7 +242,7 @@ func findMsgAddLiquidityParams(
 				poolState := k.MustGetPoolState(ctx, pool.Id)
 				var lowerPrice, upperPrice sdk.Dec
 				if r.Float64() <= 0.2 {
-					lowerPrice = types.MinPrice
+					lowerPrice = utils.ParseDec("0.01")
 				} else if r.Float64() <= 0.5 {
 					lowerPrice = exchangetypes.PriceAtTick(
 						types.AdjustPriceToTickSpacing(
@@ -261,7 +261,7 @@ func findMsgAddLiquidityParams(
 							pool.TickSpacing, false))
 				}
 				if r.Float64() <= 0.2 {
-					upperPrice = types.MaxPrice
+					upperPrice = utils.ParseDec("100")
 				} else {
 					upperPrice = exchangetypes.PriceAtTick(
 						types.AdjustPriceToTickSpacing(
