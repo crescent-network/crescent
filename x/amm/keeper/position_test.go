@@ -97,7 +97,7 @@ func (s *KeeperTestSuite) TestRewardsPool() {
 		lpAddr, pool2.Id, utils.ParseDec("9"), utils.ParseDec("12"), utils.ParseCoins("100_000000uatom,1000_000000uusd"))
 
 	ordererAddr := s.FundedAccount(2, enoughCoins)
-	s.PlaceLimitOrder(market1.Id, ordererAddr, true, utils.ParseDec("6"), sdk.NewDec(1_000000),0 )
+	s.PlaceLimitOrder(market1.Id, ordererAddr, true, utils.ParseDec("6"), sdk.NewDec(1_000000), 0)
 	s.PlaceLimitOrder(market2.Id, ordererAddr, false, utils.ParseDec("9"), sdk.NewDec(1_000000), 0)
 
 	s.AssertEqual(utils.ParseCoins("1499ucre,2620uusd"), s.GetAllBalances(pool1.MustGetRewardsPoolAddress()))
@@ -138,4 +138,27 @@ func (s *KeeperTestSuite) TestLastRemoveLiquidity() {
 
 	// No balances left in the pool.
 	s.AssertEqual(sdk.Coins{}, s.GetAllBalances(pool.MustGetReserveAddress()))
+}
+
+func (s *KeeperTestSuite) TestPositionAssets_ZeroLiquidity() {
+	_, pool := s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("5"))
+
+	lpAddr1 := s.FundedAccount(1, enoughCoins)
+
+	position, _, _ := s.AddLiquidity(
+		lpAddr1, pool.Id, utils.ParseDec("4"), utils.ParseDec("6"),
+		utils.ParseCoins("100_000000ucre,500_000000uusd"))
+
+	coin0, coin1, err := s.keeper.PositionAssets(s.Ctx, position.Id)
+	s.Require().NoError(err)
+	s.AssertEqual(utils.ParseCoin("82529840ucre"), coin0)
+	s.AssertEqual(utils.ParseCoin("499999999uusd"), coin1)
+
+	// Remove all liquidity from the position.
+	s.RemoveLiquidity(lpAddr1, position.Id, position.Liquidity)
+
+	coin0, coin1, err = s.keeper.PositionAssets(s.Ctx, position.Id)
+	s.Require().NoError(err)
+	s.AssertEqual(utils.ParseCoin("0ucre"), coin0)
+	s.AssertEqual(utils.ParseCoin("0uusd"), coin1)
 }

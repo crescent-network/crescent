@@ -569,7 +569,7 @@ func (s *KeeperTestSuite) TestCalcLiquidStakingVotingPower() {
 	s.Require().Equal(sdk.NewInt(200_000000), s.keeper.CalcLiquidStakingVotingPower(s.ctx, delB))
 
 	_, pool := s.createMarketAndPool(params.LiquidBondDenom, sdk.DefaultBondDenom, utils.ParseDec("1"))
-	s.addLiquidity(
+	position1, _, _ := s.addLiquidity(
 		delA, pool.Id, utils.ParseDec("1"), utils.ParseDec("1.2"),
 		sdk.NewCoins(
 			sdk.NewInt64Coin(params.LiquidBondDenom, 10_000000),
@@ -607,6 +607,12 @@ func (s *KeeperTestSuite) TestCalcLiquidStakingVotingPower() {
 			sdk.NewInt64Coin(params.LiquidBondDenom, 20_000000),
 			sdk.NewInt64Coin(sdk.DefaultBondDenom, 20_000000)))
 	// There might be a small amount of error again.
+	s.Require().Equal(sdk.NewInt(99_999998), s.keeper.CalcLiquidStakingVotingPower(s.ctx, delA))
+	s.Require().Equal(sdk.NewInt(199_999998), s.keeper.CalcLiquidStakingVotingPower(s.ctx, delB))
+
+	// Remove all liquidity
+	s.removeLiquidity(delA, position1.Id, position1.Liquidity)
+
 	s.Require().Equal(sdk.NewInt(99_999998), s.keeper.CalcLiquidStakingVotingPower(s.ctx, delA))
 	s.Require().Equal(sdk.NewInt(199_999998), s.keeper.CalcLiquidStakingVotingPower(s.ctx, delB))
 }

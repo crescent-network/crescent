@@ -190,6 +190,11 @@ func (k Keeper) PositionAssets(ctx sdk.Context, positionId uint64) (coin0, coin1
 		return coin0, coin1, sdkerrors.Wrap(sdkerrors.ErrNotFound, "position not found")
 	}
 	pool := k.MustGetPool(ctx, position.PoolId)
+	if position.Liquidity.IsZero() {
+		coin0 = sdk.NewInt64Coin(pool.Denom0, 0)
+		coin1 = sdk.NewInt64Coin(pool.Denom1, 0)
+		return
+	}
 	ctx, _ = ctx.CacheContext()
 	_, amt0, amt1 := k.modifyPosition(
 		ctx, pool, position.MustGetOwnerAddress(), position.LowerTick, position.UpperTick, position.Liquidity.Neg())

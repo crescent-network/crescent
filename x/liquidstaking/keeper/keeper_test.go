@@ -366,6 +366,15 @@ func (s *KeeperTestSuite) addLiquidity(
 	return
 }
 
+func (s *KeeperTestSuite) removeLiquidity(
+	ownerAddr sdk.AccAddress, positionId uint64, liquidity sdk.Int) (position ammtypes.Position, amt sdk.Coins) {
+	s.T().Helper()
+	var err error
+	position, amt, err = s.app.AMMKeeper.RemoveLiquidity(s.ctx, ownerAddr, ownerAddr, positionId, liquidity)
+	s.Require().NoError(err)
+	return
+}
+
 func (s *KeeperTestSuite) createPublicPosition(
 	poolId uint64, lowerPrice, upperPrice sdk.Dec, minBidAmt sdk.Int, feeRate sdk.Dec) liquidammtypes.PublicPosition {
 	s.T().Helper()
