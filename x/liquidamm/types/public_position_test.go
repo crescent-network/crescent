@@ -17,14 +17,14 @@ func TestShareDenom(t *testing.T) {
 		denom      string
 		expectsErr bool
 	}{
-		{"lashare1", false},
-		{"lashare10", false},
-		{"lashare18446744073709551615", false},
-		{"lashare18446744073709551616", true},
-		{"lashareabc", true},
-		{"lashare01", true},
-		{"lashare-10", true},
-		{"lashare+10", true},
+		{"sb1", false},
+		{"sb10", false},
+		{"sb18446744073709551615", false},
+		{"sb18446744073709551616", true},
+		{"sbabc", true},
+		{"sb01", true},
+		{"sb-10", true},
+		{"sb+10", true},
 		{"ucre", true},
 		{"denom1", true},
 	} {

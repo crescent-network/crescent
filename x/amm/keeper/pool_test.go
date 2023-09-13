@@ -241,6 +241,7 @@ func (s *KeeperTestSuite) TestSwapEdgecase1() {
 	market, pool := s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("45.821"))
 
 	lpAddr := s.FundedAccount(1, enoughCoins)
+	s.MakeLastPrice(market.Id, lpAddr, utils.ParseDec("45.821"))
 	s.AddLiquidity(
 		lpAddr, pool.Id, utils.ParseDec("1"), utils.ParseDec("100"),
 		utils.ParseCoins("100000000ucre,1000000000uusd"))
@@ -250,4 +251,49 @@ func (s *KeeperTestSuite) TestSwapEdgecase1() {
 		market.Id, ordererAddr, false, utils.ParseDec("45.821"), utils.ParseDec("39636169.911478604318885683"), time.Hour)
 
 	s.SwapExactAmountIn(ordererAddr, []uint64{market.Id}, utils.ParseDecCoin("35987097uusd"), utils.ParseDecCoin("0ucre"), false)
+}
+
+func (s *KeeperTestSuite) TestPoolOrdersEdgecase() {
+	// Check if there's no infinite loop in IteratePoolOrders.
+	market, pool := s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("0.000000089916180444"))
+	marketState := s.App.ExchangeKeeper.MustGetMarketState(s.Ctx, market.Id)
+	marketState.LastPrice = utils.ParseDecP("0.000000089795000000")
+	s.App.ExchangeKeeper.SetMarketState(s.Ctx, market.Id, marketState)
+
+	lpAddr := s.FundedAccount(1, enoughCoins)
+	s.AddLiquidity(
+		lpAddr, pool.Id, types.MinPrice, types.MaxPrice,
+		utils.ParseCoins("13010176813853779ucre,1169825406uusd"))
+
+	obs := s.App.ExchangeKeeper.ConstructMemOrderBookSide(s.Ctx, market, exchangetypes.MemOrderBookSideOptions{
+		IsBuy:             false,
+		MaxNumPriceLevels: 1,
+	}, nil)
+	s.Require().Len(obs.Levels(), 1)
+	obs = s.App.ExchangeKeeper.ConstructMemOrderBookSide(s.Ctx, market, exchangetypes.MemOrderBookSideOptions{
+		IsBuy:             true,
+		MaxNumPriceLevels: 1,
+	}, nil)
+	s.Require().Len(obs.Levels(), 1)
+}
+
+func (s *KeeperTestSuite) TestPoolOrderMaxOrderPriceRatio() {
+	market := s.CreateMarket("ucre", "uusd")
+
+	mmAddr := s.FundedAccount(1, enoughCoins)
+	s.MakeLastPrice(market.Id, mmAddr, utils.ParseDec("5"))
+
+	// last price != pool price
+	pool := s.CreatePool(market.Id, utils.ParseDec("100"))
+
+	s.AddLiquidityByLiquidity(
+		mmAddr, pool.Id, utils.ParseDec("50"), utils.ParseDec("200"),
+		sdk.NewInt(1000000))
+
+	ordererAddr := s.FundedAccount(2, enoughCoins)
+	s.PlaceLimitOrder(
+		market.Id, ordererAddr, false, utils.ParseDec("5.05"), sdk.NewDec(100_000000), 0)
+
+	s.AssertEqual(utils.ParseDec("90"), s.keeper.MustGetPoolState(s.Ctx, pool.Id).CurrentPrice)
+	s.AssertEqual(utils.ParseDec("90"), *s.App.ExchangeKeeper.MustGetMarketState(s.Ctx, market.Id).LastPrice)
 }

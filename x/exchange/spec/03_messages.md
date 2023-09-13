@@ -20,7 +20,7 @@ type MsgPlaceLimitOrder struct {
     MarketId uint64
     IsBuy    bool
     Price    sdk.Dec
-    Quantity sdk.Int
+    Quantity sdk.Dec
     Lifespan time.Duration
 }
 ```
@@ -33,7 +33,7 @@ type MsgPlaceBatchLimitOrder struct {
     MarketId uint64
     IsBuy    bool
     Price    sdk.Dec
-    Quantity sdk.Int
+    Quantity sdk.Dec
     Lifespan time.Duration
 }
 ```
@@ -46,7 +46,7 @@ type MsgPlaceMMLimitOrder struct {
     MarketId uint64
     IsBuy    bool
     Price    sdk.Dec
-    Quantity sdk.Int
+    Quantity sdk.Dec
     Lifespan time.Duration
 }
 ```
@@ -59,7 +59,7 @@ type MsgPlaceMMBatchLimitOrder struct {
     MarketId uint64
     IsBuy    bool
     Price    sdk.Dec
-    Quantity sdk.Int
+    Quantity sdk.Dec
     Lifespan time.Duration
 }
 ```
@@ -71,7 +71,7 @@ type MsgPlaceMarketOrder struct {
     Sender   string
     MarketId uint64
     IsBuy    bool
-    Quantity sdk.Int
+    Quantity sdk.Dec
 }
 ```
 
@@ -99,7 +99,7 @@ type MsgCancelAllOrders struct {
 type MsgSwapExactAmountIn struct {
     Sender    string
     Routes    []uint64
-    Input     types.Coin
-    MinOutput types.Coin
+    Input     types.DecCoin
+    MinOutput types.DecCoin
 }
 ```

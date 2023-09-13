@@ -28,6 +28,10 @@ func (s *KeeperTestSuite) TestSimulation() {
 			initialPrice = utils.RandomDec(r, utils.ParseDec("100000"), maxPrice)
 		}
 		market, pool := s.CreateMarketAndPool("ucre", "uusd", initialPrice)
+		marketState := s.App.ExchangeKeeper.MustGetMarketState(s.Ctx, market.Id)
+		lastPrice := exchangetypes.PriceAtTick(exchangetypes.TickAtPrice(initialPrice))
+		marketState.LastPrice = &lastPrice
+		s.App.ExchangeKeeper.SetMarketState(s.Ctx, market.Id, marketState)
 
 		lpAddrs := make([]sdk.AccAddress, 10)
 		for i := range lpAddrs {

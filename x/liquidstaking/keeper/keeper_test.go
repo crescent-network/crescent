@@ -23,12 +23,15 @@ import (
 
 	chain "github.com/crescent-network/crescent/v5/app"
 	utils "github.com/crescent-network/crescent/v5/types"
-	liquiditytypes "github.com/crescent-network/crescent/v5/x/liquidity/types"
+	ammtypes "github.com/crescent-network/crescent/v5/x/amm/types"
+	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
+	liquidammtypes "github.com/crescent-network/crescent/v5/x/liquidamm/types"
 	"github.com/crescent-network/crescent/v5/x/liquidstaking"
 	"github.com/crescent-network/crescent/v5/x/liquidstaking/keeper"
 	"github.com/crescent-network/crescent/v5/x/liquidstaking/types"
 	lpfarmtypes "github.com/crescent-network/crescent/v5/x/lpfarm/types"
 	"github.com/crescent-network/crescent/v5/x/mint"
+	minttypes "github.com/crescent-network/crescent/v5/x/mint/types"
 )
 
 var (
@@ -335,32 +338,58 @@ func (s *KeeperTestSuite) createContinuousVestingAccount(from sdk.AccAddress, to
 }
 
 func (s *KeeperTestSuite) fundAddr(addr sdk.AccAddress, amt sdk.Coins) {
-	err := s.app.BankKeeper.MintCoins(s.ctx, liquiditytypes.ModuleName, amt)
+	err := s.app.BankKeeper.MintCoins(s.ctx, minttypes.ModuleName, amt)
 	s.Require().NoError(err)
-	err = s.app.BankKeeper.SendCoinsFromModuleToAccount(s.ctx, liquiditytypes.ModuleName, addr, amt)
+	err = s.app.BankKeeper.SendCoinsFromModuleToAccount(s.ctx, minttypes.ModuleName, addr, amt)
 	s.Require().NoError(err)
 }
 
-// liquidity module keeper utils for liquid staking combine test
-
-func (s *KeeperTestSuite) createPair(creator sdk.AccAddress, baseCoinDenom, quoteCoinDenom string, fund bool) liquiditytypes.Pair {
-	params := s.app.LiquidityKeeper.GetParams(s.ctx)
-	if fund {
-		s.fundAddr(creator, params.PairCreationFee)
-	}
-	pair, err := s.app.LiquidityKeeper.CreatePair(s.ctx, liquiditytypes.NewMsgCreatePair(creator, baseCoinDenom, quoteCoinDenom))
+func (s *KeeperTestSuite) createMarketAndPool(baseDenom, quoteDenom string, price sdk.Dec) (market exchangetypes.Market, pool ammtypes.Pool) {
+	s.T().Helper()
+	creatorAddr := utils.TestAddress(100000)
+	s.fundAddr(creatorAddr, s.app.ExchangeKeeper.GetMarketCreationFee(s.ctx))
+	var err error
+	market, err = s.app.ExchangeKeeper.CreateMarket(s.ctx, creatorAddr, baseDenom, quoteDenom)
 	s.Require().NoError(err)
-	return pair
+	s.fundAddr(creatorAddr, s.app.AMMKeeper.GetPoolCreationFee(s.ctx))
+	pool, err = s.app.AMMKeeper.CreatePool(s.ctx, creatorAddr, market.Id, price)
+	s.Require().NoError(err)
+	return
 }
 
-func (s *KeeperTestSuite) createPool(creator sdk.AccAddress, pairId uint64, depositCoins sdk.Coins, fund bool) liquiditytypes.Pool {
-	params := s.app.LiquidityKeeper.GetParams(s.ctx)
-	if fund {
-		s.fundAddr(creator, depositCoins.Add(params.PoolCreationFee...))
-	}
-	pool, err := s.app.LiquidityKeeper.CreatePool(s.ctx, liquiditytypes.NewMsgCreatePool(creator, pairId, depositCoins))
+func (s *KeeperTestSuite) addLiquidity(
+	ownerAddr sdk.AccAddress, poolId uint64, lowerPrice, upperPrice sdk.Dec, desiredAmt sdk.Coins) (position ammtypes.Position, liquidity sdk.Int, amt sdk.Coins) {
+	s.T().Helper()
+	var err error
+	position, liquidity, amt, err = s.app.AMMKeeper.AddLiquidity(s.ctx, ownerAddr, ownerAddr, poolId, lowerPrice, upperPrice, desiredAmt)
 	s.Require().NoError(err)
-	return pool
+	return
+}
+
+func (s *KeeperTestSuite) removeLiquidity(
+	ownerAddr sdk.AccAddress, positionId uint64, liquidity sdk.Int) (position ammtypes.Position, amt sdk.Coins) {
+	s.T().Helper()
+	var err error
+	position, amt, err = s.app.AMMKeeper.RemoveLiquidity(s.ctx, ownerAddr, ownerAddr, positionId, liquidity)
+	s.Require().NoError(err)
+	return
+}
+
+func (s *KeeperTestSuite) createPublicPosition(
+	poolId uint64, lowerPrice, upperPrice sdk.Dec, minBidAmt sdk.Int, feeRate sdk.Dec) liquidammtypes.PublicPosition {
+	s.T().Helper()
+	publicPosition, err := s.app.LiquidAMMKeeper.CreatePublicPosition(s.ctx, poolId, lowerPrice, upperPrice, minBidAmt, feeRate)
+	s.Require().NoError(err)
+	return publicPosition
+}
+
+func (s *KeeperTestSuite) mintShare(
+	senderAddr sdk.AccAddress, publicPositionId uint64, desiredAmt sdk.Coins) (mintedShare sdk.Coin, position ammtypes.Position, liquidity sdk.Int, amt sdk.Coins) {
+	s.T().Helper()
+	var err error
+	mintedShare, position, liquidity, amt, err = s.app.LiquidAMMKeeper.MintShare(s.ctx, senderAddr, publicPositionId, desiredAmt)
+	s.Require().NoError(err)
+	return
 }
 
 // farming module keeper utils for liquid staking combine test
@@ -383,13 +412,13 @@ func (s *KeeperTestSuite) farm(farmerAddr sdk.AccAddress, coin sdk.Coin) {
 	s.Require().NoError(err)
 }
 
-func (s *KeeperTestSuite) assertTallyResult(yes, no, vito, abstain int64, proposal govtypes.Proposal) {
+func (s *KeeperTestSuite) assertTallyResult(yes, no, veto, abstain int64, proposal govtypes.Proposal) {
 	cachedCtx, _ := s.ctx.CacheContext()
 	_, _, result := s.app.GovKeeper.Tally(cachedCtx, proposal)
-	s.Require().Equal(sdk.NewInt(yes), result.Yes)
-	s.Require().Equal(sdk.NewInt(no), result.No)
-	s.Require().Equal(sdk.NewInt(vito), result.NoWithVeto)
-	s.Require().Equal(sdk.NewInt(abstain), result.Abstain)
+	s.Require().True(utils.DecApproxEqual(sdk.NewDec(yes), result.Yes.ToDec()))
+	s.Require().True(utils.DecApproxEqual(sdk.NewDec(no), result.No.ToDec()))
+	s.Require().True(utils.DecApproxEqual(sdk.NewDec(veto), result.NoWithVeto.ToDec()))
+	s.Require().True(utils.DecApproxEqual(sdk.NewDec(abstain), result.Abstain.ToDec()))
 }
 
 func (s *KeeperTestSuite) assertVotingPower(addr sdk.AccAddress, stakingVotingPower, liquidStakingVotingPower, validatorVotingPower sdk.Int) {

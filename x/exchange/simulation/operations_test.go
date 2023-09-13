@@ -129,7 +129,10 @@ func (s *SimTestSuite) TestSimulateMsgPlaceMarketOrder() {
 	r := rand.New(rand.NewSource(0))
 	accs := s.getTestingAccounts(r, 50)
 
-	s.CreateMarket("denom1", "denom2")
+	market := s.CreateMarket("denom1", "denom2")
+	marketState := s.keeper.MustGetMarketState(s.Ctx, market.Id)
+	marketState.LastPrice = utils.ParseDecP("1.2")
+	s.keeper.SetMarketState(s.Ctx, market.Id, marketState)
 
 	op := simulation.SimulateMsgPlaceMarketOrder(
 		s.App.AccountKeeper, s.App.BankKeeper, s.keeper)
@@ -219,17 +222,21 @@ func (s *SimTestSuite) TestSimulateMsgSwapExactAmountIn() {
 	r := rand.New(rand.NewSource(0))
 	accs := s.getTestingAccounts(r, 2)
 
+	mmAddr := accs[0].Address
 	market1 := s.CreateMarket("denom1", "denom2")
+	s.MakeLastPrice(market1.Id, mmAddr, utils.ParseDec("1"))
 	pool1 := s.CreatePool(market1.Id, utils.ParseDec("1"))
 	s.AddLiquidity(
 		accs[1].Address, pool1.Id, utils.ParseDec("0.5"), utils.ParseDec("2"),
 		utils.ParseCoins("10_000000denom1,10_0000000denom2"))
 	market2 := s.CreateMarket("denom2", "denom3")
+	s.MakeLastPrice(market2.Id, mmAddr, utils.ParseDec("5"))
 	pool2 := s.CreatePool(market2.Id, utils.ParseDec("5"))
 	s.AddLiquidity(
 		accs[1].Address, pool2.Id, utils.ParseDec("1"), utils.ParseDec("20"),
 		utils.ParseCoins("10_000000denom2,50_000000denom3"))
 	market3 := s.CreateMarket("denom3", "denom1")
+	s.MakeLastPrice(market3.Id, mmAddr, utils.ParseDec("0.05"))
 	pool3 := s.CreatePool(market3.Id, utils.ParseDec("0.05"))
 	s.AddLiquidity(
 		accs[1].Address, pool3.Id, utils.ParseDec("0.0001"), utils.ParseDec("1000"),

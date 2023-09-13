@@ -2,8 +2,11 @@ package keeper_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/crescent-network/crescent/v5/app/testutil"
 	utils "github.com/crescent-network/crescent/v5/types"
@@ -43,4 +46,39 @@ func (s *KeeperTestSuite) TestSetOrderSources() {
 	s.Require().PanicsWithValue("cannot set order sources twice", func() {
 		s.keeper.SetOrderSources(types.NewMockOrderSource("b"), types.NewMockOrderSource("c"))
 	})
+}
+
+func (s *KeeperTestSuite) createLiquidity(
+	marketId uint64, ordererAddr sdk.AccAddress, centerPrice, totalQty sdk.Dec) {
+	tick := types.TickAtPrice(centerPrice)
+	interval := types.PriceIntervalAtTick(tick + 10*10)
+	for i := 0; i < 10; i++ {
+		sellPrice := centerPrice.Add(interval.MulInt64(int64(i+1) * 10))
+		buyPrice := centerPrice.Sub(interval.MulInt64(int64(i+1) * 10))
+
+		qty := totalQty.QuoInt64(200).Add(totalQty.QuoInt64(100).MulInt64(int64(i)))
+		s.PlaceLimitOrder(marketId, ordererAddr, false, sellPrice, qty, time.Hour)
+		s.PlaceLimitOrder(marketId, ordererAddr, true, buyPrice, qty, time.Hour)
+	}
+}
+
+func (s *KeeperTestSuite) createLiquidity2(
+	marketId uint64, ordererAddr sdk.AccAddress, centerPrice, maxOrderPriceRatio, qtyPerTick sdk.Dec) {
+	minPrice, maxPrice := types.OrderPriceLimit(centerPrice, maxOrderPriceRatio)
+	for i := 1; ; i++ {
+		buyPrice := types.PriceAtTick(types.TickAtPrice(centerPrice) - 100*int32(i))
+		if buyPrice.LT(minPrice) {
+			break
+		}
+		s.PlaceLimitOrder(
+			marketId, ordererAddr, true, buyPrice, qtyPerTick, time.Hour)
+	}
+	for i := 1; ; i++ {
+		sellPrice := types.PriceAtTick(types.TickAtPrice(centerPrice) + 100*int32(i))
+		if sellPrice.GT(maxPrice) {
+			break
+		}
+		s.PlaceLimitOrder(
+			marketId, ordererAddr, false, sellPrice, qtyPerTick, time.Hour)
+	}
 }

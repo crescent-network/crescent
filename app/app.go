@@ -532,18 +532,6 @@ func NewApp(
 		app.BankKeeper,
 		app.LiquidityKeeper,
 	)
-	app.LiquidStakingKeeper = liquidstakingkeeper.NewKeeper(
-		appCodec,
-		keys[liquidstakingtypes.StoreKey],
-		app.GetSubspace(liquidstakingtypes.ModuleName),
-		app.AccountKeeper,
-		app.BankKeeper,
-		app.StakingKeeper,
-		app.DistrKeeper,
-		app.LiquidityKeeper,
-		app.LPFarmKeeper,
-		app.SlashingKeeper,
-	)
 	app.ExchangeKeeper = exchangekeeper.NewKeeper(
 		appCodec,
 		keys[exchangetypes.StoreKey],
@@ -583,6 +571,19 @@ func NewApp(
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.AMMKeeper,
+	)
+	app.LiquidStakingKeeper = liquidstakingkeeper.NewKeeper(
+		appCodec,
+		keys[liquidstakingtypes.StoreKey],
+		app.GetSubspace(liquidstakingtypes.ModuleName),
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.StakingKeeper,
+		app.DistrKeeper,
+		app.AMMKeeper,
+		app.LiquidAMMKeeper,
+		app.LPFarmKeeper,
+		app.SlashingKeeper,
 	)
 
 	// register the proposal types

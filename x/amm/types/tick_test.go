@@ -44,6 +44,32 @@ func TestAdjustTickToTickSpacing(t *testing.T) {
 	}
 }
 
+func TestAdjustPriceToTickSpacing(t *testing.T) {
+	for i, tc := range []struct {
+		price    sdk.Dec
+		roundUp  bool
+		expected sdk.Dec
+	}{
+		{utils.ParseDec("12345"), true, utils.ParseDec("12350")},
+		{utils.ParseDec("12345"), false, utils.ParseDec("12300")},
+		{utils.ParseDec("12350.1"), true, utils.ParseDec("12400")},
+		{utils.ParseDec("12350.1"), false, utils.ParseDec("12350")},
+		{utils.ParseDec("12350"), true, utils.ParseDec("12350")},
+		{utils.ParseDec("12350"), false, utils.ParseDec("12350")},
+		{utils.ParseDec("0.00012345"), true, utils.ParseDec("0.00012350")},
+		{utils.ParseDec("0.00012345"), false, utils.ParseDec("0.00012300")},
+		{utils.ParseDec("0.000123501"), true, utils.ParseDec("0.00012400")},
+		{utils.ParseDec("0.000123501"), false, utils.ParseDec("0.00012350")},
+		{utils.ParseDec("0.00012350"), true, utils.ParseDec("0.00012350")},
+		{utils.ParseDec("0.00012350"), false, utils.ParseDec("0.00012350")},
+	} {
+		t.Run(fmt.Sprint(i), func(t *testing.T) {
+			tick := types.AdjustPriceToTickSpacing(tc.price, 50, tc.roundUp)
+			require.True(sdk.DecEq(t, tc.expected, exchangetypes.PriceAtTick(tick)))
+		})
+	}
+}
+
 func TestTickInfo_Validate(t *testing.T) {
 	for _, tc := range []struct {
 		name        string

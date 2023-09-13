@@ -60,9 +60,11 @@ func (k Keeper) AddLiquidity(
 	types.ValidateAddLiquidityResult(desiredAmt0, desiredAmt1, amt0, amt1)
 
 	amt = sdk.NewCoins(sdk.NewCoin(pool.Denom0, amt0), sdk.NewCoin(pool.Denom1, amt1))
-	if err = k.bankKeeper.SendCoins(
-		ctx, fromAddr, pool.MustGetReserveAddress(), amt); err != nil {
-		return
+	if amt.IsAllPositive() {
+		if err = k.bankKeeper.SendCoins(
+			ctx, fromAddr, pool.MustGetReserveAddress(), amt); err != nil {
+			return
+		}
 	}
 
 	if err = ctx.EventManager().EmitTypedEvent(&types.EventAddLiquidity{
@@ -124,8 +126,10 @@ func (k Keeper) RemoveLiquidity(
 		if err != nil {
 			return
 		}
-		if err = k.Collect(ctx, ownerAddr, toAddr, position.Id, fee.Add(farmingRewards...)); err != nil {
-			return
+		if fee.Add(farmingRewards...).IsAllPositive() {
+			if err = k.Collect(ctx, ownerAddr, toAddr, position.Id, fee.Add(farmingRewards...)); err != nil {
+				return
+			}
 		}
 	}
 	if err = ctx.EventManager().EmitTypedEvent(&types.EventRemoveLiquidity{
@@ -164,13 +168,17 @@ func (k Keeper) Collect(
 	}
 	fee := amt.Min(position.OwedFee)
 	position.OwedFee = position.OwedFee.Sub(fee)
-	if err := k.bankKeeper.SendCoins(ctx, pool.MustGetRewardsPoolAddress(), toAddr, fee); err != nil {
-		return err
+	if fee.IsAllPositive() {
+		if err := k.bankKeeper.SendCoins(ctx, pool.MustGetRewardsPoolAddress(), toAddr, fee); err != nil {
+			return err
+		}
 	}
 	farmingRewards := amt.Sub(fee)
 	position.OwedFarmingRewards = position.OwedFarmingRewards.Sub(farmingRewards)
-	if err := k.bankKeeper.SendCoins(ctx, types.RewardsPoolAddress, toAddr, farmingRewards); err != nil {
-		return err
+	if farmingRewards.IsAllPositive() {
+		if err := k.bankKeeper.SendCoins(ctx, types.RewardsPoolAddress, toAddr, farmingRewards); err != nil {
+			return err
+		}
 	}
 	k.SetPosition(ctx, position)
 
@@ -190,6 +198,11 @@ func (k Keeper) PositionAssets(ctx sdk.Context, positionId uint64) (coin0, coin1
 		return coin0, coin1, sdkerrors.Wrap(sdkerrors.ErrNotFound, "position not found")
 	}
 	pool := k.MustGetPool(ctx, position.PoolId)
+	if position.Liquidity.IsZero() {
+		coin0 = sdk.NewInt64Coin(pool.Denom0, 0)
+		coin1 = sdk.NewInt64Coin(pool.Denom1, 0)
+		return
+	}
 	ctx, _ = ctx.CacheContext()
 	_, amt0, amt1 := k.modifyPosition(
 		ctx, pool, position.MustGetOwnerAddress(), position.LowerTick, position.UpperTick, position.Liquidity.Neg())

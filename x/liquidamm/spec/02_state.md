@@ -2,88 +2,62 @@
 
 # State
 
-The `liquidfarming` module keeps track of the states of pool coins and LFCoins.
+## PublicPosition
 
-## LiquidFarm
+* LastPublicPositionId: `0x81 -> BigEndian(LastPublicPositionId)`
+* PublicPosition: `0x83 | BigEndian(PublicPositionId) -> ProtocolBuffer(PublicPosition)`
+* PublicPositionsByPoolIndex: `0x84 | BigEndian(PoolId) | BigEndian(PublicPositionId) -> nil`
+* PublicPositionByParamsIndex: `0x85 | AddrLen (1 byte) | Owner | BigEndian(PoolId) | Sign (1 byte) | BigEndian(LowerTick) | Sign (1 byte) | BigEndian(UpperTick) -> nil`
 
 ```go
-// LiquidFarms tracks the list of the activated LiquidFarms
-type LiquidFarms struct {
-	liquidfarms []LiquidFarm
-}
-
-// LiquidFarm defines liquid farm.
-type LiquidFarm struct {
-	PoolId        uint64  // the pool id
-	MinFarmAmount sdk.Int // the minimum farm amount; it allows zero value
-	MinBidAmount  sdk.Int // the minimum bid amount; it allows zero value
-	FeeRate       sdk.Dec // the fee rate for the liquidfarm which deducts from auction winner's rewards
+type PublicPosition struct {
+    Id                   uint64
+    PoolId               uint64
+    LowerTick            int32
+    UpperTick            int32
+    BidReserveAddress    string
+    MinBidAmount         sdk.Int
+    FeeRate              sdk.Dec
+    LastRewardsAuctionId uint64
 }
 ```
 
 ## RewardsAuction
 
+* LastRewardsAuctionEndTime: `0x82 -> FormatTimeBytes(LastRewardsAuctionEndTime)`
+* RewardsAuction: `0x86 | BigEndian(PublicPositionId) | BigEndian(AuctionId) -> ProtocolBuffer(RewardsAuction)`
+
 ```go
-// AuctionStatus enumerates the valid status of an auction.
 type AuctionStatus int32
 
 const (
-	AuctionStatusNil      AuctionStatus = 0
-	AuctionStatusStarted  AuctionStatus = 1
-	AuctionStatusFinished AuctionStatus = 2
-	AuctionStatusSkipped  AuctionStatus = 3
+    AuctionStatusNil      AuctionStatus = 0
+    AuctionStatusStarted  AuctionStatus = 1
+    AuctionStatusFinished AuctionStatus = 2
+    AuctionStatusSkipped  AuctionStatus = 3
 )
 
-// RewardsAuction defines rewards auction information.
 type RewardsAuction struct {
-	Id                   uint64        // rewards auction id
-	PoolId               uint64        // corresponding pool id of the target liquid farm
-	BiddingCoinDenom     string        // corresponding pool coin denom
-	PayingReserveAddress string        // the paying reserve address that collects bidding coin placed by bidders
-	StartTime            time.Time     // the auction start time
-	EndTime              time.Time     // the auction end time
-	Status               AuctionStatus // the auction status
-	Winner               string        // the bidder who won the auction
-	WinningAmount        sdk.Coin      // the winning amount placed by the winner
-	Rewards              sdk.Coins     // the farming rewards for are accumulated every block
-	Fees                 sdk.Coins     // the fees for the rewards by the fee rate
-	FeeRate              sdk.Dec       // the fee rate for the liquid farm
-}
-```
-
-## CompoundingRewards
-
-```go
-// CompoundingRewards records the amount of farming rewards
-type CompoundingRewards struct {
-	Amount sdk.Int
+    PublicPositionId uint64
+    Id               uint64
+    StartTime        time.Time
+    EndTime          time.Time
+    Status           AuctionStatus
+    WinningBid       *Bid
+    Rewards          sdk.Coins
+    Fees             sdk.Coins
 }
 ```
 
 ## Bid
 
+* Bid: `0x87 | BigEndian(PublicPositionId) | BigEndian(AuctionId) | Bidder -> ProtocolBuffer(Bid)`
+
 ```go
-// Bid defines a standard bid for an auction.
 type Bid struct {
-	PoolId uint64
-	Bidder string
-	Amount sdk.Coin
+    PublicPositionId uint64
+    RewardsAuctionId uint64
+    Bidder           string
+    Share            sdk.Coin
 }
 ```
-
-## Parameter
-
-- ModuleName: `liquidfarming`
-- RouterKey: `liquidfarming`
-- StoreKey: `liquidfarming`
-- QuerierRoute: `liquidfarming`
-
-## Store
-
-- LastRewardsAuctionEndTimeKey: `[]byte{0xe1} -> Timestamp(time.Time)`
-- LastRewardsAuctionIdKey: `[]byte{0xe2} | PoolId -> Uint64Value(uint64)`
-- LiquidFarmKey: `[]byte{0xe3} | PoolId -> ProtocolBuffer(LiquidFarm)`
-- CompoundingRewardsKey: `[]byte{0xe4} | PoolId -> ProtocolBuffer(CompoundingRewards)`
-- RewardsAuctionKey: `[]byte{0xe5} | AuctionId | PoolId -> ProtocolBuffer(RewardsAuction)`
-- BidKey: `[]byte{0xe6} | PoolId | BidderAddressLen (1 byte) | BidderAddress -> ProtocolBuffer(Bid)`
-- WinningBidKey: `[]byte{0xe7} | AuctionId | PoolId -> ProtocolBuffer(Bid)`

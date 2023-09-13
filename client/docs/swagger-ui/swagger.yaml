@@ -11502,6 +11502,8 @@ paths:
                     market_id:
                       type: string
                       format: uint64
+                    executed_quantity:
+                      type: string
                     input:
                       type: object
                       properties:
@@ -12545,6 +12547,10 @@ paths:
                   default_tick_spacing:
                     type: integer
                     format: int64
+                  default_min_order_quantity:
+                    type: string
+                  default_min_order_quote:
+                    type: string
                   private_farming_plan_creation_fee:
                     type: array
                     items:
@@ -20438,6 +20444,8 @@ definitions:
             market_id:
               type: string
               format: uint64
+            executed_quantity:
+              type: string
             input:
               type: object
               properties:
@@ -20633,6 +20641,8 @@ definitions:
       market_id:
         type: string
         format: uint64
+      executed_quantity:
+        type: string
       input:
         type: object
         properties:
@@ -20758,6 +20768,10 @@ definitions:
       default_tick_spacing:
         type: integer
         format: int64
+      default_min_order_quantity:
+        type: string
+      default_min_order_quote:
+        type: string
       private_farming_plan_creation_fee:
         type: array
         items:
@@ -21456,6 +21470,10 @@ definitions:
           default_tick_spacing:
             type: integer
             format: int64
+          default_min_order_quantity:
+            type: string
+          default_min_order_quote:
+            type: string
           private_farming_plan_creation_fee:
             type: array
             items:

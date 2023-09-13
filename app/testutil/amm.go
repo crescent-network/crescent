@@ -29,6 +29,20 @@ func (s *TestSuite) AddLiquidity(ownerAddr sdk.AccAddress, poolId uint64, lowerP
 	return
 }
 
+func (s *TestSuite) AddLiquidityByLiquidity(ownerAddr sdk.AccAddress, poolId uint64, lowerPrice, upperPrice sdk.Dec, desiredLiquidity sdk.Int) (position ammtypes.Position, liquidity sdk.Int, amt sdk.Coins) {
+	s.T().Helper()
+	pool := s.App.AMMKeeper.MustGetPool(s.Ctx, poolId)
+	poolState := s.App.AMMKeeper.MustGetPoolState(s.Ctx, poolId)
+	amt0, amt1 := ammtypes.AmountsForLiquidity(
+		utils.DecApproxSqrt(poolState.CurrentPrice),
+		utils.DecApproxSqrt(lowerPrice),
+		utils.DecApproxSqrt(upperPrice),
+		desiredLiquidity)
+	return s.AddLiquidity(
+		ownerAddr, pool.Id, lowerPrice, upperPrice,
+		sdk.NewCoins(sdk.NewCoin(pool.Denom0, amt0), sdk.NewCoin(pool.Denom1, amt1)))
+}
+
 func (s *TestSuite) RemoveLiquidity(ownerAddr sdk.AccAddress, positionId uint64, liquidity sdk.Int) (position ammtypes.Position, amt sdk.Coins) {
 	s.T().Helper()
 	var err error

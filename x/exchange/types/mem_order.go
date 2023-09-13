@@ -166,7 +166,7 @@ func (order *MemOrder) ExecutableQuantity() sdk.Dec {
 	if order.isBuy {
 		return sdk.MinDec(executableQty, order.remainingDeposit.QuoTruncate(order.price))
 	}
-	return executableQty
+	return sdk.MinDec(executableQty, order.remainingDeposit)
 }
 
 func (order *MemOrder) HasPriorityOver(other *MemOrder) bool {

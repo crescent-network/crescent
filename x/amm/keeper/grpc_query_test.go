@@ -1,18 +1,25 @@
 package keeper_test
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/amm/types"
+	exchangekeeper "github.com/crescent-network/crescent/v5/x/exchange/keeper"
+	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
 // SetupSampleScenario creates markets, pools and positions for query tests.
 func (s *KeeperTestSuite) SetupSampleScenario() {
 	s.T().Helper()
 
+	mmAddr := s.FundedAccount(100, enoughCoins)
 	creUsdMarket := s.CreateMarket("ucre", "uusd")
 	atomUsdMarket := s.CreateMarket("uatom", "uusd")
+	s.MakeLastPrice(creUsdMarket.Id, mmAddr, utils.ParseDec("5"))
+	s.MakeLastPrice(atomUsdMarket.Id, mmAddr, utils.ParseDec("10"))
 	// pool id != market id
 	atomUsdPool := s.CreatePool(atomUsdMarket.Id, utils.ParseDec("10"))
 	creUsdPool := s.CreatePool(creUsdMarket.Id, utils.ParseDec("5"))
@@ -64,7 +71,10 @@ func (s *KeeperTestSuite) SetupSampleScenario() {
 		utils.ParseDecCoin("20_000000uatom"), utils.ParseDecCoin("38_000000ucre"), false)
 	s.SwapExactAmountIn(
 		ordererAddr, []uint64{creUsdMarket.Id, atomUsdMarket.Id},
-		utils.ParseDecCoin("100_000000ucre"), utils.ParseDecCoin("45_000000uatom"), false)
+		utils.ParseDecCoin("50_000000ucre"), utils.ParseDecCoin("20_000000uatom"), false)
+	s.SwapExactAmountIn(
+		ordererAddr, []uint64{creUsdMarket.Id, atomUsdMarket.Id},
+		utils.ParseDecCoin("50_000000ucre"), utils.ParseDecCoin("20_000000uatom"), false)
 }
 
 func (s *KeeperTestSuite) TestQueryParams() {
@@ -103,7 +113,7 @@ func (s *KeeperTestSuite) TestQueryAllPools() {
 				pool := resp.Pools[0]
 				s.Require().EqualValues(1, pool.MarketId)
 				s.Require().EqualValues(2, pool.Id)
-				s.AssertEqual(utils.ParseCoin("153579684ucre"), pool.Balance0)
+				s.AssertEqual(utils.ParseCoin("153579685ucre"), pool.Balance0)
 				s.AssertEqual(utils.ParseCoin("257373896uusd"), pool.Balance1)
 			},
 		},
@@ -145,8 +155,8 @@ func (s *KeeperTestSuite) TestQueryPool() {
 			"",
 			func(resp *types.QueryPoolResponse) {
 				s.Require().EqualValues(1, resp.Pool.Id)
-				s.AssertEqual(utils.ParseCoin("71750980uatom"), resp.Pool.Balance0)
-				s.AssertEqual(utils.ParseCoin("1390716293uusd"), resp.Pool.Balance1)
+				s.AssertEqual(utils.ParseCoin("71750979uatom"), resp.Pool.Balance0)
+				s.AssertEqual(utils.ParseCoin("1390716291uusd"), resp.Pool.Balance1)
 				s.Require().Equal("cosmos1srphgsfqllr85ndknjme24txux8m0sz0hhpnnksn2339d3a788rsawjx77", resp.Pool.RewardsPool)
 				s.AssertEqual(utils.ParseDec("1"), resp.Pool.MinOrderQuantity)
 				s.AssertEqual(sdk.NewInt(12470981864), resp.Pool.TotalLiquidity)
@@ -536,7 +546,7 @@ func (s *KeeperTestSuite) TestQueryCollectibleCoins() {
 			},
 			"",
 			func(resp *types.QueryCollectibleCoinsResponse) {
-				s.AssertEqual(utils.ParseCoins("24181uatom,62704ucre,945127uusd"), resp.Fee)
+				s.AssertEqual(utils.ParseCoins("24181uatom,62703ucre,945127uusd"), resp.Fee)
 				s.AssertEqual(utils.ParseCoins("8578uatom,8467ucre"), resp.FarmingRewards)
 			},
 		},
@@ -547,7 +557,7 @@ func (s *KeeperTestSuite) TestQueryCollectibleCoins() {
 			},
 			"",
 			func(resp *types.QueryCollectibleCoinsResponse) {
-				s.AssertEqual(utils.ParseCoins("62704ucre,366086uusd"), resp.Fee)
+				s.AssertEqual(utils.ParseCoins("62703ucre,366086uusd"), resp.Fee)
 				s.AssertEqual(utils.ParseCoins("8467ucre"), resp.FarmingRewards)
 			},
 		},
@@ -891,5 +901,122 @@ func (s *KeeperTestSuite) TestQueryFarmingPlan() {
 				s.Require().EqualError(err, tc.expectedErr)
 			}
 		})
+	}
+}
+
+func (s *KeeperTestSuite) TestQueryOrderBookEdgecase() {
+	market, pool := s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("0.000000000002410188"))
+
+	lpAddr := s.FundedAccount(1, enoughCoins)
+	s.MakeLastPrice(market.Id, lpAddr, utils.ParseDec("0.0000000000024102"))
+
+	s.AddLiquidityByLiquidity(
+		lpAddr, pool.Id, types.MinPrice, types.MaxPrice,
+		sdk.NewInt(160843141868))
+
+	querier := exchangekeeper.Querier{Keeper: s.App.ExchangeKeeper}
+	resp, err := querier.OrderBook(sdk.WrapSDKContext(s.Ctx), &exchangetypes.QueryOrderBookRequest{
+		MarketId: market.Id,
+	})
+	s.Require().NoError(err)
+	expected := []exchangetypes.OrderBookPriceLevel{
+		{P: utils.ParseDec("0.000000000002420000"), Q: utils.ParseDec("210247167454518.426965889361986342")},
+		{P: utils.ParseDec("0.000000000002425000"), Q: utils.ParseDec("106646637502197.215845362922175345")},
+		{P: utils.ParseDec("0.000000000002430000"), Q: utils.ParseDec("106317311667972.575612265795090924")},
+		{P: utils.ParseDec("0.000000000002435000"), Q: utils.ParseDec("105989677315106.625670065116473178")},
+	}
+	s.Require().GreaterOrEqual(len(resp.OrderBooks[0].Sells), len(expected))
+	for i, level := range expected {
+		s.AssertEqual(level.P, resp.OrderBooks[0].Sells[i].P)
+		s.AssertEqual(level.Q, resp.OrderBooks[0].Sells[i].Q)
+	}
+	expected = []exchangetypes.OrderBookPriceLevel{
+		{P: utils.ParseDec("0.000000000002410000"), Q: utils.ParseDec("4041069947696.441682987551867219")},
+		{P: utils.ParseDec("0.000000000002405000"), Q: utils.ParseDec("107756725726365.156645322245322245")},
+		{P: utils.ParseDec("0.000000000002400000"), Q: utils.ParseDec("108093523942782.413913333333333333")},
+		{P: utils.ParseDec("0.000000000002395000"), Q: utils.ParseDec("108432080322133.934602087682672233")},
+	}
+	s.Require().GreaterOrEqual(len(resp.OrderBooks[0].Buys), len(expected))
+	for i, level := range expected {
+		s.AssertEqual(level.P, resp.OrderBooks[0].Buys[i].P)
+		s.AssertEqual(level.Q, resp.OrderBooks[0].Buys[i].Q)
+	}
+}
+
+func (s *KeeperTestSuite) TestQueryOrderBookEdgecase2() {
+	market, pool := s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("1"))
+
+	lpAddr := s.FundedAccount(1, enoughCoins)
+	s.MakeLastPrice(market.Id, lpAddr, utils.ParseDec("1"))
+
+	s.AddLiquidityByLiquidity(
+		lpAddr, pool.Id, types.MinPrice, types.MaxPrice, sdk.NewInt(10))
+
+	querier := exchangekeeper.Querier{Keeper: s.App.ExchangeKeeper}
+	resp, err := querier.OrderBook(sdk.WrapSDKContext(s.Ctx), &exchangetypes.QueryOrderBookRequest{
+		MarketId: market.Id,
+	})
+	s.Require().NoError(err)
+	// Due to too low liquidity, order book is not displayed.
+	s.Require().Empty(resp.OrderBooks)
+}
+
+func (s *KeeperTestSuite) TestQueryOrderBookEdgecase3() {
+	market := s.CreateMarket("ucre", "uusd")
+
+	lpAddr := s.FundedAccount(1, enoughCoins)
+	s.MakeLastPrice(market.Id, lpAddr, utils.ParseDec("5"))
+
+	// pool price != last price
+	pool := s.CreatePool(market.Id, utils.ParseDec("1000"))
+
+	s.AddLiquidityByLiquidity(
+		lpAddr, pool.Id, types.MinPrice, types.MaxPrice, sdk.NewInt(1000))
+
+	s.PlaceLimitOrder(market.Id, lpAddr, true, utils.ParseDec("4.99"), sdk.NewDec(3_000000), time.Hour)
+	s.PlaceLimitOrder(market.Id, lpAddr, true, utils.ParseDec("4.98"), sdk.NewDec(2_000000), time.Hour)
+	s.PlaceLimitOrder(market.Id, lpAddr, true, utils.ParseDec("4.97"), sdk.NewDec(1_000000), time.Hour)
+
+	querier := exchangekeeper.Querier{Keeper: s.App.ExchangeKeeper}
+	resp, err := querier.OrderBook(sdk.WrapSDKContext(s.Ctx), &exchangetypes.QueryOrderBookRequest{
+		MarketId: market.Id,
+	})
+	s.Require().NoError(err)
+	ob := resp.OrderBooks[0]
+	s.Require().Empty(ob.Sells)
+	expected := []exchangetypes.OrderBookPriceLevel{
+		{P: utils.ParseDec("941"), Q: utils.ParseDec("1.006432838818128160")},
+		{P: utils.ParseDec("4.99"), Q: utils.ParseDec("3_000000")},
+		{P: utils.ParseDec("4.98"), Q: utils.ParseDec("2_000000")},
+		{P: utils.ParseDec("4.97"), Q: utils.ParseDec("1_000000")},
+	}
+	s.Require().GreaterOrEqual(len(ob.Buys), len(expected))
+	for i, level := range expected {
+		s.AssertEqual(level.P, ob.Buys[i].P)
+		s.AssertEqual(level.Q, ob.Buys[i].Q)
+	}
+
+	ob = resp.OrderBooks[1]
+	s.Require().Empty(ob.Sells)
+	expected = []exchangetypes.OrderBookPriceLevel{
+		{P: utils.ParseDec("941"), Q: utils.ParseDec("1.006432838818128160")},
+		{P: utils.ParseDec("4.9"), Q: utils.ParseDec("6_000000")},
+	}
+	s.Require().GreaterOrEqual(len(ob.Buys), len(expected))
+	for i, level := range expected {
+		s.AssertEqual(level.P, ob.Buys[i].P)
+		s.AssertEqual(level.Q, ob.Buys[i].Q)
+	}
+
+	ob = resp.OrderBooks[2]
+	s.Require().Empty(ob.Sells)
+	expected = []exchangetypes.OrderBookPriceLevel{
+		{P: utils.ParseDec("941"), Q: utils.ParseDec("1.006432838818128160")},
+		{P: utils.ParseDec("4"), Q: utils.ParseDec("6_000000")},
+	}
+	s.Require().GreaterOrEqual(len(ob.Buys), len(expected))
+	for i, level := range expected {
+		s.AssertEqual(level.P, ob.Buys[i].P)
+		s.AssertEqual(level.Q, ob.Buys[i].Q)
 	}
 }

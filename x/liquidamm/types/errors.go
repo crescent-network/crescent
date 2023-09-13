@@ -8,6 +8,6 @@ import (
 
 // x/liquidamm module sentinel errors
 var (
-	ErrPublicPositionExists = sdkerrors.Register(ModuleName, 2, "public position with same parameters already exists")
+	ErrPublicPositionExists  = sdkerrors.Register(ModuleName, 2, "public position with same parameters already exists")
 	ErrInsufficientBidAmount = sdkerrors.Register(ModuleName, 3, "insufficient bid amount")
 )

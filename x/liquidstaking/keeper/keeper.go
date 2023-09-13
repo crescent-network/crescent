@@ -21,7 +21,8 @@ type Keeper struct {
 	bankKeeper      types.BankKeeper
 	stakingKeeper   types.StakingKeeper
 	distrKeeper     types.DistrKeeper
-	liquidityKeeper types.LiquidityKeeper
+	ammKeeper       types.AMMKeeper
+	liquidAMMKeeper types.LiquidAMMKeeper
 	lpfarmKeeper    types.LPFarmKeeper
 	slashingKeeper  types.SlashingKeeper
 }
@@ -32,7 +33,7 @@ type Keeper struct {
 // - minting, burning PoolCoins
 func NewKeeper(cdc codec.BinaryCodec, key sdk.StoreKey, paramSpace paramtypes.Subspace,
 	accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, stakingKeeper types.StakingKeeper,
-	distrKeeper types.DistrKeeper, liquidityKeeper types.LiquidityKeeper,
+	distrKeeper types.DistrKeeper, ammKeeper types.AMMKeeper, liquidAMMKeeper types.LiquidAMMKeeper,
 	lpfarmKeeper types.LPFarmKeeper, slashingKeeper types.SlashingKeeper,
 ) Keeper {
 	// ensure liquidstaking module account is set
@@ -53,7 +54,8 @@ func NewKeeper(cdc codec.BinaryCodec, key sdk.StoreKey, paramSpace paramtypes.Su
 		bankKeeper:      bankKeeper,
 		stakingKeeper:   stakingKeeper,
 		distrKeeper:     distrKeeper,
-		liquidityKeeper: liquidityKeeper,
+		ammKeeper:       ammKeeper,
+		liquidAMMKeeper: liquidAMMKeeper,
 		lpfarmKeeper:    lpfarmKeeper,
 		slashingKeeper:  slashingKeeper,
 	}

@@ -5,6 +5,9 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/exp/maps"
+	"golang.org/x/exp/slices"
+
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -62,8 +65,17 @@ func UpgradeHandler(
 		// Set new module parameters.
 		markerKeeper.SetParams(ctx, markertypes.DefaultParams())
 		exchangeParams := exchangetypes.DefaultParams()
+		exchangeParams.MarketCreationFee = sdk.NewCoins(sdk.NewInt64Coin("ucre", 2000_000000))
+		exchangeParams.Fees = exchangetypes.NewFees(
+			sdk.NewDecWithPrec(1, 3), // Maker: 0.1%
+			sdk.NewDecWithPrec(2, 3), // Taker: 0.2%
+			sdk.NewDecWithPrec(8, 1)) // Order source: Taker * 80%
 		exchangeKeeper.SetParams(ctx, exchangeParams)
 		ammParams := ammtypes.DefaultParams()
+		ammParams.PoolCreationFee = sdk.NewCoins(sdk.NewInt64Coin("ucre", 1000_000000))
+		ammParams.DefaultMinOrderQuantity = sdk.NewDec(10000)
+		ammParams.DefaultMinOrderQuote = sdk.NewDec(10000)
+		ammParams.PrivateFarmingPlanCreationFee = sdk.NewCoins(sdk.NewInt64Coin("ucre", 1000_000000))
 		ammKeeper.SetParams(ctx, ammParams)
 
 		// Migrate farming plans and staked coins to the new amm module.
@@ -145,6 +157,7 @@ func UpgradeHandler(
 		defaultOrderSourceFeeRatio := exchangeParams.Fees.DefaultOrderSourceFeeRatio
 		pairs := map[uint64]liquiditytypes.Pair{}
 		var pairIds []uint64 // For ordered map access
+		var lastMarketId uint64
 		if err := liquidityKeeper.IterateAllPairs(ctx, func(pair liquiditytypes.Pair) (stop bool, err error) {
 			// Cache pairs for later iteration.
 			pairs[pair.Id] = pair
@@ -181,14 +194,18 @@ func UpgradeHandler(
 			exchangeKeeper.SetMarket(ctx, market)
 			exchangeKeeper.SetMarketByDenomsIndex(ctx, market)
 			exchangeKeeper.SetMarketState(ctx, market.Id, exchangetypes.NewMarketState(pair.LastPrice))
+			lastMarketId = pair.Id
 			return false, nil
 		}); err != nil {
 			return nil, err
 		}
+		exchangeKeeper.SetLastMarketId(ctx, lastMarketId)
 
 		// Create a new pool for each market if the market's corresponding pair
 		// had at least one active pool.
 		defaultTickSpacing := ammParams.DefaultTickSpacing
+		defaultMinOrderQty := ammParams.DefaultMinOrderQuantity
+		defaultMinOrderQuote := ammParams.DefaultMinOrderQuote
 		newPoolIdByPairId := map[uint64]uint64{}
 		pairIdByOldPoolId := map[uint64]uint64{}
 		oldPoolsById := map[uint64]liquiditytypes.Pool{}
@@ -234,7 +251,8 @@ func UpgradeHandler(
 				newPoolId := ammKeeper.GetNextPoolIdWithUpdate(ctx)
 				marketId := pairId // We used the same ids as pairs for markets.
 				newPool := ammtypes.NewPool(
-					newPoolId, marketId, pair.BaseCoinDenom, pair.QuoteCoinDenom, defaultTickSpacing)
+					newPoolId, marketId, pair.BaseCoinDenom, pair.QuoteCoinDenom, defaultTickSpacing,
+					defaultMinOrderQty, defaultMinOrderQuote)
 				ammKeeper.SetPool(ctx, newPool)
 				// Set corresponding indexes.
 				ammKeeper.SetPoolByMarketIndex(ctx, newPool)
@@ -356,6 +374,7 @@ func UpgradeHandler(
 				return nil, err
 			}
 			liquidityKeeper.DeletePair(ctx, pairId)
+			liquidityKeeper.DeletePairIndex(ctx, pair.BaseCoinDenom, pair.QuoteCoinDenom)
 			liquidityKeeper.DeletePairLookupIndex(ctx, pair)
 		}
 		liquidityKeeper.DeleteLastPairId(ctx)
@@ -537,6 +556,42 @@ func UpgradeHandler(
 		})
 		if !ok {
 			panic("legacy historical rewards exists")
+		}
+
+		// Set default market/pool parameters for the upgrade.
+		changedPairIds := maps.Keys(ParamChanges)
+		slices.Sort(changedPairIds)
+		for _, pairId := range changedPairIds {
+			if ParamChanges[pairId].MakerFeeRate != nil || ParamChanges[pairId].TakerFeeRate != nil {
+				market, found := exchangeKeeper.GetMarket(ctx, pairId) // marketId == pairId
+				if !found {                                            // maybe in test
+					continue
+				}
+				if ParamChanges[pairId].MakerFeeRate != nil {
+					market.MakerFeeRate = *ParamChanges[pairId].MakerFeeRate
+				}
+				if ParamChanges[pairId].TakerFeeRate != nil {
+					market.TakerFeeRate = *ParamChanges[pairId].TakerFeeRate
+				}
+				exchangeKeeper.SetMarket(ctx, market)
+			}
+			if ParamChanges[pairId].TickSpacing != nil || ParamChanges[pairId].MinOrderQuantity != nil || ParamChanges[pairId].MinOrderQuote != nil {
+				poolId, ok := newPoolIdByPairId[pairId]
+				if !ok { // maybe in test
+					continue
+				}
+				pool := ammKeeper.MustGetPool(ctx, poolId)
+				if ParamChanges[pairId].TickSpacing != nil {
+					pool.TickSpacing = *ParamChanges[pairId].TickSpacing
+				}
+				if ParamChanges[pairId].MinOrderQuantity != nil {
+					pool.MinOrderQuantity = *ParamChanges[pairId].MinOrderQuantity
+				}
+				if ParamChanges[pairId].MinOrderQuote != nil {
+					pool.MinOrderQuote = *ParamChanges[pairId].MinOrderQuote
+				}
+				ammKeeper.SetPool(ctx, pool)
+			}
 		}
 
 		return vm, nil

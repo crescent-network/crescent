@@ -4,26 +4,30 @@
 
 ## Pool
 
-* LastPoolId: `0x?? -> BigEndian(LastPoolId)`
-* Pool: `0x?? | BigEndian(PoolId) -> ProtocolBuffer(Pool)`
-* PoolByReserveAddressIndex: `0x?? | AddrLen (1 byte) | ReserveAddress -> BigEndian(PoolId)`
-* PoolByMarketIndexKeyPrefix: `0x?? | BigEndian(MarketId) -> BigEndian(PoolId)`
-* PoolState: `0x?? | BigEndian(PoolId) -> ProtocolBuffer(PoolState)`
+* LastPoolId: `0x40 -> BigEndian(LastPoolId)`
+* Pool: `0x42 | BigEndian(PoolId) -> ProtocolBuffer(Pool)`
+* PoolState: `0x43 | BigEndian(PoolId) -> ProtocolBuffer(PoolState)`
+* PoolByReserveAddressIndex: `0x44 | AddrLen (1 byte) | ReserveAddress -> BigEndian(PoolId)`
+* PoolByMarketIndexKeyPrefix: `0x45 | BigEndian(MarketId) -> BigEndian(PoolId)`
 
 ```go
 type Pool struct {
-    Id             uint64
-    MarketId       uint64
-    Denom0         string
-    Denom1         string
-    TickSpacing    uint32
-    ReserveAddress string
+    Id               uint64
+    MarketId         uint64
+    Denom0           string
+    Denom1           string
+    ReserveAddress   string
+    RewardsPool      string
+    TickSpacing      uint32
+    MinOrderQuantity sdk.Dec
+    MinOrderQuote    sdk.Dec
 }
 
 type PoolState struct {
     CurrentTick                int32
     CurrentPrice               sdk.Dec
     CurrentLiquidity           sdk.Int
+    TotalLiquidity             sdk.Int
     FeeGrowthGlobal            sdk.DecCoins
     FarmingRewardsGrowthGlobal sdk.DecCoins
 }
@@ -31,10 +35,10 @@ type PoolState struct {
 
 ## Position
 
-* LastPositionId: `0x?? -> BigEndian(LastPositionId)`
-* Position: `0x?? | BigEndian(PositionId) -> ProtocoulBuffer(Position)`
-* PositionByParamsIndex: `0x?? | BigEndian(PoolId) | AddrLen (1 byte) | Owner | Sign (1 byte) | BigEndian(LowerTick) | Sign (1 byte) | BigEndian(UpperTick) -> BigEndian(PositionId)`
-* PositionsByPoolIndex: `0x?? | BigEndian(PoolId) | BigEndian(PositionId) -> nil`
+* LastPositionId: `0x41 -> BigEndian(LastPositionId)`
+* Position: `0x46 | BigEndian(PositionId) -> ProtocoulBuffer(Position)`
+* PositionByParamsIndex: `0x47 | AddrLen (1 byte) | Owner | BigEndian(PoolId) | Sign (1 byte) | BigEndian(LowerTick) | Sign (1 byte) | BigEndian(UpperTick) -> BigEndian(PositionId)`
+* PositionsByPoolIndex: `0x48 | BigEndian(PoolId) | BigEndian(PositionId) -> nil`
 
 ```go
 type Position struct {
@@ -53,7 +57,7 @@ type Position struct {
 
 ## TickInfo
 
-* TickInfo: `0x?? | BigEndian(PoolId) | Sign (1 byte) | BigEndian(Tick) -> ProtocolBuffer(TickInfo)`
+* TickInfo: `0x49 | BigEndian(PoolId) | Sign (1 byte) | BigEndian(Tick) -> ProtocolBuffer(TickInfo)`
 
 ```go
 type TickInfo struct {
@@ -66,9 +70,9 @@ type TickInfo struct {
 
 ## FarmingPlan
 
-* LastFarmingPlanId: `0x?? -> BigEndian(LastFarmingPlanId)`
-* FarmingPlan: `0x?? | BigEndian(FarmingPlanId) -> ProtocolBuffer(FarmingPlan)`
-* NumPrivateFarmingPlans: `0x?? -> BigEndian(NumPrivateFarmingPlans)`
+* LastFarmingPlanId: `0x4a -> BigEndian(LastFarmingPlanId)`
+* FarmingPlan: `0x4b | BigEndian(FarmingPlanId) -> ProtocolBuffer(FarmingPlan)`
+* NumPrivateFarmingPlans: `0x4c -> BigEndian(NumPrivateFarmingPlans)`
 
 ```go
 type FarmingPlan struct {

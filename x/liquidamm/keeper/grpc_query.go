@@ -266,7 +266,7 @@ func (k Querier) Rewards(c context.Context, req *types.QueryRewardsRequest) (*ty
 	return &types.QueryRewardsResponse{Rewards: rewards}, nil
 }
 
-// ExchangeRate queries exchange rate, such as mint rate and burn rate per 1 lashare.
+// ExchangeRate queries exchange rate, such as mint rate and burn rate per 1 sb.
 func (k Querier) ExchangeRate(c context.Context, req *types.QueryExchangeRateRequest) (*types.QueryExchangeRateResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")

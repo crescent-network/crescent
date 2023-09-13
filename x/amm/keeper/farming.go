@@ -23,8 +23,10 @@ func (k Keeper) CreatePrivateFarmingPlan(
 			"maximum number of active private farming plans reached")
 	}
 	fee := k.GetPrivateFarmingPlanCreationFee(ctx)
-	if err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, creatorAddr, types.ModuleName, fee); err != nil {
-		return
+	if fee.IsAllPositive() {
+		if err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, creatorAddr, types.ModuleName, fee); err != nil {
+			return
+		}
 	}
 	plan, err = k.createFarmingPlan(ctx, description, nil, termAddr, rewardAllocs, startTime, endTime, true)
 	if err != nil {

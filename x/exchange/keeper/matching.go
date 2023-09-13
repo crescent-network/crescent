@@ -95,11 +95,12 @@ func (k Keeper) finalizeMatching(ctx sdk.Context, market types.Market, orders []
 		if memOrder.IsMatched() {
 			types.ValidateOrderResult(memOrder)
 			receivedCoin := sdk.NewDecCoinFromDec(receiveDenom, memOrder.Received())
-			escrow.Unlock(ordererAddr, receivedCoin)
 			if memOrder.Type() == types.UserMemOrder {
+				paid := memOrder.Paid().Ceil()
+				receivedCoin.Amount = receivedCoin.Amount.TruncateDec()
 				order := memOrder.Order()
 				order.OpenQuantity = order.OpenQuantity.Sub(memOrder.ExecutedQuantity())
-				order.RemainingDeposit = memOrder.RemainingDeposit()
+				order.RemainingDeposit = order.RemainingDeposit.Sub(paid)
 				if err := ctx.EventManager().EmitTypedEvent(&types.EventOrderFilled{
 					MarketId:         market.Id,
 					OrderId:          order.Id,
@@ -109,22 +110,28 @@ func (k Keeper) finalizeMatching(ctx sdk.Context, market types.Market, orders []
 					Quantity:         order.Quantity,
 					OpenQuantity:     order.OpenQuantity,
 					ExecutedQuantity: memOrder.ExecutedQuantity(),
-					Paid:             sdk.NewDecCoinFromDec(payDenom, memOrder.Paid()),
+					Paid:             sdk.NewDecCoinFromDec(payDenom, paid),
 					Received:         receivedCoin,
 				}); err != nil {
 					return err
 				}
 				// Update user orders
 				executableQty := order.ExecutableQuantity()
-				if order.IsBuy && executableQty.TruncateDec().IsZero() ||
+				if executableQty.TruncateDec().IsZero() ||
 					!order.IsBuy && executableQty.MulTruncate(order.Price).TruncateDec().IsZero() {
 					if err := k.cancelOrder(ctx, market, order); err != nil {
+						return err
+					}
+					if err := ctx.EventManager().EmitTypedEvent(&types.EventOrderCompleted{
+						OrderId: order.Id,
+					}); err != nil {
 						return err
 					}
 				} else {
 					k.SetOrder(ctx, order)
 				}
 			}
+			escrow.Unlock(ordererAddr, receivedCoin)
 		}
 		// Should refund deposit
 		if memOrder.Type() == types.OrderSourceMemOrder && memOrder.RemainingDeposit().IsPositive() {
@@ -172,7 +179,8 @@ func (k Keeper) finalizeMatching(ctx sdk.Context, market types.Market, orders []
 				if totalFee.IsNegative() {
 					paid.Amount = paid.Amount.Add(totalFee)
 				}
-				received := sdk.NewDecCoinFromDec(receiveDenom, totalReceived)
+				paid.Amount = paid.Amount.Ceil()
+				received := sdk.NewDecCoinFromDec(receiveDenom, totalReceived.TruncateDec())
 				if err := ctx.EventManager().EmitTypedEvent(&types.EventOrderSourceOrdersFilled{
 					MarketId:         market.Id,
 					SourceName:       sourceName,

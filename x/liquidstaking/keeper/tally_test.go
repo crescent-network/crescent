@@ -1,14 +1,14 @@
 package keeper_test
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	chain "github.com/crescent-network/crescent/v5/app"
 	utils "github.com/crescent-network/crescent/v5/types"
+	ammtypes "github.com/crescent-network/crescent/v5/x/amm/types"
+	liquidammtypes "github.com/crescent-network/crescent/v5/x/liquidamm/types"
 	"github.com/crescent-network/crescent/v5/x/liquidstaking/types"
 	lpfarmtypes "github.com/crescent-network/crescent/v5/x/lpfarm/types"
 )
@@ -145,9 +145,11 @@ func (s *KeeperTestSuite) TestSetLiquidStakingVotingPowers() {
 			votingPower := votingPowers[voter.String()][v.OperatorAddress]
 			totalVotingPower = totalVotingPower.Add(votingPower)
 			// equal when all liquid validator has same currentWeight
-			s.Require().EqualValues(votingPower, bTokenValue.ToDec().QuoInt64(int64(liquidValidators.Len())))
+			s.Require().True(utils.DecApproxEqual(bTokenValue.ToDec().QuoInt64(int64(liquidValidators.Len())), votingPower))
 		}
-		s.Require().EqualValues(totalVotingPower.TruncateInt(), s.keeper.CalcLiquidStakingVotingPower(s.ctx, voter))
+		s.Require().True(
+			utils.DecApproxEqual(s.keeper.CalcLiquidStakingVotingPower(s.ctx, voter).ToDec(),
+				totalVotingPower))
 	}
 	setLiquidStakingVotingPowers := func() {
 		cachedCtx, _ := s.ctx.CacheContext()
@@ -166,22 +168,30 @@ func (s *KeeperTestSuite) TestSetLiquidStakingVotingPowers() {
 	}
 	setLiquidStakingVotingPowers()
 
-	// Test balance of PoolTokens including bToken
-	pair1 := s.createPair(delB, params.LiquidBondDenom, sdk.DefaultBondDenom, false)
-	pool1 := s.createPool(delB, pair1.Id, sdk.NewCoins(sdk.NewCoin(params.LiquidBondDenom, sdk.NewInt(40000000)), sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(44000000))), false)
+	// Test balance of amm positions including bToken
+	_, pool1 := s.createMarketAndPool(params.LiquidBondDenom, sdk.DefaultBondDenom, utils.ParseDec("1.1"))
+	s.addLiquidity(
+		delB, pool1.Id, ammtypes.MinPrice, ammtypes.MaxPrice,
+		sdk.NewCoins(sdk.NewInt64Coin(params.LiquidBondDenom, 40000000), sdk.NewInt64Coin(sdk.DefaultBondDenom, 44000000)))
+	_, pool2 := s.createMarketAndPool(sdk.DefaultBondDenom, params.LiquidBondDenom, utils.ParseDec("1.1"))
+	s.addLiquidity(
+		delC, pool2.Id, ammtypes.MinPrice, ammtypes.MaxPrice,
+		sdk.NewCoins(sdk.NewInt64Coin(params.LiquidBondDenom, 40000000), sdk.NewInt64Coin(sdk.DefaultBondDenom, 44000000)))
 	setLiquidStakingVotingPowers()
-	pair2 := s.createPair(delC, sdk.DefaultBondDenom, params.LiquidBondDenom, false)
-	pool2 := s.createPool(delC, pair2.Id, sdk.NewCoins(sdk.NewCoin(params.LiquidBondDenom, sdk.NewInt(40000000)), sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(44000000))), false)
-	balance := s.app.BankKeeper.GetBalance(s.ctx, delC, pool2.PoolCoinDenom)
-	fmt.Println(balance)
-	setLiquidStakingVotingPowers()
+
+	publicPosition1 := s.createPublicPosition(pool1.Id, ammtypes.MinPrice, ammtypes.MaxPrice, sdk.NewInt(10000), utils.ZeroDec)
+	s.mintShare(delC, publicPosition1.Id,
+		sdk.NewCoins(sdk.NewInt64Coin(params.LiquidBondDenom, 10000000), sdk.NewInt64Coin(sdk.DefaultBondDenom, 11000000)))
+	publicPosition2 := s.createPublicPosition(pool2.Id, ammtypes.MinPrice, ammtypes.MaxPrice, sdk.NewInt(10000), utils.ZeroDec)
+	s.mintShare(delC, publicPosition2.Id,
+		sdk.NewCoins(sdk.NewInt64Coin(params.LiquidBondDenom, 10000000), sdk.NewInt64Coin(sdk.DefaultBondDenom, 11000000)))
 
 	// Test Farming Queued Staking of bToken
 	s.createPublicPlan(
 		s.addrs[0], []lpfarmtypes.RewardAllocation{
 			lpfarmtypes.NewDenomRewardAllocation(params.LiquidBondDenom, utils.ParseCoins("400000stake")),
-			lpfarmtypes.NewDenomRewardAllocation(pool1.PoolCoinDenom, utils.ParseCoins("300000stake")),
-			lpfarmtypes.NewDenomRewardAllocation(pool2.PoolCoinDenom, utils.ParseCoins("300000stake")),
+			lpfarmtypes.NewDenomRewardAllocation(liquidammtypes.ShareDenom(publicPosition1.Id), utils.ParseCoins("300000stake")),
+			lpfarmtypes.NewDenomRewardAllocation(liquidammtypes.ShareDenom(publicPosition2.Id), utils.ParseCoins("300000stake")),
 		})
 	s.farm(delD, sdk.NewInt64Coin(params.LiquidBondDenom, 10000000))
 	setLiquidStakingVotingPowers()
@@ -199,7 +209,7 @@ func (s *KeeperTestSuite) TestSetLiquidStakingVotingPowers() {
 	setLiquidStakingVotingPowers()
 
 	// Test Farming Queued Staking of PoolTokens including bToken
-	s.farm(delC, sdk.NewInt64Coin(pool2.PoolCoinDenom, 500000000000))
+	s.farm(delC, sdk.NewInt64Coin(liquidammtypes.ShareDenom(publicPosition1.Id), 5000000))
 	setLiquidStakingVotingPowers()
 
 	// Test Farming Staking Position of PoolTokens including bToken
@@ -207,7 +217,7 @@ func (s *KeeperTestSuite) TestSetLiquidStakingVotingPowers() {
 	setLiquidStakingVotingPowers()
 
 	// Test Farming Queued Staking of PoolTokens including bToken
-	s.farm(delC, sdk.NewInt64Coin(pool2.PoolCoinDenom, 500000000000))
+	s.farm(delC, sdk.NewInt64Coin(liquidammtypes.ShareDenom(publicPosition2.Id), 5000000))
 	setLiquidStakingVotingPowers()
 
 	// Test Farming Staking Position of PoolTokens including bToken
@@ -277,28 +287,37 @@ func (s *KeeperTestSuite) TestGetVotingPower() {
 	s.assertVotingPower(vals[3], sdk.ZeroInt(), sdk.ZeroInt(), sdk.NewInt(130000000)) // self bonding 10000000 + normal staking 60000000 + liquid staking 240000000/4
 
 	// Test balance of PoolTokens including bToken
-	pair1 := s.createPair(delB, params.LiquidBondDenom, sdk.DefaultBondDenom, false)
-	pool1 := s.createPool(delB, pair1.Id, sdk.NewCoins(sdk.NewCoin(params.LiquidBondDenom, sdk.NewInt(40000000)), sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(44000000))), false)
-	s.assertVotingPower(delB, sdk.ZeroInt(), delBbToken, sdk.ZeroInt())
+	_, pool1 := s.createMarketAndPool(params.LiquidBondDenom, sdk.DefaultBondDenom, utils.ParseDec("1.1"))
+	s.addLiquidity(
+		delB, pool1.Id, ammtypes.MinPrice, ammtypes.MaxPrice,
+		sdk.NewCoins(sdk.NewInt64Coin(params.LiquidBondDenom, 40000000), sdk.NewInt64Coin(sdk.DefaultBondDenom, 44000000)))
+	s.assertVotingPower(delB, sdk.ZeroInt(), delBbToken.SubRaw(1), sdk.ZeroInt()) // There might be small error
 
-	pair2 := s.createPair(delC, sdk.DefaultBondDenom, params.LiquidBondDenom, false)
-	pool2 := s.createPool(delC, pair2.Id, sdk.NewCoins(sdk.NewCoin(params.LiquidBondDenom, sdk.NewInt(60000000)), sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(44000000))), false)
-	s.assertVotingPower(delC, sdk.ZeroInt(), delCbToken, sdk.ZeroInt())
+	_, pool2 := s.createMarketAndPool(sdk.DefaultBondDenom, params.LiquidBondDenom, utils.ParseDec("1.1"))
+	s.addLiquidity(
+		delC, pool2.Id, ammtypes.MinPrice, ammtypes.MaxPrice,
+		sdk.NewCoins(sdk.NewInt64Coin(params.LiquidBondDenom, 40000000), sdk.NewInt64Coin(sdk.DefaultBondDenom, 44000000)))
+	s.assertVotingPower(delC, sdk.ZeroInt(), delCbToken.Sub(utils.OneInt), sdk.ZeroInt())
+
+	publicPosition1 := s.createPublicPosition(pool2.Id, ammtypes.MinPrice, ammtypes.MaxPrice, sdk.NewInt(10000), utils.ZeroDec)
+	s.mintShare(delC, publicPosition1.Id,
+		sdk.NewCoins(sdk.NewInt64Coin(params.LiquidBondDenom, 10000000), sdk.NewInt64Coin(sdk.DefaultBondDenom, 11000000)))
+	s.mintShare(delC, publicPosition1.Id,
+		sdk.NewCoins(sdk.NewInt64Coin(params.LiquidBondDenom, 10000000), sdk.NewInt64Coin(sdk.DefaultBondDenom, 11000000)))
 
 	// Test Farming Queued Staking of bToken
 	s.createPublicPlan(
 		s.addrs[0],
 		[]lpfarmtypes.RewardAllocation{
 			lpfarmtypes.NewDenomRewardAllocation(params.LiquidBondDenom, utils.ParseCoins("400000stake")),
-			lpfarmtypes.NewDenomRewardAllocation(pool1.PoolCoinDenom, utils.ParseCoins("300000stake")),
-			lpfarmtypes.NewDenomRewardAllocation(pool2.PoolCoinDenom, utils.ParseCoins("300000stake")),
+			lpfarmtypes.NewDenomRewardAllocation(liquidammtypes.ShareDenom(publicPosition1.Id), utils.ParseCoins("300000stake")),
 		})
 	s.farm(delD, sdk.NewInt64Coin(params.LiquidBondDenom, 10000000))
-	s.assertVotingPower(delC, sdk.ZeroInt(), delCbToken, sdk.ZeroInt())
+	s.assertVotingPower(delD, sdk.ZeroInt(), delDbToken, sdk.ZeroInt())
 
 	// Test Farming Staking Position Staking of bToken without balance
 	s.advanceEpochDays()
-	s.assertVotingPower(delC, sdk.ZeroInt(), delCbToken, sdk.ZeroInt())
+	s.assertVotingPower(delC, sdk.ZeroInt(), delCbToken.SubRaw(4), sdk.ZeroInt())
 
 	// Test Farming Queued Staking of bToken
 	s.farm(delD, sdk.NewInt64Coin(params.LiquidBondDenom, 10000000))
@@ -309,20 +328,20 @@ func (s *KeeperTestSuite) TestGetVotingPower() {
 	s.assertVotingPower(delD, sdk.ZeroInt(), delDbToken, sdk.ZeroInt())
 
 	// Test Farming Queued Staking of PoolTokens including bToken
-	s.farm(delC, sdk.NewInt64Coin(pool2.PoolCoinDenom, 500000000000))
-	s.assertVotingPower(delC, sdk.ZeroInt(), delCbToken, sdk.ZeroInt())
+	s.farm(delC, sdk.NewInt64Coin(liquidammtypes.ShareDenom(publicPosition1.Id), 5000000))
+	s.assertVotingPower(delC, sdk.ZeroInt(), delCbToken.SubRaw(4), sdk.ZeroInt())
 
 	// Test Farming Staking Position of PoolTokens including bToken
 	s.advanceEpochDays()
-	s.assertVotingPower(delC, sdk.ZeroInt(), delCbToken, sdk.ZeroInt())
+	s.assertVotingPower(delC, sdk.ZeroInt(), delCbToken.SubRaw(4), sdk.ZeroInt())
 
 	// Test Farming Queued Staking of PoolTokens including bToken without balance
-	s.farm(delC, sdk.NewInt64Coin(pool2.PoolCoinDenom, 500000000000))
-	s.assertVotingPower(delC, sdk.ZeroInt(), delCbToken, sdk.ZeroInt())
+	s.farm(delC, sdk.NewInt64Coin(liquidammtypes.ShareDenom(publicPosition1.Id), 5000000))
+	s.assertVotingPower(delC, sdk.ZeroInt(), delCbToken.SubRaw(4), sdk.ZeroInt())
 
 	// Test Farming Staking Position of PoolTokens including bToken
 	s.advanceEpochDays()
-	s.assertVotingPower(delC, sdk.ZeroInt(), delCbToken, sdk.ZeroInt())
+	s.assertVotingPower(delC, sdk.ZeroInt(), delCbToken.SubRaw(4), sdk.ZeroInt())
 
 	s.assertVotingPower(delA, sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroInt())
 	s.assertVotingPower(delE, sdk.NewInt(60000000), delEbToken, sdk.ZeroInt())
@@ -523,4 +542,77 @@ func (s *KeeperTestSuite) TestVotingPower() {
 	s.Require().Equal(sdk.NewInt(0), result.No)
 	s.Require().Equal(sdk.NewInt(0), result.NoWithVeto)
 	s.Require().Equal(sdk.NewInt(0), result.Abstain)
+}
+
+func (s *KeeperTestSuite) TestCalcLiquidStakingVotingPower() {
+	params := types.DefaultParams()
+	_, valOpers, _ := s.CreateValidators([]int64{10_00000, 10_000000})
+	params.WhitelistedValidators = []types.WhitelistedValidator{
+		{ValidatorAddress: valOpers[0].String(), TargetWeight: sdk.NewInt(10)},
+		{ValidatorAddress: valOpers[1].String(), TargetWeight: sdk.NewInt(10)},
+	}
+	s.keeper.SetParams(s.ctx, params)
+	s.keeper.UpdateLiquidValidatorSet(s.ctx)
+
+	delA := s.addrs[0]
+	delB := s.addrs[1]
+
+	_, _, err := s.keeper.LiquidStake(
+		s.ctx, types.LiquidStakingProxyAcc, delA,
+		sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000000))
+	s.Require().NoError(err)
+	_, _, err = s.keeper.LiquidStake(
+		s.ctx, types.LiquidStakingProxyAcc, delB,
+		sdk.NewInt64Coin(sdk.DefaultBondDenom, 200_000000))
+	s.Require().NoError(err)
+	s.Require().Equal(sdk.NewInt(100_000000), s.keeper.CalcLiquidStakingVotingPower(s.ctx, delA))
+	s.Require().Equal(sdk.NewInt(200_000000), s.keeper.CalcLiquidStakingVotingPower(s.ctx, delB))
+
+	_, pool := s.createMarketAndPool(params.LiquidBondDenom, sdk.DefaultBondDenom, utils.ParseDec("1"))
+	position1, _, _ := s.addLiquidity(
+		delA, pool.Id, utils.ParseDec("1"), utils.ParseDec("1.2"),
+		sdk.NewCoins(
+			sdk.NewInt64Coin(params.LiquidBondDenom, 10_000000),
+			sdk.NewInt64Coin(sdk.DefaultBondDenom, 10_000000)))
+	s.addLiquidity(
+		delB, pool.Id, utils.ParseDec("1"), utils.ParseDec("1.05"),
+		sdk.NewCoins(
+			sdk.NewInt64Coin(params.LiquidBondDenom, 10_000000),
+			sdk.NewInt64Coin(sdk.DefaultBondDenom, 10_000000)))
+
+	// There might be a small amount of error.
+	s.Require().Equal(sdk.NewInt(99_999999), s.keeper.CalcLiquidStakingVotingPower(s.ctx, delA))
+	s.Require().Equal(sdk.NewInt(199_999999), s.keeper.CalcLiquidStakingVotingPower(s.ctx, delB))
+
+	// There's no active farming plans, but it's still possible to farm.
+	s.farm(delA, sdk.NewInt64Coin(params.LiquidBondDenom, 2_000000))
+	s.farm(delB, sdk.NewInt64Coin(params.LiquidBondDenom, 3_000000))
+	s.Require().Equal(sdk.NewInt(99_999999), s.keeper.CalcLiquidStakingVotingPower(s.ctx, delA))
+	s.Require().Equal(sdk.NewInt(199_999999), s.keeper.CalcLiquidStakingVotingPower(s.ctx, delB))
+
+	publicPosition := s.createPublicPosition(
+		pool.Id, utils.ParseDec("1"), utils.ParseDec("1.2"), sdk.NewInt(10000), utils.ParseDec("0.003"))
+	// Uninitialized public positions should be handled correctly.
+	s.Require().Equal(sdk.NewInt(99_999999), s.keeper.CalcLiquidStakingVotingPower(s.ctx, delA))
+	s.Require().Equal(sdk.NewInt(199_999999), s.keeper.CalcLiquidStakingVotingPower(s.ctx, delB))
+
+	s.mintShare(
+		delA, publicPosition.Id,
+		sdk.NewCoins(
+			sdk.NewInt64Coin(params.LiquidBondDenom, 10_000000),
+			sdk.NewInt64Coin(sdk.DefaultBondDenom, 10_000000)))
+	s.mintShare(
+		delB, publicPosition.Id,
+		sdk.NewCoins(
+			sdk.NewInt64Coin(params.LiquidBondDenom, 20_000000),
+			sdk.NewInt64Coin(sdk.DefaultBondDenom, 20_000000)))
+	// There might be a small amount of error again.
+	s.Require().Equal(sdk.NewInt(99_999998), s.keeper.CalcLiquidStakingVotingPower(s.ctx, delA))
+	s.Require().Equal(sdk.NewInt(199_999998), s.keeper.CalcLiquidStakingVotingPower(s.ctx, delB))
+
+	// Remove all liquidity
+	s.removeLiquidity(delA, position1.Id, position1.Liquidity)
+
+	s.Require().Equal(sdk.NewInt(99_999998), s.keeper.CalcLiquidStakingVotingPower(s.ctx, delA))
+	s.Require().Equal(sdk.NewInt(199_999998), s.keeper.CalcLiquidStakingVotingPower(s.ctx, delB))
 }
