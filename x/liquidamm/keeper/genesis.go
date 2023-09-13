@@ -16,6 +16,8 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 	}
 	for _, publicPosition := range genState.PublicPositions {
 		k.SetPublicPosition(ctx, publicPosition)
+		k.SetPublicPositionByParamsIndex(ctx, publicPosition)
+		k.SetPublicPositionsByPoolIndex(ctx, publicPosition)
 	}
 	for _, auction := range genState.RewardsAuctions {
 		k.SetRewardsAuction(ctx, auction)
