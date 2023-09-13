@@ -146,6 +146,13 @@ func (order *MemOrder) Received() sdk.Dec {
 	return order.received
 }
 
+func (order *MemOrder) ReceivedWithoutFee() sdk.Dec {
+	if order.fee.IsPositive() {
+		return order.received.Add(order.fee)
+	}
+	return order.received
+}
+
 func (order *MemOrder) Fee() sdk.Dec {
 	return order.fee
 }

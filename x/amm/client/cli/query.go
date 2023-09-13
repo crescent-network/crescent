@@ -258,6 +258,7 @@ func NewQueryPositionAssetsCmd() *cobra.Command {
 		Short: "Query a position's underlying assets",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query a position's underlying assets.
+
 Example:
 $ %s query %s position-assets 1
 `,

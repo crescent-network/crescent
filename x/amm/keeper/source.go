@@ -11,7 +11,11 @@ import (
 )
 
 var _ exchangetypes.OrderSource = OrderSource{}
-var threshold = sdk.NewDecWithPrec(1, 16) // XXX
+
+var (
+	executedQtyThreshold = sdk.NewDecWithPrec(1, 16) // XXX
+	priceChangeThreshold = sdk.NewDecWithPrec(1, 4)  // 0.01%
+)
 
 type OrderSource struct {
 	Keeper
@@ -67,6 +71,7 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 	reserveAddr := pool.MustGetReserveAddress()
 	poolState := k.MustGetPoolState(ctx, pool.Id)
 	accruedRewards := sdk.NewCoins()
+	initialPrice := poolState.CurrentPrice
 
 	// TODO: check if results are sorted?
 	isBuy := results[0].IsBuy()
@@ -200,7 +205,8 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 				extraAmt1 = extraAmt1.Add(amtInDiff)
 			}
 		} else if amtInDiff.IsNegative() { // sanity check
-			if result.ExecutedQuantity().GT(threshold) {
+			if result.ExecutedQuantity().GT(executedQtyThreshold) &&
+				nextSqrtPrice.Quo(currentSqrtPrice).Sub(utils.OneDec).Abs().GT(priceChangeThreshold) {
 				panic(fmt.Sprintf("amtInDiff is negative: %s", amtInDiff))
 			}
 		}
@@ -226,9 +232,14 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 	accrueFees()
 	k.SetPoolState(ctx, pool.Id, poolState)
 
-	if err := k.bankKeeper.SendCoins(
-		ctx, reserveAddr, pool.MustGetRewardsPoolAddress(), accruedRewards); err != nil {
-		return err
+	if accruedRewards.IsAllPositive() {
+		if err := k.bankKeeper.SendCoins(
+			ctx, reserveAddr, pool.MustGetRewardsPoolAddress(), accruedRewards); err != nil {
+			return err
+		}
 	}
+
+	types.ValidatePoolPriceAfterMatching(
+		isBuy, results[len(results)-1].Price(), poolState.CurrentPrice, initialPrice)
 	return nil
 }

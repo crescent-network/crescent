@@ -56,6 +56,10 @@ func (k Keeper) MintShare(
 
 	lowerPrice := exchangetypes.PriceAtTick(publicPosition.LowerTick)
 	upperPrice := exchangetypes.PriceAtTick(publicPosition.UpperTick)
+	if ammPosition, found := k.GetAMMPosition(ctx, publicPosition); found {
+		types.ValidatePublicPositionShareSupply(
+			ammPosition, k.bankKeeper.GetSupply(ctx, types.ShareDenom(publicPositionId)).Amount, types.ShareDenom(publicPositionId))
+	}
 	position, liquidity, amt, err = k.ammKeeper.AddLiquidity(
 		ctx, k.GetModuleAddress(), senderAddr, publicPosition.PoolId, lowerPrice, upperPrice, desiredAmt)
 	if err != nil {
@@ -67,12 +71,16 @@ func (k Keeper) MintShare(
 	mintedShareAmt := types.CalculateMintedShareAmount(
 		liquidity, position.Liquidity.Sub(liquidity), shareSupply)
 	mintedShare = sdk.NewCoin(shareDenom, mintedShareAmt)
+	types.ValidateMintShareResult(
+		liquidity, position.Liquidity.Sub(liquidity), mintedShareAmt, shareSupply)
 	if err = k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(mintedShare)); err != nil {
 		return
 	}
 	if err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, senderAddr, sdk.NewCoins(mintedShare)); err != nil {
 		return
 	}
+	types.ValidatePublicPositionShareSupply(
+		k.MustGetAMMPosition(ctx, publicPosition), shareSupply.Add(mintedShareAmt), shareDenom)
 
 	if err = ctx.EventManager().EmitTypedEvent(&types.EventMintShare{
 		Minter:           senderAddr.String(),
@@ -103,6 +111,7 @@ func (k Keeper) BurnShare(
 	position = k.MustGetAMMPosition(ctx, publicPosition)
 
 	shareSupply := k.bankKeeper.GetSupply(ctx, share.Denom).Amount
+	types.ValidatePublicPositionShareSupply(position, shareSupply, share.Denom)
 	var prevWinningBidShareAmt sdk.Int
 	auction, found := k.GetPreviousRewardsAuction(ctx, publicPosition)
 	if found && auction.WinningBid != nil {
@@ -121,6 +130,8 @@ func (k Keeper) BurnShare(
 	if err != nil {
 		return
 	}
+	types.ValidatePublicPositionShareSupply(
+		k.MustGetAMMPosition(ctx, publicPosition), shareSupply.Sub(share.Amount), share.Denom)
 
 	if err = ctx.EventManager().EmitTypedEvent(&types.EventBurnShare{
 		Burner:           senderAddr.String(),

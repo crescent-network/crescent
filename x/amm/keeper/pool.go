@@ -21,9 +21,11 @@ func (k Keeper) CreatePool(ctx sdk.Context, creatorAddr sdk.AccAddress, marketId
 	}
 
 	creationFee := k.GetPoolCreationFee(ctx)
-	if err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, creatorAddr, types.ModuleName, creationFee); err != nil {
-		err = sdkerrors.Wrap(err, "insufficient pool creation fee")
-		return
+	if creationFee.IsAllPositive() {
+		if err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, creatorAddr, types.ModuleName, creationFee); err != nil {
+			err = sdkerrors.Wrap(err, "insufficient pool creation fee")
+			return
+		}
 	}
 
 	// Create a new pool

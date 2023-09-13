@@ -93,6 +93,7 @@ func (k Keeper) finalizeMatching(ctx sdk.Context, market types.Market, orders []
 		payDenom, receiveDenom := types.PayReceiveDenoms(market.BaseDenom, market.QuoteDenom, memOrder.IsBuy())
 		ordererAddr := memOrder.OrdererAddress()
 		if memOrder.IsMatched() {
+			types.ValidateOrderResult(memOrder)
 			receivedCoin := sdk.NewDecCoinFromDec(receiveDenom, memOrder.Received())
 			if memOrder.Type() == types.UserMemOrder {
 				paid := memOrder.Paid().Ceil()
