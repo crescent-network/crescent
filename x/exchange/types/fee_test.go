@@ -104,7 +104,7 @@ func TestDeductFee(t *testing.T) {
 
 	r := rand.New(rand.NewSource(1))
 	for i := 0; i < 50; i++ {
-		amt := utils.RandomDec(r, sdk.NewDec(10), sdk.NewDec(100000000))
+		amt := utils.SimRandomDec(r, sdk.NewDec(10), sdk.NewDec(100000000))
 		deducted, fee := types.DeductFee(amt, utils.ParseDec("0.003"))
 		testutil.AssertEqual(t, amt, deducted.Add(fee))
 	}

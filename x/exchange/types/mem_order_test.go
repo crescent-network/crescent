@@ -114,8 +114,8 @@ func TestGroupMemOrdersByMsgHeight(t *testing.T) {
 		var orders []*types.MemOrder
 		hasOrderSourceOrders := false
 		for j := 0; j < 100; j++ {
-			price := utils.RandomDec(r, utils.ParseDec("9"), utils.ParseDec("11"))
-			qty := utils.RandomDec(r, sdk.NewDec(100_000000), sdk.NewDec(1000_000000))
+			price := utils.SimRandomDec(r, utils.ParseDec("9"), utils.ParseDec("11"))
+			qty := utils.SimRandomDec(r, sdk.NewDec(100_000000), sdk.NewDec(1000_000000))
 			deposit := types.DepositAmount(true, price, qty)
 			if r.Float64() <= 0.3 { // 30% chance
 				hasOrderSourceOrders = true

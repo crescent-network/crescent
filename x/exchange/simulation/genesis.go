@@ -19,8 +19,8 @@ const (
 )
 
 func GenFees(r *rand.Rand) types.Fees {
-	takerFeeRate := utils.RandomDec(r, utils.ParseDec("0"), utils.ParseDec("0.01"))
-	makerFeeRate := utils.RandomDec(r, utils.ParseDec("0"), utils.ParseDec("0.005"))
+	takerFeeRate := utils.SimRandomDec(r, utils.ParseDec("0"), utils.ParseDec("0.01"))
+	makerFeeRate := utils.SimRandomDec(r, utils.ParseDec("0"), utils.ParseDec("0.005"))
 	orderSourceFeeRatio := sdk.NewDecWithPrec(r.Int63n(101), 2) // 0%, 1%, 2%, ..., 99%, 100%
 	return types.Fees{
 		DefaultMakerFeeRate:        makerFeeRate,
@@ -30,7 +30,7 @@ func GenFees(r *rand.Rand) types.Fees {
 }
 
 func GenMaxOrderPriceRatio(r *rand.Rand) sdk.Dec {
-	return utils.RandomDec(r, utils.ParseDec("0.1"), utils.ParseDec("0.5"))
+	return utils.SimRandomDec(r, utils.ParseDec("0.1"), utils.ParseDec("0.5"))
 }
 
 // RandomizedGenState generates a random GenesisState for the module.

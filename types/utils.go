@@ -146,9 +146,21 @@ func RandomInt(r *rand.Rand, min, max sdk.Int) sdk.Int {
 	return min.Add(sdk.NewIntFromBigInt(new(big.Int).Rand(r, max.Sub(min).BigInt())))
 }
 
+// SimRandomInt is a wrapper around simulation.RandomAmount and returns
+// a random integer in the interval [min, max]
+func SimRandomInt(r *rand.Rand, min, max sdk.Int) sdk.Int {
+	return min.Add(simtypes.RandomAmount(r, max.Sub(min)))
+}
+
 // RandomDec returns a random decimal in the half-open interval [min, max).
 func RandomDec(r *rand.Rand, min, max sdk.Dec) sdk.Dec {
 	return min.Add(sdk.NewDecFromBigIntWithPrec(new(big.Int).Rand(r, max.Sub(min).BigInt()), sdk.Precision))
+}
+
+// SimRandomDec is a wrapper around simulation.RandomDecAmount and returns
+// a random decimal in the interval [min, max]
+func SimRandomDec(r *rand.Rand, min, max sdk.Dec) sdk.Dec {
+	return min.Add(simtypes.RandomDecAmount(r, max.Sub(min)))
 }
 
 // GenAndDeliverTx generates a transactions and delivers it.

@@ -362,19 +362,19 @@ func findMsgPlaceLimitOrderParams(
 				price = types.PriceAtTick(
 					types.TickAtPrice(*marketState.LastPrice) + int32(r.Intn(1000)) - 500)
 			} else {
-				price = utils.RandomDec(r, utils.ParseDec("0.1"), utils.ParseDec("10"))
+				price = utils.SimRandomDec(r, utils.ParseDec("0.1"), utils.ParseDec("10"))
 				price = types.PriceAtTick(types.TickAtPrice(price))
 			}
 			if r.Float64() <= 0.5 { // 50% chance to sell
 				if balance := spendable.AmountOf(market.BaseDenom); balance.GT(sdk.NewInt(100_000000)) {
-					qty := utils.RandomDec(r, sdk.NewDec(100), sdk.NewDec(100_000000)).TruncateDec()
+					qty := utils.SimRandomDec(r, sdk.NewDec(100), sdk.NewDec(100_000000)).TruncateDec()
 					msg = types.NewMsgPlaceLimitOrder(
 						acc.Address, market.Id, false, price, qty, lifespan)
 					return acc, msg, true
 				}
 			}
 			if balance := spendable.AmountOf(market.QuoteDenom); balance.GT(price.MulInt64(100_000000).TruncateInt()) {
-				qty := utils.RandomDec(r, sdk.NewDec(100), sdk.NewDec(100_000000)).TruncateDec()
+				qty := utils.SimRandomDec(r, sdk.NewDec(100), sdk.NewDec(100_000000)).TruncateDec()
 				msg = types.NewMsgPlaceLimitOrder(
 					acc.Address, market.Id, true, price, qty, lifespan)
 				return acc, msg, true
@@ -411,19 +411,19 @@ func findMsgPlaceMMLimitOrderParams(
 				price = types.PriceAtTick(
 					types.TickAtPrice(*marketState.LastPrice) + int32(r.Intn(1000)) - 500)
 			} else {
-				price = utils.RandomDec(r, utils.ParseDec("0.1"), utils.ParseDec("10"))
+				price = utils.SimRandomDec(r, utils.ParseDec("0.1"), utils.ParseDec("10"))
 				price = types.PriceAtTick(types.TickAtPrice(price))
 			}
 			if r.Float64() <= 0.5 { // 50% chance to sell
 				if balance := spendable.AmountOf(market.BaseDenom); balance.GT(sdk.NewInt(100_000000)) {
-					qty := utils.RandomDec(r, sdk.NewDec(100), sdk.NewDec(100_000000)).TruncateDec()
+					qty := utils.SimRandomDec(r, sdk.NewDec(100), sdk.NewDec(100_000000)).TruncateDec()
 					msg = types.NewMsgPlaceMMLimitOrder(
 						acc.Address, market.Id, false, price, qty, lifespan)
 					return acc, msg, true
 				}
 			}
 			if balance := spendable.AmountOf(market.QuoteDenom); balance.GT(price.MulInt64(100_000000).TruncateInt()) {
-				qty := utils.RandomDec(r, sdk.NewDec(100), sdk.NewDec(100_000000)).TruncateDec()
+				qty := utils.SimRandomDec(r, sdk.NewDec(100), sdk.NewDec(100_000000)).TruncateDec()
 				msg = types.NewMsgPlaceMMLimitOrder(
 					acc.Address, market.Id, true, price, qty, lifespan)
 				return acc, msg, true
@@ -454,7 +454,7 @@ func findMsgPlaceMarketOrderParams(
 		for _, market := range markets {
 			if r.Float64() <= 0.5 { // 50% chance to sell
 				if balance := spendable.AmountOf(market.BaseDenom); balance.GT(sdk.NewInt(1_000000)) {
-					qty := utils.RandomDec(r, sdk.NewDec(100), sdk.NewDec(1_000000)).TruncateDec()
+					qty := utils.SimRandomDec(r, sdk.NewDec(100), sdk.NewDec(1_000000)).TruncateDec()
 					msg = types.NewMsgPlaceMarketOrder(
 						acc.Address, market.Id, false, qty)
 					return acc, msg, true
@@ -464,7 +464,7 @@ func findMsgPlaceMarketOrderParams(
 			if marketState.LastPrice == nil {
 				continue
 			}
-			qty := utils.RandomDec(r, sdk.NewDec(100), sdk.NewDec(1_000000)).TruncateDec()
+			qty := utils.SimRandomDec(r, sdk.NewDec(100), sdk.NewDec(1_000000)).TruncateDec()
 			cacheCtx, _ := ctx.CacheContext()
 			if _, _, err := k.PlaceMarketOrder(cacheCtx, market.Id, acc.Address, true, qty); err != nil {
 				continue
@@ -533,7 +533,7 @@ func findMsgSwapExactAmountInParams(
 			if !spendable.AmountOf(denomIn).GTE(sdk.NewInt(1_000000)) {
 				continue
 			}
-			input := sdk.NewDecCoin(denomIn, utils.RandomInt(r, sdk.NewInt(10000), sdk.NewInt(1_000000)))
+			input := sdk.NewDecCoin(denomIn, utils.SimRandomInt(r, sdk.NewInt(10000), sdk.NewInt(1_000000)))
 			for _, denomOut := range allDenoms {
 				querier := keeper.Querier{Keeper: k}
 				resp, err := querier.BestSwapExactAmountInRoutes(sdk.WrapSDKContext(ctx), &types.QueryBestSwapExactAmountInRoutesRequest{

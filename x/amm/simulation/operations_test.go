@@ -100,7 +100,7 @@ func (s *SimTestSuite) TestSimulateMsgAddLiquidity() {
 		for _, denomB := range denoms {
 			if denomA != denomB {
 				market := s.CreateMarket(denomA, denomB)
-				price := utils.RandomDec(r, utils.ParseDec("0.05"), utils.ParseDec("500"))
+				price := utils.SimRandomDec(r, utils.ParseDec("0.05"), utils.ParseDec("500"))
 				s.CreatePool(market.Id, price)
 			}
 		}

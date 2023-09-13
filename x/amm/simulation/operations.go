@@ -215,7 +215,7 @@ func findMsgCreatePoolParams(r *rand.Rand, accs []simtypes.Account,
 			if marketState.LastPrice != nil {
 				price = *marketState.LastPrice
 			} else {
-				price = utils.RandomDec(r, utils.ParseDec("0.1"), utils.ParseDec("10"))
+				price = utils.SimRandomDec(r, utils.ParseDec("0.1"), utils.ParseDec("10"))
 			}
 			msg = types.NewMsgCreatePool(acc.Address, market.Id, price)
 			return acc, msg, true
@@ -246,7 +246,7 @@ func findMsgAddLiquidityParams(
 				} else if r.Float64() <= 0.5 {
 					lowerPrice = exchangetypes.PriceAtTick(
 						types.AdjustPriceToTickSpacing(
-							utils.RandomDec(
+							utils.SimRandomDec(
 								r,
 								poolState.CurrentPrice.Mul(utils.ParseDec("0.5")),
 								poolState.CurrentPrice),
@@ -254,7 +254,7 @@ func findMsgAddLiquidityParams(
 				} else {
 					lowerPrice = exchangetypes.PriceAtTick(
 						types.AdjustPriceToTickSpacing(
-							utils.RandomDec(
+							utils.SimRandomDec(
 								r,
 								poolState.CurrentPrice,
 								poolState.CurrentPrice.Mul(utils.ParseDec("1.5"))),
@@ -265,13 +265,13 @@ func findMsgAddLiquidityParams(
 				} else {
 					upperPrice = exchangetypes.PriceAtTick(
 						types.AdjustPriceToTickSpacing(
-							utils.RandomDec(
+							utils.SimRandomDec(
 								r,
 								lowerPrice.Mul(utils.ParseDec("1.01")),
 								poolState.CurrentPrice.Mul(utils.ParseDec("3"))),
 							pool.TickSpacing, true))
 				}
-				liquidity := utils.RandomInt(r, sdk.NewInt(10000), sdk.NewInt(100_000000))
+				liquidity := utils.SimRandomInt(r, sdk.NewInt(10000), sdk.NewInt(100_000000))
 				amt0, amt1 := types.AmountsForLiquidity(
 					utils.DecApproxSqrt(poolState.CurrentPrice),
 					utils.DecApproxSqrt(lowerPrice),
@@ -305,7 +305,7 @@ func findMsgRemoveLiquidityParams(
 		if len(positions) > 0 {
 			position := positions[r.Intn(len(positions))]
 			if position.Liquidity.GT(sdk.NewInt(100)) {
-				liquidity := utils.RandomInt(r, sdk.NewInt(100), position.Liquidity)
+				liquidity := utils.SimRandomInt(r, sdk.NewInt(100), position.Liquidity)
 				msg = types.NewMsgRemoveLiquidity(acc.Address, position.Id, liquidity)
 				return acc, msg, true
 			}

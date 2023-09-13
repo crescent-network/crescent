@@ -49,8 +49,8 @@ func SimulatePoolParameterChangeProposal(k keeper.Keeper) simtypes.ContentSimula
 				if len(allowedTickSpacings) > 0 {
 					tickSpacing = allowedTickSpacings[r.Intn(len(allowedTickSpacings))]
 				}
-				minOrderQty := utils.RandomDec(r, utils.ParseDec("1"), utils.ParseDec("1000000"))
-				minOrderQuote := utils.RandomDec(r, utils.ParseDec("1"), utils.ParseDec("1000000"))
+				minOrderQty := utils.SimRandomDec(r, utils.ParseDec("1"), utils.ParseDec("1000000"))
+				minOrderQuote := utils.SimRandomDec(r, utils.ParseDec("1"), utils.ParseDec("1000000"))
 				changes = append(changes,
 					types.NewPoolParameterChange(pool.Id, tickSpacing, &minOrderQty, &minOrderQuote))
 			}

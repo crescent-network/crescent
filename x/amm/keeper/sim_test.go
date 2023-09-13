@@ -21,11 +21,11 @@ func (s *KeeperTestSuite) TestSimulation() {
 		v := r.Float64()
 		switch {
 		case v <= 0.3:
-			initialPrice = utils.RandomDec(r, minPrice, utils.ParseDec("0.000001"))
+			initialPrice = utils.SimRandomDec(r, minPrice, utils.ParseDec("0.000001"))
 		case v <= 0.7:
-			initialPrice = utils.RandomDec(r, utils.ParseDec("0.05"), utils.ParseDec("500"))
+			initialPrice = utils.SimRandomDec(r, utils.ParseDec("0.05"), utils.ParseDec("500"))
 		default:
-			initialPrice = utils.RandomDec(r, utils.ParseDec("100000"), maxPrice)
+			initialPrice = utils.SimRandomDec(r, utils.ParseDec("100000"), maxPrice)
 		}
 		market, pool := s.CreateMarketAndPool("ucre", "uusd", initialPrice)
 		marketState := s.App.ExchangeKeeper.MustGetMarketState(s.Ctx, market.Id)
@@ -50,23 +50,23 @@ func (s *KeeperTestSuite) TestSimulation() {
 					v := r.Float64()
 					switch {
 					case v <= 0.3: // lowerPrice < upperPrice <= poolPrice
-						lowerPrice = utils.RandomDec(r, minPrice, poolState.CurrentPrice.Mul(utils.ParseDec("0.8")))
-						upperPrice = utils.RandomDec(r, lowerPrice.Mul(utils.ParseDec("1.001")), poolState.CurrentPrice)
+						lowerPrice = utils.SimRandomDec(r, minPrice, poolState.CurrentPrice.Mul(utils.ParseDec("0.8")))
+						upperPrice = utils.SimRandomDec(r, lowerPrice.Mul(utils.ParseDec("1.001")), poolState.CurrentPrice)
 					case v <= 0.7: // lowerPrice < poolPrice <= upperPrice
-						lowerPrice = utils.RandomDec(r, minPrice, poolState.CurrentPrice)
-						upperPrice = utils.RandomDec(r, poolState.CurrentPrice, maxPrice)
+						lowerPrice = utils.SimRandomDec(r, minPrice, poolState.CurrentPrice)
+						upperPrice = utils.SimRandomDec(r, poolState.CurrentPrice, maxPrice)
 					default: // poolPrice <= lowerPrice < upperPrice
-						lowerPrice = utils.RandomDec(r, poolState.CurrentPrice, maxPrice.Mul(utils.ParseDec("0.8")))
-						upperPrice = utils.RandomDec(r, lowerPrice.Mul(utils.ParseDec("1.001")), maxPrice)
+						lowerPrice = utils.SimRandomDec(r, poolState.CurrentPrice, maxPrice.Mul(utils.ParseDec("0.8")))
+						upperPrice = utils.SimRandomDec(r, lowerPrice.Mul(utils.ParseDec("1.001")), maxPrice)
 					}
 					lowerPrice = exchangetypes.PriceAtTick(types.AdjustTickToTickSpacing(
 						exchangetypes.TickAtPrice(lowerPrice), pool.TickSpacing, false))
 					upperPrice = exchangetypes.PriceAtTick(types.AdjustTickToTickSpacing(
 						exchangetypes.TickAtPrice(upperPrice), pool.TickSpacing, true))
 					if upperPrice.LTE(poolState.CurrentPrice) {
-						desiredAmt = sdk.NewCoins(sdk.NewCoin("uusd", utils.RandomInt(r, sdk.NewInt(10000), sdk.NewInt(1000_000000))))
+						desiredAmt = sdk.NewCoins(sdk.NewCoin("uusd", utils.SimRandomInt(r, sdk.NewInt(10000), sdk.NewInt(1000_000000))))
 					} else if lowerPrice.GTE(poolState.CurrentPrice) {
-						desiredAmt = sdk.NewCoins(sdk.NewCoin("ucre", utils.RandomInt(r, sdk.NewInt(10000), sdk.NewInt(1000_000000))))
+						desiredAmt = sdk.NewCoins(sdk.NewCoin("ucre", utils.SimRandomInt(r, sdk.NewInt(10000), sdk.NewInt(1000_000000))))
 					} else {
 						desiredAmt = utils.ParseCoins("1000_000000ucre,1000_000000uusd")
 					}
@@ -86,14 +86,14 @@ func (s *KeeperTestSuite) TestSimulation() {
 						continue
 					}
 					position := positions[r.Intn(len(positions))]
-					liquidity := utils.RandomInt(r, utils.ZeroInt, position.Liquidity).Add(sdk.NewInt(1))
+					liquidity := utils.SimRandomInt(r, utils.ZeroInt, position.Liquidity).Add(sdk.NewInt(1))
 					s.RemoveLiquidity(lpAddr, position.Id, liquidity)
 				}
 			}
 
 			// Randomly place market orders
 			isBuy := r.Float64() <= 0.5
-			qty := utils.RandomDec(r, sdk.NewDec(100), sdk.NewDec(10_000000))
+			qty := utils.SimRandomDec(r, sdk.NewDec(100), sdk.NewDec(10_000000))
 			s.PlaceMarketOrder(market.Id, ordererAddr, isBuy, qty)
 		}
 	}
