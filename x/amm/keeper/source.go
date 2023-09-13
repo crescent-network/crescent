@@ -11,7 +11,11 @@ import (
 )
 
 var _ exchangetypes.OrderSource = OrderSource{}
-var threshold = sdk.NewDecWithPrec(1, 16) // XXX
+
+var (
+	executedQtyThreshold = sdk.NewDecWithPrec(1, 16) // XXX
+	priceChangeThreshold = sdk.NewDecWithPrec(1, 4)  // 0.01%
+)
 
 type OrderSource struct {
 	Keeper
@@ -201,7 +205,8 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 				extraAmt1 = extraAmt1.Add(amtInDiff)
 			}
 		} else if amtInDiff.IsNegative() { // sanity check
-			if result.ExecutedQuantity().GT(threshold) {
+			if result.ExecutedQuantity().GT(executedQtyThreshold) &&
+				nextSqrtPrice.Quo(currentSqrtPrice).Sub(utils.OneDec).Abs().GT(priceChangeThreshold) {
 				panic(fmt.Sprintf("amtInDiff is negative: %s", amtInDiff))
 			}
 		}
