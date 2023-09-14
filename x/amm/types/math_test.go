@@ -137,8 +137,8 @@ func TestNextSqrtPriceFromOutput(t *testing.T) {
 	} {
 		t.Run(fmt.Sprint(i), func(t *testing.T) {
 			nextSqrtPrice := types.NextSqrtPriceFromOutput(
-				utils.DecApproxSqrt(tc.price), tc.liquidity, tc.amt, tc.isBuy)
-			require.Equal(t, tc.nextPrice, nextSqrtPrice.Power(2))
+				utils.MustMonotonicSqrtBigDec(utils.BigDecFromDec(tc.price)), tc.liquidity, tc.amt, tc.isBuy)
+			require.Equal(t, tc.nextPrice, nextSqrtPrice.PowerInteger(2))
 		})
 	}
 }

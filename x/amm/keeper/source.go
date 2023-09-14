@@ -171,17 +171,18 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 			}
 		}
 
-		currentSqrtPrice := utils.DecApproxSqrt(poolState.CurrentPrice)
-		var nextSqrtPrice, nextPrice sdk.Dec
+		currentSqrtPrice := utils.MustMonotonicSqrtBigDec(utils.BigDecFromDec(poolState.CurrentPrice))
+		var nextSqrtPrice utils.BigDec
+		var nextPrice sdk.Dec
 		max = false
 		if i < len(results)-1 || result.Quantity().Sub(result.ExecutedQuantity()).LTE(utils.SmallestDec) {
-			nextSqrtPrice = utils.DecApproxSqrt(result.Price())
+			nextSqrtPrice = utils.MustMonotonicSqrtBigDec(utils.BigDecFromDec(result.Price()))
 			nextPrice = result.Price()
 			max = true
 		} else { // Partially executed
 			nextSqrtPrice = types.NextSqrtPriceFromOutput(
 				currentSqrtPrice, poolState.CurrentLiquidity, result.PaidWithoutFee(), isBuy)
-			nextPrice = nextSqrtPrice.Power(2)
+			nextPrice = nextSqrtPrice.PowerInteger(2).Dec()
 		}
 
 		var expectedAmtIn sdk.Dec
@@ -199,10 +200,8 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 			} else {
 				extraAmt1 = extraAmt1.Add(amtInDiff)
 			}
-		} else if amtInDiff.IsNegative() { // sanity check
-			if result.ExecutedQuantity().GT(threshold) {
-				panic(fmt.Sprintf("amtInDiff is negative: %s", amtInDiff))
-			}
+		} else if amtInDiff.IsNegative() {
+			panic(fmt.Sprintf("amtInDiff is negative: %s", amtInDiff))
 		}
 
 		if result.Fee().IsNegative() { // extra fees
