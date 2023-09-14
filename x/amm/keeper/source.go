@@ -11,7 +11,6 @@ import (
 )
 
 var _ exchangetypes.OrderSource = OrderSource{}
-var threshold = sdk.NewDecWithPrec(1, 16) // XXX
 
 type OrderSource struct {
 	Keeper
@@ -199,8 +198,8 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 			} else {
 				extraAmt1 = extraAmt1.Add(amtInDiff)
 			}
-		} else if amtInDiff.IsNegative() { // sanity check
-			if result.ExecutedQuantity().GT(threshold) {
+		} else if amtInDiff.IsNegative() {
+			if amtInDiff.Abs().GT(utils.OneDec) { // sanity check
 				panic(fmt.Sprintf("amtInDiff is negative: %s", amtInDiff))
 			}
 		}

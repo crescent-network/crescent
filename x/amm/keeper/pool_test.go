@@ -245,3 +245,20 @@ func (s *KeeperTestSuite) TestPoolOrderMaxOrderPriceRatio() {
 	s.AssertEqual(utils.ParseDec("90"), s.keeper.MustGetPoolState(s.Ctx, pool.Id).CurrentPrice)
 	s.AssertEqual(utils.ParseDec("90"), *s.App.ExchangeKeeper.MustGetMarketState(s.Ctx, market.Id).LastPrice)
 }
+
+func (s *KeeperTestSuite) TestPoolOrdersEdgecase2() {
+	market, pool := s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("0.013250000014384006"))
+	pool.TickSpacing = 10
+	s.keeper.SetPool(s.Ctx, pool)
+
+	lpAddr := s.FundedAccount(1, enoughCoins)
+	s.MakeLastPrice(market.Id, lpAddr, utils.ParseDec("0.01325"))
+	s.AddLiquidityByLiquidity(lpAddr, pool.Id, utils.ParseDec("0.000000000000010000"), utils.ParseDec("10000000000000000000000000000000000000000.000000000000000000"), sdk.NewInt(14102128091))
+	s.AddLiquidityByLiquidity(lpAddr, pool.Id, utils.ParseDec("0.013240000000000000"), utils.ParseDec("0.016190000000000000"), sdk.NewInt(7124428357))
+	s.AddLiquidityByLiquidity(lpAddr, pool.Id, utils.ParseDec("0.013240000000000000"), utils.ParseDec("0.013260000000000000"), sdk.NewInt(15106033123))
+	s.AddLiquidityByLiquidity(lpAddr, pool.Id, utils.ParseDec("0.013250000000000000"), utils.ParseDec("0.013260000000000000"), sdk.NewInt(30521055959))
+	s.AddLiquidityByLiquidity(lpAddr, pool.Id, utils.ParseDec("0.011920000000000000"), utils.ParseDec("0.014580000000000000"), sdk.NewInt(6561227654))
+
+	// Should not panic
+	s.PlaceMarketOrder(market.Id, lpAddr, false, sdk.NewDec(346))
+}
