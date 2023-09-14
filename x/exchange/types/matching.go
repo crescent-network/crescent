@@ -267,6 +267,8 @@ func (ctx *MatchingContext) RunSinglePriceAuction(buyObs, sellObs *MemOrderBookS
 }
 
 func (ctx *MatchingContext) BatchMatchOrderBookSides(buyObs, sellObs *MemOrderBookSide, lastPrice sdk.Dec) (newLastPrice sdk.Dec, matched bool) {
+	newLastPrice = lastPrice // in case of there's no matching at all
+
 	// Phase 1: Match orders with price below(or equal to) the last price and
 	// price above(or equal to) the last price.
 	// The execution price is the last price.
@@ -288,7 +290,8 @@ func (ctx *MatchingContext) BatchMatchOrderBookSides(buyObs, sellObs *MemOrderBo
 		matched = true
 	}
 	// If there's no more levels to match, return earlier.
-	if buyLevelIdx >= len(buyObs.levels) || sellLevelIdx >= len(sellObs.levels) {
+	if (buyLevelIdx >= len(buyObs.levels) || sellLevelIdx >= len(sellObs.levels)) ||
+		buyObs.levels[buyLevelIdx].price.LT(sellObs.levels[sellLevelIdx].price) {
 		return lastPrice, matched
 	}
 
