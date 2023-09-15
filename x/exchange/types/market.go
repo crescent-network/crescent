@@ -82,7 +82,7 @@ func (marketState MarketState) Validate() error {
 }
 
 func OrderPriceLimit(basePrice, maxOrderPriceRatio sdk.Dec) (minPrice, maxPrice sdk.Dec) {
-	minPrice = basePrice.Mul(utils.OneDec.Sub(maxOrderPriceRatio))
+	minPrice = basePrice.MulTruncate(utils.OneDec.Sub(maxOrderPriceRatio))
 	maxPrice = basePrice.Mul(utils.OneDec.Add(maxOrderPriceRatio))
 	return
 }

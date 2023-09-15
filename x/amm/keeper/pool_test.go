@@ -42,8 +42,8 @@ func (s *KeeperTestSuite) TestCreatePool() {
 	// Check pool state
 	poolState, found := s.keeper.GetPoolState(s.Ctx, pool.Id)
 	s.Require().True(found)
-	s.Require().Equal("5.000000000000000000", poolState.CurrentPrice.String())
-	s.Require().Equal(sdk.ZeroInt(), poolState.CurrentLiquidity)
+	s.AssertEqual(utils.ParseBigDec("5"), poolState.CurrentPrice)
+	s.AssertEqual(sdk.ZeroInt(), poolState.CurrentLiquidity)
 	s.Require().EqualValues(40000, poolState.CurrentTick)
 	s.Require().Equal("", poolState.FeeGrowthGlobal.String())
 	s.Require().Equal("", poolState.FarmingRewardsGrowthGlobal.String())
@@ -68,16 +68,16 @@ func (s *KeeperTestSuite) TestPoolOrders() {
 					utils.ParseCoins("100_000000ucre,500_000000uusd"))
 			},
 			[]order{
-				{utils.ParseDec("4.9950"), utils.ParseDec("25006228.045359273458597011")},
-				{utils.ParseDec("4.9900"), utils.ParseDec("25043815.694766946591052267")},
-				{utils.ParseDec("4.9850"), utils.ParseDec("25081497.603931454430609096")},
-				{utils.ParseDec("4.9800"), utils.ParseDec("25119274.104114621728236342")},
+				{utils.ParseDec("4.9950"), utils.ParseDec("25006228.045359262488486731")},
+				{utils.ParseDec("4.9900"), utils.ParseDec("25043815.694766942486608777")},
+				{utils.ParseDec("4.9850"), utils.ParseDec("25081497.603931465188490236")},
+				{utils.ParseDec("4.9800"), utils.ParseDec("25119274.104114627683365225")},
 			},
 			[]order{
-				{utils.ParseDec("5.0050"), utils.ParseDec("24956259.314253166236473605")},
-				{utils.ParseDec("5.0100"), utils.ParseDec("24918890.317138035518922385")},
-				{utils.ParseDec("5.0150"), utils.ParseDec("24881614.486321922356604332")},
-				{utils.ParseDec("5.0200"), utils.ParseDec("24844431.496940975997647047")},
+				{utils.ParseDec("5.0050"), utils.ParseDec("24956259.314253180967520946")},
+				{utils.ParseDec("5.0100"), utils.ParseDec("24918890.317138036303083955")},
+				{utils.ParseDec("5.0150"), utils.ParseDec("24881614.486321923574460360")},
+				{utils.ParseDec("5.0200"), utils.ParseDec("24844431.496940974884021551")},
 			},
 		},
 		{
@@ -91,16 +91,16 @@ func (s *KeeperTestSuite) TestPoolOrders() {
 					utils.ParseCoins("100_000000ucre,500_000000uusd"))
 			},
 			[]order{
-				{utils.ParseDec("4.9750"), utils.ParseDec("25106679.687535992611509571")},
-				{utils.ParseDec("4.9700"), utils.ParseDec("25144570.207463681941517428")},
-				{utils.ParseDec("4.9650"), utils.ParseDec("25182556.129454879252944134")},
-				{utils.ParseDec("4.9600"), utils.ParseDec("25220637.790137883245677765")},
+				{utils.ParseDec("4.9750"), utils.ParseDec("25106679.687535974412705343")},
+				{utils.ParseDec("4.9700"), utils.ParseDec("25144570.207463683705030984")},
+				{utils.ParseDec("4.9650"), utils.ParseDec("25182556.129454886883854569")},
+				{utils.ParseDec("4.9600"), utils.ParseDec("25220637.790137880625517964")},
 			},
 			[]order{
-				{utils.ParseDec("5.0250"), utils.ParseDec("25055960.893621086799461016")},
-				{utils.ParseDec("5.0300"), utils.ParseDec("25018591.820577420876682247")},
-				{utils.ParseDec("5.0350"), utils.ParseDec("24981315.543854639280576018")},
-				{utils.ParseDec("5.0400"), utils.ParseDec("24944131.741163331026323419")},
+				{utils.ParseDec("5.0250"), utils.ParseDec("25055960.893621089277704072")},
+				{utils.ParseDec("5.0300"), utils.ParseDec("25018591.820577412010098578")},
+				{utils.ParseDec("5.0350"), utils.ParseDec("24981315.543854636630943528")},
+				{utils.ParseDec("5.0400"), utils.ParseDec("24944131.741163323075203051")},
 			},
 		},
 		{
@@ -117,20 +117,20 @@ func (s *KeeperTestSuite) TestPoolOrders() {
 					utils.ParseCoins("100_000000ucre,500_000000uusd"))
 			},
 			[]order{
-				{utils.ParseDec("4.9950"), utils.ParseDec("16662453.996505449171218157")},
-				{utils.ParseDec("4.9900"), utils.ParseDec("16687499.856199124957359553")},
-				{utils.ParseDec("4.9850"), utils.ParseDec("66850484.536911765050696598")},
-				{utils.ParseDec("4.9800"), utils.ParseDec("66951171.401038954332729693")},
-				{utils.ParseDec("4.9750"), utils.ParseDec("16763015.169045484918964269")},
-				{utils.ParseDec("4.9700"), utils.ParseDec("16788313.590350720122141501")},
+				{utils.ParseDec("4.9950"), utils.ParseDec("16662453.996505441861480858")},
+				{utils.ParseDec("4.9900"), utils.ParseDec("16687499.856199122222436848")},
+				{utils.ParseDec("4.9850"), utils.ParseDec("66850484.536911793724007027")},
+				{utils.ParseDec("4.9800"), utils.ParseDec("66951171.401038970205117284")},
+				{utils.ParseDec("4.9750"), utils.ParseDec("16763015.169045472768140858")},
+				{utils.ParseDec("4.9700"), utils.ParseDec("16788313.590350721299589290")},
 			},
 			[]order{
-				{utils.ParseDec("5.0050"), utils.ParseDec("16629158.223875967012562200")},
-				{utils.ParseDec("5.0100"), utils.ParseDec("16604258.059237103564291374")},
-				{utils.ParseDec("5.0150"), utils.ParseDec("66616807.814489223777976688")},
-				{utils.ParseDec("5.0200"), utils.ParseDec("66517255.912062619753483793")},
-				{utils.ParseDec("5.0250"), utils.ParseDec("16529929.178629755600051203")},
-				{utils.ParseDec("5.0300"), utils.ParseDec("16505276.037865950359873963")},
+				{utils.ParseDec("5.0050"), utils.ParseDec("16629158.223875976828332822")},
+				{utils.ParseDec("5.0100"), utils.ParseDec("16604258.059237104086803448")},
+				{utils.ParseDec("5.0150"), utils.ParseDec("66616807.814489227038604369")},
+				{utils.ParseDec("5.0200"), utils.ParseDec("66517255.912062616771917799")},
+				{utils.ParseDec("5.0250"), utils.ParseDec("16529929.178629757234998766")},
+				{utils.ParseDec("5.0300"), utils.ParseDec("16505276.037865944510407614")},
 			},
 		},
 	} {
@@ -242,6 +242,6 @@ func (s *KeeperTestSuite) TestPoolOrderMaxOrderPriceRatio() {
 	s.PlaceLimitOrder(
 		market.Id, ordererAddr, false, utils.ParseDec("5.05"), sdk.NewDec(100_000000), 0)
 
-	s.AssertEqual(utils.ParseDec("90"), s.keeper.MustGetPoolState(s.Ctx, pool.Id).CurrentPrice)
+	s.AssertEqual(utils.ParseBigDec("90"), s.keeper.MustGetPoolState(s.Ctx, pool.Id).CurrentPrice)
 	s.AssertEqual(utils.ParseDec("90"), *s.App.ExchangeKeeper.MustGetMarketState(s.Ctx, market.Id).LastPrice)
 }

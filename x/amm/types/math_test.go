@@ -8,6 +8,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/crescent-network/crescent/v5/cremath"
 	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/amm/types"
 )
@@ -66,8 +67,9 @@ func TestLiquidityForAmounts(t *testing.T) {
 	} {
 		t.Run(fmt.Sprint(i), func(t *testing.T) {
 			liquidity := types.LiquidityForAmounts(
-				utils.DecApproxSqrt(tc.currentPrice),
-				utils.DecApproxSqrt(tc.priceA), utils.DecApproxSqrt(tc.priceB),
+				cremath.NewBigDecFromDec(tc.currentPrice).SqrtMut(),
+				cremath.NewBigDecFromDec(tc.priceA).SqrtMut(),
+				cremath.NewBigDecFromDec(tc.priceB).SqrtMut(),
 				tc.amt0, tc.amt1)
 			require.Equal(t, tc.expected, liquidity)
 		})
@@ -88,7 +90,9 @@ func TestAmount0Delta(t *testing.T) {
 	} {
 		t.Run(fmt.Sprint(i), func(t *testing.T) {
 			amt0 := types.Amount0Delta(
-				utils.DecApproxSqrt(tc.priceA), utils.DecApproxSqrt(tc.priceB), tc.liquidity)
+				cremath.NewBigDecFromDec(tc.priceA).SqrtMut(),
+				cremath.NewBigDecFromDec(tc.priceB).SqrtMut(),
+				tc.liquidity)
 			require.Equal(t, tc.expected, amt0)
 		})
 	}
@@ -108,7 +112,9 @@ func TestAmount1Delta(t *testing.T) {
 	} {
 		t.Run(fmt.Sprint(i), func(t *testing.T) {
 			amt1 := types.Amount1Delta(
-				utils.DecApproxSqrt(tc.priceA), utils.DecApproxSqrt(tc.priceB), tc.liquidity)
+				cremath.NewBigDecFromDec(tc.priceA).SqrtMut(),
+				cremath.NewBigDecFromDec(tc.priceB).SqrtMut(),
+				tc.liquidity)
 			require.Equal(t, tc.expected, amt1)
 		})
 	}
@@ -137,7 +143,7 @@ func TestNextSqrtPriceFromOutput(t *testing.T) {
 	} {
 		t.Run(fmt.Sprint(i), func(t *testing.T) {
 			nextSqrtPrice := types.NextSqrtPriceFromOutput(
-				utils.DecApproxSqrt(tc.price), tc.liquidity, tc.amt, tc.isBuy)
+				cremath.NewBigDecFromDec(tc.price).SqrtMut(), tc.liquidity, tc.amt, tc.isBuy)
 			require.Equal(t, tc.nextPrice, nextSqrtPrice.Power(2))
 		})
 	}

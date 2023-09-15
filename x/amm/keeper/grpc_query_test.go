@@ -920,10 +920,10 @@ func (s *KeeperTestSuite) TestQueryOrderBookEdgecase() {
 	})
 	s.Require().NoError(err)
 	expected := []exchangetypes.OrderBookPriceLevel{
-		{P: utils.ParseDec("0.000000000002420000"), Q: utils.ParseDec("210247167454518.426965889361986342")},
-		{P: utils.ParseDec("0.000000000002425000"), Q: utils.ParseDec("106646637502197.215845362922175345")},
-		{P: utils.ParseDec("0.000000000002430000"), Q: utils.ParseDec("106317311667972.575612265795090924")},
-		{P: utils.ParseDec("0.000000000002435000"), Q: utils.ParseDec("105989677315106.625670065116473178")},
+		{P: utils.ParseDec("0.000000000002415000"), Q: utils.ParseDec("103269500340991.431178334335499009")},
+		{P: utils.ParseDec("0.000000000002420000"), Q: utils.ParseDec("106977667069587.588503336856544660")},
+		{P: utils.ParseDec("0.000000000002425000"), Q: utils.ParseDec("106646637524773.178471750859165788")},
+		{P: utils.ParseDec("0.000000000002430000"), Q: utils.ParseDec("106317311684281.668039367256921362")},
 	}
 	s.Require().GreaterOrEqual(len(resp.OrderBooks[0].Sells), len(expected))
 	for i, level := range expected {
@@ -931,10 +931,10 @@ func (s *KeeperTestSuite) TestQueryOrderBookEdgecase() {
 		s.AssertEqual(level.Q, resp.OrderBooks[0].Sells[i].Q)
 	}
 	expected = []exchangetypes.OrderBookPriceLevel{
-		{P: utils.ParseDec("0.000000000002410000"), Q: utils.ParseDec("4041069947696.441682987551867219")},
-		{P: utils.ParseDec("0.000000000002405000"), Q: utils.ParseDec("107756725726365.156645322245322245")},
-		{P: utils.ParseDec("0.000000000002400000"), Q: utils.ParseDec("108093523942782.413913333333333333")},
-		{P: utils.ParseDec("0.000000000002395000"), Q: utils.ParseDec("108432080322133.934602087682672233")},
+		{P: utils.ParseDec("0.000000000002410000"), Q: utils.ParseDec("4041069951902.014667634854771784")},
+		{P: utils.ParseDec("0.000000000002405000"), Q: utils.ParseDec("107756725721022.227459043659043659")},
+		{P: utils.ParseDec("0.000000000002400000"), Q: utils.ParseDec("108093523950523.575051666666666666")},
+		{P: utils.ParseDec("0.000000000002395000"), Q: utils.ParseDec("108432080305385.892827557411273486")},
 	}
 	s.Require().GreaterOrEqual(len(resp.OrderBooks[0].Buys), len(expected))
 	for i, level := range expected {

@@ -198,7 +198,7 @@ message PoolResponse {
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
   int32  current_tick  = 10;
   string current_price = 11
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+      [(gogoproto.customtype) = "github.com/crescent-network/crescent/v5/cremath.BigDec", (gogoproto.nullable) = false];
   string current_liquidity = 12
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
   string total_liquidity = 13

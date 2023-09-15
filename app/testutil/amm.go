@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/crescent-network/crescent/v5/cremath"
 	utils "github.com/crescent-network/crescent/v5/types"
 	ammtypes "github.com/crescent-network/crescent/v5/x/amm/types"
 )
@@ -34,9 +35,9 @@ func (s *TestSuite) AddLiquidityByLiquidity(ownerAddr sdk.AccAddress, poolId uin
 	pool := s.App.AMMKeeper.MustGetPool(s.Ctx, poolId)
 	poolState := s.App.AMMKeeper.MustGetPoolState(s.Ctx, poolId)
 	amt0, amt1 := ammtypes.AmountsForLiquidity(
-		utils.DecApproxSqrt(poolState.CurrentPrice),
-		utils.DecApproxSqrt(lowerPrice),
-		utils.DecApproxSqrt(upperPrice),
+		poolState.CurrentPrice.Sqrt(),
+		cremath.NewBigDecFromDec(lowerPrice).Sqrt(),
+		cremath.NewBigDecFromDec(upperPrice).Sqrt(),
 		desiredLiquidity)
 	return s.AddLiquidity(
 		ownerAddr, pool.Id, lowerPrice, upperPrice,

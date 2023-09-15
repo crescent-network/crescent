@@ -14,6 +14,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	chain "github.com/crescent-network/crescent/v5/app"
+	"github.com/crescent-network/crescent/v5/cremath"
 	utils "github.com/crescent-network/crescent/v5/types"
 	minttypes "github.com/crescent-network/crescent/v5/x/mint/types"
 )
@@ -110,6 +111,8 @@ func (s *TestSuite) AssertEqual(exp, got any) {
 		equal = exp.Equal(got.(sdk.Int))
 	case sdk.Dec:
 		equal = exp.Equal(got.(sdk.Dec))
+	case cremath.BigDec:
+		equal = exp.Equal(got.(cremath.BigDec))
 	case sdk.Coin:
 		equal = exp.IsEqual(got.(sdk.Coin))
 	case sdk.Coins:

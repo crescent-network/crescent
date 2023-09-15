@@ -133,14 +133,14 @@ func TestPoolState_Validate(t *testing.T) {
 		{
 			"invalid current price",
 			func(poolState *types.PoolState) {
-				poolState.CurrentPrice = utils.ParseDec("0")
+				poolState.CurrentPrice = utils.ParseBigDec("0")
 			},
 			"current price must be positive: 0.000000000000000000",
 		},
 		{
 			"invalid current price 2",
 			func(poolState *types.PoolState) {
-				poolState.CurrentPrice = utils.ParseDec("-1.0")
+				poolState.CurrentPrice = utils.ParseBigDec("-1.0")
 			},
 			"current price must be positive: -1.000000000000000000",
 		},
@@ -183,7 +183,7 @@ func TestPoolState_Validate(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			pool := types.PoolState{
 				CurrentTick:                -10,
-				CurrentPrice:               utils.ParseDec("0.99991100001"),
+				CurrentPrice:               utils.ParseBigDec("0.99991100001"),
 				CurrentLiquidity:           sdk.NewInt(1000_000000),
 				TotalLiquidity:             sdk.NewInt(2000_000000),
 				FeeGrowthGlobal:            utils.ParseDecCoins("0.0001ucre,0.0001uusd"),

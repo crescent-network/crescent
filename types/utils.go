@@ -15,6 +15,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+
+	"github.com/crescent-network/crescent/v5/cremath"
 )
 
 // GetShareValue multiplies with truncation by receiving int amount and decimal ratio and returns int result.
@@ -73,6 +75,10 @@ func ParseDec(s string) sdk.Dec {
 func ParseDecP(s string) *sdk.Dec {
 	d := ParseDec(s)
 	return &d
+}
+
+func ParseBigDec(s string) cremath.BigDec {
+	return cremath.MustNewBigDecFromStr(strings.ReplaceAll(s, "_", ""))
 }
 
 // ParseCoin parses and returns sdk.Coin.

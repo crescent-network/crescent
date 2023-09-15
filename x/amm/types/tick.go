@@ -5,12 +5,13 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/crescent-network/crescent/v5/cremath"
 	utils "github.com/crescent-network/crescent/v5/types"
 	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
-func SqrtPriceAtTick(tick int32) sdk.Dec {
-	return utils.DecApproxSqrt(exchangetypes.PriceAtTick(tick))
+func SqrtPriceAtTick(tick int32) cremath.BigDec {
+	return cremath.NewBigDecFromDec(exchangetypes.PriceAtTick(tick)).SqrtMut()
 }
 
 // AdjustTickToTickSpacing returns rounded tick based on tickSpacing.

@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
+	"github.com/crescent-network/crescent/v5/cremath"
 	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/amm/types"
 	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
@@ -45,10 +46,10 @@ func (k Keeper) AddLiquidity(
 	}
 	poolState := k.MustGetPoolState(ctx, poolId)
 
-	sqrtPriceA := types.SqrtPriceAtTick(lowerTick)
-	sqrtPriceB := types.SqrtPriceAtTick(upperTick)
+	sqrtPriceA := cremath.NewBigDecFromDec(exchangetypes.PriceAtTick(lowerTick)).Sqrt()
+	sqrtPriceB := cremath.NewBigDecFromDec(exchangetypes.PriceAtTick(upperTick)).Sqrt()
 	liquidity = types.LiquidityForAmounts(
-		utils.DecApproxSqrt(poolState.CurrentPrice), sqrtPriceA, sqrtPriceB, desiredAmt0, desiredAmt1)
+		poolState.CurrentPrice.Sqrt(), sqrtPriceA, sqrtPriceB, desiredAmt0, desiredAmt1)
 	if liquidity.IsZero() {
 		err = sdkerrors.Wrap(sdkerrors.ErrInsufficientFunds, "minted liquidity is zero") // TODO: use different error
 		return
@@ -297,12 +298,12 @@ func (k Keeper) modifyPosition(
 	amt0 = utils.ZeroInt
 	amt1 = utils.ZeroInt
 	if !liquidityDelta.IsZero() {
-		sqrtPriceA := types.SqrtPriceAtTick(lowerTick)
-		sqrtPriceB := types.SqrtPriceAtTick(upperTick)
+		sqrtPriceA := cremath.NewBigDecFromDec(exchangetypes.PriceAtTick(lowerTick)).Sqrt()
+		sqrtPriceB := cremath.NewBigDecFromDec(exchangetypes.PriceAtTick(upperTick)).Sqrt()
 		if poolState.CurrentTick < lowerTick {
 			amt0 = types.Amount0Delta(sqrtPriceA, sqrtPriceB, liquidityDelta)
 		} else if poolState.CurrentTick < upperTick {
-			currentSqrtPrice := utils.DecApproxSqrt(poolState.CurrentPrice)
+			currentSqrtPrice := poolState.CurrentPrice.Sqrt()
 			amt0 = types.Amount0Delta(currentSqrtPrice, sqrtPriceB, liquidityDelta)
 			amt1 = types.Amount1Delta(sqrtPriceA, currentSqrtPrice, liquidityDelta)
 			poolState.CurrentLiquidity = poolState.CurrentLiquidity.Add(liquidityDelta)

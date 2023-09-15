@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 
+	"github.com/crescent-network/crescent/v5/cremath"
 	utils "github.com/crescent-network/crescent/v5/types"
 )
 
@@ -89,7 +90,7 @@ func (pool Pool) Validate() error {
 	return nil
 }
 
-func NewPoolState(tick int32, price sdk.Dec) PoolState {
+func NewPoolState(tick int32, price cremath.BigDec) PoolState {
 	return PoolState{
 		CurrentTick:                tick,
 		CurrentPrice:               price,
@@ -121,4 +122,10 @@ func (poolState PoolState) Validate() error {
 		return fmt.Errorf("invalid farming rewards growth global: %w", err)
 	}
 	return nil
+}
+
+func PoolOrderPriceLimit(currentPrice cremath.BigDec, maxPriceRatio sdk.Dec) (minPrice, maxPrice sdk.Dec) {
+	minPrice = currentPrice.MulTruncate(cremath.NewBigDecFromDec(utils.OneDec.Sub(maxPriceRatio))).Dec()
+	maxPrice = currentPrice.MulTruncate(cremath.NewBigDecFromDec(utils.OneDec.Add(maxPriceRatio))).DecRoundUp()
+	return
 }

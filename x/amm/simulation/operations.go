@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
 	appparams "github.com/crescent-network/crescent/v5/app/params"
+	"github.com/crescent-network/crescent/v5/cremath"
 	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/amm/keeper"
 	"github.com/crescent-network/crescent/v5/x/amm/types"
@@ -248,16 +249,16 @@ func findMsgAddLiquidityParams(
 						types.AdjustPriceToTickSpacing(
 							utils.RandomDec(
 								r,
-								poolState.CurrentPrice.Mul(utils.ParseDec("0.5")),
-								poolState.CurrentPrice),
+								poolState.CurrentPrice.Dec().Mul(utils.ParseDec("0.5")),
+								poolState.CurrentPrice.Dec()),
 							pool.TickSpacing, false))
 				} else {
 					lowerPrice = exchangetypes.PriceAtTick(
 						types.AdjustPriceToTickSpacing(
 							utils.RandomDec(
 								r,
-								poolState.CurrentPrice,
-								poolState.CurrentPrice.Mul(utils.ParseDec("1.5"))),
+								poolState.CurrentPrice.Dec(),
+								poolState.CurrentPrice.Dec().Mul(utils.ParseDec("1.5"))),
 							pool.TickSpacing, false))
 				}
 				if r.Float64() <= 0.2 {
@@ -268,14 +269,14 @@ func findMsgAddLiquidityParams(
 							utils.RandomDec(
 								r,
 								lowerPrice.Mul(utils.ParseDec("1.01")),
-								poolState.CurrentPrice.Mul(utils.ParseDec("3"))),
+								poolState.CurrentPrice.DecRoundUp().Mul(utils.ParseDec("3"))),
 							pool.TickSpacing, true))
 				}
 				liquidity := utils.RandomInt(r, sdk.NewInt(10000), sdk.NewInt(100_000000))
 				amt0, amt1 := types.AmountsForLiquidity(
-					utils.DecApproxSqrt(poolState.CurrentPrice),
-					utils.DecApproxSqrt(lowerPrice),
-					utils.DecApproxSqrt(upperPrice),
+					poolState.CurrentPrice.Sqrt(),
+					cremath.NewBigDecFromDec(lowerPrice).Sqrt(),
+					cremath.NewBigDecFromDec(upperPrice).Sqrt(),
 					liquidity)
 				desiredAmt := sdk.NewCoins(sdk.NewCoin(pool.Denom0, amt0), sdk.NewCoin(pool.Denom1, amt1))
 				if !spendable.IsAllGTE(desiredAmt) {

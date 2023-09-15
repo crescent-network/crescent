@@ -5,13 +5,13 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/crescent-network/crescent/v5/cremath"
 	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/amm/types"
 	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
 var _ exchangetypes.OrderSource = OrderSource{}
-var threshold = sdk.NewDecWithPrec(1, 16) // XXX
 
 type OrderSource struct {
 	Keeper
@@ -33,9 +33,9 @@ func (k OrderSource) ConstructMemOrderBookSide(
 	if !found {
 		return nil // no pool found
 	}
-	maxPriceRatio := k.exchangeKeeper.GetMaxOrderPriceRatio(ctx)
 	poolState := k.MustGetPoolState(ctx, pool.Id)
-	minPrice, maxPrice := exchangetypes.OrderPriceLimit(poolState.CurrentPrice, maxPriceRatio)
+	maxPriceRatio := k.exchangeKeeper.GetMaxOrderPriceRatio(ctx)
+	minPrice, maxPrice := types.PoolOrderPriceLimit(poolState.CurrentPrice, maxPriceRatio)
 
 	reserveAddr := pool.MustGetReserveAddress()
 	accQty := utils.ZeroDec
@@ -83,7 +83,7 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 			netLiquidity := k.crossTick(ctx, pool.Id, tick, poolState)
 			poolState.CurrentLiquidity = poolState.CurrentLiquidity.Sub(netLiquidity)
 			poolState.CurrentTick = tick
-			poolState.CurrentPrice = exchangetypes.PriceAtTick(tick)
+			poolState.CurrentPrice = cremath.NewBigDecFromDec(exchangetypes.PriceAtTick(tick))
 			return false
 		})
 	} else {
@@ -96,7 +96,7 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 			netLiquidity := k.crossTick(ctx, pool.Id, tick, poolState)
 			poolState.CurrentLiquidity = poolState.CurrentLiquidity.Add(netLiquidity)
 			poolState.CurrentTick = tick
-			poolState.CurrentPrice = exchangetypes.PriceAtTick(tick)
+			poolState.CurrentPrice = cremath.NewBigDecFromDec(exchangetypes.PriceAtTick(tick))
 			return false
 		})
 	}
@@ -145,13 +145,13 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 				netLiquidity = k.crossTick(ctx, pool.Id, tick, poolState)
 				poolState.CurrentLiquidity = poolState.CurrentLiquidity.Sub(netLiquidity)
 				poolState.CurrentTick = tick
-				poolState.CurrentPrice = exchangetypes.PriceAtTick(tick)
+				poolState.CurrentPrice = cremath.NewBigDecFromDec(exchangetypes.PriceAtTick(tick))
 				return false
 			})
 			if !foundTargetTick { // sanity check
 				panic("target tick not found")
 			}
-		} else if !isBuy && max && poolState.CurrentPrice.Equal(exchangetypes.PriceAtTick(targetTick)) {
+		} else if !isBuy && max && poolState.CurrentPrice.Equal(cremath.NewBigDecFromDec(exchangetypes.PriceAtTick(targetTick))) {
 			foundTargetTick = false
 			k.IterateTickInfosAbove(ctx, pool.Id, targetTick, func(tick int32, tickInfo types.TickInfo) (stop bool) {
 				if tick >= orderTick {
@@ -163,7 +163,7 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 				netLiquidity := k.crossTick(ctx, pool.Id, tick, poolState)
 				poolState.CurrentLiquidity = poolState.CurrentLiquidity.Add(netLiquidity)
 				poolState.CurrentTick = tick
-				poolState.CurrentPrice = exchangetypes.PriceAtTick(tick)
+				poolState.CurrentPrice = cremath.NewBigDecFromDec(exchangetypes.PriceAtTick(tick))
 				return false
 			})
 			if !foundTargetTick { // sanity check
@@ -171,12 +171,12 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 			}
 		}
 
-		currentSqrtPrice := utils.DecApproxSqrt(poolState.CurrentPrice)
-		var nextSqrtPrice, nextPrice sdk.Dec
+		currentSqrtPrice := poolState.CurrentPrice.Sqrt()
+		var nextSqrtPrice, nextPrice cremath.BigDec
 		max = false
 		if i < len(results)-1 || result.Quantity().Sub(result.ExecutedQuantity()).LTE(utils.SmallestDec) {
-			nextSqrtPrice = utils.DecApproxSqrt(result.Price())
-			nextPrice = result.Price()
+			nextSqrtPrice = cremath.NewBigDecFromDec(result.Price()).SqrtMut()
+			nextPrice = cremath.NewBigDecFromDec(result.Price())
 			max = true
 		} else { // Partially executed
 			nextSqrtPrice = types.NextSqrtPriceFromOutput(
@@ -189,8 +189,8 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 			expectedAmtIn = types.Amount0DeltaRoundingDec(
 				currentSqrtPrice, nextSqrtPrice, poolState.CurrentLiquidity, true)
 		} else {
-			expectedAmtIn = types.Amount1DeltaDec(
-				currentSqrtPrice, nextSqrtPrice, poolState.CurrentLiquidity)
+			expectedAmtIn = types.Amount1DeltaRoundingDec(
+				currentSqrtPrice, nextSqrtPrice, poolState.CurrentLiquidity, true)
 		}
 		amtInDiff := result.Received().Sub(expectedAmtIn)
 		if amtInDiff.IsPositive() {
@@ -200,9 +200,7 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 				extraAmt1 = extraAmt1.Add(amtInDiff)
 			}
 		} else if amtInDiff.IsNegative() { // sanity check
-			if result.ExecutedQuantity().GT(threshold) {
-				panic(fmt.Sprintf("amtInDiff is negative: %s", amtInDiff))
-			}
+			panic(fmt.Sprintf("amtInDiff is negative: %s", amtInDiff))
 		}
 
 		if result.Fee().IsNegative() { // extra fees
@@ -214,7 +212,7 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 			}
 		}
 
-		nextTick := exchangetypes.TickAtPrice(nextPrice)
+		nextTick := exchangetypes.TickAtPrice(nextPrice.Dec())
 		if !isBuy && max && nextTick == targetTick {
 			accrueFees()
 			netLiquidity := k.crossTick(ctx, pool.Id, targetTick, poolState)

@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -197,4 +198,27 @@ func (s *KeeperTestSuite) TestRemoveSmallLiquidity() {
 			break
 		}
 	}
+}
+
+func (s *KeeperTestSuite) TestTooHighLiquidity() {
+	market, pool := s.CreateMarketAndPool(
+		"ucre", "uusd", utils.ParseDec("100000000000000000000"))
+	lpAddr := s.FundedAccount(1, enoughCoins)
+	_, liquidity, amt := s.AddLiquidity(
+		lpAddr, pool.Id,
+		utils.ParseDec("100000000000000000000"),
+		utils.ParseDec("100500000000000000000"),
+		sdk.NewCoins(
+			sdk.NewCoin("ucre", sdk.NewIntWithDecimal(1, 24)),
+			sdk.NewCoin("uusd", sdk.NewIntWithDecimal(1, 24))))
+	fmt.Println(liquidity)
+	// 4014993765576342135075873850245161032
+	// 4014993765576342135075873726064501792
+	s.AssertEqual(utils.ParseCoins("1000000000000000000000000ucre"), amt)
+
+	ordererAddr := s.FundedAccount(2, enoughCoins)
+	_, _, res := s.PlaceLimitOrder(market.Id, ordererAddr, true, types.MaxPrice, sdk.NewDec(10000), time.Hour)
+	fmt.Println(res.Executed())
+	fmt.Println(res.Paid)
+	fmt.Println(res.Received)
 }

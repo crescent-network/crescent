@@ -94,21 +94,13 @@ func (s *KeeperTestSuite) TestOrderGas() {
 		{utils.ParseDec("78.05"), utils.ParseDec("125.5"), sdk.NewInt(2572344642)},
 		{utils.ParseDec("64.60"), utils.ParseDec("164"), sdk.NewInt(96518823)},
 	} {
+		currentSqrtPrice := poolState.CurrentPrice.Sqrt()
 		lowerTick := exchangetypes.TickAtPrice(info.lowerPrice)
 		upperTick := exchangetypes.TickAtPrice(info.upperPrice)
 		sqrtPriceA := types.SqrtPriceAtTick(lowerTick)
 		sqrtPriceB := types.SqrtPriceAtTick(upperTick)
-		amt0 := utils.ZeroInt
-		amt1 := utils.ZeroInt
-		if poolState.CurrentTick < lowerTick {
-			amt0 = types.Amount0Delta(sqrtPriceA, sqrtPriceB, info.liquidity)
-		} else if poolState.CurrentTick < upperTick {
-			currentSqrtPrice := utils.DecApproxSqrt(poolState.CurrentPrice)
-			amt0 = types.Amount0Delta(currentSqrtPrice, sqrtPriceB, info.liquidity)
-			amt1 = types.Amount1Delta(sqrtPriceA, currentSqrtPrice, info.liquidity)
-		} else {
-			amt1 = types.Amount1Delta(sqrtPriceA, sqrtPriceB, info.liquidity)
-		}
+		amt0, amt1 := types.AmountsForLiquidity(
+			currentSqrtPrice, sqrtPriceA, sqrtPriceB, info.liquidity)
 		desiredAmt := sdk.NewCoins(sdk.NewCoin(pool.Denom0, amt0), sdk.NewCoin(pool.Denom1, amt1))
 		s.AddLiquidity(
 			lpAddr, pool.Id, info.lowerPrice, info.upperPrice, desiredAmt)
