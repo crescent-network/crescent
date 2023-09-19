@@ -18,7 +18,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/client/debug"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/server"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
@@ -32,13 +31,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 
-	"github.com/evmos/ethermint/app"
+	ethermintclient "github.com/evmos/ethermint/client"
 	ethermintserver "github.com/evmos/ethermint/server"
 	servercfg "github.com/evmos/ethermint/server/config"
 	srvflags "github.com/evmos/ethermint/server/flags"
 
 	chain "github.com/crescent-network/crescent/v5/app"
 	appparams "github.com/crescent-network/crescent/v5/app/params"
+	ethkeyring "github.com/crescent-network/crescent/v5/crypto/keyring"
 )
 
 var (
@@ -78,7 +78,8 @@ func NewRootCmd() (*cobra.Command, appparams.EncodingConfig) {
 		WithInput(os.Stdin).
 		WithAccountRetriever(types.AccountRetriever{}).
 		WithHomeDir(chain.DefaultNodeHome).
-		WithViper("") // In simapp, we don't use any prefix for env variables.
+		WithKeyringOptions(ethkeyring.Option()).
+		WithViper("crescent") // In simapp, we don't use any prefix for env variables.
 
 	rootCmd := &cobra.Command{
 		Use:   chain.AppBinary,
@@ -177,89 +178,89 @@ func initAppConfig() (string, interface{}) {
 	//# Warning: this is currently unstable and may lead to crashes, best to keep for 0 unless testing locally
 	//lru_size = 0`
 
-	customAppTemplate = customAppTemplate + `
-###############################################################################
-###                             EVM Configuration                           ###
-###############################################################################
-
-[evm]
-
-# Tracer defines the 'vm.Tracer' type that the EVM will use when the node is run in
-# debug mode. To enable tracing use the '--evm.tracer' flag when starting your node.
-# Valid types are: json|struct|access_list|markdown
-tracer = ""
-
-# MaxTxGasWanted defines the gas wanted for each eth tx returned in ante handler in check tx mode.
-max-tx-gas-wanted = 0
-
-###############################################################################
-###                           JSON RPC Configuration                        ###
-###############################################################################
-
-[json-rpc]
-
-# Enable defines if the gRPC server should be enabled.
-enable = true
-
-# Address defines the EVM RPC HTTP server address to bind to.
-address = "0.0.0.0:8545"
-
-# Address defines the EVM WebSocket server address to bind to.
-ws-address = "0.0.0.0:8546"
-
-# API defines a list of JSON-RPC namespaces that should be enabled
-# Example: "eth,txpool,personal,net,debug,web3"
-api = "eth,net,web3"
-
-# GasCap sets a cap on gas that can be used in eth_call/estimateGas (0=infinite). Default: 25,000,000.
-gas-cap = 25000000
-
-# EVMTimeout is the global timeout for eth_call. Default: 5s.
-evm-timeout = "5s"
-
-# TxFeeCap is the global tx-fee cap for send transaction. Default: 1eth.
-txfee-cap = 1
-
-# FilterCap sets the global cap for total number of filters that can be created
-filter-cap = 200
-
-# FeeHistoryCap sets the global cap for total number of blocks that can be fetched
-feehistory-cap = 100
-
-# LogsCap defines the max number of results can be returned from single 'eth_getLogs' query.
-logs-cap = 10000
-
-# BlockRangeCap defines the max block range allowed for 'eth_getLogs' query.
-block-range-cap = 10000
-
-# HTTPTimeout is the read/write timeout of http json-rpc server.
-http-timeout = "30s"
-
-# HTTPIdleTimeout is the idle timeout of http json-rpc server.
-http-idle-timeout = "2m0s"
-
-# AllowUnprotectedTxs restricts unprotected (non EIP155 signed) transactions to be submitted via
-# the node's RPC when the global parameter is disabled.
-allow-unprotected-txs = false
-
-# MaxOpenConnections sets the maximum number of simultaneous connections
-# for the server listener.
-max-open-connections = 0
-
-# EnableIndexer enables the custom transaction indexer for the EVM (ethereum transactions).
-enable-indexer = false
-
-###############################################################################
-###                             TLS Configuration                           ###
-###############################################################################
-
-[tls]
-
-# Certificate path defines the cert.pem file path for the TLS configuration.
-certificate-path = ""
-
-# Key path defines the key.pem file path for the TLS configuration.
-key-path = ""`
+	//	customAppTemplate = customAppTemplate + `
+	//###############################################################################
+	//###                             EVM Configuration                           ###
+	//###############################################################################
+	//
+	//[evm]
+	//
+	//# Tracer defines the 'vm.Tracer' type that the EVM will use when the node is run in
+	//# debug mode. To enable tracing use the '--evm.tracer' flag when starting your node.
+	//# Valid types are: json|struct|access_list|markdown
+	//tracer = ""
+	//
+	//# MaxTxGasWanted defines the gas wanted for each eth tx returned in ante handler in check tx mode.
+	//max-tx-gas-wanted = 0
+	//
+	//###############################################################################
+	//###                           JSON RPC Configuration                        ###
+	//###############################################################################
+	//
+	//[json-rpc]
+	//
+	//# Enable defines if the gRPC server should be enabled.
+	//enable = true
+	//
+	//# Address defines the EVM RPC HTTP server address to bind to.
+	//address = "0.0.0.0:8545"
+	//
+	//# Address defines the EVM WebSocket server address to bind to.
+	//ws-address = "0.0.0.0:8546"
+	//
+	//# API defines a list of JSON-RPC namespaces that should be enabled
+	//# Example: "eth,txpool,personal,net,debug,web3"
+	//api = "eth,net,web3"
+	//
+	//# GasCap sets a cap on gas that can be used in eth_call/estimateGas (0=infinite). Default: 25,000,000.
+	//gas-cap = 25000000
+	//
+	//# EVMTimeout is the global timeout for eth_call. Default: 5s.
+	//evm-timeout = "5s"
+	//
+	//# TxFeeCap is the global tx-fee cap for send transaction. Default: 1eth.
+	//txfee-cap = 1
+	//
+	//# FilterCap sets the global cap for total number of filters that can be created
+	//filter-cap = 200
+	//
+	//# FeeHistoryCap sets the global cap for total number of blocks that can be fetched
+	//feehistory-cap = 100
+	//
+	//# LogsCap defines the max number of results can be returned from single 'eth_getLogs' query.
+	//logs-cap = 10000
+	//
+	//# BlockRangeCap defines the max block range allowed for 'eth_getLogs' query.
+	//block-range-cap = 10000
+	//
+	//# HTTPTimeout is the read/write timeout of http json-rpc server.
+	//http-timeout = "30s"
+	//
+	//# HTTPIdleTimeout is the idle timeout of http json-rpc server.
+	//http-idle-timeout = "2m0s"
+	//
+	//# AllowUnprotectedTxs restricts unprotected (non EIP155 signed) transactions to be submitted via
+	//# the node's RPC when the global parameter is disabled.
+	//allow-unprotected-txs = false
+	//
+	//# MaxOpenConnections sets the maximum number of simultaneous connections
+	//# for the server listener.
+	//max-open-connections = 0
+	//
+	//# EnableIndexer enables the custom transaction indexer for the EVM (ethereum transactions).
+	//enable-indexer = false
+	//
+	//###############################################################################
+	//###                             TLS Configuration                           ###
+	//###############################################################################
+	//
+	//[tls]
+	//
+	//# Certificate path defines the cert.pem file path for the TLS configuration.
+	//certificate-path = ""
+	//
+	//# Key path defines the key.pem file path for the TLS configuration.
+	//key-path = ""`
 
 	return customAppTemplate, customAppConfig
 }
@@ -281,14 +282,14 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig appparams.EncodingConfig
 	a := appCreator{encodingConfig}
 	//server.AddCommands(rootCmd, chain.DefaultNodeHome, a.newApp, a.appExport, addModuleInitFlags)
 	// Ethermint
-	ethermintserver.AddCommands(rootCmd, app.DefaultNodeHome, a.newApp, a.appExport, addModuleInitFlags)
+	ethermintserver.AddCommands(rootCmd, chain.DefaultNodeHome, a.newApp, a.appExport, addModuleInitFlags)
 
 	// add keybase, auxiliary RPC, query, and tx child commands
 	rootCmd.AddCommand(
 		rpc.StatusCommand(),
 		queryCommand(),
 		txCommand(),
-		keys.Commands(chain.DefaultNodeHome),
+		ethermintclient.KeyCommands(chain.DefaultNodeHome),
 	)
 	rootCmd, err := srvflags.AddTxFlags(rootCmd)
 	if err != nil {

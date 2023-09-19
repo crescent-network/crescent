@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 
+	ethermint "github.com/evmos/ethermint/types"
 	evmrest "github.com/evmos/ethermint/x/evm/client/rest"
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
@@ -343,6 +344,9 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
+
+	// temporary update the power reduction by replacing 6 -> 18 for cre on testnet
+	sdk.DefaultPowerReduction = ethermint.PowerReduction
 
 	DefaultNodeHome = filepath.Join(userHomeDir, AppUserHomeDir)
 }
@@ -964,7 +968,8 @@ func NewApp(
 			BankKeeper:      app.BankKeeper,
 			FeegrantKeeper:  app.FeeGrantKeeper,
 			SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
-			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
+			//SigGasConsumer: ante.DefaultSigVerificationGasConsumer,
+			SigGasConsumer: EthSigVerificationGasConsumer,
 		},
 		Codec:           appCodec,
 		GovKeeper:       &app.GovKeeper,
