@@ -64,24 +64,42 @@ func (suite *AnteTestSuite) SetupTest(isCheckTx bool) {
 	suite.clientCtx = client.Context{}.
 		WithTxConfig(encodingConfig.TxConfig)
 
-	anteHandler, err := app.NewAnteHandler(
-		app.HandlerOptions{
-			HandlerOptions: ante.HandlerOptions{
-				AccountKeeper:   suite.app.AccountKeeper,
-				BankKeeper:      suite.app.BankKeeper,
-				FeegrantKeeper:  suite.app.FeeGrantKeeper,
-				SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
-				SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
-			},
-			Codec:         encodingConfig.Marshaler,
-			GovKeeper:     &suite.app.GovKeeper,
-			IBCKeeper:     suite.app.IBCKeeper,
-			MsgFilterFlag: true,
-		},
-	)
+	//anteHandler, err := app.NewAnteHandler(
+	//	app.HandlerOptions{
+	//		HandlerOptions: ante.HandlerOptions{
+	//			AccountKeeper:   suite.app.AccountKeeper,
+	//			BankKeeper:      suite.app.BankKeeper,
+	//			FeegrantKeeper:  suite.app.FeeGrantKeeper,
+	//			SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
+	//			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
+	//		},
+	//		Codec:         encodingConfig.Marshaler,
+	//		GovKeeper:     &suite.app.GovKeeper,
+	//		IBCKeeper:     suite.app.IBCKeeper,
+	//		MsgFilterFlag: true,
+	//	},
+	//)
 
-	suite.Require().NoError(err)
-	suite.anteHandler = anteHandler
+	options := app.HandlerOptions{
+		HandlerOptions: ante.HandlerOptions{
+			AccountKeeper:   suite.app.AccountKeeper,
+			BankKeeper:      suite.app.BankKeeper,
+			FeegrantKeeper:  suite.app.FeeGrantKeeper,
+			SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
+			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
+		},
+		Codec:           encodingConfig.Marshaler,
+		GovKeeper:       &suite.app.GovKeeper,
+		IBCKeeper:       suite.app.IBCKeeper,
+		EvmKeeper:       suite.app.EvmKeeper,
+		AccountKeeper:   suite.app.AccountKeeper,
+		FeeMarketKeeper: suite.app.FeeMarketKeeper,
+		// TODO: need to set as default
+		MaxTxGasWanted: uint64(10000000000),
+		MsgFilterFlag:  true,
+	}
+	suite.Require().NoError(options.Validate())
+	suite.anteHandler = app.NewAnteHandler(options)
 }
 
 func (suite *AnteTestSuite) SetAnteHandler(anteHandler sdk.AnteHandler) {

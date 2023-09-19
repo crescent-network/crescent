@@ -5,6 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 
 	ethante "github.com/evmos/ethermint/app/ante"
@@ -82,7 +83,7 @@ func newEthAnteHandler(options HandlerOptions) sdk.AnteHandler {
 // newCosmosAnteHandlerEip712 creates the ante handler for transactions signed with EIP712
 func newCosmosAnteHandlerEip712(options HandlerOptions) sdk.AnteHandler {
 	return sdk.ChainAnteDecorators(
-		ethante.RejectMessagesDecorator{}, // reject MsgEthereumTxs
+		//ethante.RejectMessagesDecorator{}, // reject MsgEthereumTxs
 		ante.NewSetUpContextDecorator(),
 		ante.NewMempoolFeeDecorator(),
 		ante.NewValidateBasicDecorator(),
@@ -90,12 +91,13 @@ func newCosmosAnteHandlerEip712(options HandlerOptions) sdk.AnteHandler {
 		ante.NewTxTimeoutHeightDecorator(),
 		ante.NewValidateMemoDecorator(options.AccountKeeper),
 		ante.NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
+		crescentante.NewMsgFilterDecorator(options.Codec, options.GovKeeper, options.MsgFilterFlag),
 		ante.NewDeductFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper),
 		// SetPubKeyDecorator must be called before all signature verification decorators
 		ante.NewSetPubKeyDecorator(options.AccountKeeper),
 		ante.NewValidateSigCountDecorator(options.AccountKeeper),
 		ante.NewSigGasConsumeDecorator(options.AccountKeeper, options.SigGasConsumer),
-		// Note: signature verification uses EIP instead of the cosmos signature validator
+		// Diff from CosmosAnteHandler: signature verification uses EIP instead of the cosmos signature validator,
 		ethante.NewEip712SigVerificationDecorator(options.AccountKeeper, options.SignModeHandler),
 		ante.NewIncrementSequenceDecorator(options.AccountKeeper),
 		ibcante.NewAnteDecorator(options.IBCKeeper),
@@ -103,15 +105,9 @@ func newCosmosAnteHandlerEip712(options HandlerOptions) sdk.AnteHandler {
 	)
 }
 
-// TOOD: antehandler for evm txs
-func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
-
-	var sigGasConsumer = options.SigGasConsumer
-	if sigGasConsumer == nil {
-		sigGasConsumer = ante.DefaultSigVerificationGasConsumer
-	}
-
-	anteDecorators := []sdk.AnteDecorator{
+// newCosmosAnteHandler
+func newCosmosAnteHandler(options HandlerOptions) sdk.AnteHandler {
+	return sdk.ChainAnteDecorators(
 		ante.NewSetUpContextDecorator(),
 		ante.NewRejectExtensionOptionsDecorator(),
 		ante.NewMempoolFeeDecorator(),
@@ -126,13 +122,63 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		// SetPubKeyDecorator must be called before all signature verification decorators
 		ante.NewSetPubKeyDecorator(options.AccountKeeper),
 		ante.NewValidateSigCountDecorator(options.AccountKeeper),
-		ante.NewSigGasConsumeDecorator(options.AccountKeeper, sigGasConsumer),
+		ante.NewSigGasConsumeDecorator(options.AccountKeeper, options.SigGasConsumer),
 		ante.NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler),
 		ante.NewIncrementSequenceDecorator(options.AccountKeeper),
 		ibcante.NewAnteDecorator(options.IBCKeeper),
 		// TODO: need to consider
 		ethante.NewGasWantedDecorator(options.EvmKeeper, options.FeeMarketKeeper),
-	}
-
-	return sdk.ChainAnteDecorators(anteDecorators...), nil
+	)
 }
+
+// NewAnteHandler returns an ante handler responsible for attempting to route an
+// Ethereum or SDK transaction to an internal ante handler for performing
+// transaction-level processing (e.g. fee payment, signature verification) before
+// being passed onto it's respective handler.
+func NewAnteHandler(options HandlerOptions) sdk.AnteHandler {
+	return func(
+		ctx sdk.Context, tx sdk.Tx, sim bool,
+	) (newCtx sdk.Context, err error) {
+		var anteHandler sdk.AnteHandler
+
+		defer ethante.Recover(ctx.Logger(), &err)
+
+		txWithExtensions, ok := tx.(authante.HasExtensionOptionsTx)
+		if ok {
+			opts := txWithExtensions.GetExtensionOptions()
+			if len(opts) > 0 {
+				switch typeURL := opts[0].GetTypeUrl(); typeURL {
+				case "/ethermint.evm.v1.ExtensionOptionsEthereumTx":
+					// handle as *evmtypes.MsgEthereumTx
+					anteHandler = newEthAnteHandler(options)
+				case "/ethermint.types.v1.ExtensionOptionsWeb3Tx":
+					// handle as normal Cosmos SDK tx, except signature is checked for EIP712 representation
+					anteHandler = newCosmosAnteHandlerEip712(options)
+				default:
+					return ctx, sdkerrors.Wrapf(
+						sdkerrors.ErrUnknownExtensionOptions,
+						"rejecting tx with unsupported extension option: %s", typeURL,
+					)
+				}
+
+				return anteHandler(ctx, tx, sim)
+			}
+		}
+
+		// handle as totally normal Cosmos SDK tx
+		switch tx.(type) {
+		case sdk.Tx:
+			//if options.Simulation {
+			//	anteHandler = newCosmosSimulationAnteHandler(options)
+			//} else {
+			anteHandler = newCosmosAnteHandler(options)
+		default:
+			return ctx, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "invalid transaction type: %T", tx)
+		}
+
+		return anteHandler(ctx, tx, sim)
+	}
+}
+
+// TODO: DefaultSigVerificationGasConsumer, allow both secp
+// TODO: directory refactoring

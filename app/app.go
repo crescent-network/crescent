@@ -101,6 +101,7 @@ import (
 	ibchost "github.com/cosmos/ibc-go/v3/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v3/modules/core/keeper"
 
+	v6 "github.com/crescent-network/crescent/v5/app/upgrades/mainnet/v6"
 	// budget module
 	"github.com/crescent-network/crescent/v5/x/budget"
 	budgetkeeper "github.com/crescent-network/crescent/v5/x/budget/keeper"
@@ -957,29 +958,28 @@ func NewApp(
 
 	maxGasWanted := cast.ToUint64(appOpts.Get(srvflags.EVMMaxTxGasWanted))
 
-	anteHandler, err := NewAnteHandler(
-		HandlerOptions{
-			HandlerOptions: ante.HandlerOptions{
-				AccountKeeper:   app.AccountKeeper,
-				BankKeeper:      app.BankKeeper,
-				FeegrantKeeper:  app.FeeGrantKeeper,
-				SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
-				SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
-			},
-			Codec:           appCodec,
-			GovKeeper:       &app.GovKeeper,
-			IBCKeeper:       app.IBCKeeper,
-			EvmKeeper:       app.EvmKeeper,
-			FeeMarketKeeper: app.FeeMarketKeeper,
-			MaxTxGasWanted:  maxGasWanted,
-			MsgFilterFlag:   msgFilterFlag,
+	options := HandlerOptions{
+		HandlerOptions: ante.HandlerOptions{
+			AccountKeeper:   app.AccountKeeper,
+			BankKeeper:      app.BankKeeper,
+			FeegrantKeeper:  app.FeeGrantKeeper,
+			SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
+			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 		},
-	)
-	if err != nil {
+		Codec:           appCodec,
+		GovKeeper:       &app.GovKeeper,
+		IBCKeeper:       app.IBCKeeper,
+		EvmKeeper:       app.EvmKeeper,
+		AccountKeeper:   app.AccountKeeper,
+		FeeMarketKeeper: app.FeeMarketKeeper,
+		MaxTxGasWanted:  maxGasWanted,
+		MsgFilterFlag:   msgFilterFlag,
+	}
+	if err := options.Validate(); err != nil {
 		panic(fmt.Errorf("failed to create AnteHandler: %s", err))
 	}
 
-	app.SetAnteHandler(anteHandler)
+	app.SetAnteHandler(NewAnteHandler(options))
 	app.SetInitChainer(app.InitChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
 	app.SetEndBlocker(app.EndBlocker)
@@ -1208,6 +1208,10 @@ func (app *App) SetUpgradeStoreLoaders() {
 		// configure store loader that checks if version == upgradeHeight and applies store upgrades
 		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &v5.StoreUpgrades))
 	}
+	if upgradeInfo.Name == v6.UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+		// configure store loader that checks if version == upgradeHeight and applies store upgrades
+		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &v6.StoreUpgrades))
+	}
 }
 
 func (app *App) SetUpgradeHandlers(mm *module.Manager, configurator module.Configurator, enableMigrationEventEmit bool) {
@@ -1229,6 +1233,12 @@ func (app *App) SetUpgradeHandlers(mm *module.Manager, configurator module.Confi
 
 	app.UpgradeKeeper.SetUpgradeHandler(
 		v5.UpgradeName, v5.UpgradeHandler(
+			mm, configurator, app.AccountKeeper, app.BankKeeper, app.DistrKeeper, app.LiquidityKeeper,
+			app.LPFarmKeeper, app.ExchangeKeeper, app.AMMKeeper, app.MarkerKeeper, app.FarmingKeeper,
+			app.ClaimKeeper, enableMigrationEventEmit))
+
+	app.UpgradeKeeper.SetUpgradeHandler(
+		v6.UpgradeName, v6.UpgradeHandler(
 			mm, configurator, app.AccountKeeper, app.BankKeeper, app.DistrKeeper, app.LiquidityKeeper,
 			app.LPFarmKeeper, app.ExchangeKeeper, app.AMMKeeper, app.MarkerKeeper, app.FarmingKeeper,
 			app.ClaimKeeper, enableMigrationEventEmit))

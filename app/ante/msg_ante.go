@@ -83,12 +83,13 @@ func (d MsgFilterDecorator) ValidateMsgs(ctx sdk.Context, msgs []sdk.Msg) error 
 				return fmt.Errorf("double nested %s is not allowed", sdk.MsgTypeURL(msg))
 			}
 
-		// block authz nested MsgEthereumTx
+		// block authz any MsgEthereumTx on cosmos ante handler
 		case *evmtypes.MsgEthereumTx:
-			if nested {
-				return fmt.Errorf("authz nested %s is not allowed", sdk.MsgTypeURL(msg))
-			}
-			
+			return sdkerrors.Wrapf(
+				sdkerrors.ErrInvalidType,
+				"MsgEthereumTx needs to be contained within a tx with 'ExtensionOptionsEthereumTx' option",
+			)
+
 		default:
 			// block deprecated module's msgs
 			if legacyMsg, ok := msg.(legacytx.LegacyMsg); ok {
