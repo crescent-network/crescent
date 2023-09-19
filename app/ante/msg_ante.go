@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	evmtypes "github.com/evmos/ethermint/x/evm/types"
 
 	claimtypes "github.com/crescent-network/crescent/v5/x/claim/types"
 	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
@@ -81,6 +82,13 @@ func (d MsgFilterDecorator) ValidateMsgs(ctx sdk.Context, msgs []sdk.Msg) error 
 			if nested {
 				return fmt.Errorf("double nested %s is not allowed", sdk.MsgTypeURL(msg))
 			}
+
+		// block authz nested MsgEthereumTx
+		case *evmtypes.MsgEthereumTx:
+			if nested {
+				return fmt.Errorf("authz nested %s is not allowed", sdk.MsgTypeURL(msg))
+			}
+			
 		default:
 			// block deprecated module's msgs
 			if legacyMsg, ok := msg.(legacytx.LegacyMsg); ok {

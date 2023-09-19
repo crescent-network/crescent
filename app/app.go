@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 
+	evmrest "github.com/evmos/ethermint/x/evm/client/rest"
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
@@ -104,6 +105,16 @@ import (
 	"github.com/crescent-network/crescent/v5/x/budget"
 	budgetkeeper "github.com/crescent-network/crescent/v5/x/budget/keeper"
 	budgettypes "github.com/crescent-network/crescent/v5/x/budget/types"
+
+	// ethermint modules
+	srvflags "github.com/evmos/ethermint/server/flags"
+	"github.com/evmos/ethermint/x/evm"
+	evmkeeper "github.com/evmos/ethermint/x/evm/keeper"
+	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	"github.com/evmos/ethermint/x/feemarket"
+	feemarketkeeper "github.com/evmos/ethermint/x/feemarket/keeper"
+	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
+	// TODO: add erc20
 
 	// core modules
 	appparams "github.com/crescent-network/crescent/v5/app/params"
@@ -211,6 +222,10 @@ var (
 		marker.AppModuleBasic{},
 		exchange.AppModuleBasic{},
 		amm.AppModuleBasic{},
+
+		evm.AppModuleBasic{},
+		feemarket.AppModuleBasic{},
+		//erc20.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -234,6 +249,9 @@ var (
 		exchangetypes.ModuleName:       nil,
 		ammtypes.ModuleName:            {authtypes.Minter, authtypes.Burner},
 		icatypes.ModuleName:            nil,
+		evmtypes.ModuleName:            {authtypes.Minter, authtypes.Burner},
+		//erc20types.ModuleName:          {authtypes.Minter, authtypes.Burner},
+
 	}
 )
 
@@ -294,6 +312,11 @@ type App struct {
 	MarkerKeeper        markerkeeper.Keeper
 	ExchangeKeeper      exchangekeeper.Keeper
 	AMMKeeper           ammkeeper.Keeper
+
+	// Ethermint keepers
+	EvmKeeper       *evmkeeper.Keeper
+	FeeMarketKeeper feemarketkeeper.Keeper
+	//Erc20Keeper         erc20keeper.Keeper
 
 	// scoped keepers
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
@@ -375,9 +398,15 @@ func NewApp(
 		markertypes.StoreKey,
 		exchangetypes.StoreKey,
 		ammtypes.StoreKey,
+		evmtypes.StoreKey,
+		feemarkettypes.StoreKey,
+		//erc20types.StoreKey,
 	)
+
 	tkeys := sdk.NewTransientStoreKeys(
 		paramstypes.TStoreKey,
+		evmtypes.TransientKey,
+		feemarkettypes.TransientKey,
 	)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
 
@@ -487,6 +516,24 @@ func NewApp(
 	app.StakingKeeper = app.StakingKeeper.SetHooks(
 		stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks()),
 	)
+
+	tracer := cast.ToString(appOpts.Get(srvflags.EVMTracer))
+	// Create Ethermint keepers
+	app.FeeMarketKeeper = feemarketkeeper.NewKeeper(
+		appCodec, app.GetSubspace(feemarkettypes.ModuleName), keys[feemarkettypes.StoreKey], tkeys[feemarkettypes.TransientKey],
+	)
+
+	app.EvmKeeper = evmkeeper.NewKeeper(
+		appCodec, keys[evmtypes.StoreKey], tkeys[evmtypes.TransientKey], app.GetSubspace(evmtypes.ModuleName),
+		app.AccountKeeper, app.BankKeeper, &stakingKeeper, app.FeeMarketKeeper,
+		tracer,
+	)
+
+	//app.Erc20Keeper = erc20keeper.NewKeeper(
+	//	keys[erc20types.StoreKey], appCodec, app.GetSubspace(erc20types.ModuleName),
+	//	app.AccountKeeper, app.BankKeeper, app.EvmKeeper,
+	//)
+
 	app.IBCKeeper = ibckeeper.NewKeeper(
 		appCodec,
 		keys[ibchost.StoreKey],
@@ -615,6 +662,13 @@ func NewApp(
 			app.LiquidStakingKeeper.Hooks(),
 		),
 	)
+
+	//app.EvmKeeper = app.EvmKeeper.SetHooks(
+	//	evmkeeper.NewMultiEvmHooks(
+	//		app.Erc20Keeper.Hooks(),
+	//	),
+	//)
+
 	app.ClaimKeeper = claimkeeper.NewKeeper(
 		appCodec,
 		keys[claimtypes.StoreKey],
@@ -708,6 +762,9 @@ func NewApp(
 		marker.NewAppModule(appCodec, app.MarkerKeeper),
 		exchange.NewAppModule(appCodec, app.ExchangeKeeper, app.AccountKeeper, app.BankKeeper),
 		amm.NewAppModule(appCodec, app.AMMKeeper, app.AccountKeeper, app.BankKeeper, app.ExchangeKeeper),
+		evm.NewAppModule(app.EvmKeeper, app.AccountKeeper),
+		feemarket.NewAppModule(app.FeeMarketKeeper),
+		//erc20.NewAppModule(app.Erc20Keeper, app.AccountKeeper),
 		app.transferModule,
 		app.icaModule,
 	)
@@ -719,6 +776,8 @@ func NewApp(
 	app.mm.SetOrderBeginBlockers(
 		upgradetypes.ModuleName,
 		capabilitytypes.ModuleName,
+		feemarkettypes.ModuleName,
+		evmtypes.ModuleName,
 		minttypes.ModuleName,
 		budgettypes.ModuleName,
 		distrtypes.ModuleName,
@@ -750,6 +809,7 @@ func NewApp(
 		icatypes.ModuleName,
 		markertypes.ModuleName,
 		exchangetypes.ModuleName,
+		//erc20types.ModuleName,
 	)
 
 	app.mm.SetOrderMidBlockers(
@@ -761,6 +821,8 @@ func NewApp(
 		crisistypes.ModuleName,
 		govtypes.ModuleName,
 		stakingtypes.ModuleName,
+		evmtypes.ModuleName,
+		feemarkettypes.ModuleName,
 		liquiditytypes.ModuleName,
 		farmingtypes.ModuleName,
 		liquidstakingtypes.ModuleName,
@@ -790,7 +852,7 @@ func NewApp(
 		ammtypes.ModuleName,
 		liquidammtypes.ModuleName,
 		liquidfarmingtypes.ModuleName,
-
+		//erc20types.ModuleName,
 		markertypes.ModuleName,
 	)
 
@@ -809,6 +871,8 @@ func NewApp(
 		govtypes.ModuleName,
 		minttypes.ModuleName,
 		ibchost.ModuleName,
+		evmtypes.ModuleName,
+		feemarkettypes.ModuleName,
 		genutiltypes.ModuleName,
 		evidencetypes.ModuleName,
 		ibctransfertypes.ModuleName,
@@ -826,6 +890,7 @@ func NewApp(
 		markertypes.ModuleName,
 		exchangetypes.ModuleName,
 		ammtypes.ModuleName,
+		//erc20types.ModuleName,
 
 		// empty logic modules
 		paramstypes.ModuleName,
@@ -872,6 +937,10 @@ func NewApp(
 		ibc.NewAppModule(app.IBCKeeper),
 		app.transferModule,
 
+		// Temporarily disable ethermint simulation
+		//evm.NewAppModule(app.EvmKeeper, app.AccountKeeper),
+		//feemarket.NewAppModule(app.FeeMarketKeeper),
+
 		// disable simulation for deprecated modules
 		//claim.NewAppModule(appCodec, app.ClaimKeeper, app.AccountKeeper, app.BankKeeper, app.DistrKeeper, app.GovKeeper, app.LiquidityKeeper, app.LiquidStakingKeeper),
 		//farming.NewAppModule(appCodec, app.FarmingKeeper, app.AccountKeeper, app.BankKeeper),
@@ -886,6 +955,8 @@ func NewApp(
 	app.MountTransientStores(tkeys)
 	app.MountMemoryStores(memKeys)
 
+	maxGasWanted := cast.ToUint64(appOpts.Get(srvflags.EVMMaxTxGasWanted))
+
 	anteHandler, err := NewAnteHandler(
 		HandlerOptions{
 			HandlerOptions: ante.HandlerOptions{
@@ -895,10 +966,13 @@ func NewApp(
 				SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
 				SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 			},
-			Codec:         appCodec,
-			GovKeeper:     &app.GovKeeper,
-			IBCKeeper:     app.IBCKeeper,
-			MsgFilterFlag: msgFilterFlag,
+			Codec:           appCodec,
+			GovKeeper:       &app.GovKeeper,
+			IBCKeeper:       app.IBCKeeper,
+			EvmKeeper:       app.EvmKeeper,
+			FeeMarketKeeper: app.FeeMarketKeeper,
+			MaxTxGasWanted:  maxGasWanted,
+			MsgFilterFlag:   msgFilterFlag,
 		},
 	)
 	if err != nil {
@@ -1029,6 +1103,9 @@ func (app *App) SimulationManager() *module.SimulationManager {
 func (app *App) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig) {
 	clientCtx := apiSvr.ClientCtx
 	rpc.RegisterRoutes(clientCtx, apiSvr.Router)
+
+	evmrest.RegisterTxRoutes(clientCtx, apiSvr.Router)
+
 	// Register legacy tx routes.
 	authrest.RegisterTxRoutes(clientCtx, apiSvr.Router)
 	// Register new tx routes from grpc-gateway.
@@ -1093,6 +1170,10 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(exchangetypes.ModuleName)
 	paramsKeeper.Subspace(ammtypes.ModuleName)
 	paramsKeeper.Subspace(icahosttypes.SubModuleName)
+
+	paramsKeeper.Subspace(evmtypes.ModuleName)
+	paramsKeeper.Subspace(feemarkettypes.ModuleName)
+	//paramsKeeper.Subspace(erc20types.ModuleName)
 
 	return paramsKeeper
 }
