@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/evmos/ethermint/encoding"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -22,14 +23,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/simapp/params"
-	"github.com/cosmos/cosmos-sdk/std"
+	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
-	simappparams "github.com/crescent-network/crescent/v5/app/params"
 	minttypes "github.com/crescent-network/crescent/v5/x/mint/types"
 )
 
@@ -53,20 +53,23 @@ var DefaultConsensusParams = &abci.ConsensusParams{
 }
 
 func MakeTestEncodingConfig() simappparams.EncodingConfig {
-	encodingConfig := simappparams.MakeTestEncodingConfig()
-	std.RegisterLegacyAminoCodec(encodingConfig.Amino)
-	std.RegisterInterfaces(encodingConfig.InterfaceRegistry)
-	ModuleBasics.RegisterLegacyAminoCodec(encodingConfig.Amino)
-	ModuleBasics.RegisterInterfaces(encodingConfig.InterfaceRegistry)
-	return encodingConfig
+	return encoding.MakeConfig(ModuleBasics)
+	//encodingConfig := simappparams.MakeTestEncodingConfig()
+	//std.RegisterLegacyAminoCodec(encodingConfig.Amino)
+	//std.RegisterInterfaces(encodingConfig.InterfaceRegistry)
+	//ModuleBasics.RegisterLegacyAminoCodec(encodingConfig.Amino)
+	//ModuleBasics.RegisterInterfaces(encodingConfig.InterfaceRegistry)
+	//return encodingConfig
 }
 
 func setup(withGenesis bool, invCheckPeriod uint, msgFilterFlag bool) (*App, GenesisState) {
 	db := dbm.NewMemDB()
-	encCdc := MakeTestEncodingConfig()
-	app := NewApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, invCheckPeriod, encCdc, EmptyAppOptions{}, msgFilterFlag)
+
+	encodingConfig := encoding.MakeConfig(ModuleBasics)
+	//encCdc := MakeTestEncodingConfig()
+	app := NewApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, invCheckPeriod, encodingConfig, EmptyAppOptions{}, msgFilterFlag)
 	if withGenesis {
-		return app, NewDefaultGenesisState(encCdc.Marshaler)
+		return app, NewDefaultGenesisState(encodingConfig.Marshaler)
 	}
 	return app, GenesisState{}
 }
@@ -288,11 +291,12 @@ func FundModuleAccount(bankKeeper bankkeeper.Keeper, ctx sdk.Context, recipientM
 // NewConfig returns config that defines the necessary testing requirements
 // used to bootstrap and start an in-process local testing network.
 func NewConfig(dbm *dbm.MemDB, msgFilterFlag bool) network.Config {
-	encCfg := simapp.MakeTestEncodingConfig()
+	//encCfg := simapp.MakeTestEncodingConfig()
+	encodingConfig := encoding.MakeConfig(ModuleBasics)
 
 	cfg := network.DefaultConfig()
-	cfg.AppConstructor = NewAppConstructor(encCfg, dbm, msgFilterFlag) // the ABCI application constructor
-	cfg.GenesisState = ModuleBasics.DefaultGenesis(cfg.Codec)          // farming genesis state to provide
+	cfg.AppConstructor = NewAppConstructor(encodingConfig, dbm, msgFilterFlag) // the ABCI application constructor
+	cfg.GenesisState = ModuleBasics.DefaultGenesis(cfg.Codec)                  // farming genesis state to provide
 	return cfg
 }
 
@@ -301,7 +305,7 @@ func NewAppConstructor(encodingCfg params.EncodingConfig, db *dbm.MemDB, msgFilt
 	return func(val network.Validator) types.Application {
 		return NewApp(
 			val.Ctx.Logger, db, nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
-			MakeEncodingConfig(),
+			encodingCfg,
 			simapp.EmptyAppOptions{},
 			msgFilterFlag,
 			bam.SetPruning(store.NewPruningOptionsFromString(val.AppConfig.Pruning)),

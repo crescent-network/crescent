@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -24,7 +25,6 @@ import (
 	tmdb "github.com/tendermint/tm-db"
 
 	chain "github.com/crescent-network/crescent/v5/app"
-	"github.com/crescent-network/crescent/v5/app/params"
 	"github.com/crescent-network/crescent/v5/x/liquidstaking/client/cli"
 	"github.com/crescent-network/crescent/v5/x/liquidstaking/types"
 )
@@ -36,7 +36,7 @@ type IntegrationTestSuite struct {
 	network *network.Network
 }
 
-func NewAppConstructor(encodingCfg params.EncodingConfig) network.AppConstructor {
+func NewAppConstructor(encodingCfg simappparams.EncodingConfig) network.AppConstructor {
 	return func(val network.Validator) servertypes.Application {
 		return chain.NewApp(
 			val.Ctx.Logger, tmdb.NewMemDB(), nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,

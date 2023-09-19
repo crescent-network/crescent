@@ -28,6 +28,9 @@ import (
 	ica "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts"
 	"github.com/cosmos/ibc-go/v3/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v3/modules/core"
+	"github.com/evmos/ethermint/encoding"
+	"github.com/evmos/ethermint/x/evm"
+	"github.com/evmos/ethermint/x/feemarket"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -50,7 +53,7 @@ import (
 )
 
 func TestSimAppExportAndBlockedAddrs(t *testing.T) {
-	encCfg := MakeTestEncodingConfig()
+	encCfg := encoding.MakeConfig(ModuleBasics)
 	db := dbm.NewMemDB()
 	app := NewApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{}, true)
 	for acc := range maccPerms {
@@ -85,7 +88,7 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 
 func TestRunMigrations(t *testing.T) {
 	db := dbm.NewMemDB()
-	encCfg := MakeTestEncodingConfig()
+	encCfg := encoding.MakeConfig(ModuleBasics)
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 	app := NewApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{}, true)
 
@@ -207,6 +210,8 @@ func TestRunMigrations(t *testing.T) {
 					"ibc":                ibc.AppModule{}.ConsensusVersion(),
 					"transfer":           transfer.AppModule{}.ConsensusVersion(),
 					"interchainaccounts": ica.AppModule{}.ConsensusVersion(),
+					"evm":                evm.AppModule{}.ConsensusVersion(),
+					"feemarket":          feemarket.AppModule{}.ConsensusVersion(),
 				},
 			)
 			if tc.expRunErr {
@@ -222,7 +227,7 @@ func TestRunMigrations(t *testing.T) {
 
 func TestInitGenesisOnMigration(t *testing.T) {
 	db := dbm.NewMemDB()
-	encCfg := MakeTestEncodingConfig()
+	encCfg := encoding.MakeConfig(ModuleBasics)
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 	app := NewApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{}, true)
 	ctx := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
@@ -272,13 +277,15 @@ func TestInitGenesisOnMigration(t *testing.T) {
 			"amm":           amm.AppModule{}.ConsensusVersion(),
 			"ibc":           ibc.AppModule{}.ConsensusVersion(),
 			"transfer":      transfer.AppModule{}.ConsensusVersion(),
+			"evm":           evm.AppModule{}.ConsensusVersion(),
+			"feemarket":     feemarket.AppModule{}.ConsensusVersion(),
 		},
 	)
 	require.NoError(t, err)
 }
 
 func TestUpgradeStateOnGenesis(t *testing.T) {
-	encCfg := MakeTestEncodingConfig()
+	encCfg := encoding.MakeConfig(ModuleBasics)
 	db := dbm.NewMemDB()
 	app := NewApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{}, true)
 	genesisState := NewDefaultGenesisState(encCfg.Marshaler)

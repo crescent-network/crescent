@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 
+	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	ethermint "github.com/evmos/ethermint/types"
 	evmrest "github.com/evmos/ethermint/x/evm/client/rest"
 	"github.com/gorilla/mux"
@@ -118,8 +119,6 @@ import (
 	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
 	// TODO: add erc20
 
-	// core modules
-	appparams "github.com/crescent-network/crescent/v5/app/params"
 	v2_0_0 "github.com/crescent-network/crescent/v5/app/upgrades/mainnet/v2.0.0"
 	v3 "github.com/crescent-network/crescent/v5/app/upgrades/mainnet/v3"
 	v4 "github.com/crescent-network/crescent/v5/app/upgrades/mainnet/v4"
@@ -360,7 +359,7 @@ func NewApp(
 	skipUpgradeHeights map[int64]bool,
 	homePath string,
 	invCheckPeriod uint,
-	encodingConfig appparams.EncodingConfig,
+	encodingConfig simappparams.EncodingConfig,
 	appOpts servertypes.AppOptions,
 	msgFilterFlag bool,
 	baseAppOptions ...func(*baseapp.BaseApp),
@@ -668,11 +667,11 @@ func NewApp(
 		),
 	)
 
-	//app.EvmKeeper = app.EvmKeeper.SetHooks(
-	//	evmkeeper.NewMultiEvmHooks(
-	//		app.Erc20Keeper.Hooks(),
-	//	),
-	//)
+	app.EvmKeeper = app.EvmKeeper.SetHooks(
+		evmkeeper.NewMultiEvmHooks(
+		//app.Erc20Keeper.Hooks(),
+		),
+	)
 
 	app.ClaimKeeper = claimkeeper.NewKeeper(
 		appCodec,

@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
+	"github.com/evmos/ethermint/encoding"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -19,7 +21,6 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	chain "github.com/crescent-network/crescent/v5/app"
-	"github.com/crescent-network/crescent/v5/app/params"
 	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/liquidity/client/cli"
 	"github.com/crescent-network/crescent/v5/x/liquidity/types"
@@ -36,7 +37,7 @@ type IntegrationTestSuite struct {
 	denom1, denom2 string
 }
 
-func NewAppConstructor(encodingCfg params.EncodingConfig) network.AppConstructor {
+func NewAppConstructor(encodingCfg simappparams.EncodingConfig) network.AppConstructor {
 	return func(val network.Validator) servertypes.Application {
 		return chain.NewApp(
 			val.Ctx.Logger, dbm.NewMemDB(), nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
@@ -56,7 +57,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		s.T().Skip("skipping test in unit-tests mode.")
 	}
 
-	encCfg := chain.MakeTestEncodingConfig()
+	encCfg := encoding.MakeConfig(chain.ModuleBasics)
 
 	cfg := network.DefaultConfig()
 	cfg.AppConstructor = NewAppConstructor(encCfg)

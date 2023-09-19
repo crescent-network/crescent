@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/cosmos/cosmos-sdk/simapp/params"
+	"github.com/evmos/ethermint/encoding"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
@@ -37,7 +39,6 @@ import (
 	srvflags "github.com/evmos/ethermint/server/flags"
 
 	chain "github.com/crescent-network/crescent/v5/app"
-	appparams "github.com/crescent-network/crescent/v5/app/params"
 	ethkeyring "github.com/crescent-network/crescent/v5/crypto/keyring"
 )
 
@@ -50,6 +51,8 @@ var (
 
 		return nil
 	}
+
+	BaseDenom = "ucre"
 )
 
 func GetConfig() *sdk.Config {
@@ -65,11 +68,13 @@ func GetConfig() *sdk.Config {
 
 // NewRootCmd creates a new root command for the app. It is called once in the
 // main function.
-func NewRootCmd() (*cobra.Command, appparams.EncodingConfig) {
+func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 	sdkConfig := GetConfig()
 	sdkConfig.Seal()
 
-	encodingConfig := chain.MakeEncodingConfig()
+	encodingConfig := encoding.MakeConfig(chain.ModuleBasics)
+	//encodingConfig := chain.MakeEncodingConfig()
+
 	initClientCtx := client.Context{}.
 		WithCodec(encodingConfig.Marshaler).
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
@@ -178,7 +183,7 @@ func initAppConfig() (string, interface{}) {
 	//# Warning: this is currently unstable and may lead to crashes, best to keep for 0 unless testing locally
 	//lru_size = 0`
 
-	//	customAppTemplate = customAppTemplate + `
+	//customAppTemplate = customAppTemplate + `
 	//###############################################################################
 	//###                             EVM Configuration                           ###
 	//###############################################################################
@@ -265,7 +270,7 @@ func initAppConfig() (string, interface{}) {
 	return customAppTemplate, customAppConfig
 }
 
-func initRootCmd(rootCmd *cobra.Command, encodingConfig appparams.EncodingConfig) {
+func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 	rootCmd.AddCommand(
 		genutilcli.InitCmd(chain.ModuleBasics, chain.DefaultNodeHome),
 		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, chain.DefaultNodeHome),
@@ -274,7 +279,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig appparams.EncodingConfig
 		genutilcli.ValidateGenesisCmd(chain.ModuleBasics),
 		AddGenesisAccountCmd(chain.DefaultNodeHome),
 		tmcli.NewCompletionCmd(rootCmd, true),
-		testnetCmd(chain.ModuleBasics, banktypes.GenesisBalancesIterator{}),
+		NewTestnetCmd(chain.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),
 		config.Cmd(),
 	)
@@ -357,7 +362,7 @@ func txCommand() *cobra.Command {
 }
 
 type appCreator struct {
-	encCfg appparams.EncodingConfig
+	encCfg params.EncodingConfig
 }
 
 // newApp is an appCreator
