@@ -54,7 +54,7 @@ func (order Order) Validate() error {
 		return fmt.Errorf("open quantity must not be negative: %s", order.OpenQuantity)
 	}
 	if order.OpenQuantity.GT(order.Quantity) {
-		return fmt.Errorf("open quantity must be smaller than quantity: %s > %s", order.OpenQuantity, order.Quantity)
+		return fmt.Errorf("open quantity must not be greater than quantity: %s > %s", order.OpenQuantity, order.Quantity)
 	}
 	if !order.RemainingDeposit.IsPositive() {
 		return fmt.Errorf("remaining deposit must be positive: %s", order.RemainingDeposit)
