@@ -28,7 +28,7 @@ var (
 		DefaultTakerFeeRate:        sdk.NewDecWithPrec(3, 3),  // 0.3%
 		DefaultOrderSourceFeeRatio: sdk.NewDecWithPrec(5, 1),  // 50%
 	}
-	DefaultMaxOrderLifespan          = 24 * time.Hour
+	DefaultMaxOrderLifespan          = 7 * 24 * time.Hour
 	DefaultMaxOrderPriceRatio        = sdk.NewDecWithPrec(1, 1) // 10%
 	DefaultMaxSwapRoutesLen   uint32 = 3
 	DefaultMaxNumMMOrders     uint32 = 15
