@@ -48,24 +48,25 @@ func (s *KeeperTestSuite) TestSimulation() {
 					var lowerPrice, upperPrice sdk.Dec
 					var desiredAmt sdk.Coins
 					v := r.Float64()
+					currentPrice := poolState.CurrentSqrtPrice.Power(2)
 					switch {
 					case v <= 0.3: // lowerPrice < upperPrice <= poolPrice
-						lowerPrice = utils.RandomDec(r, minPrice, poolState.CurrentPrice.Mul(utils.ParseDec("0.8")))
-						upperPrice = utils.RandomDec(r, lowerPrice.Mul(utils.ParseDec("1.001")), poolState.CurrentPrice)
+						lowerPrice = utils.RandomDec(r, minPrice, currentPrice.Mul(utils.ParseDec("0.8")))
+						upperPrice = utils.RandomDec(r, lowerPrice.Mul(utils.ParseDec("1.001")), currentPrice)
 					case v <= 0.7: // lowerPrice < poolPrice <= upperPrice
-						lowerPrice = utils.RandomDec(r, minPrice, poolState.CurrentPrice)
-						upperPrice = utils.RandomDec(r, poolState.CurrentPrice, maxPrice)
+						lowerPrice = utils.RandomDec(r, minPrice, currentPrice)
+						upperPrice = utils.RandomDec(r, currentPrice, maxPrice)
 					default: // poolPrice <= lowerPrice < upperPrice
-						lowerPrice = utils.RandomDec(r, poolState.CurrentPrice, maxPrice.Mul(utils.ParseDec("0.8")))
+						lowerPrice = utils.RandomDec(r, currentPrice, maxPrice.Mul(utils.ParseDec("0.8")))
 						upperPrice = utils.RandomDec(r, lowerPrice.Mul(utils.ParseDec("1.001")), maxPrice)
 					}
 					lowerPrice = exchangetypes.PriceAtTick(types.AdjustTickToTickSpacing(
 						exchangetypes.TickAtPrice(lowerPrice), pool.TickSpacing, false))
 					upperPrice = exchangetypes.PriceAtTick(types.AdjustTickToTickSpacing(
 						exchangetypes.TickAtPrice(upperPrice), pool.TickSpacing, true))
-					if upperPrice.LTE(poolState.CurrentPrice) {
+					if upperPrice.LTE(currentPrice) {
 						desiredAmt = sdk.NewCoins(sdk.NewCoin("uusd", utils.RandomInt(r, sdk.NewInt(10000), sdk.NewInt(1000_000000))))
-					} else if lowerPrice.GTE(poolState.CurrentPrice) {
+					} else if lowerPrice.GTE(currentPrice) {
 						desiredAmt = sdk.NewCoins(sdk.NewCoin("ucre", utils.RandomInt(r, sdk.NewInt(10000), sdk.NewInt(1000_000000))))
 					} else {
 						desiredAmt = utils.ParseCoins("1000_000000ucre,1000_000000uusd")

@@ -103,7 +103,7 @@ func (s *KeeperTestSuite) TestOrderGas() {
 		if poolState.CurrentTick < lowerTick {
 			amt0 = types.Amount0Delta(sqrtPriceA, sqrtPriceB, info.liquidity)
 		} else if poolState.CurrentTick < upperTick {
-			currentSqrtPrice := utils.DecApproxSqrt(poolState.CurrentPrice)
+			currentSqrtPrice := utils.DecApproxSqrt(poolState.CurrentSqrtPrice)
 			amt0 = types.Amount0Delta(currentSqrtPrice, sqrtPriceB, info.liquidity)
 			amt1 = types.Amount1Delta(sqrtPriceA, currentSqrtPrice, info.liquidity)
 		} else {

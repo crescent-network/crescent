@@ -48,7 +48,7 @@ func (k Keeper) AddLiquidity(
 	sqrtPriceA := types.SqrtPriceAtTick(lowerTick)
 	sqrtPriceB := types.SqrtPriceAtTick(upperTick)
 	liquidity = types.LiquidityForAmounts(
-		utils.DecApproxSqrt(poolState.CurrentPrice), sqrtPriceA, sqrtPriceB, desiredAmt0, desiredAmt1)
+		poolState.CurrentSqrtPrice, sqrtPriceA, sqrtPriceB, desiredAmt0, desiredAmt1)
 	if liquidity.IsZero() {
 		err = sdkerrors.Wrap(sdkerrors.ErrInsufficientFunds, "minted liquidity is zero") // TODO: use different error
 		return
@@ -302,9 +302,8 @@ func (k Keeper) modifyPosition(
 		if poolState.CurrentTick < lowerTick {
 			amt0 = types.Amount0Delta(sqrtPriceA, sqrtPriceB, liquidityDelta)
 		} else if poolState.CurrentTick < upperTick {
-			currentSqrtPrice := utils.DecApproxSqrt(poolState.CurrentPrice)
-			amt0 = types.Amount0Delta(currentSqrtPrice, sqrtPriceB, liquidityDelta)
-			amt1 = types.Amount1Delta(sqrtPriceA, currentSqrtPrice, liquidityDelta)
+			amt0 = types.Amount0Delta(poolState.CurrentSqrtPrice, sqrtPriceB, liquidityDelta)
+			amt1 = types.Amount1Delta(sqrtPriceA, poolState.CurrentSqrtPrice, liquidityDelta)
 			poolState.CurrentLiquidity = poolState.CurrentLiquidity.Add(liquidityDelta)
 		} else {
 			amt1 = types.Amount1Delta(sqrtPriceA, sqrtPriceB, liquidityDelta)

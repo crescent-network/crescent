@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
+	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/amm/types"
 	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 )
@@ -40,7 +41,8 @@ func (k Keeper) CreatePool(ctx sdk.Context, creatorAddr sdk.AccAddress, marketId
 	k.SetPoolByReserveAddressIndex(ctx, pool)
 
 	// Set initial pool state
-	state := types.NewPoolState(exchangetypes.TickAtPrice(price), price)
+	state := types.NewPoolState(
+		exchangetypes.TickAtPrice(price), utils.DecApproxSqrt(price))
 	k.SetPoolState(ctx, pool.Id, state)
 
 	if err = ctx.EventManager().EmitTypedEvent(&types.EventCreatePool{
@@ -54,4 +56,3 @@ func (k Keeper) CreatePool(ctx sdk.Context, creatorAddr sdk.AccAddress, marketId
 
 	return pool, nil
 }
-

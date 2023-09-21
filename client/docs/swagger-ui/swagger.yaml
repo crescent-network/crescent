@@ -12661,7 +12661,7 @@ paths:
                     current_tick:
                       type: integer
                       format: int32
-                    current_price:
+                    current_sqrt_price:
                       type: string
                     current_liquidity:
                       type: string
@@ -12879,7 +12879,7 @@ paths:
                   current_tick:
                     type: integer
                     format: int32
-                  current_price:
+                  current_sqrt_price:
                     type: string
                   current_liquidity:
                     type: string
@@ -20838,7 +20838,7 @@ definitions:
       current_tick:
         type: integer
         format: int32
-      current_price:
+      current_sqrt_price:
         type: string
       current_liquidity:
         type: string
@@ -21101,7 +21101,7 @@ definitions:
             current_tick:
               type: integer
               format: int32
-            current_price:
+            current_sqrt_price:
               type: string
             current_liquidity:
               type: string
@@ -21552,7 +21552,7 @@ definitions:
           current_tick:
             type: integer
             format: int32
-          current_price:
+          current_sqrt_price:
             type: string
           current_liquidity:
             type: string

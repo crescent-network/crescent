@@ -32,7 +32,8 @@ func (k OrderSource) ConstructMemOrderBookSide(
 	}
 	maxPriceRatio := k.exchangeKeeper.GetMaxOrderPriceRatio(ctx)
 	poolState := k.MustGetPoolState(ctx, pool.Id)
-	minPrice, maxPrice := exchangetypes.OrderPriceLimit(poolState.CurrentPrice, maxPriceRatio)
+	minPrice, maxPrice := exchangetypes.OrderPriceLimit(
+		poolState.CurrentSqrtPrice.Power(2), maxPriceRatio)
 
 	reserveAddr := pool.MustGetReserveAddress()
 	accQty := utils.ZeroDec
@@ -65,7 +66,7 @@ func (k Keeper) IteratePoolOrders(ctx sdk.Context, pool types.Pool, isBuy bool, 
 	reserveBalance := k.bankKeeper.SpendableCoins(ctx, pool.MustGetReserveAddress()).
 		AmountOf(pool.DenomOut(isBuy)).ToDec()
 	orderLiquidity := poolState.CurrentLiquidity
-	currentPrice := poolState.CurrentPrice
+	currentSqrtPrice := poolState.CurrentSqrtPrice
 
 	iterCb := func(tick int32, tickInfo types.TickInfo) (stop bool) {
 		if orderLiquidity.IsPositive() {
@@ -79,20 +80,19 @@ func (k Keeper) IteratePoolOrders(ctx sdk.Context, pool types.Pool, isBuy bool, 
 				)
 				if isBuy {
 					orderTick, valid = NextOrderTick(
-						true, orderLiquidity, currentPrice, pool.MinOrderQuantity, pool.MinOrderQuote, pool.TickSpacing)
+						true, orderLiquidity, currentSqrtPrice, pool.MinOrderQuantity, pool.MinOrderQuote, pool.TickSpacing)
 					if !valid || orderTick < tick {
 						orderTick = tick
 					}
 				} else {
 					orderTick, valid = NextOrderTick(
-						false, orderLiquidity, currentPrice, pool.MinOrderQuantity, pool.MinOrderQuote, pool.TickSpacing)
+						false, orderLiquidity, currentSqrtPrice, pool.MinOrderQuantity, pool.MinOrderQuote, pool.TickSpacing)
 					if !valid || orderTick > tick {
 						orderTick = tick
 					}
 				}
 				orderPrice := exchangetypes.PriceAtTick(orderTick)
 				orderSqrtPrice := utils.DecApproxSqrt(orderPrice)
-				currentSqrtPrice := utils.DecApproxSqrt(currentPrice)
 				var qty, openQty sdk.Dec
 				if isBuy {
 					qty = types.Amount1DeltaDec(currentSqrtPrice, orderSqrtPrice, orderLiquidity).QuoTruncate(orderPrice)
@@ -106,7 +106,7 @@ func (k Keeper) IteratePoolOrders(ctx sdk.Context, pool types.Pool, isBuy bool, 
 						return true
 					}
 					reserveBalance = reserveBalance.Sub(exchangetypes.DepositAmount(isBuy, orderPrice, qty))
-					currentPrice = orderPrice
+					currentSqrtPrice = orderSqrtPrice
 				} else { // No more possible order price
 					break
 				}
@@ -115,7 +115,7 @@ func (k Keeper) IteratePoolOrders(ctx sdk.Context, pool types.Pool, isBuy bool, 
 				}
 			}
 		} else {
-			currentPrice = exchangetypes.PriceAtTick(tick)
+			currentSqrtPrice = types.SqrtPriceAtTick(tick)
 		}
 		if isBuy {
 			orderLiquidity = orderLiquidity.Sub(tickInfo.NetLiquidity)
@@ -135,7 +135,6 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 	isBuy := results[0].IsBuy()
 
 	poolState := k.MustGetPoolState(ctx, pool.Id)
-	currentSqrtPrice := utils.DecApproxSqrt(poolState.CurrentPrice)
 	rewards := sdk.Coins{}
 
 	for len(results) > 0 {
@@ -163,27 +162,27 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 		var expectedAmtOutToTargetSqrtPrice sdk.Dec
 		if isBuy {
 			expectedAmtOutToTargetSqrtPrice = types.Amount1DeltaDec(
-				targetSqrtPrice, currentSqrtPrice, poolState.CurrentLiquidity)
+				targetSqrtPrice, poolState.CurrentSqrtPrice, poolState.CurrentLiquidity)
 		} else {
 			expectedAmtOutToTargetSqrtPrice = types.Amount0DeltaRoundingDec(
-				currentSqrtPrice, targetSqrtPrice, poolState.CurrentLiquidity, false)
+				poolState.CurrentSqrtPrice, targetSqrtPrice, poolState.CurrentLiquidity, false)
 		}
 		var nextSqrtPrice sdk.Dec
 		if amtOut.GTE(expectedAmtOutToTargetSqrtPrice) {
 			nextSqrtPrice = targetSqrtPrice
 		} else {
 			nextSqrtPrice = types.NextSqrtPriceFromOutput(
-				currentSqrtPrice, poolState.CurrentLiquidity, amtOut, isBuy)
+				poolState.CurrentSqrtPrice, poolState.CurrentLiquidity, amtOut, isBuy)
 		}
 
 		// Calculate expected amount in.
 		var expectedAmtIn sdk.Dec
 		if isBuy {
 			expectedAmtIn = types.Amount0DeltaRoundingDec(
-				nextSqrtPrice, currentSqrtPrice, poolState.CurrentLiquidity, true)
+				nextSqrtPrice, poolState.CurrentSqrtPrice, poolState.CurrentLiquidity, true)
 		} else {
 			expectedAmtIn = types.Amount1DeltaDec(
-				currentSqrtPrice, nextSqrtPrice, poolState.CurrentLiquidity)
+				poolState.CurrentSqrtPrice, nextSqrtPrice, poolState.CurrentLiquidity)
 		}
 		if amtIn.GT(expectedAmtIn) {
 			fee := amtIn.Sub(expectedAmtIn).TruncateInt()
@@ -210,9 +209,9 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 			}
 		}
 
-		currentSqrtPrice = nextSqrtPrice
+		poolState.CurrentSqrtPrice = nextSqrtPrice
 
-		if currentSqrtPrice.Equal(targetSqrtPrice) {
+		if poolState.CurrentSqrtPrice.Equal(targetSqrtPrice) {
 			netLiquidity := k.crossTick(ctx, pool.Id, nextTick, poolState)
 			if isBuy {
 				netLiquidity = netLiquidity.Neg()
@@ -224,10 +223,9 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 				poolState.CurrentTick = nextTick
 			}
 		} else {
-			poolState.CurrentTick = exchangetypes.TickAtPrice(currentSqrtPrice.Power(2))
+			poolState.CurrentTick = exchangetypes.TickAtPrice(poolState.CurrentSqrtPrice.Power(2))
 		}
 	}
-	poolState.CurrentPrice = currentSqrtPrice.Power(2)
 	k.SetPoolState(ctx, pool.Id, poolState)
 	if rewards.IsAllPositive() {
 		if err := k.bankKeeper.SendCoins(
@@ -256,9 +254,9 @@ func (k Keeper) nextTick(ctx sdk.Context, poolId uint64, currentTick int32, lte 
 }
 
 func NextOrderTick(
-	isBuy bool, liquidity sdk.Int, currentPrice, minOrderQty, minOrderQuote sdk.Dec, tickSpacing uint32) (tick int32, valid bool) {
-	currentSqrtPrice := utils.DecApproxSqrt(currentPrice)
+	isBuy bool, liquidity sdk.Int, currentSqrtPrice, minOrderQty, minOrderQuote sdk.Dec, tickSpacing uint32) (tick int32, valid bool) {
 	liquidityDec := liquidity.ToDec()
+	currentTick := exchangetypes.TickAtPrice(currentSqrtPrice.Power(2))
 	if isBuy {
 		// 1. Check min order qty
 		// L^2 + 4 * MinQty * L * sqrt(P_current)
@@ -273,12 +271,12 @@ func NextOrderTick(
 		if !orderSqrtPrice2.IsPositive() {
 			return 0, false
 		}
-		orderPrice := sdk.MinDec(orderSqrtPrice, orderSqrtPrice2).Power(2)
-		if orderPrice.GT(currentPrice) {
+		orderSqrtPrice = sdk.MinDec(orderSqrtPrice, orderSqrtPrice2)
+		if orderSqrtPrice.GT(currentSqrtPrice) {
 			return 0, false
 		}
-		tick = types.AdjustPriceToTickSpacing(orderPrice, tickSpacing, false)
-		if orderPrice.Equal(currentPrice) { // This implies PriceAtTick(tick) == currentPrice
+		tick = types.AdjustPriceToTickSpacing(orderSqrtPrice.Power(2), tickSpacing, false)
+		if tick == currentTick {
 			tick -= int32(tickSpacing)
 		}
 		return tick, true
@@ -294,12 +292,12 @@ func NextOrderTick(
 	if !orderSqrtPrice2.IsPositive() {
 		return 0, false
 	}
-	orderPrice := sdk.MaxDec(orderSqrtPrice, orderSqrtPrice2).Power(2)
-	if orderPrice.LT(currentPrice) {
+	orderSqrtPrice = sdk.MaxDec(orderSqrtPrice, orderSqrtPrice2)
+	if orderSqrtPrice.LT(currentSqrtPrice) {
 		return 0, false
 	}
-	tick = types.AdjustPriceToTickSpacing(orderPrice, tickSpacing, true)
-	if orderPrice.Equal(currentPrice) { // This implies PriceAtTick(tick) == currentPrice
+	tick = types.AdjustPriceToTickSpacing(orderSqrtPrice.Power(2), tickSpacing, true)
+	if tick == currentTick {
 		tick += int32(tickSpacing)
 	}
 	return tick, true

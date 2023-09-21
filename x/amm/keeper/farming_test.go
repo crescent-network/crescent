@@ -223,7 +223,7 @@ func (s *KeeperTestSuite) TestFarming() {
 		pool.MarketId, ordererAddr, true, utils.ParseDec("6"), sdk.NewDec(120_000000), 0)
 
 	poolState := s.App.AMMKeeper.MustGetPoolState(s.Ctx, pool.Id)
-	fmt.Println(poolState.CurrentPrice)
+	fmt.Println(poolState.CurrentSqrtPrice)
 
 	s.NextBlock()
 

@@ -34,7 +34,7 @@ func (s *TestSuite) AddLiquidityByLiquidity(ownerAddr sdk.AccAddress, poolId uin
 	pool := s.App.AMMKeeper.MustGetPool(s.Ctx, poolId)
 	poolState := s.App.AMMKeeper.MustGetPoolState(s.Ctx, poolId)
 	amt0, amt1 := ammtypes.AmountsForLiquidity(
-		utils.DecApproxSqrt(poolState.CurrentPrice),
+		poolState.CurrentSqrtPrice,
 		utils.DecApproxSqrt(lowerPrice),
 		utils.DecApproxSqrt(upperPrice),
 		desiredLiquidity)

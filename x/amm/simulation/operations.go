@@ -241,6 +241,7 @@ func findMsgAddLiquidityParams(
 				spendable.AmountOf(pool.Denom1).GT(sdk.NewInt(100_000000)) {
 				poolState := k.MustGetPoolState(ctx, pool.Id)
 				var lowerPrice, upperPrice sdk.Dec
+				currentPrice := poolState.CurrentSqrtPrice.Power(2)
 				if r.Float64() <= 0.2 {
 					lowerPrice = types.MinPrice
 				} else if r.Float64() <= 0.5 {
@@ -248,16 +249,16 @@ func findMsgAddLiquidityParams(
 						types.AdjustPriceToTickSpacing(
 							utils.RandomDec(
 								r,
-								poolState.CurrentPrice.Mul(utils.ParseDec("0.5")),
-								poolState.CurrentPrice),
+								currentPrice.Mul(utils.ParseDec("0.5")),
+								currentPrice),
 							pool.TickSpacing, false))
 				} else {
 					lowerPrice = exchangetypes.PriceAtTick(
 						types.AdjustPriceToTickSpacing(
 							utils.RandomDec(
 								r,
-								poolState.CurrentPrice,
-								poolState.CurrentPrice.Mul(utils.ParseDec("1.5"))),
+								currentPrice,
+								currentPrice.Mul(utils.ParseDec("1.5"))),
 							pool.TickSpacing, false))
 				}
 				if r.Float64() <= 0.2 {
@@ -268,12 +269,12 @@ func findMsgAddLiquidityParams(
 							utils.RandomDec(
 								r,
 								lowerPrice.Mul(utils.ParseDec("1.01")),
-								poolState.CurrentPrice.Mul(utils.ParseDec("3"))),
+								currentPrice.Mul(utils.ParseDec("3"))),
 							pool.TickSpacing, true))
 				}
 				liquidity := utils.RandomInt(r, sdk.NewInt(10000), sdk.NewInt(100_000000))
 				amt0, amt1 := types.AmountsForLiquidity(
-					utils.DecApproxSqrt(poolState.CurrentPrice),
+					poolState.CurrentSqrtPrice,
 					utils.DecApproxSqrt(lowerPrice),
 					utils.DecApproxSqrt(upperPrice),
 					liquidity)
