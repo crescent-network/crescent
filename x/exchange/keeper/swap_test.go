@@ -94,3 +94,20 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn_MaxOrderPriceRatio() {
 	// cannot sell CRE fully.
 	s.Require().EqualError(err, "in market 1; paid 30000000.000000000000000000ucre < input 50000000.000000000000000000ucre: not enough liquidity in the market")
 }
+
+// HERE! Test for the halves fee
+func (s *KeeperTestSuite) TestSwapExactAmountIn_HalveFee() {
+
+}
+
+// HERE! Test for FindAllRoutes
+func (s *KeeperTestSuite) TestFindAllRoutes() {
+	// Add markets: ucre/uusd, ucre/uatom, uusd/uatom, uusd/ustake, uatom/ustake
+
+}
+
+// HERE! Test for FindAllRoutes with no last prices markets
+func (s *KeeperTestSuite) TestFindAllRoutes_NoLastPrice() {
+	// Add markets: ucre/uusd, ucre/uatom, uusd/uatom, uusd/ustake, uatom/ustake
+
+}

@@ -16,7 +16,8 @@ var p = int(math.Pow10(TickPrecision))
 // char returns the characteristic(integral part) of
 // log10(x).
 func char(x *big.Int) int {
-	if x.Sign() == 0 {
+	// HERE! Might need to check if x is negative
+	if x.Sign() <= 0 {
 		panic("cannot calculate char for 0")
 	}
 	return len(x.Text(10)) - 1
@@ -44,6 +45,7 @@ func ValidateTickPrice(price sdk.Dec) (tick int32, valid bool) {
 }
 
 func PriceAtTick(tick int32) sdk.Dec {
+	// HERE! Exception handling for tick > maxTick or tick < minTick
 	q, r := utils.DivMod(int(tick), 9*p)
 	//if q < prec-sdk.Precision {
 	//	panic("price underflow")

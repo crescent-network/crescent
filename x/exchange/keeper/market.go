@@ -53,6 +53,7 @@ func (k Keeper) EscrowCoins(
 	if coins.IsAllPositive() {
 		return k.bankKeeper.SendCoins(ctx, addr, market.MustGetEscrowAddress(), coins)
 	}
+	// HERE! If some coins are zero, an error msg might need to be returned.
 	return nil
 }
 
@@ -62,5 +63,6 @@ func (k Keeper) ReleaseCoins(
 	if coins.IsAllPositive() {
 		return k.bankKeeper.SendCoins(ctx, market.MustGetEscrowAddress(), addr, coins)
 	}
+	// HERE! If some coins are zero, an error msg might need to be returned.
 	return nil
 }

@@ -41,3 +41,29 @@ func TestFillMemOrderBasic(t *testing.T) {
 	testutil.AssertEqual(t, sdk.NewDec(6_231250), order.Received())
 	testutil.AssertEqual(t, sdk.NewDec(18750), order.Fee())
 }
+
+// HERE! Test for the case where no bid order exists in batch matching.
+// The tests below might be in keeper/matching_test.go or keeper/batch_test.go.
+func TestNoBestBidPriceBatch(t *testing.T) {
+
+}
+
+// HERE! Test for the case where no ask order exists in batch matching.
+func TestNoBestAskPriceBatch(t *testing.T) {
+
+}
+
+// HERE! Test for the case where the best bid price is lower than the best ask price.
+func TestNoMatchingBatch(t *testing.T) {
+
+}
+
+// HERE! Test for the case where the best bid price is equal to the best ask price.
+func TestSinglePriceAuction_SameBestPrice(t *testing.T) {
+
+}
+
+// HERE! Test for the case where the best bid price is higher than the best ask price.
+func TestSinglePriceAuction_HigherBestBidPrice(t *testing.T) {
+
+}

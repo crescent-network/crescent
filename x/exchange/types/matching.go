@@ -137,6 +137,8 @@ func (ctx *MatchingContext) FillOrderBookPriceLevel(level *MemOrderBookPriceLeve
 			remainingQty := qty.Sub(totalExecQty)
 			if remainingQty.IsZero() {
 				break
+			} else if remainingQty.IsNegative() { // sanity check
+				panic("remaining quantity is negative")
 			}
 			// TODO: optimize duplicate TotalExecutableQuantity calls?
 			executableQty = TotalExecutableQuantity(group.orders)

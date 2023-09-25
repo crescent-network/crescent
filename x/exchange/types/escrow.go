@@ -41,6 +41,7 @@ func (e *Escrow) Pays(addr sdk.AccAddress) sdk.Coins {
 	for _, decCoin := range e.deltas[addr.String()] {
 		if decCoin.IsNegative() {
 			coin := sdk.NewCoin(decCoin.Denom, decCoin.Amount.Neg().Ceil().TruncateInt())
+			// HERE! Need to check Ceil() is correct in case of negative amount
 			pays = pays.Add(coin)
 		}
 	}
@@ -77,6 +78,7 @@ func (e *Escrow) Transact(ctx sdk.Context, bankKeeper BankKeeper) error {
 			receiveOutputs = append(receiveOutputs, banktypes.Output{Address: saddr, Coins: receives})
 		}
 	}
+	// HERE! Might need to check if the length of inputs and outputs is not zero
 	if err := bankKeeper.InputOutputCoins(ctx, payInputs, payOutputs); err != nil {
 		return err
 	}

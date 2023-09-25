@@ -6,6 +6,7 @@ import (
 	"github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
+// HERE! Test for the case that the fee is set to the value larger than 1 or below 0.
 func (s *KeeperTestSuite) TestPoolParameterChangeProposal() {
 	handler := exchange.NewProposalHandler(s.keeper)
 	market1 := s.CreateMarket("ucre", "uusd")

@@ -176,6 +176,8 @@ func (s *KeeperTestSuite) TestMinMaxPrice() {
 		s.PlaceLimitOrder(
 			market.Id, ordererAddr, false, price, sdk.NewDec(1000000), time.Hour)
 	}
+
+	// HERE! No need to check something?
 }
 
 func (s *KeeperTestSuite) TestCancelOrder() {
@@ -328,6 +330,11 @@ func (s *KeeperTestSuite) TestNumMMOrdersEdgecase() {
 	// The number of MM orders should be 1, since previous order are fully matched
 	// and deleted.
 	s.Require().Equal(uint32(1), numMMOrders)
+}
+
+// HERE! Test for the limit on the MM order number
+func (s *KeeperTestSuite) TestLimitNumMMOrders() {
+
 }
 
 func (s *KeeperTestSuite) TestSwapEdgecase() {

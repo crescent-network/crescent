@@ -116,6 +116,7 @@ func (k Keeper) FindAllRoutes(ctx sdk.Context, fromDenom, toDenom string, maxRou
 		if marketState.LastPrice == nil { // Skip markets with no last price
 			continue
 		}
+		// HERE! Not need to check if the market has orders?
 		if _, ok := denomMap[baseDenom]; !ok {
 			denomMap[baseDenom] = map[string][]uint64{}
 		}

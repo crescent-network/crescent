@@ -109,3 +109,13 @@ func TestDeductFee(t *testing.T) {
 		testutil.AssertEqual(t, amt, deducted.Add(fee))
 	}
 }
+
+// HERE! Need to check when fee is negative
+func TestDeductFee_For_NegativeFee(t *testing.T) {
+	// TODO
+}
+
+// HERE! Need to check the fee for order sources
+func TestDeductFee_For_OrderSource(t *testing.T) {
+	// TODO
+}
