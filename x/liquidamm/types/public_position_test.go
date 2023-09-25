@@ -204,6 +204,15 @@ func TestCalculateRemovedLiquidity(t *testing.T) {
 			prevWinningBidShareAmt: sdk.NewInt(100_000),
 			expectedAmt:            sdk.NewInt(109_989_001),
 		},
+		// HERE! Added test cases for all burnedShare == shareSupply
+		{
+			name:                   "all burn: with previous winning bid",
+			shareSupply:            sdk.NewInt(1_000_000_000),
+			totalLiquidity:         sdk.NewInt(1_100_000_000),
+			burnedShare:            sdk.NewInt(1_000_000_000),
+			prevWinningBidShareAmt: sdk.NewInt(100_000),
+			expectedAmt:            sdk.NewInt(1_100_000_000),
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			removedLiquidity := types.CalculateRemovedLiquidity(

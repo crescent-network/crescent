@@ -85,19 +85,31 @@ func ParseShareDenom(denom string) (publicPositionId uint64, err error) {
 }
 
 func CalculateMintRate(totalLiquidity, shareSupply sdk.Int) sdk.Dec {
+	// HERE! exception handling for initial minting (totalLiquidity == 0)
+	if totalLiquidity.IsZero() {
+		return utils.OneDec
+	}
 	return shareSupply.ToDec().QuoTruncate(totalLiquidity.ToDec())
 }
 
 // CalculateMintedShareAmount calculates minting public position share amount.
 // mintedShareAmt = shareSupply * (addedLiquidity / totalLiquidity)
 func CalculateMintedShareAmount(addedLiquidity, totalLiquidity, shareSupply sdk.Int) sdk.Int {
-	if shareSupply.IsZero() { // initial minting
+	// if shareSupply.IsZero() { // initial minting
+	// 	return addedLiquidity
+	// }
+	// HERE! For safety, it might be better to use totalLiquidity
+	if totalLiquidity.IsZero() { // initial minting
 		return addedLiquidity
 	}
 	return shareSupply.Mul(addedLiquidity).Quo(totalLiquidity)
 }
 
 func CalculateBurnRate(shareSupply, totalLiquidity, prevWinningBidShareAmt sdk.Int) sdk.Dec {
+	// HERE! exception handling for zero division
+	if shareSupply.Add(prevWinningBidShareAmt).IsZero() {
+		return utils.OneDec // HERE! Check for the return value: 1 or 0?
+	}
 	return totalLiquidity.ToDec().QuoTruncate(shareSupply.Add(prevWinningBidShareAmt).ToDec())
 }
 
@@ -108,6 +120,10 @@ func CalculateRemovedLiquidity(
 	burnedShareAmt, shareSupply, totalLiquidity, prevWinningBidShareAmt sdk.Int) sdk.Int {
 	if burnedShareAmt.Equal(shareSupply) { // last one to burn
 		return totalLiquidity
+	}
+	// HERE! Exception handling for zero division
+	if shareSupply.Add(prevWinningBidShareAmt).IsZero() {
+		return sdk.ZeroInt() // HERE! Check for the return value: 0 or totalLiquidity?
 	}
 	return totalLiquidity.Mul(burnedShareAmt).Quo(shareSupply.Add(prevWinningBidShareAmt))
 }
