@@ -35,7 +35,9 @@ func SimulateMarketParameterChangeProposal(k keeper.Keeper) simtypes.ContentSimu
 			if r.Float64() <= 0.5 {
 				fees := GenFees(r)
 				changes = append(changes, types.NewMarketParameterChange(
-					market.Id, fees.DefaultMakerFeeRate, fees.DefaultTakerFeeRate, fees.DefaultOrderSourceFeeRatio))
+					market.Id,
+					fees.DefaultMakerFeeRate, fees.DefaultTakerFeeRate, fees.DefaultOrderSourceFeeRatio,
+					nil, nil, nil, nil)) // XXX
 			}
 			return false
 		})

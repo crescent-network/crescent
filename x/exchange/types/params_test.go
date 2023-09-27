@@ -94,6 +94,34 @@ func TestParams_Validate(t *testing.T) {
 			"max order price ratio must be in range (0.0, 1.0): 1.000000000000000000",
 		},
 		{
+			"negative default min order quantity",
+			func(params *types.Params) {
+				params.DefaultMinOrderQuantity = sdk.NewInt(-1)
+			},
+			"default min order quantity must not be negative: -1",
+		},
+		{
+			"negative default min order quantity",
+			func(params *types.Params) {
+				params.DefaultMinOrderQuote = sdk.NewInt(-1)
+			},
+			"default min order quote must not be negative: -1",
+		},
+		{
+			"negative default max order quantity",
+			func(params *types.Params) {
+				params.DefaultMaxOrderQuantity = sdk.NewInt(-1)
+			},
+			"default max order quantity must not be negative: -1",
+		},
+		{
+			"negative default max order quantity",
+			func(params *types.Params) {
+				params.DefaultMaxOrderQuote = sdk.NewInt(-1)
+			},
+			"default max order quote must not be negative: -1",
+		},
+		{
 			"zero max swap routes len",
 			func(params *types.Params) {
 				params.MaxSwapRoutesLen = 0

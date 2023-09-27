@@ -139,4 +139,8 @@ message EventMarketParameterChanged {
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
   string order_source_fee_ratio = 4
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string min_order_quantity = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int"];
+  string min_order_quote    = 6 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int"];
+  string max_order_quantity = 7 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int"];
+  string max_order_quote    = 8 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int"];
 }

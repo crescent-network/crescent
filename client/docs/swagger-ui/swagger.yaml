@@ -11610,6 +11610,14 @@ paths:
                       type: string
                     order_source_fee_ratio:
                       type: string
+                    min_order_quantity:
+                      type: string
+                    min_order_quote:
+                      type: string
+                    max_order_quantity:
+                      type: string
+                    max_order_quote:
+                      type: string
                     last_price:
                       type: string
                     last_matching_height:
@@ -11750,6 +11758,14 @@ paths:
                   taker_fee_rate:
                     type: string
                   order_source_fee_ratio:
+                    type: string
+                  min_order_quantity:
+                    type: string
+                  min_order_quote:
+                    type: string
+                  max_order_quantity:
+                    type: string
+                  max_order_quote:
                     type: string
                   last_price:
                     type: string
@@ -12137,6 +12153,14 @@ paths:
                     title: >-
                       max_order_price_ratio defines the ratio of the maximum
                       possible order price compared to the market's last price
+                  default_min_order_quantity:
+                    type: string
+                  default_min_order_quote:
+                    type: string
+                  default_max_order_quantity:
+                    type: string
+                  default_max_order_quote:
+                    type: string
                   max_swap_routes_len:
                     type: integer
                     format: int64
@@ -12543,10 +12567,6 @@ paths:
                   default_tick_spacing:
                     type: integer
                     format: int64
-                  default_min_order_quantity:
-                    type: string
-                  default_min_order_quote:
-                    type: string
                   private_farming_plan_creation_fee:
                     type: array
                     items:
@@ -12650,10 +12670,6 @@ paths:
                     tick_spacing:
                       type: integer
                       format: int64
-                    min_order_quantity:
-                      type: string
-                    min_order_quote:
-                      type: string
                     current_tick:
                       type: integer
                       format: int32
@@ -12868,10 +12884,6 @@ paths:
                   tick_spacing:
                     type: integer
                     format: int64
-                  min_order_quantity:
-                    type: string
-                  min_order_quote:
-                    type: string
                   current_tick:
                     type: integer
                     format: int32
@@ -20172,6 +20184,14 @@ definitions:
         type: string
       order_source_fee_ratio:
         type: string
+      min_order_quantity:
+        type: string
+      min_order_quote:
+        type: string
+      max_order_quantity:
+        type: string
+      max_order_quote:
+        type: string
       last_price:
         type: string
       last_matching_height:
@@ -20288,6 +20308,14 @@ definitions:
         title: >-
           max_order_price_ratio defines the ratio of the maximum possible order
           price compared to the market's last price
+      default_min_order_quantity:
+        type: string
+      default_min_order_quote:
+        type: string
+      default_max_order_quantity:
+        type: string
+      default_max_order_quote:
+        type: string
       max_swap_routes_len:
         type: integer
         format: int64
@@ -20316,6 +20344,14 @@ definitions:
             taker_fee_rate:
               type: string
             order_source_fee_ratio:
+              type: string
+            min_order_quantity:
+              type: string
+            min_order_quote:
+              type: string
+            max_order_quantity:
+              type: string
+            max_order_quote:
               type: string
             last_price:
               type: string
@@ -20508,6 +20544,14 @@ definitions:
             type: string
           order_source_fee_ratio:
             type: string
+          min_order_quantity:
+            type: string
+          min_order_quote:
+            type: string
+          max_order_quantity:
+            type: string
+          max_order_quote:
+            type: string
           last_price:
             type: string
           last_matching_height:
@@ -20622,6 +20666,14 @@ definitions:
             title: >-
               max_order_price_ratio defines the ratio of the maximum possible
               order price compared to the market's last price
+          default_min_order_quantity:
+            type: string
+          default_min_order_quote:
+            type: string
+          default_max_order_quantity:
+            type: string
+          default_max_order_quote:
+            type: string
           max_swap_routes_len:
             type: integer
             format: int64
@@ -20761,10 +20813,6 @@ definitions:
       default_tick_spacing:
         type: integer
         format: int64
-      default_min_order_quantity:
-        type: string
-      default_min_order_quote:
-        type: string
       private_farming_plan_creation_fee:
         type: array
         items:
@@ -20824,10 +20872,6 @@ definitions:
       tick_spacing:
         type: integer
         format: int64
-      min_order_quantity:
-        type: string
-      min_order_quote:
-        type: string
       current_tick:
         type: integer
         format: int32
@@ -21087,10 +21131,6 @@ definitions:
             tick_spacing:
               type: integer
               format: int64
-            min_order_quantity:
-              type: string
-            min_order_quote:
-              type: string
             current_tick:
               type: integer
               format: int32
@@ -21463,10 +21503,6 @@ definitions:
           default_tick_spacing:
             type: integer
             format: int64
-          default_min_order_quantity:
-            type: string
-          default_min_order_quote:
-            type: string
           private_farming_plan_creation_fee:
             type: array
             items:
@@ -21538,10 +21574,6 @@ definitions:
           tick_spacing:
             type: integer
             format: int64
-          min_order_quantity:
-            type: string
-          min_order_quote:
-            type: string
           current_tick:
             type: integer
             format: int32

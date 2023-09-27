@@ -18,18 +18,15 @@ func DerivePoolRewardsPoolAddress(poolId uint64) sdk.AccAddress {
 }
 
 func NewPool(
-	id uint64, marketId uint64, denom0, denom1 string, tickSpacing uint32,
-	minOrderQty, minOrderQuote sdk.Int) Pool {
+	id uint64, marketId uint64, denom0, denom1 string, tickSpacing uint32) Pool {
 	return Pool{
-		Id:               id,
-		MarketId:         marketId,
-		Denom0:           denom0,
-		Denom1:           denom1,
-		ReserveAddress:   DerivePoolReserveAddress(id).String(),
-		RewardsPool:      DerivePoolRewardsPoolAddress(id).String(),
-		TickSpacing:      tickSpacing,
-		MinOrderQuantity: minOrderQty,
-		MinOrderQuote:    minOrderQuote,
+		Id:             id,
+		MarketId:       marketId,
+		Denom0:         denom0,
+		Denom1:         denom1,
+		ReserveAddress: DerivePoolReserveAddress(id).String(),
+		RewardsPool:    DerivePoolRewardsPoolAddress(id).String(),
+		TickSpacing:    tickSpacing,
 	}
 }
 
@@ -79,12 +76,6 @@ func (pool Pool) Validate() error {
 	}
 	if !IsAllowedTickSpacing(pool.TickSpacing) {
 		return fmt.Errorf("tick spacing %d is not allowed", pool.TickSpacing)
-	}
-	if pool.MinOrderQuantity.IsNegative() {
-		return fmt.Errorf("min order quantity must not be negative: %s", pool.MinOrderQuantity)
-	}
-	if pool.MinOrderQuote.IsNegative() {
-		return fmt.Errorf("min order quote must not be negative: %s", pool.MinOrderQuote)
 	}
 	return nil
 }

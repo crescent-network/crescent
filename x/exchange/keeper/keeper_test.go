@@ -14,8 +14,11 @@ import (
 	"github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
-var enoughCoins = utils.ParseCoins(
-	"10000_000000000000000000ucre,10000_000000000000000000uatom,10000_000000000000000000uusd,10000_000000000000000000stake")
+var enoughCoins = sdk.NewCoins(
+	sdk.NewCoin("ucre", sdk.NewIntWithDecimal(1, 60)),
+	sdk.NewCoin("uatom", sdk.NewIntWithDecimal(1, 60)),
+	sdk.NewCoin("uusd", sdk.NewIntWithDecimal(1, 60)),
+	sdk.NewCoin("stake", sdk.NewIntWithDecimal(1, 60)))
 
 type KeeperTestSuite struct {
 	testutil.TestSuite

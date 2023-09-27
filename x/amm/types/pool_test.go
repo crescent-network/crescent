@@ -12,13 +12,13 @@ import (
 )
 
 func TestPool_DenomIn(t *testing.T) {
-	pool := types.NewPool(1, 2, "ucre", "uusd", 10, sdk.NewInt(1), sdk.NewInt(1))
+	pool := types.NewPool(1, 2, "ucre", "uusd", 10)
 	require.Equal(t, "ucre", pool.DenomIn(true))
 	require.Equal(t, "uusd", pool.DenomIn(false))
 }
 
 func TestPool_DenomOut(t *testing.T) {
-	pool := types.NewPool(1, 2, "ucre", "uusd", 10, sdk.NewInt(1), sdk.NewInt(1))
+	pool := types.NewPool(1, 2, "ucre", "uusd", 10)
 	require.Equal(t, "uusd", pool.DenomOut(true))
 	require.Equal(t, "ucre", pool.DenomOut(false))
 }
@@ -91,23 +91,9 @@ func TestPool_Validate(t *testing.T) {
 			},
 			"tick spacing 7 is not allowed",
 		},
-		{
-			"negative min order quantity",
-			func(pool *types.Pool) {
-				pool.MinOrderQuantity = sdk.NewInt(-1000)
-			},
-			"min order quantity must not be negative: -1000",
-		},
-		{
-			"negative min order quote",
-			func(pool *types.Pool) {
-				pool.MinOrderQuote = sdk.NewInt(-1000)
-			},
-			"min order quote must not be negative: -1000",
-		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			pool := types.NewPool(1, 2, "ucre", "uusd", 10, sdk.NewInt(1), sdk.NewInt(1))
+			pool := types.NewPool(1, 2, "ucre", "uusd", 10)
 			tc.malleate(&pool)
 			err := pool.Validate()
 			if tc.expectedErr == "" {

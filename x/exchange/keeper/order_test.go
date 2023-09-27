@@ -171,11 +171,17 @@ func (s *KeeperTestSuite) TestOrderMatching() {
 func (s *KeeperTestSuite) TestMinMaxPrice() {
 	market := s.CreateMarket("ucre", "uusd")
 	ordererAddr := s.FundedAccount(1, enoughCoins)
-	maxPrice := types.MaxPrice
-	for price := types.MinPrice; price.LT(maxPrice); price = price.MulInt64(10) {
-		s.PlaceLimitOrder(
-			market.Id, ordererAddr, false, price, sdk.NewInt(1000000), time.Hour)
-	}
+	ctx := s.Ctx
+	s.Ctx, _ = ctx.CacheContext()
+	s.PlaceLimitOrder(
+		market.Id, ordererAddr, false, types.MinPrice, sdk.NewIntWithDecimal(1, 18), time.Hour)
+	s.PlaceLimitOrder(
+		market.Id, ordererAddr, false, types.MaxPrice, sdk.NewInt(10000), time.Hour)
+	s.Ctx, _ = ctx.CacheContext()
+	s.PlaceLimitOrder(
+		market.Id, ordererAddr, true, types.MinPrice, sdk.NewIntWithDecimal(1, 18), time.Hour)
+	s.PlaceLimitOrder(
+		market.Id, ordererAddr, true, types.MaxPrice, sdk.NewInt(10000), time.Hour)
 }
 
 func (s *KeeperTestSuite) TestCancelOrder() {
@@ -271,46 +277,6 @@ func (s *KeeperTestSuite) TestFairMatching() {
 
 	s.AssertEqual(sdk.NewInt(6929), order1.OpenQuantity) // 101*7/10 matched
 	s.AssertEqual(sdk.NewInt(2970), order2.OpenQuantity) // 101*3/10 matched
-}
-
-func (s *KeeperTestSuite) TestDecQuantity() {
-	market := s.CreateMarket("ucre", "uusd")
-	// Set the fees to zero for now.
-	market.MakerFeeRate = sdk.ZeroDec()
-	market.TakerFeeRate = sdk.ZeroDec()
-	s.keeper.SetMarket(s.Ctx, market)
-
-	ordererAddr1 := s.FundedAccount(1, enoughCoins)
-	ordererAddr2 := s.FundedAccount(2, enoughCoins)
-	ordererAddr3 := s.FundedAccount(3, enoughCoins)
-
-	_, order1, _ := s.PlaceLimitOrder(
-		market.Id, ordererAddr1, true, utils.ParseDec("0.14076"), sdk.NewInt(7000), time.Hour)
-	_, order2, _ := s.PlaceLimitOrder(
-		market.Id, ordererAddr2, true, utils.ParseDec("0.14076"), sdk.NewInt(3000), time.Hour)
-
-	s.PlaceLimitOrder(
-		market.Id, ordererAddr3, false, utils.ParseDec("0.14"), sdk.NewInt(1001), 0)
-
-	order1, _ = s.keeper.GetOrder(s.Ctx, order1.Id)
-	order2, _ = s.keeper.GetOrder(s.Ctx, order2.Id)
-	s.AssertEqual(sdk.NewInt(6299), order1.OpenQuantity)
-	s.AssertEqual(sdk.NewInt(2700), order2.OpenQuantity)
-
-	// Cancel the first order.
-	s.NextBlock()
-	s.CancelOrder(ordererAddr1, order1.Id)
-
-	orderer3BalancesBefore := s.GetAllBalances(ordererAddr3)
-	// Fill the rest.
-	s.PlaceMarketOrder(market.Id, ordererAddr3, false, sdk.NewInt(10000))
-	orderer3BalancesAfter := s.GetAllBalances(ordererAddr3)
-
-	// order2 remaining deposit = 380uusd
-	// order2 executable quantity ~= 2699.6305768
-	// order2 executable quantity * 0.14076 ~= 379.9999999
-	diff, _ := orderer3BalancesAfter.SafeSub(orderer3BalancesBefore)
-	s.AssertEqual(sdk.NewInt(379), diff.AmountOf("uusd"))
 }
 
 func (s *KeeperTestSuite) TestNumMMOrdersEdgecase() {

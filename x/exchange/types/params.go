@@ -13,12 +13,16 @@ import (
 var _ paramstypes.ParamSet = (*Params)(nil)
 
 var (
-	KeyMarketCreationFee  = []byte("MarketCreationFee")
-	KeyFees               = []byte("Fees")
-	KeyMaxOrderLifespan   = []byte("MaxOrderLifespan")
-	KeyMaxOrderPriceRatio = []byte("MaxOrderPriceRatio")
-	KeyMaxSwapRoutesLen   = []byte("MaxSwapRoutesLen")
-	KeyMaxNumMMOrders     = []byte("MaxNumMMOrders")
+	KeyMarketCreationFee       = []byte("MarketCreationFee")
+	KeyFees                    = []byte("Fees")
+	KeyMaxOrderLifespan        = []byte("MaxOrderLifespan")
+	KeyMaxOrderPriceRatio      = []byte("MaxOrderPriceRatio")
+	KeyDefaultMinOrderQuantity = []byte("DefaultMinOrderQuantity")
+	KeyDefaultMinOrderQuote    = []byte("DefaultMinOrderQuote")
+	KeyDefaultMaxOrderQuantity = []byte("DefaultMaxOrderQuantity")
+	KeyDefaultMaxOrderQuote    = []byte("DefaultMaxOrderQuote")
+	KeyMaxSwapRoutesLen        = []byte("MaxSwapRoutesLen")
+	KeyMaxNumMMOrders          = []byte("MaxNumMMOrders")
 )
 
 var (
@@ -28,10 +32,14 @@ var (
 		DefaultTakerFeeRate:        sdk.NewDecWithPrec(3, 3),  // 0.3%
 		DefaultOrderSourceFeeRatio: sdk.NewDecWithPrec(5, 1),  // 50%
 	}
-	DefaultMaxOrderLifespan          = 7 * 24 * time.Hour
-	DefaultMaxOrderPriceRatio        = sdk.NewDecWithPrec(1, 1) // 10%
-	DefaultMaxSwapRoutesLen   uint32 = 3
-	DefaultMaxNumMMOrders     uint32 = 15
+	DefaultMaxOrderLifespan               = 7 * 24 * time.Hour
+	DefaultMaxOrderPriceRatio             = sdk.NewDecWithPrec(1, 1) // 10%
+	DefaultDefaultMinOrderQuantity        = sdk.NewInt(1)
+	DefaultDefaultMinOrderQuote           = sdk.NewInt(1)
+	DefaultDefaultMaxOrderQuantity        = sdk.NewIntWithDecimal(1, 40)
+	DefaultDefaultMaxOrderQuote           = sdk.NewIntWithDecimal(1, 40)
+	DefaultMaxSwapRoutesLen        uint32 = 3
+	DefaultMaxNumMMOrders          uint32 = 15
 
 	MinPrice = sdk.NewDecWithPrec(1, 14)                       // 10^-14
 	MaxPrice = sdk.NewDecFromInt(sdk.NewIntWithDecimal(1, 24)) // 10^24
@@ -43,14 +51,19 @@ func ParamKeyTable() paramstypes.KeyTable {
 
 func NewParams(
 	marketCreationFee sdk.Coins, fees Fees, maxOrderLifespan time.Duration, maxOrderPriceRatio sdk.Dec,
+	defaultMinOrderQty, defaultMinOrderQuote, defaultMaxOrderQty, defaultMaxOrderQuote sdk.Int,
 	maxSwapRoutesLen, maxNumMMOrders uint32) Params {
 	return Params{
-		MarketCreationFee:  marketCreationFee,
-		Fees:               fees,
-		MaxOrderLifespan:   maxOrderLifespan,
-		MaxOrderPriceRatio: maxOrderPriceRatio,
-		MaxSwapRoutesLen:   maxSwapRoutesLen,
-		MaxNumMMOrders:     maxNumMMOrders,
+		MarketCreationFee:       marketCreationFee,
+		Fees:                    fees,
+		MaxOrderLifespan:        maxOrderLifespan,
+		MaxOrderPriceRatio:      maxOrderPriceRatio,
+		DefaultMinOrderQuantity: defaultMinOrderQty,
+		DefaultMinOrderQuote:    defaultMinOrderQuote,
+		DefaultMaxOrderQuantity: defaultMaxOrderQty,
+		DefaultMaxOrderQuote:    defaultMaxOrderQuote,
+		MaxSwapRoutesLen:        maxSwapRoutesLen,
+		MaxNumMMOrders:          maxNumMMOrders,
 	}
 }
 
@@ -58,6 +71,8 @@ func NewParams(
 func DefaultParams() Params {
 	return NewParams(
 		DefaultMarketCreationFee, DefaultFees, DefaultMaxOrderLifespan, DefaultMaxOrderPriceRatio,
+		DefaultDefaultMinOrderQuantity, DefaultDefaultMinOrderQuote,
+		DefaultDefaultMaxOrderQuantity, DefaultDefaultMaxOrderQuote,
 		DefaultMaxSwapRoutesLen, DefaultMaxNumMMOrders)
 }
 
@@ -68,6 +83,10 @@ func (params *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 		paramstypes.NewParamSetPair(KeyFees, &params.Fees, validateFees),
 		paramstypes.NewParamSetPair(KeyMaxOrderLifespan, &params.MaxOrderLifespan, validateMaxOrderLifespan),
 		paramstypes.NewParamSetPair(KeyMaxOrderPriceRatio, &params.MaxOrderPriceRatio, validateMaxOrderPriceRatio),
+		paramstypes.NewParamSetPair(KeyDefaultMinOrderQuantity, &params.DefaultMinOrderQuantity, validateDefaultMinOrderQuantity),
+		paramstypes.NewParamSetPair(KeyDefaultMinOrderQuote, &params.DefaultMinOrderQuote, validateDefaultMinOrderQuote),
+		paramstypes.NewParamSetPair(KeyDefaultMaxOrderQuantity, &params.DefaultMaxOrderQuantity, validateDefaultMaxOrderQuantity),
+		paramstypes.NewParamSetPair(KeyDefaultMaxOrderQuote, &params.DefaultMaxOrderQuote, validateDefaultMaxOrderQuote),
 		paramstypes.NewParamSetPair(KeyMaxSwapRoutesLen, &params.MaxSwapRoutesLen, validateMaxSwapRoutesLen),
 		paramstypes.NewParamSetPair(KeyMaxNumMMOrders, &params.MaxNumMMOrders, validateMaxNumMMOrders),
 	}
@@ -83,6 +102,10 @@ func (params Params) Validate() error {
 		{params.Fees, validateFees},
 		{params.MaxOrderLifespan, validateMaxOrderLifespan},
 		{params.MaxOrderPriceRatio, validateMaxOrderPriceRatio},
+		{params.DefaultMinOrderQuantity, validateDefaultMinOrderQuantity},
+		{params.DefaultMinOrderQuote, validateDefaultMinOrderQuote},
+		{params.DefaultMaxOrderQuantity, validateDefaultMaxOrderQuantity},
+		{params.DefaultMaxOrderQuote, validateDefaultMaxOrderQuote},
 		{params.MaxSwapRoutesLen, validateMaxSwapRoutesLen},
 		{params.MaxNumMMOrders, validateMaxNumMMOrders},
 	} {
@@ -130,6 +153,50 @@ func validateMaxOrderPriceRatio(i interface{}) error {
 	}
 	if !(v.IsPositive() && v.LT(utils.OneDec)) {
 		return fmt.Errorf("max order price ratio must be in range (0.0, 1.0): %s", v)
+	}
+	return nil
+}
+
+func validateDefaultMinOrderQuantity(i interface{}) error {
+	v, ok := i.(sdk.Int)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	if v.IsNegative() {
+		return fmt.Errorf("default min order quantity must not be negative: %s", v)
+	}
+	return nil
+}
+
+func validateDefaultMinOrderQuote(i interface{}) error {
+	v, ok := i.(sdk.Int)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	if v.IsNegative() {
+		return fmt.Errorf("default min order quote must not be negative: %s", v)
+	}
+	return nil
+}
+
+func validateDefaultMaxOrderQuantity(i interface{}) error {
+	v, ok := i.(sdk.Int)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	if v.IsNegative() {
+		return fmt.Errorf("default max order quantity must not be negative: %s", v)
+	}
+	return nil
+}
+
+func validateDefaultMaxOrderQuote(i interface{}) error {
+	v, ok := i.(sdk.Int)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	if v.IsNegative() {
+		return fmt.Errorf("default max order quote must not be negative: %s", v)
 	}
 	return nil
 }

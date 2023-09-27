@@ -16,12 +16,20 @@ func HandleMarketParameterChangeProposal(ctx sdk.Context, k Keeper, p *types.Mar
 		market.MakerFeeRate = change.MakerFeeRate
 		market.TakerFeeRate = change.TakerFeeRate
 		market.OrderSourceFeeRatio = change.OrderSourceFeeRatio
+		if change.MinOrderQuantity != nil {
+			market.MinOrderQuantity = *change.MinOrderQuantity
+		}
+		if change.MinOrderQuote != nil {
+			market.MinOrderQuote = *change.MinOrderQuote
+		}
 		k.SetMarket(ctx, market)
 		if err := ctx.EventManager().EmitTypedEvent(&types.EventMarketParameterChanged{
 			MarketId:            change.MarketId,
 			MakerFeeRate:        change.MakerFeeRate,
 			TakerFeeRate:        change.TakerFeeRate,
 			OrderSourceFeeRatio: change.OrderSourceFeeRatio,
+			MinOrderQuantity:    change.MinOrderQuantity,
+			MinOrderQuote:       change.MinOrderQuote,
 		}); err != nil {
 			return err
 		}

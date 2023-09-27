@@ -66,18 +66,28 @@ func (p MarketParameterChangeProposal) String() string {
       Maker Fee Rate:         %s
       Taker Fee Rate:         %s
       Order Source Fee Ratio: %s
-`, change.MarketId, change.MakerFeeRate, change.TakerFeeRate, change.OrderSourceFeeRatio))
+      Min Order Quantity:     %s
+      Min Order Quote:        %s
+      Max Order Quantity:     %s
+      Max Order Quote:        %s
+`, change.MarketId, change.MakerFeeRate, change.TakerFeeRate, change.OrderSourceFeeRatio,
+			change.MinOrderQuantity, change.MinOrderQuote, change.MaxOrderQuantity, change.MaxOrderQuote))
 	}
 	return b.String()
 }
 
 func NewMarketParameterChange(
-	marketId uint64, makerFeeRate, takerFeeRate, orderSourceRatio sdk.Dec) MarketParameterChange {
+	marketId uint64, makerFeeRate, takerFeeRate, orderSourceRatio sdk.Dec,
+	minOrderQty, minOrderQuote, maxOrderQty, maxOrderQuote *sdk.Int) MarketParameterChange {
 	return MarketParameterChange{
 		MarketId:            marketId,
 		MakerFeeRate:        makerFeeRate,
 		TakerFeeRate:        takerFeeRate,
 		OrderSourceFeeRatio: orderSourceRatio,
+		MinOrderQuantity:    minOrderQty,
+		MinOrderQuote:       minOrderQuote,
+		MaxOrderQuantity:    maxOrderQty,
+		MaxOrderQuote:       maxOrderQuote,
 	}
 }
 
@@ -88,6 +98,30 @@ func (change MarketParameterChange) Validate() error {
 	if err := ValidateFees(
 		change.MakerFeeRate, change.TakerFeeRate, change.OrderSourceFeeRatio); err != nil {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+	if change.MinOrderQuantity != nil {
+		if change.MinOrderQuantity.IsNegative() {
+			return sdkerrors.Wrapf(
+				sdkerrors.ErrInvalidRequest, "min order quantity must not be negative: %s", change.MinOrderQuantity)
+		}
+	}
+	if change.MinOrderQuote != nil {
+		if change.MinOrderQuote.IsNegative() {
+			return sdkerrors.Wrapf(
+				sdkerrors.ErrInvalidRequest, "min order quote must not be negative: %s", change.MinOrderQuote)
+		}
+	}
+	if change.MaxOrderQuantity != nil {
+		if change.MaxOrderQuantity.IsNegative() {
+			return sdkerrors.Wrapf(
+				sdkerrors.ErrInvalidRequest, "max order quantity must not be negative: %s", change.MaxOrderQuantity)
+		}
+	}
+	if change.MaxOrderQuote != nil {
+		if change.MaxOrderQuote.IsNegative() {
+			return sdkerrors.Wrapf(
+				sdkerrors.ErrInvalidRequest, "max order quote must not be negative: %s", change.MaxOrderQuote)
+		}
 	}
 	return nil
 }

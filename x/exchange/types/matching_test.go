@@ -22,7 +22,10 @@ func TestPayReceiveDenoms(t *testing.T) {
 
 func TestFillMemOrderBasic(t *testing.T) {
 	market := types.NewMarket(
-		1, "ucre", "uusd", utils.ParseDec("-0.0015"), utils.ParseDec("0.003"), utils.ParseDec("0.5"))
+		1, "ucre", "uusd",
+		utils.ParseDec("-0.0015"), utils.ParseDec("0.003"), utils.ParseDec("0.5"),
+		types.DefaultDefaultMinOrderQuantity, types.DefaultDefaultMinOrderQuote,
+		types.DefaultDefaultMaxOrderQuantity, types.DefaultDefaultMaxOrderQuote)
 	ctx := types.NewMatchingContext(market, false)
 
 	order := newUserMemOrder(1, true, utils.ParseDec("1.0015"), sdk.NewInt(10000), sdk.NewInt(9000))

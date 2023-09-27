@@ -31,11 +31,8 @@ func (k Keeper) CreatePool(ctx sdk.Context, creatorAddr sdk.AccAddress, marketId
 	// Create a new pool
 	poolId := k.GetNextPoolIdWithUpdate(ctx)
 	defaultTickSpacing := k.GetDefaultTickSpacing(ctx)
-	defaultMinOrderQty := k.GetDefaultMinOrderQuantity(ctx)
-	defaultMinOrderQuote := k.GetDefaultMinOrderQuote(ctx)
 	pool = types.NewPool(
-		poolId, marketId, market.BaseDenom, market.QuoteDenom, defaultTickSpacing,
-		defaultMinOrderQty, defaultMinOrderQuote)
+		poolId, marketId, market.BaseDenom, market.QuoteDenom, defaultTickSpacing)
 	k.SetPool(ctx, pool)
 	k.SetPoolByMarketIndex(ctx, pool)
 	k.SetPoolByReserveAddressIndex(ctx, pool)
@@ -56,7 +53,7 @@ func (k Keeper) CreatePool(ctx sdk.Context, creatorAddr sdk.AccAddress, marketId
 	return pool, nil
 }
 
-func (k Keeper) IteratePoolOrders(ctx sdk.Context, pool types.Pool, isBuy bool, cb func(price sdk.Dec, qty sdk.Int) (stop bool)) {
+func (k Keeper) IteratePoolOrders(ctx sdk.Context, market exchangetypes.Market, pool types.Pool, isBuy bool, cb func(price sdk.Dec, qty sdk.Int) (stop bool)) {
 	poolState := k.MustGetPoolState(ctx, pool.Id)
 	reserveBalance := k.bankKeeper.SpendableCoins(ctx, pool.MustGetReserveAddress()).
 		AmountOf(pool.DenomOut(isBuy))
@@ -75,13 +72,13 @@ func (k Keeper) IteratePoolOrders(ctx sdk.Context, pool types.Pool, isBuy bool, 
 				)
 				if isBuy {
 					orderTick, valid = NextOrderTick(
-						true, orderLiquidity, currentPrice, pool.MinOrderQuantity, pool.MinOrderQuote, pool.TickSpacing)
+						true, orderLiquidity, currentPrice, market.MinOrderQuantity, market.MinOrderQuote, pool.TickSpacing)
 					if !valid || orderTick < tick {
 						orderTick = tick
 					}
 				} else {
 					orderTick, valid = NextOrderTick(
-						false, orderLiquidity, currentPrice, pool.MinOrderQuantity, pool.MinOrderQuote, pool.TickSpacing)
+						false, orderLiquidity, currentPrice, market.MinOrderQuantity, market.MinOrderQuote, pool.TickSpacing)
 					if !valid || orderTick > tick {
 						orderTick = tick
 					}
@@ -99,7 +96,7 @@ func (k Keeper) IteratePoolOrders(ctx sdk.Context, pool types.Pool, isBuy bool, 
 						reserveBalance,
 						types.Amount0DeltaRoundingDec(currentSqrtPrice, orderSqrtPrice, orderLiquidity, false).TruncateInt())
 				}
-				if qty.IsPositive() && (orderTick == tick || (qty.GTE(pool.MinOrderQuantity))) {
+				if qty.IsPositive() && (orderTick == tick || (qty.GTE(market.MinOrderQuantity))) {
 					if cb(orderPrice, qty) {
 						return true
 					}

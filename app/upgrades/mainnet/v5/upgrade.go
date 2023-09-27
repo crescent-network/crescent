@@ -70,11 +70,11 @@ func UpgradeHandler(
 			sdk.NewDecWithPrec(1, 3), // Maker: 0.1%
 			sdk.NewDecWithPrec(2, 3), // Taker: 0.2%
 			sdk.NewDecWithPrec(8, 1)) // Order source: Taker * 80%
+		exchangeParams.DefaultMinOrderQuantity = sdk.NewInt(10000)
+		exchangeParams.DefaultMinOrderQuote = sdk.NewInt(10000)
 		exchangeKeeper.SetParams(ctx, exchangeParams)
 		ammParams := ammtypes.DefaultParams()
 		ammParams.PoolCreationFee = sdk.NewCoins(sdk.NewInt64Coin("ucre", 1000_000000))
-		ammParams.DefaultMinOrderQuantity = sdk.NewInt(10000)
-		ammParams.DefaultMinOrderQuote = sdk.NewInt(10000)
 		ammParams.PrivateFarmingPlanCreationFee = sdk.NewCoins(sdk.NewInt64Coin("ucre", 1000_000000))
 		ammKeeper.SetParams(ctx, ammParams)
 
@@ -155,6 +155,10 @@ func UpgradeHandler(
 		defaultMakerFeeRate := exchangeParams.Fees.DefaultMakerFeeRate
 		defaultTakerFeeRate := exchangeParams.Fees.DefaultTakerFeeRate
 		defaultOrderSourceFeeRatio := exchangeParams.Fees.DefaultOrderSourceFeeRatio
+		defaultMinOrderQty := exchangeParams.DefaultMinOrderQuantity
+		defaultMinOrderQuote := exchangeParams.DefaultMinOrderQuote
+		defaultMaxOrderQty := exchangeParams.DefaultMaxOrderQuantity
+		defaultMaxOrderQuote := exchangeParams.DefaultMaxOrderQuote
 		pairs := map[uint64]liquiditytypes.Pair{}
 		var pairIds []uint64 // For ordered map access
 		var lastMarketId uint64
@@ -190,7 +194,8 @@ func UpgradeHandler(
 			// corresponding indexes, too.
 			market := exchangetypes.NewMarket(
 				pair.Id, pair.BaseCoinDenom, pair.QuoteCoinDenom,
-				defaultMakerFeeRate, defaultTakerFeeRate, defaultOrderSourceFeeRatio)
+				defaultMakerFeeRate, defaultTakerFeeRate, defaultOrderSourceFeeRatio,
+				defaultMinOrderQty, defaultMinOrderQuote, defaultMaxOrderQty, defaultMaxOrderQuote)
 			exchangeKeeper.SetMarket(ctx, market)
 			exchangeKeeper.SetMarketByDenomsIndex(ctx, market)
 			exchangeKeeper.SetMarketState(ctx, market.Id, exchangetypes.NewMarketState(pair.LastPrice))
@@ -204,8 +209,6 @@ func UpgradeHandler(
 		// Create a new pool for each market if the market's corresponding pair
 		// had at least one active pool.
 		defaultTickSpacing := ammParams.DefaultTickSpacing
-		defaultMinOrderQty := ammParams.DefaultMinOrderQuantity
-		defaultMinOrderQuote := ammParams.DefaultMinOrderQuote
 		newPoolIdByPairId := map[uint64]uint64{}
 		pairIdByOldPoolId := map[uint64]uint64{}
 		oldPoolsById := map[uint64]liquiditytypes.Pool{}
@@ -251,8 +254,7 @@ func UpgradeHandler(
 				newPoolId := ammKeeper.GetNextPoolIdWithUpdate(ctx)
 				marketId := pairId // We used the same ids as pairs for markets.
 				newPool := ammtypes.NewPool(
-					newPoolId, marketId, pair.BaseCoinDenom, pair.QuoteCoinDenom, defaultTickSpacing,
-					defaultMinOrderQty, defaultMinOrderQuote)
+					newPoolId, marketId, pair.BaseCoinDenom, pair.QuoteCoinDenom, defaultTickSpacing)
 				ammKeeper.SetPool(ctx, newPool)
 				// Set corresponding indexes.
 				ammKeeper.SetPoolByMarketIndex(ctx, newPool)
@@ -573,6 +575,12 @@ func UpgradeHandler(
 				if ParamChanges[pairId].TakerFeeRate != nil {
 					market.TakerFeeRate = *ParamChanges[pairId].TakerFeeRate
 				}
+				if ParamChanges[pairId].MinOrderQuantity != nil {
+					market.MinOrderQuantity = *ParamChanges[pairId].MinOrderQuantity
+				}
+				if ParamChanges[pairId].MinOrderQuote != nil {
+					market.MinOrderQuote = *ParamChanges[pairId].MinOrderQuote
+				}
 				exchangeKeeper.SetMarket(ctx, market)
 			}
 			if ParamChanges[pairId].TickSpacing != nil || ParamChanges[pairId].MinOrderQuantity != nil || ParamChanges[pairId].MinOrderQuote != nil {
@@ -583,12 +591,6 @@ func UpgradeHandler(
 				pool := ammKeeper.MustGetPool(ctx, poolId)
 				if ParamChanges[pairId].TickSpacing != nil {
 					pool.TickSpacing = *ParamChanges[pairId].TickSpacing
-				}
-				if ParamChanges[pairId].MinOrderQuantity != nil {
-					pool.MinOrderQuantity = *ParamChanges[pairId].MinOrderQuantity
-				}
-				if ParamChanges[pairId].MinOrderQuote != nil {
-					pool.MinOrderQuote = *ParamChanges[pairId].MinOrderQuote
 				}
 				ammKeeper.SetPool(ctx, pool)
 			}

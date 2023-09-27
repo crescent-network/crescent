@@ -14,7 +14,8 @@ func (s *KeeperTestSuite) TestPoolParameterChangeProposal() {
 	proposal := types.NewMarketParameterChangeProposal(
 		"Title", "Description", []types.MarketParameterChange{
 			types.NewMarketParameterChange(
-				market2.Id, utils.ParseDec("0.001"), utils.ParseDec("0.002"), utils.ParseDec("0.3")),
+				market2.Id, utils.ParseDec("0.001"), utils.ParseDec("0.002"), utils.ParseDec("0.3"),
+				nil, nil, nil, nil),
 		})
 	s.Require().NoError(proposal.ValidateBasic())
 	s.Require().NoError(handler(s.Ctx, proposal))
@@ -35,7 +36,8 @@ func (s *KeeperTestSuite) TestPoolParameterChangeProposal() {
 	proposal = types.NewMarketParameterChangeProposal(
 		"Title", "Description", []types.MarketParameterChange{
 			types.NewMarketParameterChange(
-				3, utils.ParseDec("0.001"), utils.ParseDec("0.002"), utils.ParseDec("0.5")),
+				3, utils.ParseDec("0.001"), utils.ParseDec("0.002"), utils.ParseDec("0.5"),
+				nil, nil, nil, nil),
 		})
 	s.Require().NoError(proposal.ValidateBasic())
 	s.Require().EqualError(handler(s.Ctx, proposal), "market 3 not found: not found")

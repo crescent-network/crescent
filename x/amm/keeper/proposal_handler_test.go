@@ -13,7 +13,7 @@ func (s *KeeperTestSuite) TestPoolParameterChangeProposal() {
 	// Change tick spacing only
 	proposal := types.NewPoolParameterChangeProposal(
 		"Title", "Description", []types.PoolParameterChange{
-			types.NewPoolParameterChange(pool.Id, 10, nil, nil),
+			types.NewPoolParameterChange(pool.Id, 10),
 		})
 	s.Require().NoError(proposal.ValidateBasic())
 	s.Require().NoError(handler(s.Ctx, proposal))
@@ -21,45 +21,10 @@ func (s *KeeperTestSuite) TestPoolParameterChangeProposal() {
 	pool, _ = s.keeper.GetPool(s.Ctx, pool.Id)
 	s.Require().EqualValues(10, pool.TickSpacing)
 
-	// Change min order qty only
-	proposal = types.NewPoolParameterChangeProposal(
-		"Title", "Description", []types.PoolParameterChange{
-			types.NewPoolParameterChange(pool.Id, 0, utils.ParseDecP("10000"), nil),
-		})
-	s.Require().NoError(proposal.ValidateBasic())
-	s.Require().NoError(handler(s.Ctx, proposal))
-
-	pool, _ = s.keeper.GetPool(s.Ctx, pool.Id)
-	s.AssertEqual(utils.ParseDec("10000"), pool.MinOrderQuantity)
-
-	// Change min order quote only
-	proposal = types.NewPoolParameterChangeProposal(
-		"Title", "Description", []types.PoolParameterChange{
-			types.NewPoolParameterChange(pool.Id, 0, nil, utils.ParseDecP("1000")),
-		})
-	s.Require().NoError(proposal.ValidateBasic())
-	s.Require().NoError(handler(s.Ctx, proposal))
-
-	pool, _ = s.keeper.GetPool(s.Ctx, pool.Id)
-	s.AssertEqual(utils.ParseDec("1000"), pool.MinOrderQuote)
-
-	// Change altogether
-	proposal = types.NewPoolParameterChangeProposal(
-		"Title", "Description", []types.PoolParameterChange{
-			types.NewPoolParameterChange(pool.Id, 5, utils.ParseDecP("1000000"), utils.ParseDecP("10000")),
-		})
-	s.Require().NoError(proposal.ValidateBasic())
-	s.Require().NoError(handler(s.Ctx, proposal))
-
-	pool, _ = s.keeper.GetPool(s.Ctx, pool.Id)
-	s.Require().EqualValues(5, pool.TickSpacing)
-	s.AssertEqual(utils.ParseDec("1000000"), pool.MinOrderQuantity)
-	s.AssertEqual(utils.ParseDec("10000"), pool.MinOrderQuote)
-
 	// Failing cases
 	proposal = types.NewPoolParameterChangeProposal(
 		"Title", "Description", []types.PoolParameterChange{
-			types.NewPoolParameterChange(pool.Id, 5, nil, nil),
+			types.NewPoolParameterChange(pool.Id, 5),
 		})
 	s.Require().NoError(proposal.ValidateBasic())
 	// Same tick spacing

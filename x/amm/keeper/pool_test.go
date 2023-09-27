@@ -136,15 +136,15 @@ func (s *KeeperTestSuite) TestPoolOrders() {
 	} {
 		s.Run(tc.name, func() {
 			s.SetupTest()
-			_, pool := s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("5"))
+			market, pool := s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("5"))
 			lpAddr := s.FundedAccount(1, utils.ParseCoins("10000_000000ucre,10000_000000uusd"))
 			tc.addLiquidity(pool, lpAddr)
 			var buyOrders, sellOrders []order
-			s.App.AMMKeeper.IteratePoolOrders(s.Ctx, pool, true, func(price sdk.Dec, qty sdk.Int) (stop bool) {
+			s.App.AMMKeeper.IteratePoolOrders(s.Ctx, market, pool, true, func(price sdk.Dec, qty sdk.Int) (stop bool) {
 				buyOrders = append(buyOrders, order{price, qty})
 				return false
 			})
-			s.App.AMMKeeper.IteratePoolOrders(s.Ctx, pool, false, func(price sdk.Dec, qty sdk.Int) (stop bool) {
+			s.App.AMMKeeper.IteratePoolOrders(s.Ctx, market, pool, false, func(price sdk.Dec, qty sdk.Int) (stop bool) {
 				sellOrders = append(sellOrders, order{price, qty})
 				return false
 			})
@@ -165,8 +165,8 @@ func (s *KeeperTestSuite) TestPoolOrders() {
 func (s *KeeperTestSuite) TestPoolMinOrderQuantity() {
 	s.keeper.SetDefaultTickSpacing(s.Ctx, 1)
 	market, pool := s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("5"))
-	pool.MinOrderQuantity = sdk.NewInt(100)
-	s.keeper.SetPool(s.Ctx, pool)
+	market.MinOrderQuantity = sdk.NewInt(100)
+	s.App.ExchangeKeeper.SetMarket(s.Ctx, market)
 
 	lpAddr := s.FundedAccount(1, enoughCoins)
 	s.AddLiquidity(

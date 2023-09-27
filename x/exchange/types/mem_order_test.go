@@ -106,7 +106,9 @@ func TestGroupMemOrdersByMsgHeight(t *testing.T) {
 	r := rand.New(rand.NewSource(1))
 	market := types.NewMarket(
 		1, "ucre", "uusd",
-		types.DefaultFees.DefaultMakerFeeRate, types.DefaultFees.DefaultTakerFeeRate, types.DefaultFees.DefaultOrderSourceFeeRatio)
+		types.DefaultFees.DefaultMakerFeeRate, types.DefaultFees.DefaultTakerFeeRate, types.DefaultFees.DefaultOrderSourceFeeRatio,
+		types.DefaultDefaultMinOrderQuantity, types.DefaultDefaultMinOrderQuote,
+		types.DefaultDefaultMaxOrderQuantity, types.DefaultDefaultMaxOrderQuote)
 	deadline := utils.ParseTime("2023-06-01T00:00:00Z")
 	orderSourceOrdererAddr := utils.TestAddress(100)
 	source := types.NewMockOrderSource("source")

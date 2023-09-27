@@ -41,7 +41,7 @@ func (k OrderSource) ConstructMemOrderBookSide(
 	accQty := utils.ZeroInt
 	accQuote := utils.ZeroDec
 	numPriceLevels := 0
-	k.IteratePoolOrders(ctx, pool, opts.IsBuy, func(price sdk.Dec, qty sdk.Int) (stop bool) {
+	k.IteratePoolOrders(ctx, market, pool, opts.IsBuy, func(price sdk.Dec, qty sdk.Int) (stop bool) {
 		if (opts.IsBuy && price.LT(minPrice)) ||
 			(!opts.IsBuy && price.GT(maxPrice)) {
 			return true

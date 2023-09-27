@@ -14,7 +14,9 @@ func DeriveMarketEscrowAddress(marketId uint64) sdk.AccAddress {
 }
 
 func NewMarket(
-	marketId uint64, baseDenom, quoteDenom string, makerFeeRate, takerFeeRate, orderSourceFeeRatio sdk.Dec) Market {
+	marketId uint64, baseDenom, quoteDenom string,
+	makerFeeRate, takerFeeRate, orderSourceFeeRatio sdk.Dec,
+	minOrderQty, minOrderQuote, maxOrderQty, maxOrderQuote sdk.Int) Market {
 	return Market{
 		Id:                  marketId,
 		BaseDenom:           baseDenom,
@@ -23,6 +25,10 @@ func NewMarket(
 		MakerFeeRate:        makerFeeRate,
 		TakerFeeRate:        takerFeeRate,
 		OrderSourceFeeRatio: orderSourceFeeRatio,
+		MinOrderQuantity:    minOrderQty,
+		MinOrderQuote:       minOrderQuote,
+		MaxOrderQuantity:    maxOrderQty,
+		MaxOrderQuote:       maxOrderQuote,
 	}
 }
 
@@ -45,6 +51,18 @@ func (market Market) Validate() error {
 	if err := ValidateFees(
 		market.MakerFeeRate, market.TakerFeeRate, market.OrderSourceFeeRatio); err != nil {
 		return err
+	}
+	if market.MinOrderQuantity.IsNegative() {
+		return fmt.Errorf("min order quantity must not be negative: %s", market.MinOrderQuantity)
+	}
+	if market.MinOrderQuote.IsNegative() {
+		return fmt.Errorf("min order quote must not be negative: %s", market.MinOrderQuote)
+	}
+	if market.MaxOrderQuantity.IsNegative() {
+		return fmt.Errorf("max order quantity must not be negative: %s", market.MaxOrderQuantity)
+	}
+	if market.MaxOrderQuote.IsNegative() {
+		return fmt.Errorf("max order quote must not be negative: %s", market.MaxOrderQuote)
 	}
 	return nil
 }

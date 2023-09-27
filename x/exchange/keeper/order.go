@@ -119,6 +119,32 @@ func (k Keeper) placeLimitOrder(
 		err = sdkerrors.Wrap(sdkerrors.ErrNotFound, "market not found")
 		return
 	}
+	if qty.LT(market.MinOrderQuantity) {
+		err = sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidRequest,
+			"quantity is less than the minimum order quantity allowed: %s < %s",
+			qty, market.MinOrderQuantity)
+		return
+	} else if qty.GT(market.MaxOrderQuantity) {
+		err = sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidRequest,
+			"quantity is greater than the maximum order quantity allowed: %s > %s",
+			qty, market.MaxOrderQuantity)
+		return
+	}
+	if quote := price.MulInt(qty).TruncateInt(); quote.LT(market.MinOrderQuote) {
+		err = sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidRequest,
+			"quantity * price is less than the minimum order quote allowed: %s < %s",
+			quote, market.MinOrderQuantity)
+		return
+	} else if quote.GT(market.MaxOrderQuote) {
+		err = sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidRequest,
+			"quantity * price is greater than the maximum order quote allowed: %s > %s",
+			quote, market.MaxOrderQuote)
+		return
+	}
 
 	var (
 		maxNumMMOrders, numMMOrders uint32
@@ -194,6 +220,19 @@ func (k Keeper) PlaceMarketOrder(
 	market, found := k.GetMarket(ctx, marketId)
 	if !found {
 		err = sdkerrors.Wrap(sdkerrors.ErrNotFound, "market not found")
+		return
+	}
+	if qty.LT(market.MinOrderQuantity) {
+		err = sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidRequest,
+			"quantity is less than the minimum order quantity allowed: %s < %s",
+			qty, market.MinOrderQuantity)
+		return
+	} else if qty.GT(market.MaxOrderQuantity) {
+		err = sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidRequest,
+			"quantity is greater than the maximum order quantity allowed: %s > %s",
+			qty, market.MaxOrderQuantity)
 		return
 	}
 	marketState := k.MustGetMarketState(ctx, market.Id)

@@ -86,10 +86,41 @@ func TestMarket_Validate(t *testing.T) {
 			},
 			"taker fee rate must be in range [0, 1]: 1.100000000000000000",
 		},
+		{
+			"negative min order quantity",
+			func(market *types.Market) {
+				market.MinOrderQuantity = sdk.NewInt(-1000)
+			},
+			"min order quantity must not be negative: -1000",
+		},
+		{
+			"negative min order quote",
+			func(market *types.Market) {
+				market.MinOrderQuote = sdk.NewInt(-1000)
+			},
+			"min order quote must not be negative: -1000",
+		},
+		{
+			"negative max order quantity",
+			func(market *types.Market) {
+				market.MaxOrderQuantity = sdk.NewInt(-1000)
+			},
+			"max order quantity must not be negative: -1000",
+		},
+		{
+			"negative max order quote",
+			func(market *types.Market) {
+				market.MaxOrderQuote = sdk.NewInt(-1000)
+			},
+			"max order quote must not be negative: -1000",
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			market := types.NewMarket(
-				1, "ucre", "uusd", utils.ParseDec("0.0015"), utils.ParseDec("0.003"), utils.ParseDec("0.5"))
+				1, "ucre", "uusd",
+				utils.ParseDec("0.0015"), utils.ParseDec("0.003"), utils.ParseDec("0.5"),
+				types.DefaultDefaultMinOrderQuantity, types.DefaultDefaultMinOrderQuote,
+				types.DefaultDefaultMaxOrderQuantity, types.DefaultDefaultMaxOrderQuote)
 			tc.malleate(&market)
 			err := market.Validate()
 			if tc.expectedErr == "" {

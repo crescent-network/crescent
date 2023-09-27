@@ -55,6 +55,42 @@ func (k Keeper) SetMaxOrderPriceRatio(ctx sdk.Context, maxRatio sdk.Dec) {
 	k.paramSpace.Set(ctx, types.KeyMaxOrderPriceRatio, maxRatio)
 }
 
+func (k Keeper) GetDefaultMinOrderQuantity(ctx sdk.Context) (minOrderQty sdk.Int) {
+	k.paramSpace.Get(ctx, types.KeyDefaultMinOrderQuantity, &minOrderQty)
+	return
+}
+
+func (k Keeper) SetDefaultMinOrderQuantity(ctx sdk.Context, minOrderQty sdk.Int) {
+	k.paramSpace.Set(ctx, types.KeyDefaultMinOrderQuantity, minOrderQty)
+}
+
+func (k Keeper) GetDefaultMinOrderQuote(ctx sdk.Context) (minOrderQuote sdk.Int) {
+	k.paramSpace.Get(ctx, types.KeyDefaultMinOrderQuote, &minOrderQuote)
+	return
+}
+
+func (k Keeper) SetDefaultMinOrderQuote(ctx sdk.Context, minOrderQuote sdk.Int) {
+	k.paramSpace.Set(ctx, types.KeyDefaultMinOrderQuote, minOrderQuote)
+}
+
+func (k Keeper) GetDefaultMaxOrderQuantity(ctx sdk.Context) (maxOrderQty sdk.Int) {
+	k.paramSpace.Get(ctx, types.KeyDefaultMaxOrderQuantity, &maxOrderQty)
+	return
+}
+
+func (k Keeper) SetDefaultMaxOrderQuantity(ctx sdk.Context, maxOrderQty sdk.Int) {
+	k.paramSpace.Set(ctx, types.KeyDefaultMaxOrderQuantity, maxOrderQty)
+}
+
+func (k Keeper) GetDefaultMaxOrderQuote(ctx sdk.Context) (maxOrderQuote sdk.Int) {
+	k.paramSpace.Get(ctx, types.KeyDefaultMaxOrderQuote, &maxOrderQuote)
+	return
+}
+
+func (k Keeper) SetDefaultMaxOrderQuote(ctx sdk.Context, maxOrderQuote sdk.Int) {
+	k.paramSpace.Set(ctx, types.KeyDefaultMaxOrderQuote, maxOrderQuote)
+}
+
 func (k Keeper) GetMaxSwapRoutesLen(ctx sdk.Context) (maxLen uint32) {
 	k.paramSpace.Get(ctx, types.KeyMaxSwapRoutesLen, &maxLen)
 	return
