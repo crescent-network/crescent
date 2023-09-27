@@ -33,8 +33,8 @@ var (
 	DefaultMaxSwapRoutesLen   uint32 = 3
 	DefaultMaxNumMMOrders     uint32 = 15
 
-	MinPrice = sdk.NewDecWithPrec(1, 14)
-	MaxPrice = sdk.NewDecFromInt(sdk.NewIntWithDecimal(1, 40))
+	MinPrice = sdk.NewDecWithPrec(1, 14)                       // 10^-14
+	MaxPrice = sdk.NewDecFromInt(sdk.NewIntWithDecimal(1, 24)) // 10^24
 )
 
 func ParamKeyTable() paramstypes.KeyTable {

@@ -12,7 +12,7 @@ type OrderSource interface {
 	AfterOrdersExecuted(ctx sdk.Context, market Market, ordererAddr sdk.AccAddress, results []*MemOrder) error
 }
 
-type CreateOrderFunc func(ordererAddr sdk.AccAddress, price, qty, openQty sdk.Dec)
+type CreateOrderFunc func(ordererAddr sdk.AccAddress, price sdk.Dec, qty sdk.Int)
 
 type MockOrderSource struct {
 	name string

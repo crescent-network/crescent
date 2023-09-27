@@ -35,8 +35,8 @@ var (
 var (
 	DefaultPoolCreationFee               = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000))
 	DefaultDefaultTickSpacing            = uint32(50)
-	DefaultDefaultMinOrderQuantity       = sdk.NewDec(1)
-	DefaultDefaultMinOrderQuote          = sdk.NewDec(1)
+	DefaultDefaultMinOrderQuantity       = sdk.NewInt(10000)
+	DefaultDefaultMinOrderQuote          = sdk.NewInt(10000)
 	DefaultPrivateFarmingPlanCreationFee = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000))
 	DefaultMaxNumPrivateFarmingPlans     = uint32(50)
 	DefaultMaxFarmingBlockTime           = 10 * time.Second
@@ -140,7 +140,7 @@ func validateDefaultTickSpacing(i interface{}) error {
 }
 
 func validateDefaultMinOrderQuantity(i interface{}) error {
-	v, ok := i.(sdk.Dec)
+	v, ok := i.(sdk.Int)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
@@ -151,7 +151,7 @@ func validateDefaultMinOrderQuantity(i interface{}) error {
 }
 
 func validateDefaultMinOrderQuote(i interface{}) error {
-	v, ok := i.(sdk.Dec)
+	v, ok := i.(sdk.Int)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}

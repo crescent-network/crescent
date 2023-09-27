@@ -28,8 +28,8 @@ func (s *KeeperTestSuite) TestRewardsGrowthGlobalInvariant() {
 	s.NextBlock()
 
 	ordererAddr := s.FundedAccount(2, enoughCoins)
-	s.PlaceLimitOrder(market.Id, ordererAddr, true, utils.ParseDec("1"), sdk.NewDec(200_000000), 0)
-	s.PlaceMarketOrder(market.Id, ordererAddr, false, sdk.NewDec(500_000000))
+	s.PlaceLimitOrder(market.Id, ordererAddr, true, utils.ParseDec("1"), sdk.NewInt(200_000000), 0)
+	s.PlaceMarketOrder(market.Id, ordererAddr, false, sdk.NewInt(500_000000))
 
 	_, broken := keeper.RewardsGrowthGlobalInvariant(s.keeper)(s.Ctx)
 	s.Require().False(broken)
@@ -62,10 +62,10 @@ func (s *KeeperTestSuite) TestRewardsGrowthOutsideInvariant() {
 	s.NextBlock()
 
 	ordererAddr := s.FundedAccount(2, enoughCoins)
-	s.PlaceLimitOrder(market.Id, ordererAddr, true, utils.ParseDec("1"), sdk.NewDec(200_000000), 0)
-	s.PlaceMarketOrder(market.Id, ordererAddr, false, sdk.NewDec(200_000000))
-	s.PlaceMarketOrder(market.Id, ordererAddr, false, sdk.NewDec(200_000000))
-	s.PlaceMarketOrder(market.Id, ordererAddr, false, sdk.NewDec(200_000000))
+	s.PlaceLimitOrder(market.Id, ordererAddr, true, utils.ParseDec("1"), sdk.NewInt(200_000000), 0)
+	s.PlaceMarketOrder(market.Id, ordererAddr, false, sdk.NewInt(200_000000))
+	s.PlaceMarketOrder(market.Id, ordererAddr, false, sdk.NewInt(200_000000))
+	s.PlaceMarketOrder(market.Id, ordererAddr, false, sdk.NewInt(200_000000))
 
 	_, broken := keeper.RewardsGrowthOutsideInvariant(s.keeper)(s.Ctx)
 	s.Require().False(broken)
@@ -119,10 +119,10 @@ func (s *KeeperTestSuite) TestCanCollectInvariant() {
 
 	ordererAddr := s.FundedAccount(2, enoughCoins)
 	for i := 0; i < 100; i++ {
-		s.PlaceMarketOrder(market.Id, ordererAddr, false, sdk.NewDec(50_000000))
+		s.PlaceMarketOrder(market.Id, ordererAddr, false, sdk.NewInt(50_000000))
 	}
 	for i := 0; i < 150; i++ {
-		s.PlaceMarketOrder(market.Id, ordererAddr, true, sdk.NewDec(50_000000))
+		s.PlaceMarketOrder(market.Id, ordererAddr, true, sdk.NewInt(50_000000))
 	}
 
 	_, broken := keeper.CanCollectInvariant(s.keeper)(s.Ctx)
@@ -139,10 +139,10 @@ func (s *KeeperTestSuite) TestCanCollectInvariant() {
 	s.NextBlock()
 
 	for i := 0; i < 100; i++ {
-		s.PlaceMarketOrder(market.Id, ordererAddr, false, sdk.NewDec(50_000000))
+		s.PlaceMarketOrder(market.Id, ordererAddr, false, sdk.NewInt(50_000000))
 	}
 	for i := 0; i < 150; i++ {
-		s.PlaceMarketOrder(market.Id, ordererAddr, true, sdk.NewDec(50_000000))
+		s.PlaceMarketOrder(market.Id, ordererAddr, true, sdk.NewInt(50_000000))
 	}
 
 	position := s.keeper.MustGetPosition(s.Ctx, 1)
@@ -165,7 +165,7 @@ func (s *KeeperTestSuite) TestPoolCurrentLiquidityInvariant() {
 		utils.ParseCoins("1000_000000ucre,500_000000uusd"))
 
 	ordererAddr := s.FundedAccount(2, enoughCoins)
-	s.PlaceLimitOrder(market.Id, ordererAddr, true, utils.ParseDec("1"), sdk.NewDec(200_000000), 0)
+	s.PlaceLimitOrder(market.Id, ordererAddr, true, utils.ParseDec("1"), sdk.NewInt(200_000000), 0)
 
 	_, broken := keeper.PoolCurrentLiquidityInvariant(s.keeper)(s.Ctx)
 	s.Require().False(broken)

@@ -19,13 +19,13 @@ func (s *KeeperTestSuite) TestGetBestPrice() {
 
 	ordererAddr := s.FundedAccount(1, enoughCoins)
 	s.PlaceLimitOrder(
-		market.Id, ordererAddr, true, utils.ParseDec("0.99"), sdk.NewDec(10000), time.Hour)
+		market.Id, ordererAddr, true, utils.ParseDec("0.99"), sdk.NewInt(10000), time.Hour)
 	s.PlaceLimitOrder(
-		market.Id, ordererAddr, true, utils.ParseDec("0.98"), sdk.NewDec(10000), time.Hour)
+		market.Id, ordererAddr, true, utils.ParseDec("0.98"), sdk.NewInt(10000), time.Hour)
 	s.PlaceLimitOrder(
-		market.Id, ordererAddr, false, utils.ParseDec("1.01"), sdk.NewDec(10000), time.Hour)
+		market.Id, ordererAddr, false, utils.ParseDec("1.01"), sdk.NewInt(10000), time.Hour)
 	s.PlaceLimitOrder(
-		market.Id, ordererAddr, false, utils.ParseDec("1.02"), sdk.NewDec(10000), time.Hour)
+		market.Id, ordererAddr, false, utils.ParseDec("1.02"), sdk.NewInt(10000), time.Hour)
 	bestBuyPrice, found := s.keeper.GetBestOrderPrice(s.Ctx, market.Id, true)
 	s.Require().True(found)
 	s.AssertEqual(utils.ParseDec("0.99"), bestBuyPrice)
@@ -38,21 +38,21 @@ func (s *KeeperTestSuite) TestIterateOrderBookSide() {
 	market := s.CreateMarket("ucre", "uusd")
 	ordererAddr := s.FundedAccount(1, enoughCoins)
 	s.PlaceLimitOrder(
-		market.Id, ordererAddr, true, utils.ParseDec("1.2"), sdk.NewDec(10000), time.Hour)
+		market.Id, ordererAddr, true, utils.ParseDec("1.2"), sdk.NewInt(10000), time.Hour)
 	s.PlaceLimitOrder(
-		market.Id, ordererAddr, true, utils.ParseDec("1.2"), sdk.NewDec(10000), time.Hour)
+		market.Id, ordererAddr, true, utils.ParseDec("1.2"), sdk.NewInt(10000), time.Hour)
 	s.PlaceLimitOrder(
-		market.Id, ordererAddr, true, utils.ParseDec("1.1"), sdk.NewDec(10000), time.Hour)
+		market.Id, ordererAddr, true, utils.ParseDec("1.1"), sdk.NewInt(10000), time.Hour)
 	s.PlaceLimitOrder(
-		market.Id, ordererAddr, true, utils.ParseDec("1.0"), sdk.NewDec(10000), time.Hour)
+		market.Id, ordererAddr, true, utils.ParseDec("1.0"), sdk.NewInt(10000), time.Hour)
 	s.PlaceLimitOrder(
-		market.Id, ordererAddr, false, utils.ParseDec("1.3"), sdk.NewDec(10000), time.Hour)
+		market.Id, ordererAddr, false, utils.ParseDec("1.3"), sdk.NewInt(10000), time.Hour)
 	s.PlaceLimitOrder(
-		market.Id, ordererAddr, false, utils.ParseDec("1.3"), sdk.NewDec(10000), time.Hour)
+		market.Id, ordererAddr, false, utils.ParseDec("1.3"), sdk.NewInt(10000), time.Hour)
 	s.PlaceLimitOrder(
-		market.Id, ordererAddr, false, utils.ParseDec("1.4"), sdk.NewDec(10000), time.Hour)
+		market.Id, ordererAddr, false, utils.ParseDec("1.4"), sdk.NewInt(10000), time.Hour)
 	s.PlaceLimitOrder(
-		market.Id, ordererAddr, false, utils.ParseDec("1.5"), sdk.NewDec(10000), time.Hour)
+		market.Id, ordererAddr, false, utils.ParseDec("1.5"), sdk.NewInt(10000), time.Hour)
 
 	type priceLevel struct {
 		price    sdk.Dec

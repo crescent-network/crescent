@@ -49,21 +49,21 @@ func (s *KeeperTestSuite) TestSetOrderSources() {
 }
 
 func (s *KeeperTestSuite) createLiquidity(
-	marketId uint64, ordererAddr sdk.AccAddress, centerPrice, totalQty sdk.Dec) {
+	marketId uint64, ordererAddr sdk.AccAddress, centerPrice sdk.Dec, totalQty sdk.Int) {
 	tick := types.TickAtPrice(centerPrice)
 	interval := types.PriceIntervalAtTick(tick + 10*10)
 	for i := 0; i < 10; i++ {
 		sellPrice := centerPrice.Add(interval.MulInt64(int64(i+1) * 10))
 		buyPrice := centerPrice.Sub(interval.MulInt64(int64(i+1) * 10))
 
-		qty := totalQty.QuoInt64(200).Add(totalQty.QuoInt64(100).MulInt64(int64(i)))
+		qty := totalQty.QuoRaw(200).Add(totalQty.QuoRaw(100).MulRaw(int64(i)))
 		s.PlaceLimitOrder(marketId, ordererAddr, false, sellPrice, qty, time.Hour)
 		s.PlaceLimitOrder(marketId, ordererAddr, true, buyPrice, qty, time.Hour)
 	}
 }
 
 func (s *KeeperTestSuite) createLiquidity2(
-	marketId uint64, ordererAddr sdk.AccAddress, centerPrice, maxOrderPriceRatio, qtyPerTick sdk.Dec) {
+	marketId uint64, ordererAddr sdk.AccAddress, centerPrice, maxOrderPriceRatio sdk.Dec, qtyPerTick sdk.Int) {
 	minPrice, maxPrice := types.OrderPriceLimit(centerPrice, maxOrderPriceRatio)
 	for i := 1; ; i++ {
 		buyPrice := types.PriceAtTick(types.TickAtPrice(centerPrice) - 100*int32(i))

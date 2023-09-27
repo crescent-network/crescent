@@ -8,8 +8,8 @@ type ParamChange struct {
 	MakerFeeRate     *sdk.Dec
 	TakerFeeRate     *sdk.Dec
 	TickSpacing      *uint32
-	MinOrderQuantity *sdk.Dec
-	MinOrderQuote    *sdk.Dec
+	MinOrderQuantity *sdk.Int
+	MinOrderQuote    *sdk.Int
 }
 
 var ParamChanges = map[uint64]ParamChange{} // pairId => ParamChange
@@ -75,11 +75,11 @@ var (
 		},
 	}
 	minOrderQtyChanges = []struct {
-		MinOrderQuantity sdk.Dec
+		MinOrderQuantity sdk.Int
 		TargetPairIds    []uint64
 	}{
 		{
-			MinOrderQuantity: sdk.NewDecFromInt(sdk.NewIntWithDecimal(1, 16)),
+			MinOrderQuantity: sdk.NewIntWithDecimal(1, 16),
 			TargetPairIds: []uint64{
 				8,  // WETH.grv/bCRE
 				12, // WETH.grv/USDC.grv
@@ -95,7 +95,7 @@ var (
 			},
 		},
 		{
-			MinOrderQuantity: sdk.NewDecFromInt(sdk.NewIntWithDecimal(1, 6)),
+			MinOrderQuantity: sdk.NewIntWithDecimal(1, 6),
 			TargetPairIds: []uint64{
 				39, // WBTC.grv/USDC.grv
 				51, // CRO/bCRE
@@ -103,11 +103,11 @@ var (
 		},
 	}
 	minOrderQuoteChanges = []struct {
-		MinOrderQuote sdk.Dec
+		MinOrderQuote sdk.Int
 		TargetPairIds []uint64
 	}{
 		{
-			MinOrderQuote: sdk.NewDecFromInt(sdk.NewIntWithDecimal(1, 16)),
+			MinOrderQuote: sdk.NewIntWithDecimal(1, 16),
 			TargetPairIds: []uint64{
 				7,  // GRAV/WETH.grv
 				11, // USDC.grv/WETH.grv

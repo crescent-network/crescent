@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
 	utils "github.com/crescent-network/crescent/v5/types"
@@ -50,7 +51,7 @@ func TestPoolParameterChangeProposal_ValidateBasic(t *testing.T) {
 			"change only min order qty",
 			func(p *types.PoolParameterChangeProposal) {
 				p.Changes = []types.PoolParameterChange{
-					types.NewPoolParameterChange(1, 0, utils.ParseDecP("10"), nil),
+					types.NewPoolParameterChange(1, 0, utils.Pointer(sdk.NewInt(10)), nil),
 				}
 			},
 			"",
@@ -59,7 +60,7 @@ func TestPoolParameterChangeProposal_ValidateBasic(t *testing.T) {
 			"change only min order quote",
 			func(p *types.PoolParameterChangeProposal) {
 				p.Changes = []types.PoolParameterChange{
-					types.NewPoolParameterChange(1, 0, nil, utils.ParseDecP("10")),
+					types.NewPoolParameterChange(1, 0, nil, utils.Pointer(sdk.NewInt(10))),
 				}
 			},
 			"",
@@ -68,25 +69,25 @@ func TestPoolParameterChangeProposal_ValidateBasic(t *testing.T) {
 			"negative min order qty",
 			func(p *types.PoolParameterChangeProposal) {
 				p.Changes = []types.PoolParameterChange{
-					types.NewPoolParameterChange(1, 5, utils.ParseDecP("-10"), nil),
+					types.NewPoolParameterChange(1, 5, utils.Pointer(sdk.NewInt(-10)), nil),
 				}
 			},
-			"min order quantity must not be negative: -10.000000000000000000: invalid request",
+			"min order quantity must not be negative: -10: invalid request",
 		},
 		{
 			"negative min order quote",
 			func(p *types.PoolParameterChangeProposal) {
 				p.Changes = []types.PoolParameterChange{
-					types.NewPoolParameterChange(1, 5, nil, utils.ParseDecP("-10")),
+					types.NewPoolParameterChange(1, 5, nil, utils.Pointer(sdk.NewInt(-10))),
 				}
 			},
-			"min order quote must not be negative: -10.000000000000000000: invalid request",
+			"min order quote must not be negative: -10: invalid request",
 		},
 		{
 			"zero min order qty",
 			func(p *types.PoolParameterChangeProposal) {
 				p.Changes = []types.PoolParameterChange{
-					types.NewPoolParameterChange(1, 5, utils.ParseDecP("0"), nil),
+					types.NewPoolParameterChange(1, 5, utils.Pointer(sdk.NewInt(0)), nil),
 				}
 			},
 			"",
@@ -95,7 +96,7 @@ func TestPoolParameterChangeProposal_ValidateBasic(t *testing.T) {
 			"zero min order quote",
 			func(p *types.PoolParameterChangeProposal) {
 				p.Changes = []types.PoolParameterChange{
-					types.NewPoolParameterChange(1, 5, nil, utils.ParseDecP("0")),
+					types.NewPoolParameterChange(1, 5, nil, utils.Pointer(sdk.NewInt(0))),
 				}
 			},
 			"",
@@ -114,8 +115,8 @@ func TestPoolParameterChangeProposal_ValidateBasic(t *testing.T) {
 			p := types.NewPoolParameterChangeProposal(
 				"Title", "Description", []types.PoolParameterChange{
 					types.NewPoolParameterChange(1, 5, nil, nil),
-					types.NewPoolParameterChange(2, 10, utils.ParseDecP("100"), nil),
-					types.NewPoolParameterChange(2, 10, nil, utils.ParseDecP("1000")),
+					types.NewPoolParameterChange(2, 10, utils.Pointer(sdk.NewInt(100)), nil),
+					types.NewPoolParameterChange(2, 10, nil, utils.Pointer(sdk.NewInt(1000))),
 				})
 			require.Equal(t, types.ProposalTypePoolParameterChange, p.ProposalType())
 			tc.malleate(p)
@@ -188,8 +189,8 @@ func ExamplePoolParameterChangeProposal_String() {
 	p := types.NewPoolParameterChangeProposal(
 		"Title", "Description", []types.PoolParameterChange{
 			types.NewPoolParameterChange(1, 5, nil, nil),
-			types.NewPoolParameterChange(2, 10, utils.ParseDecP("100"), nil),
-			types.NewPoolParameterChange(2, 10, nil, utils.ParseDecP("1000")),
+			types.NewPoolParameterChange(2, 10, utils.Pointer(sdk.NewInt(100)), nil),
+			types.NewPoolParameterChange(2, 10, nil, utils.Pointer(sdk.NewInt(1000))),
 		})
 	fmt.Println(p.String())
 
@@ -206,13 +207,13 @@ func ExamplePoolParameterChangeProposal_String() {
 	//     Pool Parameter Change:
 	//       Pool Id:            2
 	//       Tick Spacing:       10
-	//       Min Order Quantity: 100.000000000000000000
+	//       Min Order Quantity: 100
 	//       Min Order Quote:    <nil>
 	//     Pool Parameter Change:
 	//       Pool Id:            2
 	//       Tick Spacing:       10
 	//       Min Order Quantity: <nil>
-	//       Min Order Quote:    1000.000000000000000000
+	//       Min Order Quote:    1000
 }
 
 func ExamplePublicFarmingPlanProposal_String() {

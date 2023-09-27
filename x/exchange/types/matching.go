@@ -1,6 +1,8 @@
 package types
 
 import (
+	"fmt"
+
 	"golang.org/x/exp/slices"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -8,8 +10,96 @@ import (
 	utils "github.com/crescent-network/crescent/v5/types"
 )
 
+type MatchState struct {
+	executedQty sdk.Int
+	paid        sdk.Dec
+	received    sdk.Dec
+	feePaid     sdk.Dec
+	feeReceived sdk.Dec
+}
+
+func NewMatchState() MatchState {
+	return MatchState{
+		executedQty: utils.ZeroInt,
+		paid:        utils.ZeroDec,
+		received:    utils.ZeroDec,
+		feePaid:     utils.ZeroDec,
+		feeReceived: utils.ZeroDec,
+	}
+}
+
+func (ms *MatchState) IsMatched() bool {
+	return ms.executedQty.IsPositive()
+}
+
+func (ms *MatchState) Fill(isBuy bool, qty sdk.Int, price sdk.Dec, feeRate sdk.Dec) (executedQuote, paid, received, feePaid, feeReceived sdk.Dec) {
+	ms.executedQty = ms.executedQty.Add(qty)
+	executedQuote = price.MulInt(qty)
+	if isBuy {
+		paid = executedQuote
+		received = qty.ToDec()
+	} else {
+		paid = qty.ToDec()
+		received = executedQuote
+	}
+	if feeRate.IsPositive() {
+		feePaid = feeRate.Mul(received)
+		received = received.Sub(feePaid)
+	} else {
+		feePaid = utils.ZeroDec
+	}
+	if feeRate.IsNegative() {
+		feeReceived = feeRate.Neg().MulTruncate(paid)
+		paid = paid.Sub(feeReceived)
+	} else {
+		feeReceived = utils.ZeroDec
+	}
+	ms.paid = ms.paid.Add(paid)
+	ms.received = ms.received.Add(received)
+	ms.feePaid = ms.feePaid.Add(feePaid)
+	ms.feeReceived = ms.feeReceived.Add(feeReceived)
+	return
+}
+
+func (ms *MatchState) Result() MatchResult {
+	received := ms.received.TruncateInt()
+	return MatchResult{
+		ExecutedQuantity: ms.executedQty,
+		Paid:             ms.paid.Ceil().TruncateInt(),
+		Received:         received,
+		FeePaid:          utils.MinInt(received, ms.feePaid.Ceil().TruncateInt()), // XXX
+		FeeReceived:      ms.feeReceived.TruncateInt(),
+	}
+}
+
+type MatchResult struct {
+	ExecutedQuantity sdk.Int
+	Paid             sdk.Int
+	Received         sdk.Int
+	FeePaid          sdk.Int
+	FeeReceived      sdk.Int
+}
+
+func (res MatchResult) IsMatched() bool {
+	return res.ExecutedQuantity.IsPositive()
+}
+
+type ExecuteOrderResult struct {
+	LastPrice        sdk.Dec
+	ExecutedQuantity sdk.Int
+	Paid             sdk.Coin
+	Received         sdk.Coin
+	FeePaid          sdk.Coin
+	FeeReceived      sdk.Coin
+}
+
+func (res ExecuteOrderResult) IsMatched() bool {
+	return res.ExecutedQuantity.IsPositive()
+}
+
 type MatchingContext struct {
-	baseDenom, quoteDenom                           string
+	baseDenom, quoteDenom string
+
 	makerFeeRate, takerFeeRate, orderSourceFeeRatio sdk.Dec
 }
 
@@ -29,62 +119,35 @@ func NewMatchingContext(market Market, halveFees bool) *MatchingContext {
 	}
 }
 
-func (ctx *MatchingContext) feeRate(isMaker bool) sdk.Dec {
-	if isMaker {
-		return ctx.makerFeeRate
+func (ctx *MatchingContext) FeeRate(orderType MemOrderType, isMaker bool) (feeRate sdk.Dec) {
+	if orderType == UserMemOrder {
+		if isMaker {
+			feeRate = ctx.makerFeeRate
+		} else {
+			feeRate = ctx.takerFeeRate
+		}
+	} else if orderType == OrderSourceMemOrder { // order source order
+		if isMaker {
+			feeRate = ctx.takerFeeRate.Neg().Mul(ctx.orderSourceFeeRatio)
+		} else {
+			feeRate = utils.ZeroDec
+		}
+	} else { // sanity check
+		panic("invalid order type")
 	}
-	return ctx.takerFeeRate
+	return feeRate
 }
 
-func (ctx *MatchingContext) FillOrder(order *MemOrder, qty, price sdk.Dec, isMaker bool) {
+func (ctx *MatchingContext) FillOrder(order *MemOrder, qty sdk.Int, price sdk.Dec, isMaker bool) {
 	executableQty := order.ExecutableQuantity()
 	if qty.GT(executableQty) { // sanity check
 		panic("open quantity is less than quantity")
 	}
-	if order.isMaker != nil && isMaker != *order.isMaker { // sanity check
-		panic("an order's isMaker must be consistent under one matching context")
-	}
-	_, pays, receives, fee := ctx.fillOrder(order.typ, order.isBuy, qty, price, isMaker)
-	order.paid = order.paid.Add(pays)
-	order.remainingDeposit = order.remainingDeposit.Sub(pays)
-	order.received = order.received.Add(receives)
-	order.fee = order.fee.Add(fee)
-	order.executedQty = order.executedQty.Add(qty)
-	order.isMatched = true
-	order.isMaker = &isMaker
+	feeRate := ctx.FeeRate(order.Type, isMaker)
+	order.Fill(order.IsBuy, qty, price, feeRate)
 }
 
-func (ctx *MatchingContext) fillOrder(orderType MemOrderType, isBuy bool, qty, price sdk.Dec, isMaker bool) (executedQuote, pays, receives, fee sdk.Dec) {
-	executedQuote = QuoteAmount(isBuy, price, qty)
-	if isBuy {
-		pays = executedQuote
-		receives = qty
-	} else {
-		pays = qty
-		receives = executedQuote
-	}
-	var feeRate sdk.Dec
-	if orderType == UserMemOrder {
-		feeRate = ctx.feeRate(isMaker)
-	} else {
-		if isMaker {
-			feeRate = ctx.takerFeeRate.Mul(ctx.orderSourceFeeRatio).Neg()
-		} else {
-			feeRate = utils.ZeroDec
-		}
-	}
-	if feeRate.IsNegative() {
-		fee = feeRate.MulTruncate(pays)
-		pays = pays.Add(fee)
-	} else if feeRate.IsPositive() {
-		receives, fee = DeductFee(receives, feeRate)
-	} else {
-		fee = utils.ZeroDec
-	}
-	return
-}
-
-func (ctx *MatchingContext) FillOrders(orders []*MemOrder, qty, price sdk.Dec, isMaker bool) {
+func (ctx *MatchingContext) FillOrders(orders []*MemOrder, qty sdk.Int, price sdk.Dec, isMaker bool) {
 	totalExecutableQty := TotalExecutableQuantity(orders)
 	if totalExecutableQty.LT(qty) { // sanity check
 		panic("executable quantity is less than quantity")
@@ -100,7 +163,7 @@ func (ctx *MatchingContext) FillOrders(orders []*MemOrder, qty, price sdk.Dec, i
 		if executableQty.IsZero() { // sanity check
 			panic("executable quantity is zero")
 		}
-		executedQty := executableQty.MulTruncate(qty).QuoTruncate(totalExecutableQty)
+		executedQty := executableQty.Mul(qty).Quo(totalExecutableQty)
 		if executedQty.IsPositive() {
 			ctx.FillOrder(order, executedQty, price, isMaker)
 			remainingQty = remainingQty.Sub(executedQty)
@@ -115,7 +178,7 @@ func (ctx *MatchingContext) FillOrders(orders []*MemOrder, qty, price sdk.Dec, i
 			if remainingQty.IsZero() {
 				break
 			}
-			executedQty := sdk.MinDec(remainingQty, order.ExecutableQuantity())
+			executedQty := utils.MinInt(remainingQty, order.ExecutableQuantity())
 			if executedQty.IsPositive() {
 				ctx.FillOrder(order, executedQty, price, isMaker)
 				remainingQty = remainingQty.Sub(executedQty)
@@ -124,15 +187,15 @@ func (ctx *MatchingContext) FillOrders(orders []*MemOrder, qty, price sdk.Dec, i
 	}
 }
 
-func (ctx *MatchingContext) FillOrderBookPriceLevel(level *MemOrderBookPriceLevel, qty, price sdk.Dec, isMaker bool) {
-	executableQty := TotalExecutableQuantity(level.orders)
+func (ctx *MatchingContext) FillOrderBookPriceLevel(level *MemOrderBookPriceLevel, qty sdk.Int, price sdk.Dec, isMaker bool) {
+	executableQty := TotalExecutableQuantity(level.Orders)
 	if executableQty.LT(qty) { // sanity check
 		panic("executable quantity is less than quantity")
 	} else if executableQty.Equal(qty) { // full matches
-		ctx.FillOrders(level.orders, qty, price, isMaker)
+		ctx.FillOrders(level.Orders, qty, price, isMaker)
 	} else {
-		groups := GroupMemOrdersByMsgHeight(level.orders)
-		totalExecQty := utils.ZeroDec
+		groups := GroupMemOrdersByMsgHeight(level.Orders)
+		totalExecQty := utils.ZeroInt
 		for _, group := range groups {
 			remainingQty := qty.Sub(totalExecQty)
 			if remainingQty.IsZero() {
@@ -140,7 +203,7 @@ func (ctx *MatchingContext) FillOrderBookPriceLevel(level *MemOrderBookPriceLeve
 			}
 			// TODO: optimize duplicate TotalExecutableQuantity calls?
 			executableQty = TotalExecutableQuantity(group.orders)
-			executedQty := sdk.MinDec(remainingQty, executableQty)
+			executedQty := utils.MinInt(remainingQty, executableQty)
 			ctx.FillOrders(group.orders, executedQty, price, isMaker)
 			totalExecQty = totalExecQty.Add(executedQty)
 		}
@@ -149,10 +212,10 @@ func (ctx *MatchingContext) FillOrderBookPriceLevel(level *MemOrderBookPriceLeve
 
 func (ctx *MatchingContext) MatchOrderBookPriceLevels(
 	levelA *MemOrderBookPriceLevel, isLevelAMaker bool,
-	levelB *MemOrderBookPriceLevel, isLevelBMaker bool, price sdk.Dec) (executedQty sdk.Dec, fullA, fullB bool) {
-	executableQtyA := TotalExecutableQuantity(levelA.orders)
-	executableQtyB := TotalExecutableQuantity(levelB.orders)
-	executedQty = sdk.MinDec(executableQtyA, executableQtyB)
+	levelB *MemOrderBookPriceLevel, isLevelBMaker bool, price sdk.Dec) (executedQty sdk.Int, fullA, fullB bool) {
+	executableQtyA := TotalExecutableQuantity(levelA.Orders)
+	executableQtyB := TotalExecutableQuantity(levelB.Orders)
+	executedQty = utils.MinInt(executableQtyA, executableQtyB)
 	fullA = executedQty.Equal(executableQtyA)
 	fullB = executedQty.Equal(executableQtyB)
 	ctx.FillOrderBookPriceLevel(levelA, executedQty, price, isLevelAMaker)
@@ -164,76 +227,68 @@ func (ctx *MatchingContext) MatchOrderBookPriceLevels(
 // obs should be a valid MemOrderBookSide which the order will be executed against.
 // The order will always be a taker.
 func (ctx *MatchingContext) ExecuteOrder(
-	obs *MemOrderBookSide, qtyLimit, quoteLimit *sdk.Dec) (res ExecuteOrderResult) {
+	isBuy bool, obs *MemOrderBookSide, qtyLimit, quoteLimit *sdk.Int) (res MatchResult, full bool, lastPrice sdk.Dec) {
 	if qtyLimit == nil && quoteLimit == nil { // sanity check
 		panic("quantity limit and quote limit cannot be set to nil at the same time")
 	}
-	isBuy := !obs.isBuy // the order's direction
-	res = NewExecuteOrderResult(PayReceiveDenoms(ctx.baseDenom, ctx.quoteDenom, isBuy))
-	for _, level := range obs.levels {
+	if isBuy != !obs.IsBuy {
+		panic(fmt.Sprintf("%v != %v", isBuy, !obs.IsBuy))
+	}
+	matchState := NewMatchState()
+	totalExecutedQuote := utils.ZeroDec
+	for _, level := range obs.Levels {
 		// Check limits
-		if qtyLimit != nil && !qtyLimit.Sub(res.ExecutedQuantity).IsPositive() {
-			break
-		}
-		if quoteLimit != nil && !quoteLimit.Sub(res.ExecutedQuote).IsPositive() {
-			break
-		}
-
-		executableQty := TotalExecutableQuantity(level.orders)
-		var remainingQty sdk.Dec
+		var (
+			remainingQty   sdk.Int
+			remainingQuote sdk.Dec
+		)
 		if qtyLimit != nil {
-			remainingQty = qtyLimit.Sub(res.ExecutedQuantity)
+			remainingQty = qtyLimit.Sub(matchState.executedQty)
 		}
 		if quoteLimit != nil {
-			remainingQuote := quoteLimit.Sub(res.ExecutedQuote)
-			if remainingQuote.LT(utils.OneDec) {
-				res.FullyExecuted = true
-				break
-			}
-			qty := remainingQuote.QuoTruncate(level.price)
+			remainingQuote = quoteLimit.ToDec().Sub(totalExecutedQuote)
+			qty := remainingQuote.QuoTruncate(level.Price).TruncateInt()
 			if remainingQty.IsNil() {
 				remainingQty = qty
 			} else {
-				remainingQty = sdk.MinDec(remainingQty, qty)
+				remainingQty = utils.MinInt(remainingQty, qty)
 			}
 		}
-		if remainingQty.LT(utils.OneDec) {
-			res.FullyExecuted = true
+		if remainingQty.IsZero() {
+			full = true
 			break
 		}
 
-		executedQty := sdk.MinDec(executableQty, remainingQty)
+		executableQty := TotalExecutableQuantity(level.Orders)
+		executedQty := utils.MinInt(executableQty, remainingQty)
 		if executedQty.Equal(remainingQty) {
-			res.FullyExecuted = true // used in swap
+			full = true
 		}
 
-		matchPrice := level.price
+		matchPrice := level.Price
 		ctx.FillOrderBookPriceLevel(level, executedQty, matchPrice, true)
-		executedQuote, pays, receives, fee := ctx.fillOrder(UserMemOrder, isBuy, executedQty, matchPrice, false)
-		res.ExecutedQuantity = res.ExecutedQuantity.Add(executedQty)
-		res.ExecutedQuote = res.ExecutedQuote.Add(executedQuote)
-		res.Paid.Amount = res.Paid.Amount.Add(pays)
-		res.Received.Amount = res.Received.Amount.Add(receives)
-		res.Fee.Amount = res.Fee.Amount.Add(fee)
-		res.LastPrice = matchPrice
+		executedQuote, _, _, _, _ := matchState.Fill(isBuy, executedQty, matchPrice, ctx.FeeRate(UserMemOrder, false))
+		totalExecutedQuote = totalExecutedQuote.Add(executedQuote)
+		lastPrice = matchPrice
 	}
-	return
+	return matchState.Result(), full, lastPrice
 }
 
 func (ctx *MatchingContext) RunSinglePriceAuction(buyObs, sellObs *MemOrderBookSide) (matchPrice sdk.Dec, matched bool) {
 	buyLevelIdx, sellLevelIdx := 0, 0
 	var buyLastPrice, sellLastPrice sdk.Dec
-	for buyLevelIdx < len(buyObs.levels) && sellLevelIdx < len(sellObs.levels) {
-		buyLevel := buyObs.levels[buyLevelIdx]
-		sellLevel := sellObs.levels[sellLevelIdx]
-		if buyLevel.price.LT(sellLevel.price) {
+	for buyLevelIdx < len(buyObs.Levels) && sellLevelIdx < len(sellObs.Levels) {
+		buyLevel := buyObs.Levels[buyLevelIdx]
+		sellLevel := sellObs.Levels[sellLevelIdx]
+		if buyLevel.Price.LT(sellLevel.Price) {
 			break
 		}
-		buyExecutableQty := TotalExecutableQuantity(buyLevel.Orders())
-		sellExecutableQty := TotalExecutableQuantity(sellLevel.Orders())
-		execQty := sdk.MinDec(buyExecutableQty, sellExecutableQty)
-		buyLastPrice = buyLevel.price
-		sellLastPrice = sellLevel.price
+		buyExecutableQty := TotalExecutableQuantity(buyLevel.Orders)
+		sellExecutableQty := TotalExecutableQuantity(sellLevel.Orders)
+		// TODO: fix bug
+		execQty := utils.MinInt(buyExecutableQty, sellExecutableQty)
+		buyLastPrice = buyLevel.Price
+		sellLastPrice = sellLevel.Price
 		buyFull := execQty.Equal(buyExecutableQty)
 		sellFull := execQty.Equal(sellExecutableQty)
 		if buyFull {
@@ -246,10 +301,10 @@ func (ctx *MatchingContext) RunSinglePriceAuction(buyObs, sellObs *MemOrderBookS
 	if !buyLastPrice.IsNil() && !sellLastPrice.IsNil() {
 		matchPrice = RoundPrice(buyLastPrice.Add(sellLastPrice).QuoInt64(2))
 		buyLevelIdx, sellLevelIdx = 0, 0
-		for buyLevelIdx < len(buyObs.levels) && sellLevelIdx < len(sellObs.levels) {
-			buyLevel := buyObs.levels[buyLevelIdx]
-			sellLevel := sellObs.levels[sellLevelIdx]
-			if buyLevel.price.LT(matchPrice) || sellLevel.price.GT(matchPrice) {
+		for buyLevelIdx < len(buyObs.Levels) && sellLevelIdx < len(sellObs.Levels) {
+			buyLevel := buyObs.Levels[buyLevelIdx]
+			sellLevel := sellObs.Levels[sellLevelIdx]
+			if buyLevel.Price.LT(matchPrice) || sellLevel.Price.GT(matchPrice) {
 				break
 			}
 			// Both sides are taker
@@ -273,10 +328,10 @@ func (ctx *MatchingContext) BatchMatchOrderBookSides(buyObs, sellObs *MemOrderBo
 	// price above(or equal to) the last price.
 	// The execution price is the last price.
 	buyLevelIdx, sellLevelIdx := 0, 0
-	for buyLevelIdx < len(buyObs.levels) && sellLevelIdx < len(sellObs.levels) {
-		buyLevel := buyObs.levels[buyLevelIdx]
-		sellLevel := sellObs.levels[sellLevelIdx]
-		if buyLevel.price.LT(lastPrice) || sellLevel.price.GT(lastPrice) {
+	for buyLevelIdx < len(buyObs.Levels) && sellLevelIdx < len(sellObs.Levels) {
+		buyLevel := buyObs.Levels[buyLevelIdx]
+		sellLevel := sellObs.Levels[sellLevelIdx]
+		if buyLevel.Price.LT(lastPrice) || sellLevel.Price.GT(lastPrice) {
 			break
 		}
 		// Both sides are taker
@@ -290,8 +345,8 @@ func (ctx *MatchingContext) BatchMatchOrderBookSides(buyObs, sellObs *MemOrderBo
 		matched = true
 	}
 	// If there's no more levels to match, return earlier.
-	if (buyLevelIdx >= len(buyObs.levels) || sellLevelIdx >= len(sellObs.levels)) ||
-		buyObs.levels[buyLevelIdx].price.LT(sellObs.levels[sellLevelIdx].price) {
+	if (buyLevelIdx >= len(buyObs.Levels) || sellLevelIdx >= len(sellObs.Levels)) ||
+		buyObs.Levels[buyLevelIdx].Price.LT(sellObs.Levels[sellLevelIdx].Price) {
 		return lastPrice, matched
 	}
 
@@ -300,18 +355,18 @@ func (ctx *MatchingContext) BatchMatchOrderBookSides(buyObs, sellObs *MemOrderBo
 
 	// No sell orders with price below(or equal to) the last price,
 	// thus the price will increase.
-	isPriceIncreasing := sellObs.levels[sellLevelIdx].price.GT(lastPrice)
-	for buyLevelIdx < len(buyObs.levels) && sellLevelIdx < len(sellObs.levels) {
-		buyLevel := buyObs.levels[buyLevelIdx]
-		sellLevel := sellObs.levels[sellLevelIdx]
-		if buyLevel.price.LT(sellLevel.price) {
+	isPriceIncreasing := sellObs.Levels[sellLevelIdx].Price.GT(lastPrice)
+	for buyLevelIdx < len(buyObs.Levels) && sellLevelIdx < len(sellObs.Levels) {
+		buyLevel := buyObs.Levels[buyLevelIdx]
+		sellLevel := sellObs.Levels[sellLevelIdx]
+		if buyLevel.Price.LT(sellLevel.Price) {
 			break
 		}
 		var matchPrice sdk.Dec
 		if isPriceIncreasing {
-			matchPrice = sellLevel.price
+			matchPrice = sellLevel.Price
 		} else {
-			matchPrice = buyLevel.price
+			matchPrice = buyLevel.Price
 		}
 		_, sellFull, buyFull := ctx.MatchOrderBookPriceLevels(sellLevel, isPriceIncreasing, buyLevel, !isPriceIncreasing, matchPrice)
 		newLastPrice = matchPrice

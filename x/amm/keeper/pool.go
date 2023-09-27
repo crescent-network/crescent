@@ -56,10 +56,10 @@ func (k Keeper) CreatePool(ctx sdk.Context, creatorAddr sdk.AccAddress, marketId
 	return pool, nil
 }
 
-func (k Keeper) IteratePoolOrders(ctx sdk.Context, pool types.Pool, isBuy bool, cb func(price, qty, openQty sdk.Dec) (stop bool)) {
+func (k Keeper) IteratePoolOrders(ctx sdk.Context, pool types.Pool, isBuy bool, cb func(price sdk.Dec, qty sdk.Int) (stop bool)) {
 	poolState := k.MustGetPoolState(ctx, pool.Id)
 	reserveBalance := k.bankKeeper.SpendableCoins(ctx, pool.MustGetReserveAddress()).
-		AmountOf(pool.DenomOut(isBuy)).ToDec()
+		AmountOf(pool.DenomOut(isBuy))
 	orderLiquidity := poolState.CurrentLiquidity
 	currentPrice := poolState.CurrentPrice
 
@@ -89,16 +89,18 @@ func (k Keeper) IteratePoolOrders(ctx sdk.Context, pool types.Pool, isBuy bool, 
 				orderPrice := exchangetypes.PriceAtTick(orderTick)
 				orderSqrtPrice := utils.DecApproxSqrt(orderPrice)
 				currentSqrtPrice := utils.DecApproxSqrt(currentPrice)
-				var qty, openQty sdk.Dec
+				var qty sdk.Int
 				if isBuy {
-					qty = types.Amount1DeltaDec(currentSqrtPrice, orderSqrtPrice, orderLiquidity).QuoTruncate(orderPrice)
-					openQty = sdk.MinDec(reserveBalance.QuoTruncate(orderPrice), qty)
+					qty = utils.MinInt(
+						reserveBalance.ToDec().QuoTruncate(orderPrice).TruncateInt(),
+						types.Amount1DeltaDec(currentSqrtPrice, orderSqrtPrice, orderLiquidity).QuoTruncate(orderPrice).TruncateInt())
 				} else {
-					qty = types.Amount0DeltaRoundingDec(currentSqrtPrice, orderSqrtPrice, orderLiquidity, false)
-					openQty = sdk.MinDec(reserveBalance, qty)
+					qty = utils.MinInt(
+						reserveBalance,
+						types.Amount0DeltaRoundingDec(currentSqrtPrice, orderSqrtPrice, orderLiquidity, false).TruncateInt())
 				}
-				if openQty.IsPositive() && (orderTick == tick || (openQty.GTE(pool.MinOrderQuantity))) {
-					if cb(orderPrice, qty, openQty) {
+				if qty.IsPositive() && (orderTick == tick || (qty.GTE(pool.MinOrderQuantity))) {
+					if cb(orderPrice, qty) {
 						return true
 					}
 					reserveBalance = reserveBalance.Sub(exchangetypes.DepositAmount(isBuy, orderPrice, qty))
@@ -128,20 +130,22 @@ func (k Keeper) IteratePoolOrders(ctx sdk.Context, pool types.Pool, isBuy bool, 
 }
 
 func NextOrderTick(
-	isBuy bool, liquidity sdk.Int, currentPrice, minOrderQty, minOrderQuote sdk.Dec, tickSpacing uint32) (tick int32, valid bool) {
+	isBuy bool, liquidity sdk.Int, currentPrice sdk.Dec, minOrderQty, minOrderQuote sdk.Int, tickSpacing uint32) (tick int32, valid bool) {
 	currentSqrtPrice := utils.DecApproxSqrt(currentPrice)
 	liquidityDec := liquidity.ToDec()
+	minOrderQtyDec := minOrderQty.ToDec()
+	minOrderQuoteDec := minOrderQuote.ToDec()
 	if isBuy {
 		// 1. Check min order qty
 		// L^2 + 4 * MinQty * L * sqrt(P_current)
 		intermediate := liquidityDec.Power(2).Add(
-			minOrderQty.Mul(liquidityDec).MulTruncate(currentSqrtPrice).MulInt64(4))
-		orderSqrtPrice := utils.DecApproxSqrt(intermediate).Sub(liquidityDec).QuoTruncate(minOrderQty.MulInt64(2))
+			minOrderQtyDec.Mul(liquidityDec).MulTruncate(currentSqrtPrice).MulInt64(4))
+		orderSqrtPrice := utils.DecApproxSqrt(intermediate).Sub(liquidityDec).QuoTruncate(minOrderQtyDec.MulInt64(2))
 		if !orderSqrtPrice.IsPositive() {
 			return 0, false
 		}
 		// 2. Check min order quote
-		orderSqrtPrice2 := currentSqrtPrice.Mul(liquidityDec).Sub(minOrderQuote).QuoTruncate(liquidityDec)
+		orderSqrtPrice2 := currentSqrtPrice.Mul(liquidityDec).Sub(minOrderQuoteDec).QuoTruncate(liquidityDec)
 		if !orderSqrtPrice2.IsPositive() {
 			return 0, false
 		}
@@ -157,12 +161,12 @@ func NextOrderTick(
 	}
 	// 1. Check min order qty
 	orderSqrtPrice := currentSqrtPrice.Mul(liquidityDec).
-		QuoRoundUp(liquidityDec.Sub(minOrderQty.Mul(currentSqrtPrice)))
+		QuoRoundUp(liquidityDec.Sub(minOrderQtyDec.Mul(currentSqrtPrice)))
 	if !orderSqrtPrice.IsPositive() {
 		return 0, false
 	}
 	// 2. Check min order quote
-	orderSqrtPrice2 := minOrderQuote.Mul(currentSqrtPrice).QuoRoundUp(liquidityDec).Add(currentSqrtPrice)
+	orderSqrtPrice2 := minOrderQuoteDec.Mul(currentSqrtPrice).QuoRoundUp(liquidityDec).Add(currentSqrtPrice)
 	if !orderSqrtPrice2.IsPositive() {
 		return 0, false
 	}

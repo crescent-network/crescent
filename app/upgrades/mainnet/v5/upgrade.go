@@ -73,8 +73,8 @@ func UpgradeHandler(
 		exchangeKeeper.SetParams(ctx, exchangeParams)
 		ammParams := ammtypes.DefaultParams()
 		ammParams.PoolCreationFee = sdk.NewCoins(sdk.NewInt64Coin("ucre", 1000_000000))
-		ammParams.DefaultMinOrderQuantity = sdk.NewDec(10000)
-		ammParams.DefaultMinOrderQuote = sdk.NewDec(10000)
+		ammParams.DefaultMinOrderQuantity = sdk.NewInt(10000)
+		ammParams.DefaultMinOrderQuote = sdk.NewInt(10000)
 		ammParams.PrivateFarmingPlanCreationFee = sdk.NewCoins(sdk.NewInt64Coin("ucre", 1000_000000))
 		ammKeeper.SetParams(ctx, ammParams)
 

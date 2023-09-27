@@ -18,16 +18,16 @@ func (s *KeeperTestSuite) TestBatchMatchingEdgecase() {
 	ordererAddr2 := s.FundedAccount(3, enoughCoins)
 
 	s.PlaceBatchLimitOrder(
-		market.Id, ordererAddr1, false, utils.ParseDec("1"), sdk.NewDec(5_000000), time.Hour)
+		market.Id, ordererAddr1, false, utils.ParseDec("1"), sdk.NewInt(5_000000), time.Hour)
 	s.PlaceBatchLimitOrder(
-		market.Id, ordererAddr1, false, utils.ParseDec("1.001"), sdk.NewDec(10_000000), time.Hour)
+		market.Id, ordererAddr1, false, utils.ParseDec("1.001"), sdk.NewInt(10_000000), time.Hour)
 	s.PlaceBatchLimitOrder(
-		market.Id, ordererAddr1, false, utils.ParseDec("1.002"), sdk.NewDec(10_000000), time.Hour)
+		market.Id, ordererAddr1, false, utils.ParseDec("1.002"), sdk.NewInt(10_000000), time.Hour)
 
 	order := s.PlaceBatchLimitOrder(
-		market.Id, ordererAddr2, true, utils.ParseDec("1"), sdk.NewDec(10_000000), time.Hour)
+		market.Id, ordererAddr2, true, utils.ParseDec("1"), sdk.NewInt(10_000000), time.Hour)
 	s.PlaceBatchLimitOrder(
-		market.Id, ordererAddr2, true, utils.ParseDec("1.01"), sdk.NewDec(1_000000), time.Hour)
+		market.Id, ordererAddr2, true, utils.ParseDec("1.01"), sdk.NewInt(1_000000), time.Hour)
 
 	// Order book looks like:
 	//            | 1.010 | #
@@ -45,5 +45,5 @@ func (s *KeeperTestSuite) TestBatchMatchingEdgecase() {
 
 	s.AssertEqual(utils.ParseDec("1"), *s.App.ExchangeKeeper.MustGetMarketState(s.Ctx, market.Id).LastPrice)
 	order = s.keeper.MustGetOrder(s.Ctx, order.Id)
-	s.AssertEqual(sdk.NewDec(6_000000), order.OpenQuantity)
+	s.AssertEqual(sdk.NewInt(6_000000), order.OpenQuantity)
 }

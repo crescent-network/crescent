@@ -105,9 +105,9 @@ $ %s tx %s place-limit-order 1 true 15 100000 1h --from mykey
 			if err != nil {
 				return fmt.Errorf("invalid price: %w", err)
 			}
-			qty, err := sdk.NewDecFromStr(args[3])
-			if err != nil {
-				return fmt.Errorf("invalid quantity: %w", err)
+			qty, ok := sdk.NewIntFromString(args[3])
+			if ok {
+				return fmt.Errorf("invalid quantity: %s", args[3])
 			}
 			lifespan, err := time.ParseDuration(args[4])
 			if err != nil {
@@ -154,9 +154,9 @@ $ %s tx %s place-batch-limit-order 1 true 15 100000 1h --from mykey
 			if err != nil {
 				return fmt.Errorf("invalid price: %w", err)
 			}
-			qty, err := sdk.NewDecFromStr(args[3])
-			if err != nil {
-				return fmt.Errorf("invalid quantity: %w", err)
+			qty, ok := sdk.NewIntFromString(args[3])
+			if !ok {
+				return fmt.Errorf("invalid quantity: %s", args[3])
 			}
 			lifespan, err := time.ParseDuration(args[4])
 			if err != nil {
@@ -202,9 +202,9 @@ $ %s tx %s place-mm-limit-order 1 true 15 100000 1h --from mykey
 			if err != nil {
 				return fmt.Errorf("invalid price: %w", err)
 			}
-			qty, err := sdk.NewDecFromStr(args[3])
-			if err != nil {
-				return fmt.Errorf("invalid quantity: %w", err)
+			qty, ok := sdk.NewIntFromString(args[3])
+			if !ok {
+				return fmt.Errorf("invalid quantity: %s", args[3])
 			}
 			lifespan, err := time.ParseDuration(args[4])
 			if err != nil {
@@ -251,9 +251,9 @@ $ %s tx %s place-mm-batch-limit-order 1 true 15 100000 1h --from mykey
 			if err != nil {
 				return fmt.Errorf("invalid price: %w", err)
 			}
-			qty, err := sdk.NewDecFromStr(args[3])
-			if err != nil {
-				return fmt.Errorf("invalid quantity: %w", err)
+			qty, ok := sdk.NewIntFromString(args[3])
+			if !ok {
+				return fmt.Errorf("invalid quantity: %s", args[3])
 			}
 			lifespan, err := time.ParseDuration(args[4])
 			if err != nil {
@@ -295,9 +295,9 @@ $ %s tx %s place-market-order 1 false 100000 --from mykey
 			if err != nil {
 				return fmt.Errorf("invalid buy flag: %w", err)
 			}
-			qty, err := sdk.NewDecFromStr(args[2])
-			if err != nil {
-				return fmt.Errorf("invalid quantity: %w", err)
+			qty, ok := sdk.NewIntFromString(args[2])
+			if !ok {
+				return fmt.Errorf("invalid quantity: %s", args[2])
 			}
 			msg := types.NewMsgPlaceMarketOrder(clientCtx.GetFromAddress(), marketId, isBuy, qty)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -396,11 +396,11 @@ $ %s tx %s swap-exact-amount-in 1,2,3 1000000stake 98000uatom --from mykey
 				}
 				routes = append(routes, marketId)
 			}
-			input, err := sdk.ParseDecCoin(args[1])
+			input, err := sdk.ParseCoinNormalized(args[1])
 			if err != nil {
 				return fmt.Errorf("invalid input: %w", err)
 			}
-			minOutput, err := sdk.ParseDecCoin(args[2])
+			minOutput, err := sdk.ParseCoinNormalized(args[2])
 			if err != nil {
 				return fmt.Errorf("invalid minimum output: %w", err)
 			}

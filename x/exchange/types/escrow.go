@@ -7,18 +7,18 @@ import (
 
 type Escrow struct {
 	escrowAddr sdk.AccAddress
-	deltas     map[string]sdk.DecCoins // string(addr) => delta
-	addrs      []sdk.AccAddress        // for ordered access on deltas
+	deltas     map[string]sdk.Coins // string(addr) => delta
+	addrs      []sdk.AccAddress     // for ordered access on deltas
 }
 
 func NewEscrow(escrowAddr sdk.AccAddress) *Escrow {
 	return &Escrow{
 		escrowAddr: escrowAddr,
-		deltas:     map[string]sdk.DecCoins{},
+		deltas:     map[string]sdk.Coins{},
 	}
 }
 
-func (e *Escrow) Lock(addr sdk.AccAddress, amt ...sdk.DecCoin) {
+func (e *Escrow) Lock(addr sdk.AccAddress, amt ...sdk.Coin) {
 	saddr := addr.String()
 	before, ok := e.deltas[saddr]
 	if !ok {
@@ -27,7 +27,7 @@ func (e *Escrow) Lock(addr sdk.AccAddress, amt ...sdk.DecCoin) {
 	e.deltas[saddr], _ = before.SafeSub(amt)
 }
 
-func (e *Escrow) Unlock(addr sdk.AccAddress, amt ...sdk.DecCoin) {
+func (e *Escrow) Unlock(addr sdk.AccAddress, amt ...sdk.Coin) {
 	saddr := addr.String()
 	before, ok := e.deltas[saddr]
 	if !ok {
@@ -38,9 +38,9 @@ func (e *Escrow) Unlock(addr sdk.AccAddress, amt ...sdk.DecCoin) {
 
 func (e *Escrow) Pays(addr sdk.AccAddress) sdk.Coins {
 	var pays sdk.Coins
-	for _, decCoin := range e.deltas[addr.String()] {
-		if decCoin.IsNegative() {
-			coin := sdk.NewCoin(decCoin.Denom, decCoin.Amount.Neg().Ceil().TruncateInt())
+	for _, coin := range e.deltas[addr.String()] {
+		if coin.IsNegative() {
+			coin.Amount = coin.Amount.Neg()
 			pays = pays.Add(coin)
 		}
 	}
@@ -49,9 +49,8 @@ func (e *Escrow) Pays(addr sdk.AccAddress) sdk.Coins {
 
 func (e *Escrow) Receives(addr sdk.AccAddress) sdk.Coins {
 	var receives sdk.Coins
-	for _, decCoin := range e.deltas[addr.String()] {
-		if decCoin.IsPositive() {
-			coin, _ := decCoin.TruncateDecimal()
+	for _, coin := range e.deltas[addr.String()] {
+		if coin.IsPositive() {
 			receives = receives.Add(coin)
 		}
 	}

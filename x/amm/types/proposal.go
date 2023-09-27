@@ -76,7 +76,7 @@ func (p PoolParameterChangeProposal) String() string {
 }
 
 func NewPoolParameterChange(
-	poolId uint64, tickSpacing uint32, minOrderQty, minOrderQuote *sdk.Dec) PoolParameterChange {
+	poolId uint64, tickSpacing uint32, minOrderQty, minOrderQuote *sdk.Int) PoolParameterChange {
 	return PoolParameterChange{
 		PoolId:           poolId,
 		TickSpacing:      tickSpacing,

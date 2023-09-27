@@ -53,6 +53,26 @@ func (market Market) MustGetEscrowAddress() sdk.AccAddress {
 	return sdk.MustAccAddressFromBech32(market.EscrowAddress)
 }
 
+func (market Market) FeeRate(isOrderSourceOrder, isMaker, halveFees bool) (feeRate sdk.Dec) {
+	if !isOrderSourceOrder { // user order
+		if isMaker {
+			feeRate = market.MakerFeeRate
+		} else {
+			feeRate = market.TakerFeeRate
+		}
+	} else { // order source order
+		if isMaker {
+			feeRate = market.TakerFeeRate.Neg().Mul(market.OrderSourceFeeRatio)
+		} else {
+			feeRate = utils.ZeroDec
+		}
+	}
+	if halveFees {
+		feeRate = feeRate.QuoInt64(2)
+	}
+	return feeRate
+}
+
 func NewMarketState(lastPrice *sdk.Dec) MarketState {
 	return MarketState{
 		LastPrice:          lastPrice,
@@ -82,7 +102,14 @@ func (marketState MarketState) Validate() error {
 }
 
 func OrderPriceLimit(basePrice, maxOrderPriceRatio sdk.Dec) (minPrice, maxPrice sdk.Dec) {
-	minPrice = basePrice.Mul(utils.OneDec.Sub(maxOrderPriceRatio))
-	maxPrice = basePrice.Mul(utils.OneDec.Add(maxOrderPriceRatio))
+	// Manually round up the min tick.
+	minTick, valid := ValidateTickPrice(basePrice.Mul(utils.OneDec.Sub(maxOrderPriceRatio)))
+	if !valid {
+		minTick++
+	}
+	minPrice = PriceAtTick(minTick)
+	// TickAtPrice automatically rounds down the tick.
+	maxPrice = PriceAtTick(
+		TickAtPrice(basePrice.Mul(utils.OneDec.Add(maxOrderPriceRatio))))
 	return
 }

@@ -62,16 +62,16 @@ func TestParams_Validate(t *testing.T) {
 		{
 			"negative default min order quantity",
 			func(params *types.Params) {
-				params.DefaultMinOrderQuantity = sdk.NewDec(-1)
+				params.DefaultMinOrderQuantity = sdk.NewInt(-1)
 			},
-			"default min order quantity must not be negative: -1.000000000000000000",
+			"default min order quantity must not be negative: -1",
 		},
 		{
 			"negative default min order quantity",
 			func(params *types.Params) {
-				params.DefaultMinOrderQuote = sdk.NewDec(-1)
+				params.DefaultMinOrderQuote = sdk.NewInt(-1)
 			},
-			"default min order quote must not be negative: -1.000000000000000000",
+			"default min order quote must not be negative: -1",
 		},
 		{
 			"invalid private farming plan creation fee",

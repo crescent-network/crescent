@@ -19,7 +19,7 @@ func DerivePoolRewardsPoolAddress(poolId uint64) sdk.AccAddress {
 
 func NewPool(
 	id uint64, marketId uint64, denom0, denom1 string, tickSpacing uint32,
-	minOrderQty, minOrderQuote sdk.Dec) Pool {
+	minOrderQty, minOrderQuote sdk.Int) Pool {
 	return Pool{
 		Id:               id,
 		MarketId:         marketId,

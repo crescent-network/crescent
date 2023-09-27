@@ -29,193 +29,116 @@ func (typ MemOrderType) String() string {
 }
 
 type MemOrder struct {
-	typ              MemOrderType
-	order            *Order      // nil for OrderSourceMemOrder
-	source           OrderSource // nil for UserMemOrder
-	ordererAddr      sdk.AccAddress
-	isBuy            bool
-	price            sdk.Dec
-	qty              sdk.Dec
-	openQty          sdk.Dec
-	remainingDeposit sdk.Dec
-	executedQty      sdk.Dec
-	paid             sdk.Dec
-	received         sdk.Dec
-	fee              sdk.Dec
-	isMatched        bool
-	isMaker          *bool
+	Type MemOrderType
+
+	Order  *Order      // nil for OrderSourceMemOrder
+	Source OrderSource // nil for UserMemOrder
+
+	OrdererAddress   sdk.AccAddress
+	IsBuy            bool
+	Price            sdk.Dec
+	Quantity         sdk.Int
+	OpenQuantity     sdk.Int
+	RemainingDeposit sdk.Int
+
+	MatchState
 }
 
 func NewUserMemOrder(order Order) *MemOrder {
 	return &MemOrder{
-		typ:              UserMemOrder,
-		order:            &order,
-		ordererAddr:      order.MustGetOrdererAddress(),
-		isBuy:            order.IsBuy,
-		price:            order.Price,
-		qty:              order.Quantity,
-		openQty:          order.OpenQuantity,
-		remainingDeposit: order.RemainingDeposit,
-		executedQty:      utils.ZeroDec,
-		paid:             utils.ZeroDec,
-		received:         utils.ZeroDec,
-		fee:              utils.ZeroDec,
+		Type:             UserMemOrder,
+		Order:            &order,
+		OrdererAddress:   order.MustGetOrdererAddress(),
+		IsBuy:            order.IsBuy,
+		Price:            order.Price,
+		Quantity:         order.Quantity,
+		OpenQuantity:     order.OpenQuantity,
+		RemainingDeposit: order.RemainingDeposit,
+		MatchState:       NewMatchState(),
 	}
 }
 
 func NewOrderSourceMemOrder(
-	ordererAddr sdk.AccAddress, isBuy bool, price, qty, openQty sdk.Dec, source OrderSource) *MemOrder {
+	ordererAddr sdk.AccAddress, isBuy bool, price sdk.Dec, qty, openQty, remainingDeposit sdk.Int, source OrderSource) *MemOrder {
 	return &MemOrder{
-		typ:              OrderSourceMemOrder,
-		ordererAddr:      ordererAddr,
-		isBuy:            isBuy,
-		price:            price,
-		qty:              qty,
-		openQty:          openQty,
-		remainingDeposit: DepositAmount(isBuy, price, openQty),
-		executedQty:      utils.ZeroDec,
-		paid:             utils.ZeroDec,
-		received:         utils.ZeroDec,
-		fee:              utils.ZeroDec,
-		source:           source,
+		Type:             OrderSourceMemOrder,
+		OrdererAddress:   ordererAddr,
+		Source:           source,
+		IsBuy:            isBuy,
+		Price:            price,
+		Quantity:         qty,
+		OpenQuantity:     openQty,
+		RemainingDeposit: remainingDeposit,
+		MatchState:       NewMatchState(),
 	}
 }
 
 func (order *MemOrder) String() string {
 	isBuyStr := "buy"
-	if !order.isBuy {
+	if !order.IsBuy {
 		isBuyStr = "sell"
 	}
 	return fmt.Sprintf(
-		"{%s %s %s %s}",
-		order.typ, isBuyStr, order.price, order.openQty)
+		"{%s %s %s %s/%s}",
+		order.Type, isBuyStr, order.Price, order.MatchState.executedQty, order.OpenQuantity)
 }
 
-func (order *MemOrder) Type() MemOrderType {
-	return order.typ
-}
-
-func (order *MemOrder) Order() Order {
-	return *order.order
-}
-
-func (order *MemOrder) Source() OrderSource {
-	return order.source
-}
-
-func (order *MemOrder) OrdererAddress() sdk.AccAddress {
-	return order.ordererAddr
-}
-
-func (order *MemOrder) IsBuy() bool {
-	return order.isBuy
-}
-
-func (order *MemOrder) Price() sdk.Dec {
-	return order.price
-}
-
-func (order *MemOrder) Quantity() sdk.Dec {
-	return order.qty
-}
-
-func (order *MemOrder) OpenQuantity() sdk.Dec {
-	return order.openQty
-}
-
-func (order *MemOrder) RemainingDeposit() sdk.Dec {
-	return order.remainingDeposit
-}
-
-func (order *MemOrder) ExecutedQuantity() sdk.Dec {
-	return order.executedQty
-}
-
-func (order *MemOrder) Paid() sdk.Dec {
-	return order.paid
-}
-
-func (order *MemOrder) PaidWithoutFee() sdk.Dec {
-	if order.fee.IsNegative() {
-		return order.paid.Sub(order.fee)
+func (order *MemOrder) ExecutableQuantity() sdk.Int {
+	executableQty := order.OpenQuantity.Sub(order.executedQty)
+	if order.IsBuy {
+		return utils.MinInt(
+			executableQty,
+			order.RemainingDeposit.ToDec().QuoTruncate(order.Price).TruncateInt())
 	}
-	return order.paid
-}
-
-func (order *MemOrder) Received() sdk.Dec {
-	return order.received
-}
-
-func (order *MemOrder) Fee() sdk.Dec {
-	return order.fee
-}
-
-func (order *MemOrder) IsMatched() bool {
-	return order.isMatched
-}
-
-func (order *MemOrder) ExecutableQuantity() sdk.Dec {
-	executableQty := order.openQty.Sub(order.executedQty)
-	if order.isBuy {
-		return sdk.MinDec(executableQty, order.remainingDeposit.QuoTruncate(order.price))
-	}
-	return sdk.MinDec(executableQty, order.remainingDeposit)
+	return utils.MinInt(executableQty, order.RemainingDeposit.ToDec().TruncateInt())
 }
 
 func (order *MemOrder) HasPriorityOver(other *MemOrder) bool {
-	if !order.price.Equal(other.price) { // sanity check
-		panic(fmt.Sprintf("orders with different price: %s != %s", order.price, other.price))
+	if !order.Price.Equal(other.Price) { // sanity check
+		panic(fmt.Sprintf("orders with different price: %s != %s", order.Price, other.Price))
 	}
-	if !order.qty.Equal(other.qty) {
-		return order.qty.GT(other.qty)
+	if !order.Quantity.Equal(other.Quantity) {
+		return order.Quantity.GT(other.Quantity)
 	}
 	switch {
-	case order.typ == UserMemOrder && other.typ == UserMemOrder:
-		return order.order.Id < other.order.Id
-	case order.typ == UserMemOrder && other.typ == OrderSourceMemOrder:
+	case order.Type == UserMemOrder && other.Type == UserMemOrder:
+		return order.Order.Id < other.Order.Id
+	case order.Type == UserMemOrder && other.Type == OrderSourceMemOrder:
 		return false
-	case order.typ == OrderSourceMemOrder && other.typ == UserMemOrder:
+	case order.Type == OrderSourceMemOrder && other.Type == UserMemOrder:
 		return true
 	default:
-		return order.source.Name() < other.source.Name() // lexicographical ordering
+		return order.Source.Name() < other.Source.Name() // lexicographical ordering
 	}
 }
 
 type MemOrderBookPriceLevel struct {
-	isBuy  bool
-	price  sdk.Dec
-	orders []*MemOrder
+	IsBuy  bool
+	Price  sdk.Dec
+	Orders []*MemOrder
 }
 
 func NewMemOrderBookPriceLevel(order *MemOrder) *MemOrderBookPriceLevel {
-	return &MemOrderBookPriceLevel{order.isBuy, order.price, []*MemOrder{order}}
-}
-
-func (level *MemOrderBookPriceLevel) Price() sdk.Dec {
-	return level.price
-}
-
-func (level *MemOrderBookPriceLevel) Orders() []*MemOrder {
-	return level.orders
+	return &MemOrderBookPriceLevel{order.IsBuy, order.Price, []*MemOrder{order}}
 }
 
 func (level *MemOrderBookPriceLevel) AddOrder(order *MemOrder) {
-	if order.isBuy != level.isBuy { // sanity check
+	if order.IsBuy != level.IsBuy { // sanity check
 		panic("wrong order direction")
 	}
-	level.orders = append(level.orders, order)
+	level.Orders = append(level.Orders, order)
 }
 
 // MemOrderBookSideOptions is options passed when constructing MemOrderBookSide.
 type MemOrderBookSideOptions struct {
 	IsBuy             bool
 	PriceLimit        *sdk.Dec
-	QuantityLimit     *sdk.Dec
-	QuoteLimit        *sdk.Dec
+	QuantityLimit     *sdk.Int
+	QuoteLimit        *sdk.Int
 	MaxNumPriceLevels int
 }
 
-func (opts MemOrderBookSideOptions) ReachedLimit(price, accQty, accQuote sdk.Dec, numPriceLevels int) (reached bool) {
+func (opts MemOrderBookSideOptions) ReachedLimit(price sdk.Dec, accQty sdk.Int, accQuote sdk.Dec, numPriceLevels int) (reached bool) {
 	if opts.PriceLimit != nil &&
 		((opts.IsBuy && price.LT(*opts.PriceLimit)) ||
 			(!opts.IsBuy && price.GT(*opts.PriceLimit))) {
@@ -224,7 +147,7 @@ func (opts MemOrderBookSideOptions) ReachedLimit(price, accQty, accQuote sdk.Dec
 	if opts.QuantityLimit != nil && !opts.QuantityLimit.Sub(accQty).IsPositive() {
 		return true
 	}
-	if opts.QuoteLimit != nil && !opts.QuoteLimit.Sub(accQuote).IsPositive() {
+	if opts.QuoteLimit != nil && !opts.QuoteLimit.ToDec().Sub(accQuote).IsPositive() {
 		return true
 	}
 	if opts.MaxNumPriceLevels > 0 && numPriceLevels >= opts.MaxNumPriceLevels {
@@ -234,61 +157,57 @@ func (opts MemOrderBookSideOptions) ReachedLimit(price, accQty, accQuote sdk.Dec
 }
 
 type MemOrderBookSide struct {
-	isBuy  bool
-	levels []*MemOrderBookPriceLevel
+	IsBuy  bool
+	Levels []*MemOrderBookPriceLevel
 }
 
 func NewMemOrderBookSide(isBuy bool) *MemOrderBookSide {
-	return &MemOrderBookSide{isBuy: isBuy}
-}
-
-func (obs *MemOrderBookSide) Levels() []*MemOrderBookPriceLevel {
-	return obs.levels
+	return &MemOrderBookSide{IsBuy: isBuy}
 }
 
 func (obs *MemOrderBookSide) Orders() []*MemOrder {
 	var orders []*MemOrder
-	for _, level := range obs.levels {
-		orders = append(orders, level.orders...)
+	for _, level := range obs.Levels {
+		orders = append(orders, level.Orders...)
 	}
 	return orders
 }
 
 func (obs *MemOrderBookSide) Limit(n int) {
-	limit := len(obs.Levels())
+	limit := len(obs.Levels)
 	if n < limit {
 		limit = n
 	}
-	obs.levels = obs.levels[:limit]
+	obs.Levels = obs.Levels[:limit]
 }
 
 func (side *MemOrderBookSide) AddOrder(order *MemOrder) {
-	if order.isBuy != side.isBuy { // sanity check
+	if order.IsBuy != side.IsBuy { // sanity check
 		panic("wrong order direction")
 	}
-	i := sort.Search(len(side.levels), func(i int) bool {
-		if side.isBuy {
-			return side.levels[i].price.LTE(order.price)
+	i := sort.Search(len(side.Levels), func(i int) bool {
+		if side.IsBuy {
+			return side.Levels[i].Price.LTE(order.Price)
 		}
-		return side.levels[i].price.GTE(order.price)
+		return side.Levels[i].Price.GTE(order.Price)
 	})
-	if i < len(side.levels) && side.levels[i].price.Equal(order.price) {
-		side.levels[i].AddOrder(order)
+	if i < len(side.Levels) && side.Levels[i].Price.Equal(order.Price) {
+		side.Levels[i].AddOrder(order)
 	} else {
 		// Insert a new level.
-		newLevels := make([]*MemOrderBookPriceLevel, len(side.levels)+1)
-		copy(newLevels[:i], side.levels[:i])
+		newLevels := make([]*MemOrderBookPriceLevel, len(side.Levels)+1)
+		copy(newLevels[:i], side.Levels[:i])
 		newLevels[i] = NewMemOrderBookPriceLevel(order)
-		copy(newLevels[i+1:], side.levels[i:])
-		side.levels = newLevels
+		copy(newLevels[i+1:], side.Levels[i:])
+		side.Levels = newLevels
 	}
 }
 
 func (side *MemOrderBookSide) String() string {
 	var lines []string
-	for _, level := range side.levels {
-		qty := TotalExecutableQuantity(level.orders)
-		lines = append(lines, fmt.Sprintf("%s | %s", level.price, qty))
+	for _, level := range side.Levels {
+		qty := TotalExecutableQuantity(level.Orders)
+		lines = append(lines, fmt.Sprintf("%s | %s", level.Price, qty))
 	}
 	return strings.Join(lines, "\n")
 }
@@ -309,7 +228,7 @@ func (group *MemOrderGroup) Orders() []*MemOrder {
 func GroupMemOrdersByMsgHeight(orders []*MemOrder) (groups []*MemOrderGroup) {
 	var orderSourceOrders, userOrders []*MemOrder
 	for _, order := range orders {
-		if order.typ == UserMemOrder {
+		if order.Type == UserMemOrder {
 			userOrders = append(userOrders, order)
 		} else {
 			orderSourceOrders = append(orderSourceOrders, order)
@@ -320,13 +239,13 @@ func GroupMemOrdersByMsgHeight(orders []*MemOrder) (groups []*MemOrderGroup) {
 	}
 	groupByMsgHeight := map[int64]*MemOrderGroup{}
 	for _, order := range userOrders {
-		group, ok := groupByMsgHeight[order.order.MsgHeight]
+		group, ok := groupByMsgHeight[order.Order.MsgHeight]
 		if !ok {
 			i := sort.Search(len(groups), func(i int) bool {
-				return groups[i].msgHeight >= order.order.MsgHeight
+				return groups[i].msgHeight >= order.Order.MsgHeight
 			})
-			group = &MemOrderGroup{msgHeight: order.order.MsgHeight}
-			groupByMsgHeight[order.order.MsgHeight] = group
+			group = &MemOrderGroup{msgHeight: order.Order.MsgHeight}
+			groupByMsgHeight[order.Order.MsgHeight] = group
 
 			newGroups := make([]*MemOrderGroup, len(groups)+1)
 			copy(newGroups[:i], groups[:i])
@@ -342,17 +261,17 @@ func GroupMemOrdersByMsgHeight(orders []*MemOrder) (groups []*MemOrderGroup) {
 func GroupMemOrdersByOrderer(results []*MemOrder) (ordererAddrs []sdk.AccAddress, m map[string][]*MemOrder) {
 	m = map[string][]*MemOrder{}
 	for _, result := range results {
-		orderer := result.ordererAddr.String()
+		orderer := result.OrdererAddress.String()
 		if _, ok := m[orderer]; !ok {
-			ordererAddrs = append(ordererAddrs, result.ordererAddr)
+			ordererAddrs = append(ordererAddrs, result.OrdererAddress)
 		}
 		m[orderer] = append(m[orderer], result)
 	}
 	return
 }
 
-func TotalExecutableQuantity(orders []*MemOrder) sdk.Dec {
-	qty := utils.ZeroDec
+func TotalExecutableQuantity(orders []*MemOrder) sdk.Int {
+	qty := utils.ZeroInt
 	for _, order := range orders {
 		qty = qty.Add(order.ExecutableQuantity())
 	}

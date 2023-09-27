@@ -19,7 +19,7 @@ func (s *KeeperTestSuite) TestBatchOneUserOrderAndPool() {
 	// liquidity in the pool thus the order will rest in the order book.
 	// The order will be matched against the pool in the next block's batch matching.
 	_, order, res := s.PlaceLimitOrder(
-		market.Id, ordererAddr, true, utils.ParseDec("5.005"), sdk.NewDec(1_000000), time.Hour)
+		market.Id, ordererAddr, true, utils.ParseDec("5.005"), sdk.NewInt(1_000000), time.Hour)
 	s.AssertEqual(sdk.ZeroDec(), res.ExecutedQuantity)
 
 	lpAddr := s.FundedAccount(2, enoughCoins)
