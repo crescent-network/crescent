@@ -36,8 +36,8 @@ var (
 	DefaultMaxOrderPriceRatio             = sdk.NewDecWithPrec(1, 1) // 10%
 	DefaultDefaultMinOrderQuantity        = sdk.NewInt(1)
 	DefaultDefaultMinOrderQuote           = sdk.NewInt(1)
-	DefaultDefaultMaxOrderQuantity        = sdk.NewIntWithDecimal(1, 40)
-	DefaultDefaultMaxOrderQuote           = sdk.NewIntWithDecimal(1, 40)
+	DefaultDefaultMaxOrderQuantity        = sdk.NewIntWithDecimal(1, 30)
+	DefaultDefaultMaxOrderQuote           = sdk.NewIntWithDecimal(1, 30)
 	DefaultMaxSwapRoutesLen        uint32 = 3
 	DefaultMaxNumMMOrders          uint32 = 15
 

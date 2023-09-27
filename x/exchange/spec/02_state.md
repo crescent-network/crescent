@@ -15,9 +15,14 @@ type Market struct {
     BaseDenom           string
     QuoteDenom          string
     EscrowAddress       string
+    FeeCollector        string
     MakerFeeRate        sdk.Dec
     TakerFeeRate        sdk.Dec
     OrderSourceFeeRatio sdk.Dec
+	MinOrderQuantity    sdk.Int
+	MinOrderQuote       sdk.Int
+    MaxOrderQuantity    sdk.Int
+    MaxOrderQuote       sdk.Int
 }
 
 type MarketState struct {
@@ -30,7 +35,7 @@ type MarketState struct {
 
 * LastOrderId: `0x61 -> BigEndian(LastOrderId)`
 * OrderKey: `0x65 | BigEndian(OrderId) -> ProtocoulBuffer(Order)`
-* OrderBookOrderIndex: `0x66 | BigEndian(MarketId) | IsBuy | SortableDecBytes(Price) | BigEndian(OrderId) -> BigEndian(OrderId)`
+* OrderBookOrderIndex: `0x66 | BigEndian(MarketId) | IsBuy | TickAtPrice(Price) | BigEndian(OrderId) -> BigEndian(OrderId)`
 * OrdersByOrdererIndex: `0x67 | AddrLen (1 byte) | Orderer | BigEndian(MarketId) | BigEndian(OrderId) -> nil`
 * NumMMOrders: `0x68 | AddrLen (1 byte) | Orderer | BigEndian(MarketId) -> BigEndian(NumMMOrders)`
 
@@ -42,10 +47,10 @@ type Order struct {
     MarketId         uint64
     IsBuy            bool
     Price            sdk.Dec
-    Quantity         sdk.Dec
+    Quantity         sdk.Int
     MsgHeight        int64
-    OpenQuantity     sdk.Dec
-    RemainingDeposit sdk.Dec
+    OpenQuantity     sdk.Int
+    RemainingDeposit sdk.Int
     Deadline         time.Time
 }
 
