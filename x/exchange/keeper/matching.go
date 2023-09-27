@@ -31,7 +31,7 @@ func (k Keeper) ConstructMemOrderBookSide(
 			deposit := types.DepositAmount(opts.IsBuy, price, qty)
 			if escrow != nil {
 				payDenom, _ := types.PayReceiveDenoms(market.BaseDenom, market.QuoteDenom, opts.IsBuy)
-				escrow.Lock(ordererAddr, sdk.NewCoin(payDenom, deposit))
+				escrow.Escrow(ordererAddr, sdk.NewCoin(payDenom, deposit))
 			}
 			obs.AddOrder(types.NewOrderSourceMemOrder(
 				ordererAddr, opts.IsBuy, price, qty, qty, deposit, source))
@@ -59,8 +59,8 @@ func (k Keeper) executeOrder(
 	if mr.IsMatched() {
 		if !simulate {
 			payDenom, receiveDenom := types.PayReceiveDenoms(market.BaseDenom, market.QuoteDenom, isBuy)
-			escrow.Lock(ordererAddr, sdk.NewCoin(payDenom, mr.Paid))
-			escrow.Unlock(ordererAddr, sdk.NewCoin(receiveDenom, mr.Received))
+			escrow.Escrow(ordererAddr, sdk.NewCoin(payDenom, mr.Paid))
+			escrow.Release(ordererAddr, sdk.NewCoin(receiveDenom, mr.Received))
 			if err = k.finalizeMatching(ctx, market, obs.Orders(), escrow); err != nil {
 				return
 			}
@@ -135,15 +135,18 @@ func (k Keeper) finalizeMatching(
 					k.SetOrder(ctx, order)
 				}
 			}
-			escrow.Unlock(ordererAddr, receivedCoin)
+			escrow.Release(ordererAddr, receivedCoin)
 		}
 		// Should refund deposit
 		remainingDeposit := memOrder.RemainingDeposit.Sub(res.Paid)
 		if memOrder.Type == types.OrderSourceMemOrder && remainingDeposit.IsPositive() {
-			escrow.Unlock(ordererAddr, sdk.NewCoin(payDenom, remainingDeposit))
+			escrow.Release(ordererAddr, sdk.NewCoin(payDenom, remainingDeposit))
 		}
 	}
 	if err := escrow.Transact(ctx, k.bankKeeper); err != nil {
+		return err
+	}
+	if err := k.CollectFees(ctx, market); err != nil {
 		return err
 	}
 	for _, sourceName := range sourceNames {

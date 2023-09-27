@@ -13,6 +13,10 @@ func DeriveMarketEscrowAddress(marketId uint64) sdk.AccAddress {
 	return address.Module(ModuleName, []byte(fmt.Sprintf("MarketEscrowAddress/%d", marketId)))
 }
 
+func DeriveFeeCollector(marketId uint64) sdk.AccAddress {
+	return address.Module(ModuleName, []byte(fmt.Sprintf("FeeCollector/%d", marketId)))
+}
+
 func NewMarket(
 	marketId uint64, baseDenom, quoteDenom string,
 	makerFeeRate, takerFeeRate, orderSourceFeeRatio sdk.Dec,
@@ -22,6 +26,7 @@ func NewMarket(
 		BaseDenom:           baseDenom,
 		QuoteDenom:          quoteDenom,
 		EscrowAddress:       DeriveMarketEscrowAddress(marketId).String(),
+		FeeCollector:        DeriveFeeCollector(marketId).String(),
 		MakerFeeRate:        makerFeeRate,
 		TakerFeeRate:        takerFeeRate,
 		OrderSourceFeeRatio: orderSourceFeeRatio,
@@ -48,6 +53,9 @@ func (market Market) Validate() error {
 	if _, err := sdk.AccAddressFromBech32(market.EscrowAddress); err != nil {
 		return fmt.Errorf("invalid escrow address: %w", err)
 	}
+	if _, err := sdk.AccAddressFromBech32(market.FeeCollector); err != nil {
+		return fmt.Errorf("invalid fee collector: %w", err)
+	}
 	if err := ValidateFees(
 		market.MakerFeeRate, market.TakerFeeRate, market.OrderSourceFeeRatio); err != nil {
 		return err
@@ -69,6 +77,10 @@ func (market Market) Validate() error {
 
 func (market Market) MustGetEscrowAddress() sdk.AccAddress {
 	return sdk.MustAccAddressFromBech32(market.EscrowAddress)
+}
+
+func (market Market) MustGetFeeCollectorAddress() sdk.AccAddress {
+	return sdk.MustAccAddressFromBech32(market.FeeCollector)
 }
 
 func (market Market) FeeRate(isOrderSourceOrder, isMaker, halveFees bool) (feeRate sdk.Dec) {

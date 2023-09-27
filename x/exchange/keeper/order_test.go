@@ -158,14 +158,16 @@ func (s *KeeperTestSuite) TestOrderMatching() {
 
 	s.AssertEqual(utils.ParseCoins("1001497ucre,704000uusd"), s.App.BankKeeper.GetAllBalances(s.Ctx, aliceAddr))
 	s.AssertEqual(utils.ParseCoins("998500ucre,1149051uusd"), s.App.BankKeeper.GetAllBalances(s.Ctx, bobAddr))
-	s.AssertEqual(utils.ParseCoins("3ucre,146949uusd"), s.App.BankKeeper.GetAllBalances(s.Ctx, market.MustGetEscrowAddress()))
+	s.AssertEqual(utils.ParseCoins("146500uusd"), s.App.BankKeeper.GetAllBalances(s.Ctx, market.MustGetEscrowAddress()))
+	s.AssertEqual(utils.ParseCoins("3ucre,449uusd"), s.App.BankKeeper.GetAllBalances(s.Ctx, market.MustGetFeeCollectorAddress()))
 
 	s.PlaceLimitOrder(
 		market.Id, bobAddr, false, utils.ParseDec("96"), sdk.NewInt(1500), time.Hour)
 
 	s.AssertEqual(utils.ParseCoins("1002994ucre,704000uusd"), s.App.BankKeeper.GetAllBalances(s.Ctx, aliceAddr))
 	s.AssertEqual(utils.ParseCoins("997000ucre,1295111uusd"), s.App.BankKeeper.GetAllBalances(s.Ctx, bobAddr))
-	s.AssertEqual(utils.ParseCoins("6ucre,889uusd"), s.App.BankKeeper.GetAllBalances(s.Ctx, market.MustGetEscrowAddress()))
+	s.AssertEqual(utils.ParseCoins(""), s.App.BankKeeper.GetAllBalances(s.Ctx, market.MustGetEscrowAddress()))
+	s.AssertEqual(utils.ParseCoins("6ucre,889uusd"), s.App.BankKeeper.GetAllBalances(s.Ctx, market.MustGetFeeCollectorAddress()))
 }
 
 func (s *KeeperTestSuite) TestMinMaxPrice() {

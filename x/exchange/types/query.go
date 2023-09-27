@@ -6,6 +6,7 @@ func NewMarketResponse(market Market, marketState MarketState) MarketResponse {
 		BaseDenom:           market.BaseDenom,
 		QuoteDenom:          market.QuoteDenom,
 		EscrowAddress:       market.EscrowAddress,
+		FeeCollector:        market.FeeCollector,
 		MakerFeeRate:        market.MakerFeeRate,
 		TakerFeeRate:        market.TakerFeeRate,
 		OrderSourceFeeRatio: market.OrderSourceFeeRatio,

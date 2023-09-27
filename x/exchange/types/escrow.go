@@ -18,7 +18,7 @@ func NewEscrow(escrowAddr sdk.AccAddress) *Escrow {
 	}
 }
 
-func (e *Escrow) Lock(addr sdk.AccAddress, amt ...sdk.Coin) {
+func (e *Escrow) Escrow(addr sdk.AccAddress, amt ...sdk.Coin) {
 	saddr := addr.String()
 	before, ok := e.deltas[saddr]
 	if !ok {
@@ -27,7 +27,7 @@ func (e *Escrow) Lock(addr sdk.AccAddress, amt ...sdk.Coin) {
 	e.deltas[saddr], _ = before.SafeSub(amt)
 }
 
-func (e *Escrow) Unlock(addr sdk.AccAddress, amt ...sdk.Coin) {
+func (e *Escrow) Release(addr sdk.AccAddress, amt ...sdk.Coin) {
 	saddr := addr.String()
 	before, ok := e.deltas[saddr]
 	if !ok {

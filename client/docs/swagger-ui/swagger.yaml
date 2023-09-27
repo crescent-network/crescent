@@ -11604,6 +11604,8 @@ paths:
                       type: string
                     escrow_address:
                       type: string
+                    fee_collector:
+                      type: string
                     maker_fee_rate:
                       type: string
                     taker_fee_rate:
@@ -11752,6 +11754,8 @@ paths:
                   quote_denom:
                     type: string
                   escrow_address:
+                    type: string
+                  fee_collector:
                     type: string
                   maker_fee_rate:
                     type: string
@@ -20178,6 +20182,8 @@ definitions:
         type: string
       escrow_address:
         type: string
+      fee_collector:
+        type: string
       maker_fee_rate:
         type: string
       taker_fee_rate:
@@ -20338,6 +20344,8 @@ definitions:
             quote_denom:
               type: string
             escrow_address:
+              type: string
+            fee_collector:
               type: string
             maker_fee_rate:
               type: string
@@ -20537,6 +20545,8 @@ definitions:
           quote_denom:
             type: string
           escrow_address:
+            type: string
+          fee_collector:
             type: string
           maker_fee_rate:
             type: string

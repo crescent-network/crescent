@@ -59,6 +59,13 @@ func TestMarket_Validate(t *testing.T) {
 			"invalid escrow address: decoding bech32 failed: invalid separator index -1",
 		},
 		{
+			"invalid fee collector",
+			func(market *types.Market) {
+				market.FeeCollector = "invalidaddr"
+			},
+			"invalid fee collector: decoding bech32 failed: invalid separator index -1",
+		},
+		{
 			"too low maker fee rate",
 			func(market *types.Market) {
 				market.MakerFeeRate = utils.ParseDec("-0.0015")
