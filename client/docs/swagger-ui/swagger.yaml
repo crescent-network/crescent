@@ -10462,8 +10462,6 @@ paths:
                       title: >-
                         bid_reserve_address specifies the account that reserves
                         bidding amounts placed by bidders
-                    min_bid_amount:
-                      type: string
                     fee_rate:
                       type: string
                     last_rewards_auction_id:
@@ -10639,8 +10637,6 @@ paths:
                     title: >-
                       bid_reserve_address specifies the account that reserves
                       bidding amounts placed by bidders
-                  min_bid_amount:
-                    type: string
                   fee_rate:
                     type: string
                   last_rewards_auction_id:
@@ -19505,8 +19501,6 @@ definitions:
         title: >-
           bid_reserve_address specifies the account that reserves bidding
           amounts placed by bidders
-      min_bid_amount:
-        type: string
       fee_rate:
         type: string
       last_rewards_auction_id:
@@ -19642,8 +19636,6 @@ definitions:
             title: >-
               bid_reserve_address specifies the account that reserves bidding
               amounts placed by bidders
-          min_bid_amount:
-            type: string
           fee_rate:
             type: string
           last_rewards_auction_id:
@@ -19700,8 +19692,6 @@ definitions:
               title: >-
                 bid_reserve_address specifies the account that reserves bidding
                 amounts placed by bidders
-            min_bid_amount:
-              type: string
             fee_rate:
               type: string
             last_rewards_auction_id:

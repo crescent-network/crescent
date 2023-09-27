@@ -159,12 +159,10 @@ message PublicPositionResponse {
   int32  upper_tick = 4;
   // bid_reserve_address specifies the account that reserves bidding amounts placed by bidders
   string bid_reserve_address = 5;
-  string min_bid_amount      = 6
+  string fee_rate = 6 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  uint64 last_rewards_auction_id = 7;
+  string liquidity               = 8
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  string fee_rate = 7 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
-  uint64 last_rewards_auction_id = 8;
-  string liquidity               = 9
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  uint64                   position_id = 10; // underlying x/amm position's id
-  cosmos.base.v1beta1.Coin total_share = 11 [(gogoproto.nullable) = false];
+  uint64                   position_id = 9; // underlying x/amm position's id
+  cosmos.base.v1beta1.Coin total_share = 10 [(gogoproto.nullable) = false];
 }

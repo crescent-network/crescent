@@ -7,10 +7,10 @@ import (
 	liquidammtypes "github.com/crescent-network/crescent/v5/x/liquidamm/types"
 )
 
-func (s *TestSuite) CreatePublicPosition(poolId uint64, lowerPrice, upperPrice sdk.Dec, minBidAmt sdk.Int, feeRate sdk.Dec) (publicPosition liquidammtypes.PublicPosition) {
+func (s *TestSuite) CreatePublicPosition(poolId uint64, lowerPrice, upperPrice, feeRate sdk.Dec) (publicPosition liquidammtypes.PublicPosition) {
 	s.T().Helper()
 	var err error
-	publicPosition, err = s.App.LiquidAMMKeeper.CreatePublicPosition(s.Ctx, poolId, lowerPrice, upperPrice, minBidAmt, feeRate)
+	publicPosition, err = s.App.LiquidAMMKeeper.CreatePublicPosition(s.Ctx, poolId, lowerPrice, upperPrice, feeRate)
 	s.Require().NoError(err)
 	return
 }

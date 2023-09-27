@@ -27,14 +27,13 @@ func DeriveBidReserveAddress(positionId uint64) sdk.AccAddress {
 
 // NewPublicPosition returns a new PublicPosition.
 func NewPublicPosition(
-	id, poolId uint64, lowerTick, upperTick int32, minBidAmt sdk.Int, feeRate sdk.Dec) PublicPosition {
+	id, poolId uint64, lowerTick, upperTick int32, feeRate sdk.Dec) PublicPosition {
 	return PublicPosition{
 		Id:                   id,
 		PoolId:               poolId,
 		LowerTick:            lowerTick,
 		UpperTick:            upperTick,
 		BidReserveAddress:    DeriveBidReserveAddress(id).String(),
-		MinBidAmount:         minBidAmt,
 		FeeRate:              feeRate,
 		LastRewardsAuctionId: 0,
 	}
@@ -53,9 +52,6 @@ func (publicPosition PublicPosition) Validate() error {
 	}
 	if _, err := sdk.AccAddressFromBech32(publicPosition.BidReserveAddress); err != nil {
 		return fmt.Errorf("invalid bid reserve address %w", err)
-	}
-	if publicPosition.MinBidAmount.IsNegative() {
-		return fmt.Errorf("minimum bid amount must not be negative: %s", publicPosition.MinBidAmount)
 	}
 	if publicPosition.FeeRate.IsNegative() {
 		return fmt.Errorf("fee rate must not be negative: %s", publicPosition.FeeRate)

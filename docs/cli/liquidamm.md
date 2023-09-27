@@ -59,7 +59,6 @@ Where proposal.json contains:
   "pool_id": "1",
   "lower_price": "4.5",
   "upper_price": "5.5",
-  "min_bid_amount": "100000000",
   "fee_rate": "0.003"
 }
 

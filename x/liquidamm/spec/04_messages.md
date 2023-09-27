@@ -6,9 +6,9 @@
 
 ```go
 type MsgMintShare struct {
-Sender           string
-PublicPositionId uint64
-DesiredAmount    sdk.Coins
+    Sender           string
+    PublicPositionId uint64
+    DesiredAmount    sdk.Coins
 }
 ```
 
@@ -16,9 +16,9 @@ DesiredAmount    sdk.Coins
 
 ```go
 type MsgBurnShare struct {
-Sender           string
-PublicPositionId uint64
-Share            sdk.Coin
+    Sender           string
+    PublicPositionId uint64
+    Share            sdk.Coin
 }
 ```
 
@@ -26,9 +26,9 @@ Share            sdk.Coin
 
 ```go
 type MsgPlaceBid struct {
-Sender           string
-PublicPositionId uint64
-RewardsAuctionId uint64
-Share            sdk.Coin
+    Sender           string
+    PublicPositionId uint64
+    RewardsAuctionId uint64
+    Share            sdk.Coin
 }
 ```

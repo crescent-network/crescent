@@ -20,10 +20,8 @@ message PublicPosition {
   int32  upper_tick = 4;
   // bid_reserve_address specifies the account that reserves bidding amounts placed by bidders
   string bid_reserve_address = 5;
-  string min_bid_amount      = 6
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  string fee_rate = 7 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
-  uint64 last_rewards_auction_id = 8;
+  string fee_rate = 6 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  uint64 last_rewards_auction_id = 7;
 }
 
 // RewardsAuction defines rewards auction that is created by the module

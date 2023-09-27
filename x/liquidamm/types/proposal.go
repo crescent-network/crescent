@@ -32,15 +32,14 @@ func init() {
 
 func NewPublicPositionCreateProposal(
 	title, description string, poolId uint64,
-	lowerPrice, upperPrice sdk.Dec, minBidAmt sdk.Int, feeRate sdk.Dec) *PublicPositionCreateProposal {
+	lowerPrice, upperPrice sdk.Dec, feeRate sdk.Dec) *PublicPositionCreateProposal {
 	return &PublicPositionCreateProposal{
-		Title:        title,
-		Description:  description,
-		PoolId:       poolId,
-		LowerPrice:   lowerPrice,
-		UpperPrice:   upperPrice,
-		MinBidAmount: minBidAmt,
-		FeeRate:      feeRate,
+		Title:       title,
+		Description: description,
+		PoolId:      poolId,
+		LowerPrice:  lowerPrice,
+		UpperPrice:  upperPrice,
+		FeeRate:     feeRate,
 	}
 }
 
@@ -78,7 +77,7 @@ func (p *PublicPositionCreateProposal) ValidateBasic() error {
 	if upperTick > ammtypes.MaxTick {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "upper tick must not be higher than the maximum %d", ammtypes.MaxTick)
 	}
-	publicPosition := NewPublicPosition(1, p.PoolId, lowerTick, upperTick, p.MinBidAmount, p.FeeRate)
+	publicPosition := NewPublicPosition(1, p.PoolId, lowerTick, upperTick, p.FeeRate)
 	if err := publicPosition.Validate(); err != nil {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
@@ -93,9 +92,8 @@ func (p PublicPositionCreateProposal) String() string {
   Pool Id:            %d
   Lower Price:        %s
   Upper Price:        %s
-  Minimum Bid Amount: %s
   Fee Rate:           %s
-`, p.Title, p.Description, p.PoolId, p.LowerPrice, p.UpperPrice, p.MinBidAmount, p.FeeRate))
+`, p.Title, p.Description, p.PoolId, p.LowerPrice, p.UpperPrice, p.FeeRate))
 	return b.String()
 }
 
@@ -140,9 +138,8 @@ func (p PublicPositionParameterChangeProposal) String() string {
 	for _, change := range p.Changes {
 		b.WriteString(fmt.Sprintf(`    Public Position Parameter Change:
       Public Position Id: %d
-      Min Bid Amount:     %s
       Fee Rate:           %s
-`, change.PublicPositionId, change.MinBidAmount, change.FeeRate))
+`, change.PublicPositionId, change.FeeRate))
 	}
 	return b.String()
 }
@@ -150,10 +147,6 @@ func (p PublicPositionParameterChangeProposal) String() string {
 func (change PublicPositionParameterChange) Validate() error {
 	if change.PublicPositionId == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "public position id must not be 0")
-	}
-	if change.MinBidAmount.IsNegative() {
-		return sdkerrors.Wrapf(
-			sdkerrors.ErrInvalidRequest, "min bid amount must not be negative: %s", change.MinBidAmount)
 	}
 	if change.FeeRate.IsNegative() || change.FeeRate.GT(utils.OneDec) {
 		return fmt.Errorf("fee rate must be in range [0, 1]: %s", change.FeeRate)

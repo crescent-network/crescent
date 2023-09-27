@@ -12,12 +12,11 @@ func (s *KeeperTestSuite) TestCreateDuplicatePublicPosition() {
 	market := s.CreateMarket("ucre", "uusd")
 	pool := s.CreatePool(market.Id, utils.ParseDec("5"))
 	s.CreatePublicPosition(
-		pool.Id, utils.ParseDec("4.5"), utils.ParseDec("5.5"),
-		sdk.NewInt(10000), utils.ParseDec("0.003"))
+		pool.Id, utils.ParseDec("4.5"), utils.ParseDec("5.5"), utils.ParseDec("0.003"))
 
 	_, err := s.keeper.CreatePublicPosition(
 		s.Ctx, pool.Id, utils.ParseDec("4.5"), utils.ParseDec("5.5"),
-		sdk.NewInt(20000), utils.ParseDec("0.001"))
+		utils.ParseDec("0.001"))
 	s.Require().EqualError(err, "public position with same parameters already exists")
 }
 

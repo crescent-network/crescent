@@ -6,8 +6,6 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/crescent-network/crescent/v5/app/testutil"
 	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/liquidamm/keeper"
@@ -36,8 +34,7 @@ func (s *ModuleTestSuite) TestRewardsAuctionEndTime() {
 	market := s.CreateMarket("ucre", "uusd")
 	pool := s.CreatePool(market.Id, utils.ParseDec("5"))
 	s.CreatePublicPosition(
-		pool.Id, utils.ParseDec("4.5"), utils.ParseDec("5.5"),
-		sdk.NewInt(10000), utils.ParseDec("0.003"))
+		pool.Id, utils.ParseDec("4.5"), utils.ParseDec("5.5"), utils.ParseDec("0.003"))
 
 	// Ensure that the end time is initialized
 	endTime, found := s.keeper.GetNextRewardsAuctionEndTime(s.Ctx)
@@ -75,8 +72,7 @@ func (s *ModuleTestSuite) TestChainHaltedForShortTime() {
 	market := s.CreateMarket("ucre", "uusd")
 	pool := s.CreatePool(market.Id, utils.ParseDec("5"))
 	s.CreatePublicPosition(
-		pool.Id, utils.ParseDec("4.5"), utils.ParseDec("5.5"),
-		sdk.NewInt(10000), utils.ParseDec("0.003"))
+		pool.Id, utils.ParseDec("4.5"), utils.ParseDec("5.5"), utils.ParseDec("0.003"))
 
 	endTime, found := s.keeper.GetNextRewardsAuctionEndTime(s.Ctx)
 	s.Require().True(found)

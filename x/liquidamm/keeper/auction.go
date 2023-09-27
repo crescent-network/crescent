@@ -19,10 +19,6 @@ func (k Keeper) PlaceBid(
 	if shareDenom := types.ShareDenom(publicPositionId); share.Denom != shareDenom {
 		return bid, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "share denom != %s", shareDenom)
 	}
-	if share.Amount.LT(publicPosition.MinBidAmount) {
-		return bid, sdkerrors.Wrapf(
-			sdkerrors.ErrInvalidRequest, "share amount must not be smaller than %s", publicPosition.MinBidAmount)
-	}
 
 	auction, found := k.GetRewardsAuction(ctx, publicPositionId, auctionId)
 	if !found {

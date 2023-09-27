@@ -8,7 +8,7 @@ import (
 )
 
 func HandlePublicPositionCreateProposal(ctx sdk.Context, k Keeper, p *types.PublicPositionCreateProposal) error {
-	if _, err := k.CreatePublicPosition(ctx, p.PoolId, p.LowerPrice, p.UpperPrice, p.MinBidAmount, p.FeeRate); err != nil {
+	if _, err := k.CreatePublicPosition(ctx, p.PoolId, p.LowerPrice, p.UpperPrice, p.FeeRate); err != nil {
 		return err
 	}
 	return nil
@@ -20,12 +20,10 @@ func HandlePublicPositionParameterChangeProposal(ctx sdk.Context, k Keeper, p *t
 		if !found {
 			return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "public position %d not found", change.PublicPositionId)
 		}
-		publicPosition.MinBidAmount = change.MinBidAmount
 		publicPosition.FeeRate = change.FeeRate
 		k.SetPublicPosition(ctx, publicPosition)
 		if err := ctx.EventManager().EmitTypedEvent(&types.EventPublicPositionParameterChanged{
 			PublicPositionId: change.PublicPositionId,
-			MinBidAmount:     change.MinBidAmount,
 			FeeRate:          change.FeeRate,
 		}); err != nil {
 			return err

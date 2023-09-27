@@ -5,8 +5,6 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/crescent-network/crescent/v5/app/testutil"
 	utils "github.com/crescent-network/crescent/v5/types"
 	ammtypes "github.com/crescent-network/crescent/v5/x/amm/types"
@@ -39,8 +37,7 @@ func (s *KeeperTestSuite) CreateSamplePublicPosition() types.PublicPosition {
 	}, utils.ParseTime("0001-01-01T00:00:00Z"), utils.ParseTime("9999-12-31T00:00:00Z"),
 		utils.ParseCoins("100000_000000uatom"), true)
 	return s.CreatePublicPosition(
-		pool.Id, utils.ParseDec("4.5"), utils.ParseDec("5.5"),
-		sdk.NewInt(10000), utils.ParseDec("0.003"))
+		pool.Id, utils.ParseDec("4.5"), utils.ParseDec("5.5"), utils.ParseDec("0.003"))
 }
 
 func (s *KeeperTestSuite) SetupSampleScenario() {
@@ -62,11 +59,9 @@ func (s *KeeperTestSuite) SetupSampleScenario() {
 	s.NextBlock()
 
 	publicPosition1 := s.CreatePublicPosition(
-		pool1.Id, utils.ParseDec("4.5"), utils.ParseDec("5.5"),
-		sdk.NewInt(10000), utils.ParseDec("0.003"))
+		pool1.Id, utils.ParseDec("4.5"), utils.ParseDec("5.5"), utils.ParseDec("0.003"))
 	s.CreatePublicPosition(
-		pool2.Id, utils.ParseDec("5"), utils.ParseDec("20"),
-		sdk.NewInt(10000), utils.ParseDec("0.003"))
+		pool2.Id, utils.ParseDec("5"), utils.ParseDec("20"), utils.ParseDec("0.003"))
 
 	// Two account mints share.
 	minterAddr1 := utils.TestAddress(2)

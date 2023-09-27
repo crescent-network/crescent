@@ -105,7 +105,7 @@ func TestPublicPosition_Validate(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			publicPosition := types.NewPublicPosition(
-				1, 2, -100, 100, sdk.NewInt(10000), utils.ParseDec("0.003"))
+				1, 2, -100, 100, utils.ParseDec("0.003"))
 			tc.malleate(&publicPosition)
 			err := publicPosition.Validate()
 			if tc.expectedErr == "" {

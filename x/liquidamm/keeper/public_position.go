@@ -11,8 +11,7 @@ import (
 )
 
 func (k Keeper) CreatePublicPosition(
-	ctx sdk.Context, poolId uint64, lowerPrice, upperPrice sdk.Dec,
-	minBidAmt sdk.Int, feeRate sdk.Dec) (publicPosition types.PublicPosition, err error) {
+	ctx sdk.Context, poolId uint64, lowerPrice, upperPrice, feeRate sdk.Dec) (publicPosition types.PublicPosition, err error) {
 	pool, found := k.ammKeeper.GetPool(ctx, poolId)
 	if !found {
 		return publicPosition, sdkerrors.Wrap(sdkerrors.ErrNotFound, "pool not found")
@@ -27,7 +26,7 @@ func (k Keeper) CreatePublicPosition(
 
 	publicPositionId := k.GetNextPublicPositionIdWithUpdate(ctx)
 	publicPosition = types.NewPublicPosition(
-		publicPositionId, pool.Id, lowerTick, upperTick, minBidAmt, feeRate)
+		publicPositionId, pool.Id, lowerTick, upperTick, feeRate)
 	k.SetPublicPosition(ctx, publicPosition)
 	k.SetPublicPositionsByPoolIndex(ctx, publicPosition)
 	k.SetPublicPositionByParamsIndex(ctx, publicPosition)
@@ -37,7 +36,6 @@ func (k Keeper) CreatePublicPosition(
 		PoolId:           publicPosition.PoolId,
 		LowerTick:        publicPosition.LowerTick,
 		UpperTick:        publicPosition.UpperTick,
-		MinBidAmount:     publicPosition.MinBidAmount,
 		FeeRate:          publicPosition.FeeRate,
 	}); err != nil {
 		return publicPosition, err

@@ -13,9 +13,7 @@ message EventPublicPositionCreated {
   uint64 pool_id            = 2;
   int32  lower_tick         = 3;
   int32  upper_tick         = 4;
-  string min_bid_amount     = 5
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  string fee_rate = 6 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string fee_rate = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 }
 
 message EventMintShare {
@@ -54,7 +52,5 @@ message EventBidRefunded {
 
 message EventPublicPositionParameterChanged {
   uint64 public_position_id = 1;
-  string min_bid_amount     = 2
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  string fee_rate = 3 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string fee_rate = 2 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 }

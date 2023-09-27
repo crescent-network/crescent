@@ -16,7 +16,6 @@ type PublicPosition struct {
     LowerTick            int32
     UpperTick            int32
     BidReserveAddress    string
-    MinBidAmount         sdk.Int
     FeeRate              sdk.Dec
     LastRewardsAuctionId uint64
 }

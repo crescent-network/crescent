@@ -53,12 +53,6 @@ func (s *KeeperTestSuite) TestPlaceBid() {
 			"",
 		},
 		{
-			"minimum bid amount",
-			types.NewMsgPlaceBid(
-				bidderAddr3, publicPosition.Id, auction.Id, utils.ParseCoin("100sb1")),
-			"share amount must not be smaller than 10000: invalid request",
-		},
-		{
 			"smaller than winning bid",
 			types.NewMsgPlaceBid(
 				bidderAddr3, publicPosition.Id, auction.Id, utils.ParseCoin("150000sb1")),
@@ -256,12 +250,12 @@ func (s *KeeperTestSuite) TestMaxNumRecentRewardsAuctions() {
 	pool1 := s.CreatePool(market1.Id, utils.ParseDec("5"))
 	publicPosition1 := s.CreatePublicPosition(
 		pool1.Id, utils.ParseDec("4.5"), utils.ParseDec("5.5"),
-		sdk.NewInt(10000), utils.ParseDec("0.003"))
+		utils.ParseDec("0.003"))
 	market2 := s.CreateMarket("uusd", "ucre")
 	pool2 := s.CreatePool(market2.Id, utils.ParseDec("0.2"))
 	publicPosition2 := s.CreatePublicPosition(
 		pool2.Id, utils.ParseDec("0.1"), utils.ParseDec("0.3"),
-		sdk.NewInt(10000), utils.ParseDec("0.003"))
+		utils.ParseDec("0.003"))
 
 	s.NextBlock()
 
