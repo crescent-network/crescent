@@ -376,9 +376,9 @@ func (s *KeeperTestSuite) removeLiquidity(
 }
 
 func (s *KeeperTestSuite) createPublicPosition(
-	poolId uint64, lowerPrice, upperPrice sdk.Dec, minBidAmt sdk.Int, feeRate sdk.Dec) liquidammtypes.PublicPosition {
+	poolId uint64, lowerPrice, upperPrice sdk.Dec, feeRate sdk.Dec) liquidammtypes.PublicPosition {
 	s.T().Helper()
-	publicPosition, err := s.app.LiquidAMMKeeper.CreatePublicPosition(s.ctx, poolId, lowerPrice, upperPrice, minBidAmt, feeRate)
+	publicPosition, err := s.app.LiquidAMMKeeper.CreatePublicPosition(s.ctx, poolId, lowerPrice, upperPrice, feeRate)
 	s.Require().NoError(err)
 	return publicPosition
 }

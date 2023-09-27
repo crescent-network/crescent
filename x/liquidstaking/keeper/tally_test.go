@@ -179,10 +179,10 @@ func (s *KeeperTestSuite) TestSetLiquidStakingVotingPowers() {
 		sdk.NewCoins(sdk.NewInt64Coin(params.LiquidBondDenom, 40000000), sdk.NewInt64Coin(sdk.DefaultBondDenom, 44000000)))
 	setLiquidStakingVotingPowers()
 
-	publicPosition1 := s.createPublicPosition(pool1.Id, ammtypes.MinPrice, ammtypes.MaxPrice, sdk.NewInt(10000), utils.ZeroDec)
+	publicPosition1 := s.createPublicPosition(pool1.Id, ammtypes.MinPrice, ammtypes.MaxPrice, utils.ZeroDec)
 	s.mintShare(delC, publicPosition1.Id,
 		sdk.NewCoins(sdk.NewInt64Coin(params.LiquidBondDenom, 10000000), sdk.NewInt64Coin(sdk.DefaultBondDenom, 11000000)))
-	publicPosition2 := s.createPublicPosition(pool2.Id, ammtypes.MinPrice, ammtypes.MaxPrice, sdk.NewInt(10000), utils.ZeroDec)
+	publicPosition2 := s.createPublicPosition(pool2.Id, ammtypes.MinPrice, ammtypes.MaxPrice, utils.ZeroDec)
 	s.mintShare(delC, publicPosition2.Id,
 		sdk.NewCoins(sdk.NewInt64Coin(params.LiquidBondDenom, 10000000), sdk.NewInt64Coin(sdk.DefaultBondDenom, 11000000)))
 
@@ -299,7 +299,7 @@ func (s *KeeperTestSuite) TestGetVotingPower() {
 		sdk.NewCoins(sdk.NewInt64Coin(params.LiquidBondDenom, 40000000), sdk.NewInt64Coin(sdk.DefaultBondDenom, 44000000)))
 	s.assertVotingPower(delC, sdk.ZeroInt(), delCbToken.Sub(utils.OneInt), sdk.ZeroInt())
 
-	publicPosition1 := s.createPublicPosition(pool2.Id, ammtypes.MinPrice, ammtypes.MaxPrice, sdk.NewInt(10000), utils.ZeroDec)
+	publicPosition1 := s.createPublicPosition(pool2.Id, ammtypes.MinPrice, ammtypes.MaxPrice, utils.ZeroDec)
 	s.mintShare(delC, publicPosition1.Id,
 		sdk.NewCoins(sdk.NewInt64Coin(params.LiquidBondDenom, 10000000), sdk.NewInt64Coin(sdk.DefaultBondDenom, 11000000)))
 	s.mintShare(delC, publicPosition1.Id,
@@ -591,7 +591,7 @@ func (s *KeeperTestSuite) TestCalcLiquidStakingVotingPower() {
 	s.Require().Equal(sdk.NewInt(199_999999), s.keeper.CalcLiquidStakingVotingPower(s.ctx, delB))
 
 	publicPosition := s.createPublicPosition(
-		pool.Id, utils.ParseDec("1"), utils.ParseDec("1.2"), sdk.NewInt(10000), utils.ParseDec("0.003"))
+		pool.Id, utils.ParseDec("1"), utils.ParseDec("1.2"), utils.ParseDec("0.003"))
 	// Uninitialized public positions should be handled correctly.
 	s.Require().Equal(sdk.NewInt(99_999999), s.keeper.CalcLiquidStakingVotingPower(s.ctx, delA))
 	s.Require().Equal(sdk.NewInt(199_999999), s.keeper.CalcLiquidStakingVotingPower(s.ctx, delB))
