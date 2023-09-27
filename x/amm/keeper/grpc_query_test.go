@@ -158,7 +158,6 @@ func (s *KeeperTestSuite) TestQueryPool() {
 				s.AssertEqual(utils.ParseCoin("71750979uatom"), resp.Pool.Balance0)
 				s.AssertEqual(utils.ParseCoin("1390716291uusd"), resp.Pool.Balance1)
 				s.Require().Equal("cosmos1srphgsfqllr85ndknjme24txux8m0sz0hhpnnksn2339d3a788rsawjx77", resp.Pool.RewardsPool)
-				s.AssertEqual(utils.ParseDec("1"), resp.Pool.MinOrderQuantity)
 				s.AssertEqual(sdk.NewInt(12470981864), resp.Pool.TotalLiquidity)
 			},
 		},

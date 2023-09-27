@@ -62,7 +62,7 @@ func TestMsgCreatePool_ValidateBasic(t *testing.T) {
 			func(msg *types.MsgCreatePool) {
 				msg.Price = utils.ParseDec("100000000000000000000000000000000000000000")
 			},
-			"price is higher than the max price 10000000000000000000000000000000000000000.000000000000000000: invalid request",
+			"price is higher than the max price 1000000000000000000000000.000000000000000000: invalid request",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -148,7 +148,7 @@ func TestMsgAddLiquidity_ValidateBasic(t *testing.T) {
 			func(msg *types.MsgAddLiquidity) {
 				msg.UpperPrice = utils.ParseDec("100000000000000000000000000000000000000000")
 			},
-			"upper tick must not be higher than the maximum 3600000: invalid request",
+			"upper tick must not be higher than the maximum 2160000: invalid request",
 		},
 		{
 			"invalid desired amount",

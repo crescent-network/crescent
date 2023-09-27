@@ -14,12 +14,12 @@ var _ paramstypes.ParamSet = (*Params)(nil)
 
 const (
 	MinTick = -1260000
-	MaxTick = 3600000
+	MaxTick = 2160000
 )
 
 var (
 	MinPrice = exchangetypes.PriceAtTick(MinTick) // 0.000000000000010000
-	MaxPrice = exchangetypes.PriceAtTick(MaxTick) // 10000000000000000000000000000000000000000
+	MaxPrice = exchangetypes.PriceAtTick(MaxTick) // 1000000000000000000000000
 )
 
 var (

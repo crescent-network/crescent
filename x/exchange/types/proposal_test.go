@@ -162,6 +162,90 @@ func TestMarketParameterChange_Validate(t *testing.T) {
 				nil, nil, nil, nil),
 			"",
 		},
+		{
+			"change only min order qty",
+			types.NewMarketParameterChange(
+				1, utils.ParseDec("0.002"), utils.ParseDec("0.001"), utils.ParseDec("0.5"),
+				utils.Pointer(sdk.NewInt(1000)), nil, nil, nil),
+			"",
+		},
+		{
+			"change only min order quote",
+			types.NewMarketParameterChange(
+				1, utils.ParseDec("0.002"), utils.ParseDec("0.001"), utils.ParseDec("0.5"),
+				nil, utils.Pointer(sdk.NewInt(1000)), nil, nil),
+			"",
+		},
+		{
+			"change only max order qty",
+			types.NewMarketParameterChange(
+				1, utils.ParseDec("0.002"), utils.ParseDec("0.001"), utils.ParseDec("0.5"),
+				nil, nil, utils.Pointer(sdk.NewInt(1000)), nil),
+			"",
+		},
+		{
+			"change only max order quote",
+			types.NewMarketParameterChange(
+				1, utils.ParseDec("0.002"), utils.ParseDec("0.001"), utils.ParseDec("0.5"),
+				nil, nil, nil, utils.Pointer(sdk.NewInt(1000))),
+			"",
+		},
+		{
+			"negative min order qty",
+			types.NewMarketParameterChange(
+				1, utils.ParseDec("0.002"), utils.ParseDec("0.001"), utils.ParseDec("0.5"),
+				utils.Pointer(sdk.NewInt(-1000)), nil, nil, nil),
+			"min order quantity must not be negative: -1000: invalid request",
+		},
+		{
+			"negative min order quote",
+			types.NewMarketParameterChange(
+				1, utils.ParseDec("0.002"), utils.ParseDec("0.001"), utils.ParseDec("0.5"),
+				nil, utils.Pointer(sdk.NewInt(-1000)), nil, nil),
+			"min order quote must not be negative: -1000: invalid request",
+		},
+		{
+			"negative max order qty",
+			types.NewMarketParameterChange(
+				1, utils.ParseDec("0.002"), utils.ParseDec("0.001"), utils.ParseDec("0.5"),
+				nil, nil, utils.Pointer(sdk.NewInt(-1000)), nil),
+			"max order quantity must not be negative: -1000: invalid request",
+		},
+		{
+			"negative max order quote",
+			types.NewMarketParameterChange(
+				1, utils.ParseDec("0.002"), utils.ParseDec("0.001"), utils.ParseDec("0.5"),
+				nil, nil, nil, utils.Pointer(sdk.NewInt(-1000))),
+			"max order quote must not be negative: -1000: invalid request",
+		},
+		{
+			"zero min order qty",
+			types.NewMarketParameterChange(
+				1, utils.ParseDec("0.002"), utils.ParseDec("0.001"), utils.ParseDec("0.5"),
+				utils.Pointer(sdk.NewInt(0)), nil, nil, nil),
+			"",
+		},
+		{
+			"zero min order quote",
+			types.NewMarketParameterChange(
+				1, utils.ParseDec("0.002"), utils.ParseDec("0.001"), utils.ParseDec("0.5"),
+				nil, utils.Pointer(sdk.NewInt(0)), nil, nil),
+			"",
+		},
+		{
+			"zero max order qty",
+			types.NewMarketParameterChange(
+				1, utils.ParseDec("0.002"), utils.ParseDec("0.001"), utils.ParseDec("0.5"),
+				nil, nil, utils.Pointer(sdk.NewInt(0)), nil),
+			"",
+		},
+		{
+			"zero max order quote",
+			types.NewMarketParameterChange(
+				1, utils.ParseDec("0.002"), utils.ParseDec("0.001"), utils.ParseDec("0.5"),
+				nil, nil, nil, utils.Pointer(sdk.NewInt(0))),
+			"",
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.change.Validate()
