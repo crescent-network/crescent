@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
 	utils "github.com/crescent-network/crescent/v5/types"
@@ -102,19 +101,4 @@ func TestPriceToBytes(t *testing.T) {
 		price2 := types.BytesToPrice(bz)
 		require.Equal(t, price, price2)
 	}
-}
-
-func BenchmarkPriceToBytes(b *testing.B) {
-	// Maximum allowed by sdk.SortableDecBytes
-	price := utils.ParseDec("1000000000000000000")
-	b.Run("sdk.SortableDecBytes", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
-			sdk.SortableDecBytes(price)
-		}
-	})
-	b.Run("PriceToBytes", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
-			types.PriceToBytes(price)
-		}
-	})
 }

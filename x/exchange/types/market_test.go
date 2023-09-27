@@ -180,7 +180,7 @@ func TestMarketState_Validate(t *testing.T) {
 
 func TestOrderPriceLimit(t *testing.T) {
 	for i, tc := range []struct {
-		lastPrice, maxOrderPriceRatio sdk.Dec
+		basePrice, maxOrderPriceRatio sdk.Dec
 		minPrice, maxPrice            sdk.Dec
 	}{
 		{
@@ -191,9 +191,14 @@ func TestOrderPriceLimit(t *testing.T) {
 			utils.ParseDec("5"), utils.ParseDec("0.1"),
 			utils.ParseDec("4.5"), utils.ParseDec("5.5"),
 		},
+		{
+			utils.ParseDec("1.2345"), utils.ParseDec("0.1"),
+			// Min price is rounded up and max price is rounded down
+			utils.ParseDec("1.1111"), utils.ParseDec("1.3579"),
+		},
 	} {
 		t.Run(fmt.Sprint(i), func(t *testing.T) {
-			minPrice, maxPrice := types.OrderPriceLimit(tc.lastPrice, tc.maxOrderPriceRatio)
+			minPrice, maxPrice := types.OrderPriceLimit(tc.basePrice, tc.maxOrderPriceRatio)
 			require.True(sdk.DecEq(t, tc.minPrice, minPrice))
 			require.True(sdk.DecEq(t, tc.maxPrice, maxPrice))
 		})
