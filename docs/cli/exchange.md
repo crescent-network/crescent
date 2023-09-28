@@ -437,7 +437,7 @@ crescentd q exchange best-swap-exact-amount-in-routes 1000000uusd uatom -o json 
 
 ## Orderbook
 
-Query orderbook of particular market from exisiting orders
+Query orderbook of particular market from existing orders
 
 Usage
 
