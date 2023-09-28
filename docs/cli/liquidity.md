@@ -287,7 +287,7 @@ An Example of Buying Direction
 #
 # In regards of the `amount` field, it is how many ATOM you want to buy.
 # It is important to note that OfferCoinAmount/OrderPrice is the maximum amount you can buy and
-# the amount value multiply by order price cannot be more than the offer coin amount.
+# the amount value multiplied by order price cannot be more than the offer coin amount.
 # 
 # To describe the CLI below, 
 # it means you want to buy 17241379 amount of uatom by offering 50000000uusd with an order price of 2.9, which is lower than
