@@ -154,7 +154,7 @@ collect [position-id] [amount]
 Example
 
 ```bash
-# Withdraw 10uATOM and 10uUSD of reward from the positino
+# Withdraw 10uATOM and 10uUSD of reward from the position
 crescentd tx amm collect 1 10uatom,10uusd \
 --chain-id localnet \
 --from alice
@@ -207,7 +207,7 @@ crescentd q amm farming-plans -o json | jq
 
 Terminate a private farming plan.
 
-The plan's termination address must be same with the message sender.
+The plan's termination address must be same as the message sender.
 
 Usage
 
