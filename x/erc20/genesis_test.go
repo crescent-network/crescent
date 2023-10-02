@@ -14,17 +14,16 @@ import (
 	"github.com/tendermint/tendermint/version"
 
 	"github.com/evmos/ethermint/tests"
-	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
 
-	"github.com/Canto-Network/Canto/v7/app"
-	"github.com/Canto-Network/Canto/v7/x/erc20"
-	"github.com/Canto-Network/Canto/v7/x/erc20/types"
+	"github.com/crescent-network/crescent/v5/app"
+	"github.com/crescent-network/crescent/v5/x/erc20"
+	"github.com/crescent-network/crescent/v5/x/erc20/types"
 )
 
 type GenesisTestSuite struct {
 	suite.Suite
 	ctx     sdk.Context
-	app     *app.Canto
+	app     *app.App
 	genesis types.GenesisState
 }
 
@@ -36,7 +35,8 @@ func (suite *GenesisTestSuite) SetupTest() {
 	// consensus key
 	consAddress := sdk.ConsAddress(tests.GenerateAddress().Bytes())
 
-	suite.app = app.Setup(false, feemarkettypes.DefaultGenesisState())
+	//suite.app = app.Setup(false, feemarkettypes.DefaultGenesisState())
+	suite.app = app.Setup(false)
 	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{
 		Height:          1,
 		ChainID:         "canto_9000-1",

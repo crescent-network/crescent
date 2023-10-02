@@ -4,7 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	v2 "github.com/Canto-Network/Canto/v7/x/erc20/migrations/v2"
+	v2 "github.com/crescent-network/crescent/v5/x/erc20/migrations/v2"
 )
 
 var _ module.MigrationHandler = Migrator{}.Migrate1to2

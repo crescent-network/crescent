@@ -18,9 +18,9 @@ import (
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/Canto-Network/Canto/v7/x/erc20/client/cli"
-	"github.com/Canto-Network/Canto/v7/x/erc20/keeper"
-	"github.com/Canto-Network/Canto/v7/x/erc20/types"
+	"github.com/crescent-network/crescent/v5/x/erc20/client/cli"
+	"github.com/crescent-network/crescent/v5/x/erc20/keeper"
+	"github.com/crescent-network/crescent/v5/x/erc20/types"
 )
 
 // type check to ensure the interface is properly implemented

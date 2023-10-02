@@ -45,16 +45,16 @@ import (
 	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 
-	"github.com/Canto-Network/Canto/v7/app"
-	"github.com/Canto-Network/Canto/v7/contracts"
-	"github.com/Canto-Network/Canto/v7/x/erc20/types"
+	"github.com/crescent-network/crescent/v5/app"
+	"github.com/crescent-network/crescent/v5/contracts"
+	"github.com/crescent-network/crescent/v5/x/erc20/types"
 )
 
 type KeeperTestSuite struct {
 	suite.Suite
 
 	ctx              sdk.Context
-	app              *app.Canto
+	app              *app.App
 	queryClientEvm   evm.QueryClient
 	queryClient      types.QueryClient
 	address          common.Address
@@ -74,6 +74,64 @@ func TestKeeperTestSuite(t *testing.T) {
 	// Run Ginkgo integration tests
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Keeper Suite")
+}
+
+// DeployTestContract deploy a test erc20 contract and returns the contract address
+func (suite *KeeperTestSuite) DeployTestContract(t require.TestingT, owner common.Address, supply *big.Int) common.Address {
+	ctx := sdk.WrapSDKContext(suite.ctx)
+	chainID := suite.app.EvmKeeper.ChainID()
+
+	ctorArgs, err := evmtypes.ERC20Contract.ABI.Pack("", owner, supply)
+	require.NoError(t, err)
+
+	nonce := suite.app.EvmKeeper.GetNonce(suite.ctx, suite.address)
+
+	data := append(evmtypes.ERC20Contract.Bin, ctorArgs...)
+	args, err := json.Marshal(&evmtypes.TransactionArgs{
+		From: &suite.address,
+		Data: (*hexutil.Bytes)(&data),
+	})
+	require.NoError(t, err)
+
+	res, err := suite.app.EvmKeeper.EstimateGas(ctx, &evmtypes.EthCallRequest{
+		Args:   args,
+		GasCap: uint64(config.DefaultGasCap),
+	})
+	require.NoError(t, err)
+
+	var erc20DeployTx *evmtypes.MsgEthereumTx
+	if true {
+		erc20DeployTx = evmtypes.NewTxContract(
+			chainID,
+			nonce,
+			nil,     // amount
+			res.Gas, // gasLimit
+			nil,     // gasPrice
+			suite.app.FeeMarketKeeper.GetBaseFee(suite.ctx),
+			big.NewInt(1),
+			data,                   // input
+			&ethtypes.AccessList{}, // accesses
+		)
+	} else {
+		erc20DeployTx = evmtypes.NewTxContract(
+			chainID,
+			nonce,
+			nil,     // amount
+			res.Gas, // gasLimit
+			nil,     // gasPrice
+			nil, nil,
+			data, // input
+			nil,  // accesses
+		)
+	}
+
+	erc20DeployTx.From = suite.address.Hex()
+	err = erc20DeployTx.Sign(ethtypes.LatestSignerForChainID(chainID), suite.signer)
+	require.NoError(t, err)
+	rsp, err := suite.app.EvmKeeper.EthereumTx(ctx, erc20DeployTx)
+	require.NoError(t, err)
+	require.Empty(t, rsp.VmError)
+	return crypto.CreateAddress(suite.address, nonce)
 }
 
 // Test helpers
@@ -97,7 +155,8 @@ func (suite *KeeperTestSuite) DoSetupTest(t require.TestingT) {
 	feemarketGenesis.Params.NoBaseFee = false
 
 	// init app
-	suite.app = app.Setup(checkTx, feemarketGenesis)
+	//suite.app = app.Setup(checkTx, feemarketGenesis)
+	suite.app = app.Setup(checkTx)
 
 	if suite.mintFeeCollector {
 		// mint some coin to fee collector
@@ -542,4 +601,16 @@ func (b *MockBankKeeper) HasSupply(ctx sdk.Context, denom string) bool {
 func (b *MockBankKeeper) GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin {
 	args := b.Called(mock.Anything, mock.Anything)
 	return args.Get(0).(sdk.Coin)
+}
+
+func (suite *KeeperTestSuite) TestContractDeployment() {
+	suite.SetupTest()
+	fmt.Println(suite.app.EvmKeeper.GetAccountWithoutBalance(suite.ctx, suite.address))
+	contractAddress := suite.DeployTestContract(suite.T(), suite.address, big.NewInt(10000000000000))
+	db := suite.StateDB()
+	fmt.Println(suite.address)
+	fmt.Println(contractAddress)
+	fmt.Println(suite.app.EvmKeeper.GetAccountWithoutBalance(suite.ctx, suite.address).Balance.String())
+	fmt.Println(suite.app.EvmKeeper.GetAccountWithoutBalance(suite.ctx, contractAddress).Balance.String())
+	suite.Require().Greater(db.GetCodeSize(contractAddress), 0)
 }

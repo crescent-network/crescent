@@ -24,8 +24,8 @@ var (
 
 const (
 	// Amino names
-	convertERC20Name = "canto/MsgConvertERC20"
-	convertCoinName  = "canto/MsgConvertCoin"
+	convertERC20Name = "crescent/MsgConvertERC20"
+	convertCoinName  = "crescent/MsgConvertCoin"
 )
 
 // NOTE: This is required for the GetSignBytes function

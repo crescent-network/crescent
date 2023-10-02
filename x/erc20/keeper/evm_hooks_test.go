@@ -8,9 +8,10 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 
-	"github.com/Canto-Network/Canto/v7/contracts"
-	"github.com/Canto-Network/Canto/v7/x/erc20/types"
 	"github.com/evmos/ethermint/tests"
+
+	"github.com/crescent-network/crescent/v5/contracts"
+	"github.com/crescent-network/crescent/v5/x/erc20/types"
 )
 
 // ensureHooksSet tries to set the hooks on EVMKeeper, this will fail if the erc20 hook is already set

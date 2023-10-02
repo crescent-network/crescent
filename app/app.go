@@ -104,6 +104,7 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v3/modules/core/keeper"
 
 	v6 "github.com/crescent-network/crescent/v5/app/upgrades/mainnet/v6"
+
 	// budget module
 	"github.com/crescent-network/crescent/v5/x/budget"
 	budgetkeeper "github.com/crescent-network/crescent/v5/x/budget/keeper"
@@ -117,7 +118,11 @@ import (
 	"github.com/evmos/ethermint/x/feemarket"
 	feemarketkeeper "github.com/evmos/ethermint/x/feemarket/keeper"
 	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
-	// TODO: add erc20
+
+	"github.com/crescent-network/crescent/v5/x/erc20"
+	erc20client "github.com/crescent-network/crescent/v5/x/erc20/client"
+	erc20keeper "github.com/crescent-network/crescent/v5/x/erc20/keeper"
+	erc20types "github.com/crescent-network/crescent/v5/x/erc20/types"
 
 	v2_0_0 "github.com/crescent-network/crescent/v5/app/upgrades/mainnet/v2.0.0"
 	v3 "github.com/crescent-network/crescent/v5/app/upgrades/mainnet/v3"
@@ -199,6 +204,7 @@ var (
 			ammclient.PublicFarmingPlanProposalHandler,
 			liquidammclient.PublicPositionCreateProposalHandler,
 			liquidammclient.PublicPositionParameterChangeProposalHandler,
+			erc20client.RegisterCoinProposalHandler, erc20client.RegisterERC20ProposalHandler, erc20client.ToggleTokenConversionProposalHandler,
 		),
 		params.AppModuleBasic{},
 		crisis.AppModuleBasic{},
@@ -226,7 +232,7 @@ var (
 
 		evm.AppModuleBasic{},
 		feemarket.AppModuleBasic{},
-		//erc20.AppModuleBasic{},
+		erc20.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -251,8 +257,7 @@ var (
 		ammtypes.ModuleName:            {authtypes.Minter, authtypes.Burner},
 		icatypes.ModuleName:            nil,
 		evmtypes.ModuleName:            {authtypes.Minter, authtypes.Burner},
-		//erc20types.ModuleName:          {authtypes.Minter, authtypes.Burner},
-
+		erc20types.ModuleName:          {authtypes.Minter, authtypes.Burner},
 	}
 )
 
@@ -317,7 +322,7 @@ type App struct {
 	// Ethermint keepers
 	EvmKeeper       *evmkeeper.Keeper
 	FeeMarketKeeper feemarketkeeper.Keeper
-	//Erc20Keeper         erc20keeper.Keeper
+	Erc20Keeper     erc20keeper.Keeper
 
 	// scoped keepers
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
@@ -404,7 +409,7 @@ func NewApp(
 		ammtypes.StoreKey,
 		evmtypes.StoreKey,
 		feemarkettypes.StoreKey,
-		//erc20types.StoreKey,
+		erc20types.StoreKey,
 	)
 
 	tkeys := sdk.NewTransientStoreKeys(
@@ -533,10 +538,10 @@ func NewApp(
 		tracer,
 	)
 
-	//app.Erc20Keeper = erc20keeper.NewKeeper(
-	//	keys[erc20types.StoreKey], appCodec, app.GetSubspace(erc20types.ModuleName),
-	//	app.AccountKeeper, app.BankKeeper, app.EvmKeeper,
-	//)
+	app.Erc20Keeper = erc20keeper.NewKeeper(
+		keys[erc20types.StoreKey], appCodec, app.GetSubspace(erc20types.ModuleName),
+		app.AccountKeeper, app.BankKeeper, app.EvmKeeper,
+	)
 
 	app.IBCKeeper = ibckeeper.NewKeeper(
 		appCodec,
@@ -650,7 +655,8 @@ func NewApp(
 		AddRoute(lpfarmtypes.RouterKey, lpfarm.NewFarmingPlanProposalHandler(app.LPFarmKeeper)).
 		AddRoute(exchangetypes.RouterKey, exchange.NewProposalHandler(app.ExchangeKeeper)).
 		AddRoute(ammtypes.RouterKey, amm.NewProposalHandler(app.AMMKeeper)).
-		AddRoute(liquidammtypes.RouterKey, liquidamm.NewProposalHandler(app.LiquidAMMKeeper))
+		AddRoute(liquidammtypes.RouterKey, liquidamm.NewProposalHandler(app.LiquidAMMKeeper)).
+		AddRoute(erc20types.RouterKey, erc20.NewErc20ProposalHandler(&app.Erc20Keeper))
 
 	app.GovKeeper = govkeeper.NewKeeper(
 		appCodec,
@@ -669,7 +675,7 @@ func NewApp(
 
 	app.EvmKeeper = app.EvmKeeper.SetHooks(
 		evmkeeper.NewMultiEvmHooks(
-		//app.Erc20Keeper.Hooks(),
+			app.Erc20Keeper.Hooks(),
 		),
 	)
 
@@ -768,7 +774,7 @@ func NewApp(
 		amm.NewAppModule(appCodec, app.AMMKeeper, app.AccountKeeper, app.BankKeeper, app.ExchangeKeeper),
 		evm.NewAppModule(app.EvmKeeper, app.AccountKeeper),
 		feemarket.NewAppModule(app.FeeMarketKeeper),
-		//erc20.NewAppModule(app.Erc20Keeper, app.AccountKeeper),
+		erc20.NewAppModule(app.Erc20Keeper, app.AccountKeeper),
 		app.transferModule,
 		app.icaModule,
 	)
@@ -813,7 +819,7 @@ func NewApp(
 		icatypes.ModuleName,
 		markertypes.ModuleName,
 		exchangetypes.ModuleName,
-		//erc20types.ModuleName,
+		erc20types.ModuleName,
 	)
 
 	app.mm.SetOrderMidBlockers(
@@ -856,7 +862,7 @@ func NewApp(
 		ammtypes.ModuleName,
 		liquidammtypes.ModuleName,
 		liquidfarmingtypes.ModuleName,
-		//erc20types.ModuleName,
+		erc20types.ModuleName,
 		markertypes.ModuleName,
 	)
 
@@ -894,7 +900,7 @@ func NewApp(
 		markertypes.ModuleName,
 		exchangetypes.ModuleName,
 		ammtypes.ModuleName,
-		//erc20types.ModuleName,
+		erc20types.ModuleName,
 
 		// empty logic modules
 		paramstypes.ModuleName,
@@ -1177,7 +1183,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 
 	paramsKeeper.Subspace(evmtypes.ModuleName)
 	paramsKeeper.Subspace(feemarkettypes.ModuleName)
-	//paramsKeeper.Subspace(erc20types.ModuleName)
+	paramsKeeper.Subspace(erc20types.ModuleName)
 
 	return paramsKeeper
 }

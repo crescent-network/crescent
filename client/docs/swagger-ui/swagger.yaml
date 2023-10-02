@@ -13763,6 +13763,296 @@ paths:
           type: string
       tags:
         - Query
+  /crescent/erc20/v1/params:
+    get:
+      summary: Params retrieves the erc20 module params
+      operationId: ERC20Params
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              params:
+                type: object
+                properties:
+                  enable_erc20:
+                    type: boolean
+                    format: boolean
+                    description: >-
+                      parameter to enable the conversion of Cosmos coins <-->
+                      ERC20 tokens.
+                  enable_evm_hook:
+                    type: boolean
+                    format: boolean
+                    description: >-
+                      parameter to enable the EVM hook that converts an ERC20
+                      token to a Cosmos
+
+                      Coin by transferring the Tokens through a MsgEthereumTx to
+                      the
+
+                      ModuleAddress Ethereum address.
+                title: Params defines the erc20 module params
+            description: |-
+              QueryParamsResponse is the response type for the Query/Params RPC
+              method.
+        default:
+          description: An unexpected error response
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      tags:
+        - Query
+  /crescent/erc20/v1/token_pairs:
+    get:
+      summary: TokenPairs retrieves registered token pairs
+      operationId: TokenPairs
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              token_pairs:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    erc20_address:
+                      type: string
+                      title: address of ERC20 contract token
+                    denom:
+                      type: string
+                      title: cosmos base denomination to be mapped to
+                    enabled:
+                      type: boolean
+                      format: boolean
+                      title: shows token mapping enable status
+                    contract_owner:
+                      title: >-
+                        ERC20 owner address ENUM (0 invalid, 1 ModuleAccount, 2
+                        external address)
+                      type: string
+                      enum:
+                        - OWNER_UNSPECIFIED
+                        - OWNER_MODULE
+                        - OWNER_EXTERNAL
+                      default: OWNER_UNSPECIFIED
+                      description: |-
+                        Owner enumerates the ownership of a ERC20 contract.
+
+                         - OWNER_UNSPECIFIED: OWNER_UNSPECIFIED defines an invalid/undefined owner.
+                         - OWNER_MODULE: OWNER_MODULE erc20 is owned by the erc20 module account.
+                         - OWNER_EXTERNAL: EXTERNAL erc20 is owned by an external account.
+                  description: >-
+                    TokenPair defines an instance that records a pairing
+                    consisting of a native
+                     Cosmos Coin and an ERC20 token address.
+              pagination:
+                description: pagination defines the pagination in the response.
+                type: object
+                properties:
+                  next_key:
+                    type: string
+                    format: byte
+                    title: |-
+                      next_key is the key to be passed to PageRequest.key to
+                      query the next page most efficiently
+                  total:
+                    type: string
+                    format: uint64
+                    title: >-
+                      total is total number of results available if
+                      PageRequest.count_total
+
+                      was set, its value is undefined otherwise
+            description: >-
+              QueryTokenPairsResponse is the response type for the
+              Query/TokenPairs RPC
+
+              method.
+        default:
+          description: An unexpected error response
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending
+
+            order.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+      tags:
+        - Query
+  '/crescent/erc20/v1/token_pairs/{token}':
+    get:
+      summary: TokenPair retrieves a registered token pair
+      operationId: TokenPair
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              token_pair:
+                type: object
+                properties:
+                  erc20_address:
+                    type: string
+                    title: address of ERC20 contract token
+                  denom:
+                    type: string
+                    title: cosmos base denomination to be mapped to
+                  enabled:
+                    type: boolean
+                    format: boolean
+                    title: shows token mapping enable status
+                  contract_owner:
+                    title: >-
+                      ERC20 owner address ENUM (0 invalid, 1 ModuleAccount, 2
+                      external address)
+                    type: string
+                    enum:
+                      - OWNER_UNSPECIFIED
+                      - OWNER_MODULE
+                      - OWNER_EXTERNAL
+                    default: OWNER_UNSPECIFIED
+                    description: |-
+                      Owner enumerates the ownership of a ERC20 contract.
+
+                       - OWNER_UNSPECIFIED: OWNER_UNSPECIFIED defines an invalid/undefined owner.
+                       - OWNER_MODULE: OWNER_MODULE erc20 is owned by the erc20 module account.
+                       - OWNER_EXTERNAL: EXTERNAL erc20 is owned by an external account.
+                description: >-
+                  TokenPair defines an instance that records a pairing
+                  consisting of a native
+                   Cosmos Coin and an ERC20 token address.
+            description: >-
+              QueryTokenPairResponse is the response type for the
+              Query/TokenPair RPC
+
+              method.
+        default:
+          description: An unexpected error response
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: token
+          description: >-
+            token identifier can be either the hex contract address of the ERC20
+            or the
+
+            Cosmos base denomination
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
 definitions:
   cosmos.base.query.v1beta1.PageRequest:
     type: object
@@ -21815,3 +22105,191 @@ definitions:
 
             NOTE: The amount field is an Dec which implements the custom method
             signatures required by gogoproto.
+  crescent.erc20.v1.Owner:
+    type: string
+    enum:
+      - OWNER_UNSPECIFIED
+      - OWNER_MODULE
+      - OWNER_EXTERNAL
+    default: OWNER_UNSPECIFIED
+    description: |-
+      Owner enumerates the ownership of a ERC20 contract.
+
+       - OWNER_UNSPECIFIED: OWNER_UNSPECIFIED defines an invalid/undefined owner.
+       - OWNER_MODULE: OWNER_MODULE erc20 is owned by the erc20 module account.
+       - OWNER_EXTERNAL: EXTERNAL erc20 is owned by an external account.
+  crescent.erc20.v1.Params:
+    type: object
+    properties:
+      enable_erc20:
+        type: boolean
+        format: boolean
+        description: parameter to enable the conversion of Cosmos coins <--> ERC20 tokens.
+      enable_evm_hook:
+        type: boolean
+        format: boolean
+        description: >-
+          parameter to enable the EVM hook that converts an ERC20 token to a
+          Cosmos
+
+          Coin by transferring the Tokens through a MsgEthereumTx to the
+
+          ModuleAddress Ethereum address.
+    title: Params defines the erc20 module params
+  crescent.erc20.v1.QueryParamsResponse:
+    type: object
+    properties:
+      params:
+        type: object
+        properties:
+          enable_erc20:
+            type: boolean
+            format: boolean
+            description: >-
+              parameter to enable the conversion of Cosmos coins <--> ERC20
+              tokens.
+          enable_evm_hook:
+            type: boolean
+            format: boolean
+            description: >-
+              parameter to enable the EVM hook that converts an ERC20 token to a
+              Cosmos
+
+              Coin by transferring the Tokens through a MsgEthereumTx to the
+
+              ModuleAddress Ethereum address.
+        title: Params defines the erc20 module params
+    description: |-
+      QueryParamsResponse is the response type for the Query/Params RPC
+      method.
+  crescent.erc20.v1.QueryTokenPairResponse:
+    type: object
+    properties:
+      token_pair:
+        type: object
+        properties:
+          erc20_address:
+            type: string
+            title: address of ERC20 contract token
+          denom:
+            type: string
+            title: cosmos base denomination to be mapped to
+          enabled:
+            type: boolean
+            format: boolean
+            title: shows token mapping enable status
+          contract_owner:
+            title: >-
+              ERC20 owner address ENUM (0 invalid, 1 ModuleAccount, 2 external
+              address)
+            type: string
+            enum:
+              - OWNER_UNSPECIFIED
+              - OWNER_MODULE
+              - OWNER_EXTERNAL
+            default: OWNER_UNSPECIFIED
+            description: |-
+              Owner enumerates the ownership of a ERC20 contract.
+
+               - OWNER_UNSPECIFIED: OWNER_UNSPECIFIED defines an invalid/undefined owner.
+               - OWNER_MODULE: OWNER_MODULE erc20 is owned by the erc20 module account.
+               - OWNER_EXTERNAL: EXTERNAL erc20 is owned by an external account.
+        description: >-
+          TokenPair defines an instance that records a pairing consisting of a
+          native
+           Cosmos Coin and an ERC20 token address.
+    description: |-
+      QueryTokenPairResponse is the response type for the Query/TokenPair RPC
+      method.
+  crescent.erc20.v1.QueryTokenPairsResponse:
+    type: object
+    properties:
+      token_pairs:
+        type: array
+        items:
+          type: object
+          properties:
+            erc20_address:
+              type: string
+              title: address of ERC20 contract token
+            denom:
+              type: string
+              title: cosmos base denomination to be mapped to
+            enabled:
+              type: boolean
+              format: boolean
+              title: shows token mapping enable status
+            contract_owner:
+              title: >-
+                ERC20 owner address ENUM (0 invalid, 1 ModuleAccount, 2 external
+                address)
+              type: string
+              enum:
+                - OWNER_UNSPECIFIED
+                - OWNER_MODULE
+                - OWNER_EXTERNAL
+              default: OWNER_UNSPECIFIED
+              description: |-
+                Owner enumerates the ownership of a ERC20 contract.
+
+                 - OWNER_UNSPECIFIED: OWNER_UNSPECIFIED defines an invalid/undefined owner.
+                 - OWNER_MODULE: OWNER_MODULE erc20 is owned by the erc20 module account.
+                 - OWNER_EXTERNAL: EXTERNAL erc20 is owned by an external account.
+          description: >-
+            TokenPair defines an instance that records a pairing consisting of a
+            native
+             Cosmos Coin and an ERC20 token address.
+      pagination:
+        description: pagination defines the pagination in the response.
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            title: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+    description: |-
+      QueryTokenPairsResponse is the response type for the Query/TokenPairs RPC
+      method.
+  crescent.erc20.v1.TokenPair:
+    type: object
+    properties:
+      erc20_address:
+        type: string
+        title: address of ERC20 contract token
+      denom:
+        type: string
+        title: cosmos base denomination to be mapped to
+      enabled:
+        type: boolean
+        format: boolean
+        title: shows token mapping enable status
+      contract_owner:
+        title: >-
+          ERC20 owner address ENUM (0 invalid, 1 ModuleAccount, 2 external
+          address)
+        type: string
+        enum:
+          - OWNER_UNSPECIFIED
+          - OWNER_MODULE
+          - OWNER_EXTERNAL
+        default: OWNER_UNSPECIFIED
+        description: |-
+          Owner enumerates the ownership of a ERC20 contract.
+
+           - OWNER_UNSPECIFIED: OWNER_UNSPECIFIED defines an invalid/undefined owner.
+           - OWNER_MODULE: OWNER_MODULE erc20 is owned by the erc20 module account.
+           - OWNER_EXTERNAL: EXTERNAL erc20 is owned by an external account.
+    description: >-
+      TokenPair defines an instance that records a pairing consisting of a
+      native
+       Cosmos Coin and an ERC20 token address.

@@ -130,6 +130,14 @@
           "Position": "APPPosition"
         }
       }
+    },
+    {
+      "url": "./tmp-swagger-gen/crescent/erc20/v1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "ERC20Params",
+        }
+      }
     }
   ]
 }

@@ -8,9 +8,9 @@ import (
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/stretchr/testify/mock"
 
-	"github.com/Canto-Network/Canto/v7/contracts"
-	"github.com/Canto-Network/Canto/v7/x/erc20/keeper"
-	"github.com/Canto-Network/Canto/v7/x/erc20/types"
+	"github.com/crescent-network/crescent/v5/contracts"
+	"github.com/crescent-network/crescent/v5/x/erc20/keeper"
+	"github.com/crescent-network/crescent/v5/x/erc20/types"
 )
 
 func (suite *KeeperTestSuite) TestQueryERC20() {
