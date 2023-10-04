@@ -453,7 +453,7 @@ func NewApp(
 		appCodec,
 		keys[authtypes.StoreKey],
 		app.GetSubspace(authtypes.ModuleName),
-		authtypes.ProtoBaseAccount,
+		ethermint.ProtoAccount,
 		maccPerms,
 	)
 	app.BankKeeper = bankkeeper.NewBaseKeeper(

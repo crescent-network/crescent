@@ -41,6 +41,7 @@ import (
 	"github.com/crescent-network/crescent/v5/x/amm"
 	"github.com/crescent-network/crescent/v5/x/budget"
 	"github.com/crescent-network/crescent/v5/x/claim"
+	"github.com/crescent-network/crescent/v5/x/erc20"
 	"github.com/crescent-network/crescent/v5/x/exchange"
 	"github.com/crescent-network/crescent/v5/x/farming"
 	"github.com/crescent-network/crescent/v5/x/liquidamm"
@@ -212,6 +213,7 @@ func TestRunMigrations(t *testing.T) {
 					"interchainaccounts": ica.AppModule{}.ConsensusVersion(),
 					"evm":                evm.AppModule{}.ConsensusVersion(),
 					"feemarket":          feemarket.AppModule{}.ConsensusVersion(),
+					"erc20":              erc20.AppModule{}.ConsensusVersion(),
 				},
 			)
 			if tc.expRunErr {
