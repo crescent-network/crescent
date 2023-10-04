@@ -248,6 +248,8 @@ func (k Keeper) IterateAllBids(ctx sdk.Context, cb func(bid types.Bid) (stop boo
 	}
 }
 
+// In the kv store, there are only bids for auctions that are currently in progress.
+// If req.AuctionId is not PublicPosition.LastRewardsAuctionId, the iterate is meaningless.
 func (k Keeper) IterateBidsByRewardsAuction(ctx sdk.Context, publicPositionId, auctionId uint64, cb func(bid types.Bid) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.GetBidsByRewardsAuctionIteratorPrefix(publicPositionId, auctionId))

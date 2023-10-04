@@ -131,6 +131,8 @@ func CanCollectInvariant(k Keeper) sdk.Invariant {
 	}
 }
 
+// A nested iterator was used. Since there is no part of it that changes values, I don't think it will cause any problems internally.
+// However, an implementation that avoids nested iterators, like PoolCurrentLiquidityInvariant, would be better.
 func PoolCurrentLiquidityInvariant(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		msg := ""

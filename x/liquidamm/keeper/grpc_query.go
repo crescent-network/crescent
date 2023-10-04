@@ -203,6 +203,8 @@ func (k Querier) RewardsAuction(c context.Context, req *types.QueryRewardsAuctio
 }
 
 // Bids queries all Bid objects.
+// In the kv store, there are only bids for auctions that are currently in progress.
+// If req.AuctionId is not PublicPosition.LastRewardsAuctionId, the query is meaningless.
 func (k Querier) Bids(c context.Context, req *types.QueryBidsRequest) (*types.QueryBidsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")

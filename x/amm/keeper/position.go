@@ -156,7 +156,7 @@ func (k Keeper) Collect(
 
 	if position.Liquidity.IsPositive() {
 		var err error
-		position, _, err = k.RemoveLiquidity(ctx, ownerAddr, toAddr, positionId, utils.ZeroInt)
+		position, _, err = k.RemoveLiquidity(ctx, ownerAddr, toAddr, positionId, utils.ZeroInt) // It would be un-natural to call a function named RemovePosition for a state check. It also doesn't use a CacheContext, so it raises unnecessary events.
 		if err != nil {
 			return err
 		}
@@ -203,8 +203,8 @@ func (k Keeper) PositionAssets(ctx sdk.Context, positionId uint64) (coin0, coin1
 		coin1 = sdk.NewInt64Coin(pool.Denom1, 0)
 		return
 	}
-	ctx, _ = ctx.CacheContext()
-	_, amt0, amt1 := k.modifyPosition(
+	ctx, _ = ctx.CacheContext()        // It takes a CacheContext and doesn't call writeCache, so nothing is written to the context.
+	_, amt0, amt1 := k.modifyPosition( // However, it is un-natural to call a function named modifyPosition in a function that is meant to get information.
 		ctx, pool, position.MustGetOwnerAddress(), position.LowerTick, position.UpperTick, position.Liquidity.Neg())
 	amt0, amt1 = amt0.Neg(), amt1.Neg()
 	coin0 = sdk.NewCoin(pool.Denom0, amt0)
@@ -217,10 +217,10 @@ func (k Keeper) CollectibleCoins(ctx sdk.Context, positionId uint64) (fee, farmi
 	if !found {
 		return nil, nil, sdkerrors.Wrap(sdkerrors.ErrNotFound, "position not found")
 	}
-	ctx, _ = ctx.CacheContext()
+	ctx, _ = ctx.CacheContext() // It takes a CacheContext and doesn't call writeCache, so nothing is written to the context or an event is fired.
 	ownerAddr := position.MustGetOwnerAddress()
 	if position.Liquidity.IsPositive() {
-		position, _, err = k.RemoveLiquidity(ctx, ownerAddr, ownerAddr, positionId, utils.ZeroInt)
+		position, _, err = k.RemoveLiquidity(ctx, ownerAddr, ownerAddr, positionId, utils.ZeroInt) // However, it is un-natural to call a function named RemoveLiquidity in a function that is meant to get information.
 		if err != nil {
 			return nil, nil, err
 		}

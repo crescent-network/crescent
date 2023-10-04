@@ -179,6 +179,7 @@ func (k Querier) PositionAssets(c context.Context, req *types.QueryPositionAsset
 	return &types.QueryPositionAssetsResponse{Coin0: coin0, Coin1: coin1}, nil
 }
 
+// The structure of simulation-related functions as queries is strange.
 func (k Querier) AddLiquiditySimulation(c context.Context, req *types.QueryAddLiquiditySimulationRequest) (*types.QueryAddLiquiditySimulationResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -222,6 +223,7 @@ func (k Querier) AddLiquiditySimulation(c context.Context, req *types.QueryAddLi
 	}, nil
 }
 
+// The structure of simulation-related functions as queries is strange.
 func (k Querier) RemoveLiquiditySimulation(c context.Context, req *types.QueryRemoveLiquiditySimulationRequest) (*types.QueryRemoveLiquiditySimulationResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")

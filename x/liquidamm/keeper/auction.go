@@ -101,6 +101,7 @@ func (k Keeper) GetLastRewardsAuction(ctx sdk.Context, publicPositionId uint64) 
 	return k.GetRewardsAuction(ctx, publicPosition.Id, publicPosition.LastRewardsAuctionId)
 }
 
+// I think we can combine it with GetLastRewardsAuction to create a generalized function.
 func (k Keeper) GetPreviousRewardsAuction(ctx sdk.Context, publicPosition types.PublicPosition) (auction types.RewardsAuction, found bool) {
 	if publicPosition.LastRewardsAuctionId <= 1 {
 		return
@@ -134,7 +135,7 @@ func (k Keeper) AdvanceRewardsAuctions(ctx sdk.Context, nextEndTime time.Time) (
 			if auction.Id+uint64(maxNumRecentAuctions) >= lastAuctionId {
 				return true
 			}
-			k.DeleteRewardsAuction(ctx, auction)
+			k.DeleteRewardsAuction(ctx, auction) // Modifying kv store inside an iterator is undesirable. And the key prefix used by the iterator and DeleteRewardsAuction is the same.
 			return false
 		})
 		return false

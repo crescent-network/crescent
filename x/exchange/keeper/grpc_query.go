@@ -244,7 +244,7 @@ func (k Querier) MakeOrderBooks(ctx sdk.Context, market types.Market, lastPrice 
 	smallestPriceInterval := types.PriceIntervalAtTick(types.TickAtPrice(highestPrice))
 
 	var orderBooks []types.OrderBook
-	for _, p := range []int{1, 10, 100} {
+	for _, p := range []int{1, 10, 100} { // If create and return 1, 10, and 100 all at once, the query may not perform well. It could also be used in a DOS attack to intentionally degrade the performance of a node. Wouldn't it be better to create only 1 and throw it to FE to process and use?
 		priceInterval := smallestPriceInterval.MulInt64(int64(p))
 		ob := types.OrderBook{
 			PriceInterval: priceInterval,

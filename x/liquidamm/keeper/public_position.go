@@ -96,6 +96,8 @@ func (k Keeper) BurnShare(
 		return
 	}
 
+	// Requires a denom check for the share.
+
 	if err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, senderAddr, types.ModuleName, sdk.NewCoins(share)); err != nil {
 		return
 	}

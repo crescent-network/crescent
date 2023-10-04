@@ -235,7 +235,7 @@ func (k Keeper) IterateAllPositions(ctx sdk.Context, cb func(position types.Posi
 	iter := sdk.KVStorePrefixIterator(store, types.PositionKeyPrefix)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
-		var pool types.Position
+		var pool types.Position // pool -> position(mis-spell)
 		k.cdc.MustUnmarshal(iter.Value(), &pool)
 		if cb(pool) {
 			break

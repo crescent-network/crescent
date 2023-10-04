@@ -38,6 +38,7 @@ func (k Keeper) ConstructMemOrderBookSide(
 			panic(err)
 		}
 	}
+	// You can optimize performance by only accepting up to opts.MaxNumPriceLevels for each user order and order source order, and then applying a limit.
 	if opts.MaxNumPriceLevels > 0 {
 		// TODO: can refund?
 		obs.Limit(opts.MaxNumPriceLevels)
@@ -116,7 +117,7 @@ func (k Keeper) finalizeMatching(ctx sdk.Context, market types.Market, orders []
 				}
 				// Update user orders
 				executableQty := order.ExecutableQuantity()
-				if executableQty.TruncateDec().IsZero() ||
+				if executableQty.TruncateDec().IsZero() || // How about adding order.IsBuy? And it works fine in the intended order, but adding parentheses seems like a good idea.
 					!order.IsBuy && executableQty.MulTruncate(order.Price).TruncateDec().IsZero() {
 					if err := k.cancelOrder(ctx, market, order); err != nil {
 						return err
