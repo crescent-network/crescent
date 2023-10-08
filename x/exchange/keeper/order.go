@@ -331,6 +331,8 @@ func (k Keeper) cancelOrder(ctx sdk.Context, market types.Market, order types.Or
 	return nil
 }
 
+// A nested iterator has been used. Since it is changing the kv store inside the cancelOrder function,
+// there is a possibility of unintended behavior.
 func (k Keeper) CancelExpiredOrders(ctx sdk.Context) (err error) {
 	blockTime := ctx.BlockTime()
 	k.IterateAllMarkets(ctx, func(market types.Market) (stop bool) {
