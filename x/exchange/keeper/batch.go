@@ -6,6 +6,10 @@ import (
 	"github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
+// Inside the getBestPrice function, it is calling the ConstructMemOrderBookSide function,
+// which means that the ConstructMemOrderBookSide function is called 4 times in this RunBatchMatching logic.
+// Since this logic is called for every market in the midblocker of every block,
+// it can act as a significant overhead. How about improving the logic?
 func (k Keeper) RunBatchMatching(ctx sdk.Context, market types.Market) (err error) {
 	// Find the best buy(bid) and sell(ask) prices to limit the price to load
 	// on the other side.
