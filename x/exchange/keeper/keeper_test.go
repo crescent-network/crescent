@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -84,4 +85,19 @@ func (s *KeeperTestSuite) createLiquidity2(
 		s.PlaceLimitOrder(
 			marketId, ordererAddr, false, sellPrice, qtyPerTick, time.Hour)
 	}
+}
+
+func (s *KeeperTestSuite) getEventOrderFilled(orderId uint64) (event *types.EventOrderFilled) {
+	orderFilledEventType := proto.MessageName(event)
+	for _, abciEvent := range s.Ctx.EventManager().ABCIEvents() {
+		if abciEvent.Type == orderFilledEventType {
+			e, err := sdk.ParseTypedEvent(abciEvent)
+			s.Require().NoError(err)
+			event = e.(*types.EventOrderFilled)
+			if event.OrderId == orderId {
+				return event
+			}
+		}
+	}
+	return nil
 }

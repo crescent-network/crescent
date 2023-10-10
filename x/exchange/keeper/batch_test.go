@@ -41,9 +41,25 @@ func (s *KeeperTestSuite) TestBatchMatchingEdgecase() {
 	// ########## | 1.001 |
 	//            | 1.000 | ######     <-- last price
 
-	s.NextBlock()
+	s.Ctx = s.Ctx.WithEventManager(sdk.NewEventManager())
+	s.Require().NoError(s.keeper.RunBatchMatching(s.Ctx, market))
 
 	s.AssertEqual(utils.ParseDec("1"), *s.App.ExchangeKeeper.MustGetMarketState(s.Ctx, market.Id).LastPrice)
 	order = s.keeper.MustGetOrder(s.Ctx, order.Id)
 	s.AssertEqual(sdk.NewInt(6_000000), order.OpenQuantity)
+
+	ev := s.getEventOrderFilled(3)
+	s.AssertEqual(sdk.NewInt(5_000000), ev.ExecutedQuantity)
+	s.AssertEqual(utils.ParseCoin("5_000000ucre"), ev.Paid)
+	s.AssertEqual(utils.ParseCoin("4_985000uusd"), ev.Received)
+
+	ev = s.getEventOrderFilled(6)
+	s.AssertEqual(sdk.NewInt(4_000000), ev.ExecutedQuantity)
+	s.AssertEqual(utils.ParseCoin("4_000000uusd"), ev.Paid)
+	s.AssertEqual(utils.ParseCoin("3_988000ucre"), ev.Received)
+
+	ev = s.getEventOrderFilled(7)
+	s.AssertEqual(sdk.NewInt(1_000000), ev.ExecutedQuantity)
+	s.AssertEqual(utils.ParseCoin("1_000000uusd"), ev.Paid)
+	s.AssertEqual(utils.ParseCoin("9_97000ucre"), ev.Received)
 }
