@@ -72,13 +72,15 @@ func (k Keeper) IteratePoolOrders(ctx sdk.Context, market exchangetypes.Market, 
 				)
 				if isBuy {
 					orderTick, valid = NextOrderTick(
-						true, orderLiquidity, currentPrice, market.MinOrderQuantity, market.MinOrderQuote, pool.TickSpacing)
+						true, orderLiquidity, currentPrice,
+						market.OrderQuantityLimits.Min, market.OrderQuoteLimits.Min, pool.TickSpacing)
 					if !valid || orderTick < tick {
 						orderTick = tick
 					}
 				} else {
 					orderTick, valid = NextOrderTick(
-						false, orderLiquidity, currentPrice, market.MinOrderQuantity, market.MinOrderQuote, pool.TickSpacing)
+						false, orderLiquidity, currentPrice,
+						market.OrderQuantityLimits.Min, market.OrderQuoteLimits.Min, pool.TickSpacing)
 					if !valid || orderTick > tick {
 						orderTick = tick
 					}
@@ -96,7 +98,7 @@ func (k Keeper) IteratePoolOrders(ctx sdk.Context, market exchangetypes.Market, 
 						reserveBalance,
 						types.Amount0DeltaRoundingDec(currentSqrtPrice, orderSqrtPrice, orderLiquidity, false).TruncateInt())
 				}
-				if qty.IsPositive() && (orderTick == tick || (qty.GTE(market.MinOrderQuantity))) {
+				if qty.IsPositive() && (orderTick == tick || (qty.GTE(market.OrderQuantityLimits.Min))) {
 					if cb(orderPrice, qty) {
 						return true
 					}

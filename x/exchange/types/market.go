@@ -19,21 +19,16 @@ func DeriveFeeCollector(marketId uint64) sdk.AccAddress {
 
 func NewMarket(
 	marketId uint64, baseDenom, quoteDenom string,
-	makerFeeRate, takerFeeRate, orderSourceFeeRatio sdk.Dec,
-	minOrderQty, minOrderQuote, maxOrderQty, maxOrderQuote sdk.Int) Market {
+	fees Fees, orderQtyLimits, orderQuoteLimits AmountLimits) Market {
 	return Market{
 		Id:                  marketId,
 		BaseDenom:           baseDenom,
 		QuoteDenom:          quoteDenom,
 		EscrowAddress:       DeriveMarketEscrowAddress(marketId).String(),
 		FeeCollector:        DeriveFeeCollector(marketId).String(),
-		MakerFeeRate:        makerFeeRate,
-		TakerFeeRate:        takerFeeRate,
-		OrderSourceFeeRatio: orderSourceFeeRatio,
-		MinOrderQuantity:    minOrderQty,
-		MinOrderQuote:       minOrderQuote,
-		MaxOrderQuantity:    maxOrderQty,
-		MaxOrderQuote:       maxOrderQuote,
+		Fees:                fees,
+		OrderQuantityLimits: orderQtyLimits,
+		OrderQuoteLimits:    orderQuoteLimits,
 	}
 }
 
@@ -56,21 +51,14 @@ func (market Market) Validate() error {
 	if _, err := sdk.AccAddressFromBech32(market.FeeCollector); err != nil {
 		return fmt.Errorf("invalid fee collector: %w", err)
 	}
-	if err := ValidateFees(
-		market.MakerFeeRate, market.TakerFeeRate, market.OrderSourceFeeRatio); err != nil {
+	if err := market.Fees.Validate(); err != nil {
 		return err
 	}
-	if market.MinOrderQuantity.IsNegative() {
-		return fmt.Errorf("min order quantity must not be negative: %s", market.MinOrderQuantity)
+	if err := market.OrderQuantityLimits.Validate(); err != nil {
+		return fmt.Errorf("invalid order quantity limits: %w", err)
 	}
-	if market.MinOrderQuote.IsNegative() {
-		return fmt.Errorf("min order quote must not be negative: %s", market.MinOrderQuote)
-	}
-	if market.MaxOrderQuantity.IsNegative() {
-		return fmt.Errorf("max order quantity must not be negative: %s", market.MaxOrderQuantity)
-	}
-	if market.MaxOrderQuote.IsNegative() {
-		return fmt.Errorf("max order quote must not be negative: %s", market.MaxOrderQuote)
+	if err := market.OrderQuoteLimits.Validate(); err != nil {
+		return fmt.Errorf("invalid order quote limits: %w", err)
 	}
 	return nil
 }
@@ -86,13 +74,13 @@ func (market Market) MustGetFeeCollectorAddress() sdk.AccAddress {
 func (market Market) FeeRate(isOrderSourceOrder, isMaker, halveFees bool) (feeRate sdk.Dec) {
 	if !isOrderSourceOrder { // user order
 		if isMaker {
-			feeRate = market.MakerFeeRate
+			feeRate = market.Fees.MakerFeeRate
 		} else {
-			feeRate = market.TakerFeeRate
+			feeRate = market.Fees.TakerFeeRate
 		}
 	} else { // order source order
 		if isMaker {
-			feeRate = market.TakerFeeRate.Neg().Mul(market.OrderSourceFeeRatio)
+			feeRate = market.Fees.TakerFeeRate.Neg().Mul(market.Fees.OrderSourceFeeRatio)
 		} else {
 			feeRate = utils.ZeroDec
 		}

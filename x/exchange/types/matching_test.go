@@ -23,9 +23,7 @@ func TestPayReceiveDenoms(t *testing.T) {
 func TestFillMemOrderBasic(t *testing.T) {
 	market := types.NewMarket(
 		1, "ucre", "uusd",
-		utils.ParseDec("-0.0015"), utils.ParseDec("0.003"), utils.ParseDec("0.5"),
-		types.DefaultDefaultMinOrderQuantity, types.DefaultDefaultMinOrderQuote,
-		types.DefaultDefaultMaxOrderQuantity, types.DefaultDefaultMaxOrderQuote)
+		types.DefaultFees, types.DefaultOrderQuantityLimits, types.DefaultOrderQuoteLimits)
 	ctx := types.NewMatchingContext(market, false)
 
 	order := newUserMemOrder(1, true, utils.ParseDec("1.0015"), sdk.NewInt(10000), sdk.NewInt(9000))
@@ -37,7 +35,26 @@ func TestFillMemOrderBasic(t *testing.T) {
 	utils.AssertEqual(t, sdk.NewInt(17), res.FeePaid)
 	utils.AssertEqual(t, sdk.NewInt(0), res.FeeReceived)
 
-	order = newUserMemOrder(2, false, utils.ParseDec("1.0015"), sdk.NewInt(10000), sdk.NewInt(9000))
+	order = newUserMemOrder(2, false, utils.ParseDec("1.001"), sdk.NewInt(10000), sdk.NewInt(9000))
+	ctx.FillOrder(order, sdk.NewInt(5500), utils.ParseDec("1.0013"), true)
+	res = order.Result()
+	utils.AssertEqual(t, sdk.NewInt(5500), res.ExecutedQuantity)
+	utils.AssertEqual(t, sdk.NewInt(5500), res.Paid)
+	utils.AssertEqual(t, sdk.NewInt(5498), res.Received)
+	utils.AssertEqual(t, sdk.NewInt(9), res.FeePaid)
+	utils.AssertEqual(t, sdk.NewInt(0), res.FeeReceived)
+
+	// We don't need to set actual OrderSource in this test.
+	order = newOrderSourceMemOrder(true, utils.ParseDec("1.0015"), sdk.NewInt(10000), nil)
+	ctx.FillOrder(order, sdk.NewInt(5500), utils.ParseDec("1.0013"), true)
+	res = order.Result()
+	utils.AssertEqual(t, sdk.NewInt(5500), res.ExecutedQuantity)
+	utils.AssertEqual(t, sdk.NewInt(5499), res.Paid)
+	utils.AssertEqual(t, sdk.NewInt(5500), res.Received)
+	utils.AssertEqual(t, sdk.NewInt(0), res.FeePaid)
+	utils.AssertEqual(t, sdk.NewInt(8), res.FeeReceived)
+
+	order = newOrderSourceMemOrder(false, utils.ParseDec("1.001"), sdk.NewInt(10000), nil)
 	ctx.FillOrder(order, sdk.NewInt(5500), utils.ParseDec("1.0013"), true)
 	res = order.Result()
 	utils.AssertEqual(t, sdk.NewInt(5500), res.ExecutedQuantity)
@@ -45,4 +62,41 @@ func TestFillMemOrderBasic(t *testing.T) {
 	utils.AssertEqual(t, sdk.NewInt(5507), res.Received)
 	utils.AssertEqual(t, sdk.NewInt(0), res.FeePaid)
 	utils.AssertEqual(t, sdk.NewInt(8), res.FeeReceived)
+}
+
+func TestRunSinglePriceAuctionEdgecase(t *testing.T) {
+	market := types.NewMarket(
+		1, "ucre", "uusd",
+		types.DefaultFees, types.DefaultOrderQuantityLimits, types.DefaultOrderQuoteLimits)
+	ctx := types.NewMatchingContext(market, false)
+
+	buyObs := types.NewMemOrderBookSide(true)
+	buyObs.AddOrder(
+		newUserMemOrder(1, true, utils.ParseDec("100"), sdk.NewInt(10_000000), sdk.NewInt(10_000000)))
+	buyObs.AddOrder(
+		newUserMemOrder(2, true, utils.ParseDec("110"), sdk.NewInt(50_000000), sdk.NewInt(50_000000)))
+	sellObs := types.NewMemOrderBookSide(false)
+	sellObs.AddOrder(
+		newUserMemOrder(3, false, utils.ParseDec("99"), sdk.NewInt(10_000000), sdk.NewInt(10_000000)))
+	sellObs.AddOrder(
+		newUserMemOrder(4, false, utils.ParseDec("98"), sdk.NewInt(10_000000), sdk.NewInt(10_000000)))
+	sellObs.AddOrder(
+		newUserMemOrder(5, false, utils.ParseDec("97"), sdk.NewInt(10_000000), sdk.NewInt(10_000000)))
+	sellObs.AddOrder(
+		newUserMemOrder(6, false, utils.ParseDec("96"), sdk.NewInt(10_000000), sdk.NewInt(10_000000)))
+	sellObs.AddOrder(
+		newUserMemOrder(7, false, utils.ParseDec("95"), sdk.NewInt(10_000000), sdk.NewInt(10_000000)))
+	sellObs.AddOrder(
+		newUserMemOrder(8, false, utils.ParseDec("94"), sdk.NewInt(10_000000), sdk.NewInt(10_000000)))
+	//    | 110 | #####
+	//    | 100 | #
+	//  # |  99 |
+	//  # |  98 |
+	//  # |  97 |
+	//  # |  96 |
+	//  # |  95 |
+	//  # |  94 |
+	matchPrice, matched := ctx.RunSinglePriceAuction(buyObs, sellObs)
+	require.True(t, matched)
+	utils.AssertEqual(t, utils.ParseDec("99.5"), matchPrice)
 }

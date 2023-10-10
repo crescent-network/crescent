@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/exchange/types"
@@ -15,11 +16,17 @@ func ExampleMarketParameterChange_String() {
 	p := types.NewMarketParameterChangeProposal(
 		"Title", "Description", []types.MarketParameterChange{
 			types.NewMarketParameterChange(
-				1, utils.ParseDec("0.001"), utils.ParseDec("0.002"), utils.ParseDec("0.5"),
-				utils.Pointer(sdk.NewInt(100)), utils.Pointer(sdk.NewInt(100)), nil, nil),
+				1,
+				types.NewFees(
+					utils.ParseDec("0.001"), utils.ParseDec("0.002"), utils.ParseDec("0.5")),
+				types.NewAmountLimits(sdk.NewInt(10000), sdk.NewIntWithDecimal(1, 30)),
+				types.NewAmountLimits(sdk.NewInt(10000), sdk.NewIntWithDecimal(1, 30))),
 			types.NewMarketParameterChange(
-				2, utils.ParseDec("-0.0015"), utils.ParseDec("0.003"), utils.ParseDec("0.5"),
-				nil, nil, utils.Pointer(sdk.NewIntWithDecimal(1, 20)), utils.Pointer(sdk.NewIntWithDecimal(1, 20))),
+				2,
+				types.NewFees(
+					utils.ParseDec("0.0015"), utils.ParseDec("0.003"), utils.ParseDec("0.5")),
+				types.NewAmountLimits(sdk.NewInt(10), sdk.NewIntWithDecimal(1, 20)),
+				types.NewAmountLimits(sdk.NewInt(100), sdk.NewIntWithDecimal(1, 22))),
 		})
 	fmt.Println(p.String())
 
@@ -29,23 +36,29 @@ func ExampleMarketParameterChange_String() {
 	//   Description: Description
 	//   Changes:
 	//     Market Parameter Change:
-	//       Market Id:              1
-	//       Maker Fee Rate:         0.001000000000000000
-	//       Taker Fee Rate:         0.002000000000000000
-	//       Order Source Fee Ratio: 0.500000000000000000
-	//       Min Order Quantity:     100
-	//       Min Order Quote:        100
-	//       Max Order Quantity:     <nil>
-	//       Max Order Quote:        <nil>
+	//       Market Id: 1
+	//       Fees:
+	//         Maker Fee Rate:         0.001000000000000000
+	//         Taker Fee Rate:         0.002000000000000000
+	//         Order Source Fee Ratio: 0.500000000000000000
+	//       Order Quantity Limits:
+	//         Min: 10000
+	//         Max: 1000000000000000000000000000000
+	//       Order Quote Limits:
+	//         Min: 10000
+	//         Max: 1000000000000000000000000000000
 	//     Market Parameter Change:
-	//       Market Id:              2
-	//       Maker Fee Rate:         -0.001500000000000000
-	//       Taker Fee Rate:         0.003000000000000000
-	//       Order Source Fee Ratio: 0.500000000000000000
-	//       Min Order Quantity:     <nil>
-	//       Min Order Quote:        <nil>
-	//       Max Order Quantity:     100000000000000000000
-	//       Max Order Quote:        100000000000000000000
+	//       Market Id: 2
+	//       Fees:
+	//         Maker Fee Rate:         0.001500000000000000
+	//         Taker Fee Rate:         0.003000000000000000
+	//         Order Source Fee Ratio: 0.500000000000000000
+	//       Order Quantity Limits:
+	//         Min: 10
+	//         Max: 100000000000000000000
+	//       Order Quote Limits:
+	//         Min: 100
+	//         Max: 10000000000000000000000
 }
 
 func TestMarketParameterChangeProposal_ValidateBasic(t *testing.T) {
@@ -78,8 +91,11 @@ func TestMarketParameterChangeProposal_ValidateBasic(t *testing.T) {
 			p := types.NewMarketParameterChangeProposal(
 				"Title", "Description", []types.MarketParameterChange{
 					types.NewMarketParameterChange(
-						1, utils.ParseDec("0.001"), utils.ParseDec("0.003"), utils.ParseDec("0.5"),
-						nil, nil, nil, nil),
+						1,
+						types.NewFees(
+							utils.ParseDec("0.001"), utils.ParseDec("0.003"), utils.ParseDec("0.5")),
+						types.NewAmountLimits(sdk.NewInt(10000), sdk.NewIntWithDecimal(1, 30)),
+						types.NewAmountLimits(sdk.NewInt(10000), sdk.NewIntWithDecimal(1, 30))),
 				})
 			require.Equal(t, types.ProposalTypeMarketParameterChange, p.ProposalType())
 			tc.malleate(p)
@@ -96,159 +112,52 @@ func TestMarketParameterChangeProposal_ValidateBasic(t *testing.T) {
 func TestMarketParameterChange_Validate(t *testing.T) {
 	for _, tc := range []struct {
 		name        string
-		change      types.MarketParameterChange
+		malleate    func(change *types.MarketParameterChange)
 		expectedErr string
 	}{
 		{
 			"happy case",
-			types.NewMarketParameterChange(
-				1, utils.ParseDec("0.001"), utils.ParseDec("0.003"), utils.ParseDec("0.5"),
-				nil, nil, nil, nil),
+			func(change *types.MarketParameterChange) {},
 			"",
 		},
 		{
 			"invalid market id",
-			types.NewMarketParameterChange(
-				0, utils.ParseDec("0.001"), utils.ParseDec("0.003"), utils.ParseDec("0.5"),
-				nil, nil, nil, nil),
+			func(change *types.MarketParameterChange) {
+				change.MarketId = 0
+			},
 			"market id must not be 0: invalid request",
 		},
 		{
-			"too high maker fee rate",
-			types.NewMarketParameterChange(
-				1, utils.ParseDec("1.01"), utils.ParseDec("0.003"), utils.ParseDec("0.5"),
-				nil, nil, nil, nil),
+			"invalid fees",
+			func(change *types.MarketParameterChange) {
+				change.Fees = types.NewFees(
+					utils.ParseDec("1.01"), utils.ParseDec("0.003"), utils.ParseDec("0.5"))
+			},
 			"maker fee rate must be in range [0, 1]: 1.010000000000000000: invalid request",
 		},
 		{
-			"too low maker fee rate",
-			types.NewMarketParameterChange(
-				1, utils.ParseDec("-0.001"), utils.ParseDec("0.003"), utils.ParseDec("0.5"),
-				nil, nil, nil, nil),
-			"maker fee rate must be in range [0, 1]: -0.001000000000000000: invalid request",
+			"invalid order quantity limits",
+			func(change *types.MarketParameterChange) {
+				change.OrderQuantityLimits = types.NewAmountLimits(sdk.NewInt(10000), sdk.NewInt(-10000))
+			},
+			"invalid order quantity limits: the maximum value must not be negative: -10000: invalid request",
 		},
 		{
-			"too high taker fee rate",
-			types.NewMarketParameterChange(
-				1, utils.ParseDec("0.001"), utils.ParseDec("1.01"), utils.ParseDec("0.5"),
-				nil, nil, nil, nil),
-			"taker fee rate must be in range [0, 1]: 1.010000000000000000: invalid request",
-		},
-		{
-			"too low taker fee rate",
-			types.NewMarketParameterChange(
-				1, utils.ParseDec("0.001"), utils.ParseDec("-0.001"), utils.ParseDec("0.5"),
-				nil, nil, nil, nil),
-			"taker fee rate must be in range [0, 1]: -0.001000000000000000: invalid request",
-		},
-		{
-			"too high order source fee ratio",
-			types.NewMarketParameterChange(
-				1, utils.ParseDec("0.001"), utils.ParseDec("0.003"), utils.ParseDec("1.1"),
-				nil, nil, nil, nil),
-			"order source fee ratio must be in range [0, 1]: 1.100000000000000000: invalid request",
-		},
-		{
-			"too low order source fee ratio",
-			types.NewMarketParameterChange(
-				1, utils.ParseDec("0.001"), utils.ParseDec("0.003"), utils.ParseDec("-0.1"),
-				nil, nil, nil, nil),
-			"order source fee ratio must be in range [0, 1]: -0.100000000000000000: invalid request",
-		},
-		{
-			"maker fee rate > taker fee rate",
-			types.NewMarketParameterChange(
-				1, utils.ParseDec("0.002"), utils.ParseDec("0.001"), utils.ParseDec("0.5"),
-				nil, nil, nil, nil),
-			"",
-		},
-		{
-			"change only min order qty",
-			types.NewMarketParameterChange(
-				1, utils.ParseDec("0.002"), utils.ParseDec("0.001"), utils.ParseDec("0.5"),
-				utils.Pointer(sdk.NewInt(1000)), nil, nil, nil),
-			"",
-		},
-		{
-			"change only min order quote",
-			types.NewMarketParameterChange(
-				1, utils.ParseDec("0.002"), utils.ParseDec("0.001"), utils.ParseDec("0.5"),
-				nil, utils.Pointer(sdk.NewInt(1000)), nil, nil),
-			"",
-		},
-		{
-			"change only max order qty",
-			types.NewMarketParameterChange(
-				1, utils.ParseDec("0.002"), utils.ParseDec("0.001"), utils.ParseDec("0.5"),
-				nil, nil, utils.Pointer(sdk.NewInt(1000)), nil),
-			"",
-		},
-		{
-			"change only max order quote",
-			types.NewMarketParameterChange(
-				1, utils.ParseDec("0.002"), utils.ParseDec("0.001"), utils.ParseDec("0.5"),
-				nil, nil, nil, utils.Pointer(sdk.NewInt(1000))),
-			"",
-		},
-		{
-			"negative min order qty",
-			types.NewMarketParameterChange(
-				1, utils.ParseDec("0.002"), utils.ParseDec("0.001"), utils.ParseDec("0.5"),
-				utils.Pointer(sdk.NewInt(-1000)), nil, nil, nil),
-			"min order quantity must not be negative: -1000: invalid request",
-		},
-		{
-			"negative min order quote",
-			types.NewMarketParameterChange(
-				1, utils.ParseDec("0.002"), utils.ParseDec("0.001"), utils.ParseDec("0.5"),
-				nil, utils.Pointer(sdk.NewInt(-1000)), nil, nil),
-			"min order quote must not be negative: -1000: invalid request",
-		},
-		{
-			"negative max order qty",
-			types.NewMarketParameterChange(
-				1, utils.ParseDec("0.002"), utils.ParseDec("0.001"), utils.ParseDec("0.5"),
-				nil, nil, utils.Pointer(sdk.NewInt(-1000)), nil),
-			"max order quantity must not be negative: -1000: invalid request",
-		},
-		{
-			"negative max order quote",
-			types.NewMarketParameterChange(
-				1, utils.ParseDec("0.002"), utils.ParseDec("0.001"), utils.ParseDec("0.5"),
-				nil, nil, nil, utils.Pointer(sdk.NewInt(-1000))),
-			"max order quote must not be negative: -1000: invalid request",
-		},
-		{
-			"zero min order qty",
-			types.NewMarketParameterChange(
-				1, utils.ParseDec("0.002"), utils.ParseDec("0.001"), utils.ParseDec("0.5"),
-				utils.Pointer(sdk.NewInt(0)), nil, nil, nil),
-			"",
-		},
-		{
-			"zero min order quote",
-			types.NewMarketParameterChange(
-				1, utils.ParseDec("0.002"), utils.ParseDec("0.001"), utils.ParseDec("0.5"),
-				nil, utils.Pointer(sdk.NewInt(0)), nil, nil),
-			"",
-		},
-		{
-			"zero max order qty",
-			types.NewMarketParameterChange(
-				1, utils.ParseDec("0.002"), utils.ParseDec("0.001"), utils.ParseDec("0.5"),
-				nil, nil, utils.Pointer(sdk.NewInt(0)), nil),
-			"",
-		},
-		{
-			"zero max order quote",
-			types.NewMarketParameterChange(
-				1, utils.ParseDec("0.002"), utils.ParseDec("0.001"), utils.ParseDec("0.5"),
-				nil, nil, nil, utils.Pointer(sdk.NewInt(0))),
-			"",
+			"invalid order quote limits",
+			func(change *types.MarketParameterChange) {
+				change.OrderQuoteLimits = types.NewAmountLimits(sdk.NewInt(-10000), sdk.NewInt(10000))
+			},
+			"invalid order quote limits: the minimum value must not be negative: -10000: invalid request",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			err := tc.change.Validate()
+			change := types.NewMarketParameterChange(
+				1, types.NewFees(
+					utils.ParseDec("0.0015"), utils.ParseDec("0.003"), utils.ParseDec("0.7")),
+				types.NewAmountLimits(sdk.NewInt(10000), sdk.NewIntWithDecimal(1, 30)),
+				types.NewAmountLimits(sdk.NewInt(10000), sdk.NewIntWithDecimal(1, 30)))
+			tc.malleate(&change)
+			err := change.Validate()
 			if tc.expectedErr == "" {
 				require.NoError(t, err)
 			} else {

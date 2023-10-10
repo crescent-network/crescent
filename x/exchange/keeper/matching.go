@@ -40,7 +40,9 @@ func (k Keeper) ConstructMemOrderBookSide(
 		}
 	}
 	if opts.MaxNumPriceLevels > 0 {
-		// TODO: can refund?
+		if escrow != nil { // sanity check
+			panic("escrow must be nil when MaxNumPriceLevels is set")
+		}
 		obs.Limit(opts.MaxNumPriceLevels)
 	}
 	return obs
@@ -156,7 +158,6 @@ func (k Keeper) finalizeMatching(
 			totalExecQty := utils.ZeroInt
 			ordererAddrs, m := types.GroupMemOrdersByOrderer(results)
 			for _, ordererAddr := range ordererAddrs {
-				// TODO: pass transformed result
 				if err := source.AfterOrdersExecuted(ctx, market, ordererAddr, results); err != nil {
 					return err
 				}

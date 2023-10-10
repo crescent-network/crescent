@@ -104,8 +104,8 @@ type MatchingContext struct {
 }
 
 func NewMatchingContext(market Market, halveFees bool) *MatchingContext {
-	makerFeeRate := market.MakerFeeRate
-	takerFeeRate := market.TakerFeeRate
+	makerFeeRate := market.Fees.MakerFeeRate
+	takerFeeRate := market.Fees.TakerFeeRate
 	if halveFees {
 		makerFeeRate = makerFeeRate.QuoInt64(2)
 		takerFeeRate = takerFeeRate.QuoInt64(2)
@@ -115,7 +115,7 @@ func NewMatchingContext(market Market, halveFees bool) *MatchingContext {
 		quoteDenom:          market.QuoteDenom,
 		makerFeeRate:        makerFeeRate,
 		takerFeeRate:        takerFeeRate,
-		orderSourceFeeRatio: market.OrderSourceFeeRatio,
+		orderSourceFeeRatio: market.Fees.OrderSourceFeeRatio,
 	}
 }
 
@@ -142,6 +142,11 @@ func (ctx *MatchingContext) FillOrder(order *MemOrder, qty sdk.Int, price sdk.De
 	executableQty := order.ExecutableQuantity()
 	if qty.GT(executableQty) { // sanity check
 		panic("open quantity is less than quantity")
+	}
+	if order.IsBuy && price.GT(order.Price) { // sanity check
+		panic(fmt.Sprintf("matching price is higher than the order price: %s > %s", price, order.Price))
+	} else if !order.IsBuy && price.LT(order.Price) { // sanity check
+		panic(fmt.Sprintf("matching price is lower than the order price: %s < %s", price, order.Price))
 	}
 	feeRate := ctx.FeeRate(order.Type, isMaker)
 	order.Fill(order.IsBuy, qty, price, feeRate)
@@ -245,7 +250,7 @@ func (ctx *MatchingContext) ExecuteOrder(
 		if qtyLimit != nil {
 			remainingQty = qtyLimit.Sub(matchState.executedQty)
 		}
-		if quoteLimit != nil {
+		if quoteLimit != nil { // only when isBuy == true
 			remainingQuote = quoteLimit.ToDec().Sub(totalExecutedQuote)
 			qty := remainingQuote.QuoTruncate(level.Price).TruncateInt()
 			if remainingQty.IsNil() {
@@ -277,25 +282,31 @@ func (ctx *MatchingContext) ExecuteOrder(
 func (ctx *MatchingContext) RunSinglePriceAuction(buyObs, sellObs *MemOrderBookSide) (matchPrice sdk.Dec, matched bool) {
 	buyLevelIdx, sellLevelIdx := 0, 0
 	var buyLastPrice, sellLastPrice sdk.Dec
+	buyExecutedQty, sellExecutedQty := utils.ZeroInt, utils.ZeroInt
 	for buyLevelIdx < len(buyObs.Levels) && sellLevelIdx < len(sellObs.Levels) {
 		buyLevel := buyObs.Levels[buyLevelIdx]
 		sellLevel := sellObs.Levels[sellLevelIdx]
 		if buyLevel.Price.LT(sellLevel.Price) {
 			break
 		}
-		buyExecutableQty := TotalExecutableQuantity(buyLevel.Orders)
-		sellExecutableQty := TotalExecutableQuantity(sellLevel.Orders)
-		// TODO: fix bug
-		execQty := utils.MinInt(buyExecutableQty, sellExecutableQty)
+		buyExecutableQty := TotalExecutableQuantity(buyLevel.Orders).Sub(buyExecutedQty)
+		sellExecutableQty := TotalExecutableQuantity(sellLevel.Orders).Sub(sellExecutedQty)
+		executedQty := utils.MinInt(buyExecutableQty, sellExecutableQty)
 		buyLastPrice = buyLevel.Price
 		sellLastPrice = sellLevel.Price
-		buyFull := execQty.Equal(buyExecutableQty)
-		sellFull := execQty.Equal(sellExecutableQty)
+		buyFull := executedQty.Equal(buyExecutableQty)
+		sellFull := executedQty.Equal(sellExecutableQty)
 		if buyFull {
 			buyLevelIdx++
+			buyExecutedQty = utils.ZeroInt
+		} else {
+			buyExecutedQty = buyExecutedQty.Add(executedQty)
 		}
 		if sellFull {
 			sellLevelIdx++
+			sellExecutedQty = utils.ZeroInt
+		} else {
+			sellExecutedQty = sellExecutedQty.Add(executedQty)
 		}
 	}
 	if !buyLastPrice.IsNil() && !sellLastPrice.IsNil() {

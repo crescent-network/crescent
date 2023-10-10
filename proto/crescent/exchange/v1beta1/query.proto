@@ -100,25 +100,14 @@ message QueryOrderBookResponse {
 }
 
 message MarketResponse {
-  uint64 id             = 1;
-  string base_denom     = 2;
-  string quote_denom    = 3;
-  string escrow_address = 4;
-  string fee_collector  = 5;
-  string maker_fee_rate = 6
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
-  string taker_fee_rate = 7
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
-  string order_source_fee_ratio = 8
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
-  string min_order_quantity = 9
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  string min_order_quote = 10
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  string max_order_quantity = 11
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  string max_order_quote = 12
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  string last_price           = 13 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
-  int64  last_matching_height = 14;
+  uint64       id                    = 1;
+  string       base_denom            = 2;
+  string       quote_denom           = 3;
+  string       escrow_address        = 4;
+  string       fee_collector         = 5;
+  Fees         fees                  = 6 [(gogoproto.nullable) = false];
+  AmountLimits order_quantity_limits = 7 [(gogoproto.nullable) = false];
+  AmountLimits order_quote_limits    = 8 [(gogoproto.nullable) = false];
+  string       last_price            = 9 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+  int64        last_matching_height  = 10;
 }

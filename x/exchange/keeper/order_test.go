@@ -49,6 +49,16 @@ func (s *KeeperTestSuite) TestPlaceLimitOrder() {
 	})
 }
 
+func (s *KeeperTestSuite) TestPlaceLimitOrder_MaxOrderLifespan() {
+	market := s.CreateMarket("ucre", "uusd")
+
+	ordererAddr := s.FundedAccount(1, enoughCoins)
+	_, _, _, err := s.keeper.PlaceLimitOrder(
+		s.Ctx, market.Id, ordererAddr, true, utils.ParseDec("5"), sdk.NewInt(1000000),
+		8*24*time.Hour) // 8 days
+	s.Require().EqualError(err, "lifespan is longer than the maximum: 192h0m0s > 168h0m0s: invalid request")
+}
+
 func (s *KeeperTestSuite) TestPlaceBatchLimitOrder() {
 	market := s.CreateMarket("ucre", "uusd")
 
@@ -144,30 +154,30 @@ func (s *KeeperTestSuite) TestPlaceMMBatchLimitOrder() {
 }
 
 func (s *KeeperTestSuite) TestOrderMatching() {
-	aliceAddr := s.FundedAccount(1, utils.ParseCoins("1000000ucre,1000000uusd"))
-	bobAddr := s.FundedAccount(2, utils.ParseCoins("1000000ucre,1000000uusd"))
+	aliceAddr := s.FundedAccount(1, utils.ParseCoins("100000000ucre,100000000uusd"))
+	bobAddr := s.FundedAccount(2, utils.ParseCoins("100000000ucre,100000000uusd"))
 
 	market := s.CreateMarket("ucre", "uusd")
 
-	s.PlaceLimitOrder(market.Id, aliceAddr, true, utils.ParseDec("100"), sdk.NewInt(1000), time.Hour)
-	s.PlaceLimitOrder(market.Id, aliceAddr, true, utils.ParseDec("99"), sdk.NewInt(1000), time.Hour)
-	s.PlaceLimitOrder(market.Id, aliceAddr, true, utils.ParseDec("97"), sdk.NewInt(1000), time.Hour)
+	s.PlaceLimitOrder(market.Id, aliceAddr, true, utils.ParseDec("100"), sdk.NewInt(100000), time.Hour)
+	s.PlaceLimitOrder(market.Id, aliceAddr, true, utils.ParseDec("99"), sdk.NewInt(100000), time.Hour)
+	s.PlaceLimitOrder(market.Id, aliceAddr, true, utils.ParseDec("97"), sdk.NewInt(100000), time.Hour)
 
 	s.PlaceLimitOrder(
-		market.Id, bobAddr, false, utils.ParseDec("98"), sdk.NewInt(1500), time.Hour)
+		market.Id, bobAddr, false, utils.ParseDec("98"), sdk.NewInt(150000), time.Hour)
 
-	s.AssertEqual(utils.ParseCoins("1001497ucre,704000uusd"), s.App.BankKeeper.GetAllBalances(s.Ctx, aliceAddr))
-	s.AssertEqual(utils.ParseCoins("998500ucre,1149051uusd"), s.App.BankKeeper.GetAllBalances(s.Ctx, bobAddr))
-	s.AssertEqual(utils.ParseCoins("146500uusd"), s.App.BankKeeper.GetAllBalances(s.Ctx, market.MustGetEscrowAddress()))
-	s.AssertEqual(utils.ParseCoins("3ucre,449uusd"), s.App.BankKeeper.GetAllBalances(s.Ctx, market.MustGetFeeCollectorAddress()))
+	s.AssertEqual(utils.ParseCoins("100149775ucre,70400000uusd"), s.App.BankKeeper.GetAllBalances(s.Ctx, aliceAddr))
+	s.AssertEqual(utils.ParseCoins("99850000ucre,114905150uusd"), s.App.BankKeeper.GetAllBalances(s.Ctx, bobAddr))
+	s.AssertEqual(utils.ParseCoins("14650000uusd"), s.App.BankKeeper.GetAllBalances(s.Ctx, market.MustGetEscrowAddress()))
+	s.AssertEqual(utils.ParseCoins("225ucre,44850uusd"), s.App.BankKeeper.GetAllBalances(s.Ctx, market.MustGetFeeCollectorAddress()))
 
 	s.PlaceLimitOrder(
-		market.Id, bobAddr, false, utils.ParseDec("96"), sdk.NewInt(1500), time.Hour)
+		market.Id, bobAddr, false, utils.ParseDec("96"), sdk.NewInt(150000), time.Hour)
 
-	s.AssertEqual(utils.ParseCoins("1002994ucre,704000uusd"), s.App.BankKeeper.GetAllBalances(s.Ctx, aliceAddr))
-	s.AssertEqual(utils.ParseCoins("997000ucre,1295111uusd"), s.App.BankKeeper.GetAllBalances(s.Ctx, bobAddr))
+	s.AssertEqual(utils.ParseCoins("100299550ucre,70400000uusd"), s.App.BankKeeper.GetAllBalances(s.Ctx, aliceAddr))
+	s.AssertEqual(utils.ParseCoins("99700000ucre,129511200uusd"), s.App.BankKeeper.GetAllBalances(s.Ctx, bobAddr))
 	s.AssertEqual(utils.ParseCoins(""), s.App.BankKeeper.GetAllBalances(s.Ctx, market.MustGetEscrowAddress()))
-	s.AssertEqual(utils.ParseCoins("6ucre,889uusd"), s.App.BankKeeper.GetAllBalances(s.Ctx, market.MustGetFeeCollectorAddress()))
+	s.AssertEqual(utils.ParseCoins("450ucre,88800uusd"), s.App.BankKeeper.GetAllBalances(s.Ctx, market.MustGetFeeCollectorAddress()))
 }
 
 func (s *KeeperTestSuite) TestMinMaxPrice() {
@@ -252,33 +262,33 @@ func (s *KeeperTestSuite) TestFairMatching() {
 	ordererAddr3 := s.FundedAccount(3, enoughCoins)
 
 	_, order1, _ := s.PlaceLimitOrder(
-		market.Id, ordererAddr1, true, utils.ParseDec("1.2"), sdk.NewInt(10000), 0)
+		market.Id, ordererAddr1, true, utils.ParseDec("1.2"), sdk.NewInt(100000), 0)
 	_, order2, _ := s.PlaceLimitOrder(
-		market.Id, ordererAddr2, true, utils.ParseDec("1.2"), sdk.NewInt(5000), 0)
+		market.Id, ordererAddr2, true, utils.ParseDec("1.2"), sdk.NewInt(50000), 0)
 
 	s.PlaceLimitOrder(
-		market.Id, ordererAddr3, false, utils.ParseDec("1.1"), sdk.NewInt(9000), 0)
+		market.Id, ordererAddr3, false, utils.ParseDec("1.1"), sdk.NewInt(90000), 0)
 
 	order1, _ = s.keeper.GetOrder(s.Ctx, order1.Id)
 	order2, _ = s.keeper.GetOrder(s.Ctx, order2.Id)
 
-	s.AssertEqual(sdk.NewInt(4000), order1.OpenQuantity) // 9000*2/3 matched
-	s.AssertEqual(sdk.NewInt(2000), order2.OpenQuantity) // 9000*1/3 matched
+	s.AssertEqual(sdk.NewInt(40000), order1.OpenQuantity) // 90000*2/3 matched
+	s.AssertEqual(sdk.NewInt(20000), order2.OpenQuantity) // 90000*1/3 matched
 
 	s.NextBlock()
 
 	_, order1, _ = s.PlaceLimitOrder(
-		market.Id, ordererAddr1, true, utils.ParseDec("1.1"), sdk.NewInt(7000), 0)
+		market.Id, ordererAddr1, true, utils.ParseDec("1.1"), sdk.NewInt(70000), 0)
 	_, order2, _ = s.PlaceLimitOrder(
-		market.Id, ordererAddr2, true, utils.ParseDec("1.1"), sdk.NewInt(3000), 0)
+		market.Id, ordererAddr2, true, utils.ParseDec("1.1"), sdk.NewInt(30000), 0)
 
-	s.PlaceMarketOrder(market.Id, ordererAddr3, false, sdk.NewInt(101))
+	s.PlaceMarketOrder(market.Id, ordererAddr3, false, sdk.NewInt(10001))
 
 	order1, _ = s.keeper.GetOrder(s.Ctx, order1.Id)
 	order2, _ = s.keeper.GetOrder(s.Ctx, order2.Id)
 
-	s.AssertEqual(sdk.NewInt(6929), order1.OpenQuantity) // 101*7/10 matched
-	s.AssertEqual(sdk.NewInt(2970), order2.OpenQuantity) // 101*3/10 matched
+	s.AssertEqual(sdk.NewInt(62999), order1.OpenQuantity) // 10001*7/10 matched
+	s.AssertEqual(sdk.NewInt(27000), order2.OpenQuantity) // 10001*3/10 matched
 }
 
 func (s *KeeperTestSuite) TestNumMMOrdersEdgecase() {

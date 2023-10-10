@@ -98,9 +98,9 @@ func (s *KeeperTestSuite) TestQueryMarket() {
 			"",
 			func(resp *types.QueryMarketResponse) {
 				s.Require().EqualValues(2, resp.Market.Id)
-				s.AssertEqual(utils.ParseDec("0.0015"), resp.Market.MakerFeeRate)
-				s.AssertEqual(utils.ParseDec("0.003"), resp.Market.TakerFeeRate)
-				s.AssertEqual(utils.ParseDec("0.5"), resp.Market.OrderSourceFeeRatio)
+				s.AssertEqual(utils.ParseDec("0.0015"), resp.Market.Fees.MakerFeeRate)
+				s.AssertEqual(utils.ParseDec("0.003"), resp.Market.Fees.TakerFeeRate)
+				s.AssertEqual(utils.ParseDec("0.5"), resp.Market.Fees.OrderSourceFeeRatio)
 			},
 		},
 		{
@@ -397,22 +397,22 @@ func (s *KeeperTestSuite) TestFindBestSwapExactAmountInRoutes() {
 	s.MakeLastPrice(3, lpAddr, utils.ParseDec("0.33333"))
 	s.MakeLastPrice(4, lpAddr, utils.ParseDec("3"))
 
-	s.createLiquidity(1, lpAddr, utils.ParseDec("5"), sdk.NewInt(10_000000))
-	s.createLiquidity(2, lpAddr, utils.ParseDec("2"), sdk.NewInt(10_000000))
-	s.createLiquidity(3, lpAddr, utils.ParseDec("0.33333"), sdk.NewInt(30_000000))
-	s.createLiquidity(4, lpAddr, utils.ParseDec("3"), sdk.NewInt(1_000000))
+	s.createLiquidity(1, lpAddr, utils.ParseDec("5"), sdk.NewInt(1000_000000))
+	s.createLiquidity(2, lpAddr, utils.ParseDec("2"), sdk.NewInt(1000_000000))
+	s.createLiquidity(3, lpAddr, utils.ParseDec("0.33333"), sdk.NewInt(3000_000000))
+	s.createLiquidity(4, lpAddr, utils.ParseDec("3"), sdk.NewInt(100_000000))
 
 	routes := s.keeper.FindAllRoutes(s.Ctx, "uusd", "stake", 3)
 	s.Require().Equal([][]uint64{{1, 2, 3}, {1, 2, 4}}, routes)
 
 	resp, err := s.querier.BestSwapExactAmountInRoutes(sdk.WrapSDKContext(s.Ctx), &types.QueryBestSwapExactAmountInRoutesRequest{
-		Input:       "20000000uusd", // 20_000000uusd
+		Input:       "2000000000uusd", // 2000_000000uusd
 		OutputDenom: "stake",
 	})
 	s.Require().NoError(err)
-	s.AssertEqual(utils.ParseCoin("5942986stake"), resp.Output)
+	s.AssertEqual(utils.ParseCoin("594299197stake"), resp.Output)
 
-	ordererAddr := s.FundedAccount(2, utils.ParseCoins("20000000uusd"))
-	output, _ := s.SwapExactAmountIn(ordererAddr, resp.Routes, utils.ParseCoin("20000000uusd"), resp.Output, false)
+	ordererAddr := s.FundedAccount(2, utils.ParseCoins("2000_000000uusd"))
+	output, _ := s.SwapExactAmountIn(ordererAddr, resp.Routes, utils.ParseCoin("2000_000000uusd"), resp.Output, false)
 	s.AssertEqual(resp.Output, output)
 }

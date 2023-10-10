@@ -11,7 +11,6 @@ import (
 )
 
 var _ exchangetypes.OrderSource = OrderSource{}
-var threshold = sdk.NewDecWithPrec(1, 16) // XXX
 
 type OrderSource struct {
 	Keeper
@@ -63,14 +62,14 @@ func (k OrderSource) AfterOrdersExecuted(ctx sdk.Context, _ exchangetypes.Market
 	return k.AfterPoolOrdersExecuted(ctx, pool, results)
 }
 
-func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, results []*exchangetypes.MemOrder) error {
+func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, orders []*exchangetypes.MemOrder) error {
 	reserveAddr := pool.MustGetReserveAddress()
 	poolState := k.MustGetPoolState(ctx, pool.Id)
 	accruedRewards := sdk.NewCoins()
 
-	// TODO: check if results are sorted?
-	isBuy := results[0].IsBuy
-	firstOrderTick := exchangetypes.TickAtPrice(results[0].Price)
+	// TODO: check if orders are sorted?
+	isBuy := orders[0].IsBuy
+	firstOrderTick := exchangetypes.TickAtPrice(orders[0].Price)
 	var targetTick int32
 	foundTargetTick := false
 	if isBuy {
@@ -127,7 +126,7 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 		extraAmt0 = utils.ZeroDec
 		extraAmt1 = utils.ZeroDec
 	}
-	for i, order := range results {
+	for i, order := range orders {
 		orderTick := exchangetypes.TickAtPrice(order.Price)
 
 		if isBuy && max && poolState.CurrentTick == targetTick {
@@ -176,7 +175,7 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 		currentSqrtPrice := utils.DecApproxSqrt(poolState.CurrentPrice)
 		var nextSqrtPrice, nextPrice sdk.Dec
 		max = false
-		if i < len(results)-1 {
+		if i < len(orders)-1 {
 			nextSqrtPrice = utils.DecApproxSqrt(order.Price)
 			nextPrice = order.Price
 			max = true

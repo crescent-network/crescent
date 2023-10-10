@@ -66,68 +66,31 @@ func TestMarket_Validate(t *testing.T) {
 			"invalid fee collector: decoding bech32 failed: invalid separator index -1",
 		},
 		{
-			"too low maker fee rate",
+			"invalid fees",
 			func(market *types.Market) {
-				market.MakerFeeRate = utils.ParseDec("-0.0015")
+				market.Fees.MakerFeeRate = utils.ParseDec("-0.0015")
 			},
 			"maker fee rate must be in range [0, 1]: -0.001500000000000000",
 		},
 		{
-			"too high maker fee rate",
+			"invalid order quantity limits",
 			func(market *types.Market) {
-				market.MakerFeeRate = utils.ParseDec("1.1")
+				market.OrderQuantityLimits.Min = sdk.NewInt(-1000)
 			},
-			"maker fee rate must be in range [0, 1]: 1.100000000000000000",
+			"invalid order quantity limits: the minimum value must not be negative: -1000",
 		},
 		{
-			"too low taker fee rate",
+			"invalid order quote limits",
 			func(market *types.Market) {
-				market.TakerFeeRate = utils.ParseDec("-0.0015")
+				market.OrderQuoteLimits.Max = sdk.NewInt(-1000)
 			},
-			"taker fee rate must be in range [0, 1]: -0.001500000000000000",
-		},
-		{
-			"too high taker fee rate",
-			func(market *types.Market) {
-				market.TakerFeeRate = utils.ParseDec("1.1")
-			},
-			"taker fee rate must be in range [0, 1]: 1.100000000000000000",
-		},
-		{
-			"negative min order quantity",
-			func(market *types.Market) {
-				market.MinOrderQuantity = sdk.NewInt(-1000)
-			},
-			"min order quantity must not be negative: -1000",
-		},
-		{
-			"negative min order quote",
-			func(market *types.Market) {
-				market.MinOrderQuote = sdk.NewInt(-1000)
-			},
-			"min order quote must not be negative: -1000",
-		},
-		{
-			"negative max order quantity",
-			func(market *types.Market) {
-				market.MaxOrderQuantity = sdk.NewInt(-1000)
-			},
-			"max order quantity must not be negative: -1000",
-		},
-		{
-			"negative max order quote",
-			func(market *types.Market) {
-				market.MaxOrderQuote = sdk.NewInt(-1000)
-			},
-			"max order quote must not be negative: -1000",
+			"invalid order quote limits: the maximum value must not be negative: -1000",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			market := types.NewMarket(
 				1, "ucre", "uusd",
-				utils.ParseDec("0.0015"), utils.ParseDec("0.003"), utils.ParseDec("0.5"),
-				types.DefaultDefaultMinOrderQuantity, types.DefaultDefaultMinOrderQuote,
-				types.DefaultDefaultMaxOrderQuantity, types.DefaultDefaultMaxOrderQuote)
+				types.DefaultFees, types.DefaultOrderQuantityLimits, types.DefaultOrderQuoteLimits)
 			tc.malleate(&market)
 			err := market.Validate()
 			if tc.expectedErr == "" {

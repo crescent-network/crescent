@@ -90,25 +90,26 @@ func TestMemOrder_HasPriorityOver(t *testing.T) {
 	order2 = newOrderSourceMemOrder(false, price, sdk.NewInt(100_000000), source1)
 	// OrderSourceMemOrder has priority over UserMemOrder
 	require.True(t, order2.HasPriorityOver(order1))
+	require.False(t, order1.HasPriorityOver(order2))
 
 	order1 = newUserMemOrder(1, false, price, sdk.NewInt(110_000000), sdk.NewInt(90_000000))
 	order2 = newOrderSourceMemOrder(false, price, sdk.NewInt(100_000000), source1)
 	// but if the quantity of UserMemOrder is higher, it takes priority
 	require.True(t, order1.HasPriorityOver(order2))
+	require.False(t, order2.HasPriorityOver(order1))
 
 	order1 = newOrderSourceMemOrder(false, price, sdk.NewInt(100_000000), source1)
 	order2 = newOrderSourceMemOrder(false, price, sdk.NewInt(100_000000), source2)
 	// lexicographical source name priority
 	require.True(t, order1.HasPriorityOver(order2))
+	require.False(t, order2.HasPriorityOver(order1))
 }
 
 func TestGroupMemOrdersByMsgHeight(t *testing.T) {
 	r := rand.New(rand.NewSource(1))
 	market := types.NewMarket(
 		1, "ucre", "uusd",
-		types.DefaultFees.DefaultMakerFeeRate, types.DefaultFees.DefaultTakerFeeRate, types.DefaultFees.DefaultOrderSourceFeeRatio,
-		types.DefaultDefaultMinOrderQuantity, types.DefaultDefaultMinOrderQuote,
-		types.DefaultDefaultMaxOrderQuantity, types.DefaultDefaultMaxOrderQuote)
+		types.DefaultFees, types.DefaultOrderQuantityLimits, types.DefaultOrderQuoteLimits)
 	deadline := utils.ParseTime("2023-06-01T00:00:00Z")
 	orderSourceOrdererAddr := utils.TestAddress(100)
 	source := types.NewMockOrderSource("source")

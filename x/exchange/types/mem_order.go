@@ -90,12 +90,15 @@ func (order *MemOrder) ExecutableQuantity() sdk.Int {
 			executableQty,
 			order.RemainingDeposit.ToDec().QuoTruncate(order.Price).TruncateInt())
 	}
-	return utils.MinInt(executableQty, order.RemainingDeposit.ToDec().TruncateInt())
+	return utils.MinInt(executableQty, order.RemainingDeposit)
 }
 
 func (order *MemOrder) HasPriorityOver(other *MemOrder) bool {
 	if !order.Price.Equal(other.Price) { // sanity check
 		panic(fmt.Sprintf("orders with different price: %s != %s", order.Price, other.Price))
+	}
+	if order.IsBuy != other.IsBuy { // sanity check
+		panic(fmt.Sprintf("orders with different direction(isBuy): %v != %v", order.IsBuy, other.IsBuy))
 	}
 	if !order.Quantity.Equal(other.Quantity) {
 		return order.Quantity.GT(other.Quantity)
@@ -181,31 +184,31 @@ func (obs *MemOrderBookSide) Limit(n int) {
 	obs.Levels = obs.Levels[:limit]
 }
 
-func (side *MemOrderBookSide) AddOrder(order *MemOrder) {
-	if order.IsBuy != side.IsBuy { // sanity check
+func (obs *MemOrderBookSide) AddOrder(order *MemOrder) {
+	if order.IsBuy != obs.IsBuy { // sanity check
 		panic("wrong order direction")
 	}
-	i := sort.Search(len(side.Levels), func(i int) bool {
-		if side.IsBuy {
-			return side.Levels[i].Price.LTE(order.Price)
+	i := sort.Search(len(obs.Levels), func(i int) bool {
+		if obs.IsBuy {
+			return obs.Levels[i].Price.LTE(order.Price)
 		}
-		return side.Levels[i].Price.GTE(order.Price)
+		return obs.Levels[i].Price.GTE(order.Price)
 	})
-	if i < len(side.Levels) && side.Levels[i].Price.Equal(order.Price) {
-		side.Levels[i].AddOrder(order)
+	if i < len(obs.Levels) && obs.Levels[i].Price.Equal(order.Price) {
+		obs.Levels[i].AddOrder(order)
 	} else {
 		// Insert a new level.
-		newLevels := make([]*MemOrderBookPriceLevel, len(side.Levels)+1)
-		copy(newLevels[:i], side.Levels[:i])
+		newLevels := make([]*MemOrderBookPriceLevel, len(obs.Levels)+1)
+		copy(newLevels[:i], obs.Levels[:i])
 		newLevels[i] = NewMemOrderBookPriceLevel(order)
-		copy(newLevels[i+1:], side.Levels[i:])
-		side.Levels = newLevels
+		copy(newLevels[i+1:], obs.Levels[i:])
+		obs.Levels = newLevels
 	}
 }
 
-func (side *MemOrderBookSide) String() string {
+func (obs *MemOrderBookSide) String() string {
 	var lines []string
-	for _, level := range side.Levels {
+	for _, level := range obs.Levels {
 		qty := TotalExecutableQuantity(level.Orders)
 		lines = append(lines, fmt.Sprintf("%s | %s", level.Price, qty))
 	}

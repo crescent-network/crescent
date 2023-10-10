@@ -131,15 +131,25 @@ func (s *UpgradeTestSuite) TestUpgradeV5Params() {
 	for _, pairId := range changedPairIds {
 		change := v5.ParamChanges[pairId]
 		market := s.App.ExchangeKeeper.MustGetMarket(s.Ctx, pairId)
-		if change.MakerFeeRate != nil || change.TakerFeeRate != nil {
-			s.AssertEqual(*change.MakerFeeRate, market.MakerFeeRate)
+		if change.MakerFeeRate != nil {
+			s.AssertEqual(*change.MakerFeeRate, market.Fees.MakerFeeRate)
 		} else {
-			s.AssertEqual(sdk.NewDecWithPrec(1, 3), market.MakerFeeRate) // default
+			s.AssertEqual(sdk.NewDecWithPrec(1, 3), market.Fees.MakerFeeRate) // default
 		}
 		if change.TakerFeeRate != nil {
-			s.AssertEqual(*change.TakerFeeRate, market.TakerFeeRate)
+			s.AssertEqual(*change.TakerFeeRate, market.Fees.TakerFeeRate)
 		} else {
-			s.AssertEqual(sdk.NewDecWithPrec(2, 3), market.TakerFeeRate) // default
+			s.AssertEqual(sdk.NewDecWithPrec(2, 3), market.Fees.TakerFeeRate) // default
+		}
+		if change.MinOrderQuantity != nil {
+			s.AssertEqual(*change.MinOrderQuantity, market.OrderQuantityLimits.Min)
+		} else {
+			s.AssertEqual(sdk.NewInt(10000), market.OrderQuantityLimits.Min) // default
+		}
+		if change.MinOrderQuote != nil {
+			s.AssertEqual(*change.MinOrderQuote, market.OrderQuoteLimits.Min)
+		} else {
+			s.AssertEqual(sdk.NewInt(10000), market.OrderQuoteLimits.Min) // default
 		}
 		pool, found := s.App.AMMKeeper.GetPoolByMarket(s.Ctx, pairId)
 		s.Require().True(found)
@@ -147,16 +157,6 @@ func (s *UpgradeTestSuite) TestUpgradeV5Params() {
 			s.Require().EqualValues(*change.TickSpacing, pool.TickSpacing)
 		} else {
 			s.Require().EqualValues(uint32(50), pool.TickSpacing) // default
-		}
-		if change.MinOrderQuantity != nil {
-			s.Require().EqualValues(*change.MinOrderQuantity, pool.MinOrderQuantity)
-		} else {
-			s.Require().EqualValues(sdk.NewDec(10000), pool.MinOrderQuantity) // default
-		}
-		if change.MinOrderQuote != nil {
-			s.Require().EqualValues(*change.MinOrderQuote, pool.MinOrderQuote)
-		} else {
-			s.Require().EqualValues(sdk.NewDec(10000), pool.MinOrderQuote) // default
 		}
 	}
 }

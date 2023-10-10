@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -110,8 +111,18 @@ func (k Keeper) PlaceMMBatchLimitOrder(
 func (k Keeper) placeLimitOrder(
 	ctx sdk.Context, typ types.OrderType, marketId uint64, ordererAddr sdk.AccAddress,
 	isBuy bool, price sdk.Dec, qty sdk.Int, lifespan time.Duration, isBatch bool) (orderId uint64, order types.Order, res types.ExecuteOrderResult, err error) {
+	if !price.IsPositive() { // sanity check
+		panic(fmt.Sprintf("price must be positive: %s", price))
+	}
 	if !qty.IsPositive() { // sanity check
-		panic("quantity must be positive")
+		panic(fmt.Sprintf("quantity must be positive: %s", qty))
+	}
+
+	if maxOrderLifespan := k.GetMaxOrderLifespan(ctx); lifespan > maxOrderLifespan {
+		err = sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidRequest,
+			"lifespan is longer than the maximum: %s > %s", lifespan, maxOrderLifespan)
+		return
 	}
 
 	market, found := k.GetMarket(ctx, marketId)
@@ -119,30 +130,30 @@ func (k Keeper) placeLimitOrder(
 		err = sdkerrors.Wrap(sdkerrors.ErrNotFound, "market not found")
 		return
 	}
-	if qty.LT(market.MinOrderQuantity) {
+	if qty.LT(market.OrderQuantityLimits.Min) {
 		err = sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidRequest,
 			"quantity is less than the minimum order quantity allowed: %s < %s",
-			qty, market.MinOrderQuantity)
+			qty, market.OrderQuantityLimits.Min)
 		return
-	} else if qty.GT(market.MaxOrderQuantity) {
+	} else if qty.GT(market.OrderQuantityLimits.Max) {
 		err = sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidRequest,
 			"quantity is greater than the maximum order quantity allowed: %s > %s",
-			qty, market.MaxOrderQuantity)
+			qty, market.OrderQuantityLimits.Max)
 		return
 	}
-	if quote := price.MulInt(qty).TruncateInt(); quote.LT(market.MinOrderQuote) {
+	if quote := price.MulInt(qty).TruncateInt(); quote.LT(market.OrderQuoteLimits.Min) {
 		err = sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidRequest,
 			"quantity * price is less than the minimum order quote allowed: %s < %s",
-			quote, market.MinOrderQuantity)
+			quote, market.OrderQuoteLimits.Min)
 		return
-	} else if quote.GT(market.MaxOrderQuote) {
+	} else if quote := price.MulInt(qty).Ceil().TruncateInt(); quote.GT(market.OrderQuoteLimits.Max) {
 		err = sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidRequest,
 			"quantity * price is greater than the maximum order quote allowed: %s > %s",
-			quote, market.MaxOrderQuote)
+			quote, market.OrderQuoteLimits.Max)
 		return
 	}
 
@@ -222,17 +233,17 @@ func (k Keeper) PlaceMarketOrder(
 		err = sdkerrors.Wrap(sdkerrors.ErrNotFound, "market not found")
 		return
 	}
-	if qty.LT(market.MinOrderQuantity) {
+	if qty.LT(market.OrderQuantityLimits.Min) {
 		err = sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidRequest,
 			"quantity is less than the minimum order quantity allowed: %s < %s",
-			qty, market.MinOrderQuantity)
+			qty, market.OrderQuantityLimits.Min)
 		return
-	} else if qty.GT(market.MaxOrderQuantity) {
+	} else if qty.GT(market.OrderQuantityLimits.Max) {
 		err = sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidRequest,
 			"quantity is greater than the maximum order quantity allowed: %s > %s",
-			qty, market.MaxOrderQuantity)
+			qty, market.OrderQuantityLimits.Max)
 		return
 	}
 	marketState := k.MustGetMarketState(ctx, market.Id)

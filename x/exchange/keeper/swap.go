@@ -103,7 +103,6 @@ func (k Keeper) SwapExactAmountIn(
 }
 
 func (k Keeper) FindAllRoutes(ctx sdk.Context, fromDenom, toDenom string, maxRoutesLen int) (allRoutes [][]uint64) {
-	// TODO: cache all routes on-chain?
 	denomMap := map[string]map[string][]uint64{}
 	store := ctx.KVStore(k.storeKey)
 	iter := sdk.KVStorePrefixIterator(store, types.MarketByDenomsIndexKeyPrefix)
@@ -127,7 +126,6 @@ func (k Keeper) FindAllRoutes(ctx sdk.Context, fromDenom, toDenom string, maxRou
 	var currentRoutes []uint64
 	visited := map[uint64]struct{}{}
 	var backtrack func(currentDenom string)
-	// TODO: prevent stack overflow?
 	backtrack = func(currentDenom string) {
 		denoms := maps.Keys(denomMap[currentDenom])
 		slices.Sort(denoms)

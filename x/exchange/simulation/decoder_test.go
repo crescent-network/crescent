@@ -21,9 +21,8 @@ func TestDecodeStore(t *testing.T) {
 
 	market := types.NewMarket(
 		10, "ucre", "uusd",
-		types.DefaultFees.DefaultMakerFeeRate, types.DefaultFees.DefaultTakerFeeRate, types.DefaultFees.DefaultOrderSourceFeeRatio,
-		types.DefaultDefaultMinOrderQuantity, types.DefaultDefaultMinOrderQuote,
-		types.DefaultDefaultMaxOrderQuantity, types.DefaultDefaultMaxOrderQuote)
+		types.DefaultFees,
+		types.DefaultOrderQuantityLimits, types.DefaultOrderQuoteLimits)
 	marketState := types.NewMarketState(utils.ParseDecP("12.345"))
 	order := types.NewOrder(
 		1, types.OrderTypeLimit, utils.TestAddress(1), 10, false, utils.ParseDec("12.345"), sdk.NewInt(100_000000),

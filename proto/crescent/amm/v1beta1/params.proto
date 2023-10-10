@@ -13,8 +13,8 @@ message Params {
   repeated cosmos.base.v1beta1.Coin pool_creation_fee = 1
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
   uint32   default_tick_spacing                                       = 2;
-  repeated cosmos.base.v1beta1.Coin private_farming_plan_creation_fee = 5
+  repeated cosmos.base.v1beta1.Coin private_farming_plan_creation_fee = 3
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
-  uint32                   max_num_private_farming_plans = 6;
-  google.protobuf.Duration max_farming_block_time = 7 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
+  uint32                   max_num_private_farming_plans = 4;
+  google.protobuf.Duration max_farming_block_time = 5 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
 }

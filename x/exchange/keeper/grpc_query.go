@@ -162,7 +162,6 @@ func (k Querier) BestSwapExactAmountInRoutes(c context.Context, req *types.Query
 		bestOutput  = sdk.NewCoin(req.OutputDenom, utils.ZeroInt)
 		bestResults []types.SwapRouteResult
 	)
-	// TODO: cache (begin, end, input) <-> output
 	for _, routes := range allRoutes {
 		output, results, err := k.SwapExactAmountIn(
 			ctx, sdk.AccAddress{}, routes, input, sdk.NewCoin(req.OutputDenom, utils.ZeroInt), true)

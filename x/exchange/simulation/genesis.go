@@ -14,7 +14,7 @@ import (
 
 // Simulation parameter constants
 const (
-	Fees               = "fees"
+	DefaultFees        = "default_fees"
 	MaxOrderPriceRatio = "max_order_price_ratio"
 )
 
@@ -22,11 +22,13 @@ func GenFees(r *rand.Rand) types.Fees {
 	takerFeeRate := utils.RandomDec(r, utils.ParseDec("0"), utils.ParseDec("0.01"))
 	makerFeeRate := utils.RandomDec(r, utils.ParseDec("0"), utils.ParseDec("0.005"))
 	orderSourceFeeRatio := sdk.NewDecWithPrec(r.Int63n(101), 2) // 0%, 1%, 2%, ..., 99%, 100%
-	return types.Fees{
-		DefaultMakerFeeRate:        makerFeeRate,
-		DefaultTakerFeeRate:        takerFeeRate,
-		DefaultOrderSourceFeeRatio: orderSourceFeeRatio,
-	}
+	return types.NewFees(makerFeeRate, takerFeeRate, orderSourceFeeRatio)
+}
+
+func GenAmountLimits(r *rand.Rand) types.AmountLimits {
+	min := utils.RandomInt(r, sdk.NewInt(1), sdk.NewInt(10000))
+	max := utils.RandomInt(r, sdk.NewInt(10000), sdk.NewIntWithDecimal(1, 30))
+	return types.NewAmountLimits(min, max)
 }
 
 func GenMaxOrderPriceRatio(r *rand.Rand) sdk.Dec {
@@ -38,8 +40,8 @@ func RandomizedGenState(simState *module.SimulationState) {
 	genesis := types.DefaultGenesis()
 
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, Fees, &genesis.Params.Fees, simState.Rand,
-		func(r *rand.Rand) { genesis.Params.Fees = GenFees(r) },
+		simState.Cdc, DefaultFees, &genesis.Params.DefaultFees, simState.Rand,
+		func(r *rand.Rand) { genesis.Params.DefaultFees = GenFees(r) },
 	)
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, MaxOrderPriceRatio, &genesis.Params.MaxOrderPriceRatio, simState.Rand,

@@ -93,6 +93,6 @@ func (s *TestSuite) SwapExactAmountIn(
 
 func (s *TestSuite) MakeLastPrice(marketId uint64, ordererAddr sdk.AccAddress, lastPrice sdk.Dec) {
 	s.T().Helper()
-	s.PlaceLimitOrder(marketId, ordererAddr, true, lastPrice, sdk.NewInt(10000), time.Hour)
-	s.PlaceLimitOrder(marketId, ordererAddr, false, lastPrice, sdk.NewInt(10000), time.Hour)
+	s.PlaceLimitOrder(marketId, ordererAddr, true, lastPrice, sdk.NewInt(1_000000), time.Hour)
+	s.PlaceLimitOrder(marketId, ordererAddr, false, lastPrice, sdk.NewInt(1_000000), time.Hour)
 }
