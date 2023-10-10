@@ -5,6 +5,8 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
+// Escrow is a structure used to facilitate coin transfers between
+// escrow account and other accounts all at once.
 type Escrow struct {
 	escrowAddr sdk.AccAddress
 	deltas     map[string]sdk.Coins // string(addr) => delta
@@ -36,6 +38,8 @@ func (e *Escrow) Release(addr sdk.AccAddress, amt ...sdk.Coin) {
 	e.deltas[saddr] = before.Add(amt...)
 }
 
+// Pays returns how much coins an account would pay by summing negative
+// balance diffs up.
 func (e *Escrow) Pays(addr sdk.AccAddress) sdk.Coins {
 	var pays sdk.Coins
 	for _, coin := range e.deltas[addr.String()] {
@@ -47,6 +51,8 @@ func (e *Escrow) Pays(addr sdk.AccAddress) sdk.Coins {
 	return pays
 }
 
+// Receives returns how much coins an account would receive by summing positive
+// balance diffs up.
 func (e *Escrow) Receives(addr sdk.AccAddress) sdk.Coins {
 	var receives sdk.Coins
 	for _, coin := range e.deltas[addr.String()] {
@@ -57,6 +63,8 @@ func (e *Escrow) Receives(addr sdk.AccAddress) sdk.Coins {
 	return receives
 }
 
+// Transact runs the actual coin transactions between escrow account and
+// other accounts.
 func (e *Escrow) Transact(ctx sdk.Context, bankKeeper BankKeeper) error {
 	escrow := e.escrowAddr.String()
 	var (

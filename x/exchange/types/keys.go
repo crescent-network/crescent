@@ -162,6 +162,8 @@ func PriceToBytes(d sdk.Dec) []byte {
 	if !valid {
 		panic("invalid tick price")
 	}
+	// signByte ensures ticks to be properly ordered in KVStore by placing
+	// positive ticks after negative ticks.
 	var signByte []byte
 	if tick < 0 {
 		signByte = zeroByte
