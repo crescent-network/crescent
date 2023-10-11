@@ -6,9 +6,10 @@ func NewMarketResponse(market Market, marketState MarketState) MarketResponse {
 		BaseDenom:           market.BaseDenom,
 		QuoteDenom:          market.QuoteDenom,
 		EscrowAddress:       market.EscrowAddress,
-		MakerFeeRate:        market.MakerFeeRate,
-		TakerFeeRate:        market.TakerFeeRate,
-		OrderSourceFeeRatio: market.OrderSourceFeeRatio,
+		FeeCollector:        market.FeeCollector,
+		Fees:                market.Fees,
+		OrderQuantityLimits: market.OrderQuantityLimits,
+		OrderQuoteLimits:    market.OrderQuoteLimits,
 		LastPrice:           marketState.LastPrice,
 		LastMatchingHeight:  marketState.LastMatchingHeight,
 	}

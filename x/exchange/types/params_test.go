@@ -31,46 +31,11 @@ func TestParams_Validate(t *testing.T) {
 			"invalid market creation fee: coin 0ucre amount is not positive",
 		},
 		{
-			"too high default maker fee rate",
+			"invalid default fees",
 			func(params *types.Params) {
-				params.Fees.DefaultMakerFeeRate = utils.ParseDec("1.01")
+				params.DefaultFees.MakerFeeRate = utils.ParseDec("1.01")
 			},
-			"maker fee rate must be in range [0, 1]: 1.010000000000000000",
-		},
-		{
-			"too low default maker fee rate",
-			func(params *types.Params) {
-				params.Fees.DefaultMakerFeeRate = utils.ParseDec("-1.01")
-			},
-			"maker fee rate must be in range [0, 1]: -1.010000000000000000",
-		},
-		{
-			"too high default taker fee rate",
-			func(params *types.Params) {
-				params.Fees.DefaultTakerFeeRate = utils.ParseDec("1.01")
-			},
-			"taker fee rate must be in range [0, 1]: 1.010000000000000000",
-		},
-		{
-			"too low default taker fee rate",
-			func(params *types.Params) {
-				params.Fees.DefaultTakerFeeRate = utils.ParseDec("-0.001")
-			},
-			"taker fee rate must be in range [0, 1]: -0.001000000000000000",
-		},
-		{
-			"too high default order source fee ratio",
-			func(params *types.Params) {
-				params.Fees.DefaultOrderSourceFeeRatio = utils.ParseDec("1.1")
-			},
-			"order source fee ratio must be in range [0, 1]: 1.100000000000000000",
-		},
-		{
-			"too low default order source fee ratio",
-			func(params *types.Params) {
-				params.Fees.DefaultOrderSourceFeeRatio = utils.ParseDec("-0.001")
-			},
-			"order source fee ratio must be in range [0, 1]: -0.001000000000000000",
+			"invalid default fees: maker fee rate must be in range [0, 1]: 1.010000000000000000",
 		},
 		{
 			"negative max order lifespan",
@@ -94,6 +59,22 @@ func TestParams_Validate(t *testing.T) {
 			"max order price ratio must be in range (0.0, 1.0): 1.000000000000000000",
 		},
 		{
+			"invalid default order quantity limits",
+			func(params *types.Params) {
+				params.DefaultOrderQuantityLimits.Min = sdk.NewInt(1000000)
+				params.DefaultOrderQuantityLimits.Max = sdk.NewInt(10000)
+			},
+			"invalid default order quantity limits: the minimum value is greater than the maximum value: 1000000 > 10000",
+		},
+		{
+			"invalid default order quote limits",
+			func(params *types.Params) {
+				params.DefaultOrderQuoteLimits.Min = sdk.NewInt(10000000)
+				params.DefaultOrderQuoteLimits.Max = sdk.NewInt(10000)
+			},
+			"invalid default order quote limits: the minimum value is greater than the maximum value: 10000000 > 10000",
+		},
+		{
 			"zero max swap routes len",
 			func(params *types.Params) {
 				params.MaxSwapRoutesLen = 0
@@ -105,6 +86,104 @@ func TestParams_Validate(t *testing.T) {
 			params := types.DefaultParams()
 			tc.malleate(&params)
 			err := params.Validate()
+			if tc.expectedErr == "" {
+				require.NoError(t, err)
+			} else {
+				require.EqualError(t, err, tc.expectedErr)
+			}
+		})
+	}
+}
+
+func TestFees_Validate(t *testing.T) {
+	for _, tc := range []struct {
+		name        string
+		fees        types.Fees
+		expectedErr string
+	}{
+		{
+			"happy case",
+			types.NewFees(
+				utils.ParseDec("0.001"), utils.ParseDec("0.003"), utils.ParseDec("0.5")),
+			"",
+		},
+		{
+			"too high maker fee rate",
+			types.NewFees(
+				utils.ParseDec("1.01"), utils.ParseDec("0.003"), utils.ParseDec("0.5")),
+			"maker fee rate must be in range [0, 1]: 1.010000000000000000",
+		},
+		{
+			"too low maker fee rate",
+			types.NewFees(
+				utils.ParseDec("-0.001"), utils.ParseDec("1"), utils.ParseDec("0.5")),
+			"maker fee rate must be in range [0, 1]: -0.001000000000000000",
+		},
+		{
+			"too high taker fee rate",
+			types.NewFees(
+				utils.ParseDec("0.001"), utils.ParseDec("1.01"), utils.ParseDec("0.5")),
+			"taker fee rate must be in range [0, 1]: 1.010000000000000000",
+		},
+		{
+			"too low taker fee rate",
+			types.NewFees(
+				utils.ParseDec("0.001"), utils.ParseDec("-0.001"), utils.ParseDec("0.5")),
+			"taker fee rate must be in range [0, 1]: -0.001000000000000000",
+		},
+		{
+			"too high order source fee ratio",
+			types.NewFees(
+				utils.ParseDec("0.001"), utils.ParseDec("0.002"), utils.ParseDec("1.01")),
+			"order source fee ratio must be in range [0, 1]: 1.010000000000000000",
+		},
+		{
+			"too low order source fee ratio",
+			types.NewFees(
+				utils.ParseDec("0.001"), utils.ParseDec("0.002"), utils.ParseDec("-0.01")),
+			"order source fee ratio must be in range [0, 1]: -0.010000000000000000",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.fees.Validate()
+			if tc.expectedErr == "" {
+				require.NoError(t, err)
+			} else {
+				require.EqualError(t, err, tc.expectedErr)
+			}
+		})
+	}
+}
+
+func TestAmountLimits_Validate(t *testing.T) {
+	for _, tc := range []struct {
+		name        string
+		limits      types.AmountLimits
+		expectedErr string
+	}{
+		{
+			"happy case",
+			types.NewAmountLimits(sdk.NewInt(10000), sdk.NewIntWithDecimal(1, 30)),
+			"",
+		},
+		{
+			"negative min",
+			types.NewAmountLimits(sdk.NewInt(-10000), sdk.NewIntWithDecimal(1, 30)),
+			"the minimum value must not be negative: -10000",
+		},
+		{
+			"negative max",
+			types.NewAmountLimits(sdk.NewInt(10000), sdk.NewIntWithDecimal(-1, 30)),
+			"the maximum value must not be negative: -1000000000000000000000000000000",
+		},
+		{
+			"min > max",
+			types.NewAmountLimits(sdk.NewInt(10000), sdk.NewInt(1000)),
+			"the minimum value is greater than the maximum value: 10000 > 1000",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.limits.Validate()
 			if tc.expectedErr == "" {
 				require.NoError(t, err)
 			} else {

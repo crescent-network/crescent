@@ -27,10 +27,12 @@ func (k Keeper) CreateMarket(
 	}
 
 	marketId := k.GetNextMarketIdWithUpdate(ctx)
-	fees := k.GetFees(ctx)
+	fees := k.GetDefaultFees(ctx)
+	orderQtyLimits := k.GetDefaultOrderQuantityLimits(ctx)
+	orderQuoteLimits := k.GetDefaultOrderQuoteLimits(ctx)
 	market = types.NewMarket(
 		marketId, baseDenom, quoteDenom,
-		fees.DefaultMakerFeeRate, fees.DefaultTakerFeeRate, fees.DefaultOrderSourceFeeRatio)
+		fees, orderQtyLimits, orderQuoteLimits)
 	k.SetMarket(ctx, market)
 	k.SetMarketByDenomsIndex(ctx, market)
 	k.SetMarketState(ctx, market.Id, types.NewMarketState(nil))

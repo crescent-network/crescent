@@ -51,7 +51,7 @@ func BenchmarkPlaceMarketOrder(b *testing.B) {
 		ctx = app.NewContext(false, hdr)
 
 		_, _, err := app.ExchangeKeeper.PlaceMarketOrder(
-			ctx, market.Id, ordererAddr, isBuy, sdk.NewDec(10_000000))
+			ctx, market.Id, ordererAddr, isBuy, sdk.NewInt(10_000000))
 		require.NoError(b, err)
 		isBuy = !isBuy
 
@@ -70,7 +70,7 @@ func BenchmarkPlaceMarketOrder(b *testing.B) {
 		b.StartTimer()
 
 		_, _, err := app.ExchangeKeeper.PlaceMarketOrder(
-			ctx, market.Id, ordererAddr, isBuy, sdk.NewDec(10_000000))
+			ctx, market.Id, ordererAddr, isBuy, sdk.NewInt(10_000000))
 		require.NoError(b, err)
 		isBuy = !isBuy
 
@@ -115,7 +115,7 @@ func (s *KeeperTestSuite) TestOrderGas() {
 	}
 	ordererAddr := s.FundedAccount(2, enoughCoins)
 	gasConsumedBefore := s.Ctx.GasMeter().GasConsumed()
-	s.PlaceLimitOrder(market.Id, ordererAddr, true, utils.ParseDec("150.5"), sdk.NewDec(50_000000), 0)
+	s.PlaceLimitOrder(market.Id, ordererAddr, true, utils.ParseDec("150.5"), sdk.NewInt(50_000000), 0)
 	s.Require().Less(s.Ctx.GasMeter().GasConsumed()-gasConsumedBefore, uint64(200000))
 }
 
@@ -131,9 +131,9 @@ func (s *KeeperTestSuite) TestCurrentLiquidityEdgecase() {
 		utils.ParseCoins("10_000000ucre,50_000000uusd"))
 
 	ordererAddr := s.FundedAccount(2, enoughCoins)
-	s.PlaceLimitOrder(market.Id, ordererAddr, true, utils.ParseDec("4.99"), sdk.NewDec(5988301+1), time.Hour)
+	s.PlaceLimitOrder(market.Id, ordererAddr, true, utils.ParseDec("4.99"), sdk.NewInt(5988301+1), time.Hour)
 
-	s.PlaceLimitOrder(market.Id, ordererAddr, false, utils.ParseDec("4.8"), sdk.NewDec(5979313+5988301*2+1000), 0)
+	s.PlaceLimitOrder(market.Id, ordererAddr, false, utils.ParseDec("4.8"), sdk.NewInt(5979313+5988301*2+1000), 0)
 	_, broken := keeper.PoolCurrentLiquidityInvariant(s.keeper)(s.Ctx)
 	s.Require().False(broken)
 }

@@ -15,8 +15,6 @@ func NewPoolResponse(pool Pool, poolState PoolState, balances sdk.Coins) PoolRes
 		ReserveAddress:             pool.ReserveAddress,
 		RewardsPool:                pool.RewardsPool,
 		TickSpacing:                pool.TickSpacing,
-		MinOrderQuantity:           pool.MinOrderQuantity,
-		MinOrderQuote:              pool.MinOrderQuote,
 		CurrentTick:                poolState.CurrentTick,
 		CurrentSqrtPrice:           poolState.CurrentSqrtPrice,
 		CurrentLiquidity:           poolState.CurrentLiquidity,

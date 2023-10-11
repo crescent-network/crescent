@@ -33,16 +33,37 @@ func TestOrderKey(t *testing.T) {
 func TestOrderBookOrderIndexKey(t *testing.T) {
 	key := types.GetOrderBookOrderIndexKey(1000000, true, types.MaxPrice, 10000000)
 	require.Equal(t, []byte{
-		0x66, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf, 0x42, 0x40, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x1,
-		0x97, 0xd4, 0xdf, 0x19, 0xd6, 0x5, 0x76, 0x73, 0x37, 0xe9, 0xf1, 0x4d, 0x3e, 0xec, 0x89,
-		0x20, 0xe4, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xff, 0xff, 0xff, 0xff, 0xff, 0x67, 0x69, 0x80,
+		0x66, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf, 0x42, 0x40, 0x0, 0x1, 0x0, 0x20, 0xf5, 0x80, 0xff, 0xff,
+		0xff, 0xff, 0xff, 0x67, 0x69, 0x80,
 	}, key)
 	orderId := types.ParseOrderIdFromOrderBookOrderIndexKey(key)
 	require.EqualValues(t, 10000000, orderId)
+	price := types.ParsePriceFromOrderBookOrderIndexKey(key)
+	utils.AssertEqual(t, types.MaxPrice, price)
 	prefix := types.GetOrderBookSideIteratorPrefix(1000000, true)
 	require.True(t, bytes.HasPrefix(key, prefix))
 	prefix = types.GetOrdersByMarketIteratorPrefix(1000000)
 	require.True(t, bytes.HasPrefix(key, prefix))
+
+	key = types.GetOrderBookOrderIndexKey(1000000, false, types.MinPrice, 10000000)
+	require.Equal(t, []byte{
+		0x66, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf, 0x42, 0x40, 0x1, 0x0, 0xff, 0xec, 0xc6, 0x20, 0x0, 0x0,
+		0x0, 0x0, 0x0, 0x98, 0x96, 0x80,
+	}, key)
+	orderId = types.ParseOrderIdFromOrderBookOrderIndexKey(key)
+	require.EqualValues(t, 10000000, orderId)
+	price = types.ParsePriceFromOrderBookOrderIndexKey(key)
+	utils.AssertEqual(t, types.MinPrice, price)
+	prefix = types.GetOrderBookSideIteratorPrefix(1000000, false)
+	require.True(t, bytes.HasPrefix(key, prefix))
+	prefix = types.GetOrdersByMarketIteratorPrefix(1000000)
+	require.True(t, bytes.HasPrefix(key, prefix))
+
+	key1 := types.GetOrderBookOrderIndexKey(1, true, utils.ParseDec("0.8"), 1)
+	key2 := types.GetOrderBookOrderIndexKey(1, true, utils.ParseDec("0.9"), 2)
+	key3 := types.GetOrderBookOrderIndexKey(1, true, utils.ParseDec("1.1"), 3)
+	require.Equal(t, -1, bytes.Compare(key1, key2))
+	require.Equal(t, -1, bytes.Compare(key2, key3))
 }
 
 func TestOrdersByOrdererIndexKey(t *testing.T) {
@@ -71,4 +92,13 @@ func TestNumMMOrdersKey(t *testing.T) {
 	ordererAddr2, marketId := types.ParseNumMMOrdersKey(key)
 	require.Equal(t, ordererAddr, ordererAddr2)
 	require.EqualValues(t, 1000000, marketId)
+}
+
+func TestPriceToBytes(t *testing.T) {
+	maxPrice := types.MaxPrice
+	for price := types.MinPrice; price.LT(maxPrice); price = price.MulInt64(10) {
+		bz := types.PriceToBytes(price)
+		price2 := types.BytesToPrice(bz)
+		require.Equal(t, price, price2)
+	}
 }

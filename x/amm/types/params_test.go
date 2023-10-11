@@ -60,20 +60,6 @@ func TestParams_Validate(t *testing.T) {
 			"tick spacing 7 is not allowed",
 		},
 		{
-			"negative default min order quantity",
-			func(params *types.Params) {
-				params.DefaultMinOrderQuantity = sdk.NewDec(-1)
-			},
-			"default min order quantity must not be negative: -1.000000000000000000",
-		},
-		{
-			"negative default min order quantity",
-			func(params *types.Params) {
-				params.DefaultMinOrderQuote = sdk.NewDec(-1)
-			},
-			"default min order quote must not be negative: -1.000000000000000000",
-		},
-		{
 			"invalid private farming plan creation fee",
 			func(params *types.Params) {
 				params.PrivateFarmingPlanCreationFee = sdk.Coins{sdk.NewInt64Coin("ucre", 0)}

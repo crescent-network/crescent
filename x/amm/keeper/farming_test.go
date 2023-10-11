@@ -220,7 +220,7 @@ func (s *KeeperTestSuite) TestFarming() {
 
 	ordererAddr := s.FundedAccount(3, utils.ParseCoins("10000_000000uusd"))
 	s.PlaceLimitOrder(
-		pool.MarketId, ordererAddr, true, utils.ParseDec("6"), sdk.NewDec(120_000000), 0)
+		pool.MarketId, ordererAddr, true, utils.ParseDec("6"), sdk.NewInt(120_000000), 0)
 
 	poolState := s.App.AMMKeeper.MustGetPoolState(s.Ctx, pool.Id)
 	fmt.Println(poolState.CurrentSqrtPrice)

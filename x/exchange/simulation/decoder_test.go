@@ -21,11 +21,12 @@ func TestDecodeStore(t *testing.T) {
 
 	market := types.NewMarket(
 		10, "ucre", "uusd",
-		types.DefaultFees.DefaultMakerFeeRate, types.DefaultFees.DefaultTakerFeeRate, types.DefaultFees.DefaultOrderSourceFeeRatio)
+		types.DefaultFees,
+		types.DefaultOrderQuantityLimits, types.DefaultOrderQuoteLimits)
 	marketState := types.NewMarketState(utils.ParseDecP("12.345"))
 	order := types.NewOrder(
-		1, types.OrderTypeLimit, utils.TestAddress(1), 10, false, utils.ParseDec("12.345"), sdk.NewDec(100_000000),
-		200, sdk.NewDec(90_000000), sdk.NewDec(90_000000), utils.ParseTime("2023-06-01T00:00:00Z"))
+		1, types.OrderTypeLimit, utils.TestAddress(1), 10, false, utils.ParseDec("12.345"), sdk.NewInt(100_000000),
+		200, sdk.NewInt(90_000000), sdk.NewInt(90_000000), utils.ParseTime("2023-06-01T00:00:00Z"))
 
 	kvPairs := kv.Pairs{
 		Pairs: []kv.Pair{

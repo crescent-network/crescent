@@ -21,7 +21,7 @@ func TestParamChanges(t *testing.T) {
 		simValue    string
 		subspace    string
 	}{
-		{"exchange/Fees", "Fees", `{"default_maker_fee_rate":"0.001083067024517151","default_taker_fee_rate":"0.007709506529800694","default_order_source_fee_ratio":"0.320000000000000000"}`, "exchange"},
+		{"exchange/DefaultFees", "DefaultFees", `{"maker_fee_rate":"0.001083067024517151","taker_fee_rate":"0.007709506529800694","order_source_fee_ratio":"0.320000000000000000"}`, "exchange"},
 		{"exchange/MaxOrderPriceRatio", "MaxOrderPriceRatio", `"0.235318889613999521"`, "exchange"},
 	}
 

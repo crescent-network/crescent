@@ -1,18 +1,18 @@
 package keeper
 
 import (
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
 func (k Keeper) PlaceLimitOrder(
 	ctx sdk.Context, marketId uint64, ordererAddr sdk.AccAddress,
-	isBuy bool, price, qty sdk.Dec, lifespan time.Duration) (orderId uint64, order types.Order, res types.ExecuteOrderResult, err error) {
+	isBuy bool, price sdk.Dec, qty sdk.Int, lifespan time.Duration) (orderId uint64, order types.Order, res types.ExecuteOrderResult, err error) {
 	orderId, order, res, err = k.placeLimitOrder(
 		ctx, types.OrderTypeLimit, marketId, ordererAddr, isBuy, price, qty, lifespan, false)
 	if err != nil {
@@ -38,7 +38,7 @@ func (k Keeper) PlaceLimitOrder(
 
 func (k Keeper) PlaceBatchLimitOrder(
 	ctx sdk.Context, marketId uint64, ordererAddr sdk.AccAddress,
-	isBuy bool, price, qty sdk.Dec, lifespan time.Duration) (order types.Order, err error) {
+	isBuy bool, price sdk.Dec, qty sdk.Int, lifespan time.Duration) (order types.Order, err error) {
 	_, order, _, err = k.placeLimitOrder(
 		ctx, types.OrderTypeLimit, marketId, ordererAddr, isBuy, price, qty, lifespan, true)
 	if err != nil {
@@ -61,7 +61,7 @@ func (k Keeper) PlaceBatchLimitOrder(
 
 func (k Keeper) PlaceMMLimitOrder(
 	ctx sdk.Context, marketId uint64, ordererAddr sdk.AccAddress,
-	isBuy bool, price, qty sdk.Dec, lifespan time.Duration) (orderId uint64, order types.Order, res types.ExecuteOrderResult, err error) {
+	isBuy bool, price sdk.Dec, qty sdk.Int, lifespan time.Duration) (orderId uint64, order types.Order, res types.ExecuteOrderResult, err error) {
 	orderId, order, res, err = k.placeLimitOrder(
 		ctx, types.OrderTypeMM, marketId, ordererAddr, isBuy, price, qty, lifespan, false)
 	if err != nil {
@@ -87,7 +87,7 @@ func (k Keeper) PlaceMMLimitOrder(
 
 func (k Keeper) PlaceMMBatchLimitOrder(
 	ctx sdk.Context, marketId uint64, ordererAddr sdk.AccAddress,
-	isBuy bool, price, qty sdk.Dec, lifespan time.Duration) (order types.Order, err error) {
+	isBuy bool, price sdk.Dec, qty sdk.Int, lifespan time.Duration) (order types.Order, err error) {
 	_, order, _, err = k.placeLimitOrder(
 		ctx, types.OrderTypeMM, marketId, ordererAddr, isBuy, price, qty, lifespan, true)
 	if err != nil {
@@ -110,14 +110,50 @@ func (k Keeper) PlaceMMBatchLimitOrder(
 
 func (k Keeper) placeLimitOrder(
 	ctx sdk.Context, typ types.OrderType, marketId uint64, ordererAddr sdk.AccAddress,
-	isBuy bool, price, qty sdk.Dec, lifespan time.Duration, isBatch bool) (orderId uint64, order types.Order, res types.ExecuteOrderResult, err error) {
+	isBuy bool, price sdk.Dec, qty sdk.Int, lifespan time.Duration, isBatch bool) (orderId uint64, order types.Order, res types.ExecuteOrderResult, err error) {
+	if !price.IsPositive() { // sanity check
+		panic(fmt.Sprintf("price must be positive: %s", price))
+	}
 	if !qty.IsPositive() { // sanity check
-		panic("quantity must be positive")
+		panic(fmt.Sprintf("quantity must be positive: %s", qty))
+	}
+
+	if maxOrderLifespan := k.GetMaxOrderLifespan(ctx); lifespan > maxOrderLifespan {
+		err = sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidRequest,
+			"lifespan is longer than the maximum: %s > %s", lifespan, maxOrderLifespan)
+		return
 	}
 
 	market, found := k.GetMarket(ctx, marketId)
 	if !found {
 		err = sdkerrors.Wrap(sdkerrors.ErrNotFound, "market not found")
+		return
+	}
+	if qty.LT(market.OrderQuantityLimits.Min) {
+		err = sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidRequest,
+			"quantity is less than the minimum order quantity allowed: %s < %s",
+			qty, market.OrderQuantityLimits.Min)
+		return
+	} else if qty.GT(market.OrderQuantityLimits.Max) {
+		err = sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidRequest,
+			"quantity is greater than the maximum order quantity allowed: %s > %s",
+			qty, market.OrderQuantityLimits.Max)
+		return
+	}
+	if quote := price.MulInt(qty).TruncateInt(); quote.LT(market.OrderQuoteLimits.Min) {
+		err = sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidRequest,
+			"quantity * price is less than the minimum order quote allowed: %s < %s",
+			quote, market.OrderQuoteLimits.Min)
+		return
+	} else if quote := price.MulInt(qty).Ceil().TruncateInt(); quote.GT(market.OrderQuoteLimits.Max) {
+		err = sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidRequest,
+			"quantity * price is greater than the maximum order quote allowed: %s > %s",
+			quote, market.OrderQuoteLimits.Max)
 		return
 	}
 
@@ -149,8 +185,8 @@ func (k Keeper) placeLimitOrder(
 	orderId = k.GetNextOrderIdWithUpdate(ctx)
 	openQty := qty
 	if !isBatch {
-		res, err = k.executeOrder(
-			ctx, market, ordererAddr, types.MemOrderBookSideOptions{
+		res, _, err = k.executeOrder(
+			ctx, market, ordererAddr, isBuy, types.MemOrderBookSideOptions{
 				IsBuy:         !isBuy,
 				PriceLimit:    &price,
 				QuantityLimit: &qty,
@@ -161,13 +197,13 @@ func (k Keeper) placeLimitOrder(
 		openQty = openQty.Sub(res.ExecutedQuantity)
 	}
 
-	if isBatch || openQty.GTE(utils.OneDec) {
+	if isBatch || openQty.IsPositive() {
 		deadline := ctx.BlockTime().Add(lifespan)
 		depositDenom, _ := types.PayReceiveDenoms(market.BaseDenom, market.QuoteDenom, isBuy)
-		depositCoin := sdk.NewCoin(depositDenom, types.DepositAmount(isBuy, price, openQty).Ceil().TruncateInt())
+		depositCoin := sdk.NewCoin(depositDenom, types.DepositAmount(isBuy, price, openQty))
 		order = types.NewOrder(
 			orderId, typ, ordererAddr, market.Id, isBuy, price, qty,
-			ctx.BlockHeight(), openQty, depositCoin.Amount.ToDec(), deadline)
+			ctx.BlockHeight(), openQty, depositCoin.Amount, deadline)
 		if err = k.EscrowCoins(ctx, market, ordererAddr, depositCoin); err != nil {
 			return
 		}
@@ -187,7 +223,7 @@ func (k Keeper) placeLimitOrder(
 
 func (k Keeper) PlaceMarketOrder(
 	ctx sdk.Context, marketId uint64, ordererAddr sdk.AccAddress,
-	isBuy bool, qty sdk.Dec) (orderId uint64, res types.ExecuteOrderResult, err error) {
+	isBuy bool, qty sdk.Int) (orderId uint64, res types.ExecuteOrderResult, err error) {
 	if !qty.IsPositive() { // sanity check
 		panic("quantity must be positive")
 	}
@@ -195,6 +231,19 @@ func (k Keeper) PlaceMarketOrder(
 	market, found := k.GetMarket(ctx, marketId)
 	if !found {
 		err = sdkerrors.Wrap(sdkerrors.ErrNotFound, "market not found")
+		return
+	}
+	if qty.LT(market.OrderQuantityLimits.Min) {
+		err = sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidRequest,
+			"quantity is less than the minimum order quantity allowed: %s < %s",
+			qty, market.OrderQuantityLimits.Min)
+		return
+	} else if qty.GT(market.OrderQuantityLimits.Max) {
+		err = sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidRequest,
+			"quantity is greater than the maximum order quantity allowed: %s > %s",
+			qty, market.OrderQuantityLimits.Max)
 		return
 	}
 	marketState := k.MustGetMarketState(ctx, market.Id)
@@ -207,30 +256,26 @@ func (k Keeper) PlaceMarketOrder(
 
 	orderId = k.GetNextOrderIdWithUpdate(ctx)
 	var (
-		quoteLimit *sdk.Dec
 		priceLimit sdk.Dec
 	)
 	spendable := k.bankKeeper.SpendableCoins(ctx, ordererAddr)
 	if isBuy {
-		quote := spendable.AmountOf(market.QuoteDenom).ToDec()
-		quoteLimit = &quote
 		priceLimit = maxPrice
 	} else {
-		base := spendable.AmountOf(market.BaseDenom).ToDec()
+		base := spendable.AmountOf(market.BaseDenom)
 		if qty.GT(base) {
 			err = sdkerrors.Wrapf(
 				sdkerrors.ErrInsufficientFunds, "%s%s is smaller than %s%s",
-				base.TruncateInt(), market.BaseDenom, qty, market.BaseDenom)
+				base, market.BaseDenom, qty, market.BaseDenom)
 			return
 		}
 		priceLimit = minPrice
 	}
-	res, err = k.executeOrder(
-		ctx, market, ordererAddr, types.MemOrderBookSideOptions{
+	res, _, err = k.executeOrder(
+		ctx, market, ordererAddr, isBuy, types.MemOrderBookSideOptions{
 			IsBuy:         !isBuy,
 			PriceLimit:    &priceLimit,
 			QuantityLimit: &qty,
-			QuoteLimit:    quoteLimit,
 		}, false, false)
 	if err != nil {
 		return
@@ -310,7 +355,7 @@ func (k Keeper) CancelAllOrders(ctx sdk.Context, ordererAddr sdk.AccAddress, mar
 func (k Keeper) cancelOrder(ctx sdk.Context, market types.Market, order types.Order) error {
 	ordererAddr := order.MustGetOrdererAddress()
 	depositDenom, _ := types.PayReceiveDenoms(market.BaseDenom, market.QuoteDenom, order.IsBuy)
-	refunded := sdk.NewCoin(depositDenom, order.RemainingDeposit.TruncateInt())
+	refunded := sdk.NewCoin(depositDenom, order.RemainingDeposit)
 	if err := k.ReleaseCoins(ctx, market, ordererAddr, refunded); err != nil {
 		return err
 	}
@@ -351,4 +396,24 @@ func (k Keeper) CancelExpiredOrders(ctx sdk.Context) (err error) {
 		return err != nil
 	})
 	return err
+}
+
+func (k Keeper) CollectFees(ctx sdk.Context, market types.Market) error {
+	var deposits sdk.Coins
+	k.IterateOrdersByMarket(ctx, market.Id, func(order types.Order) (stop bool) {
+		payDenom, _ := types.PayReceiveDenoms(market.BaseDenom, market.QuoteDenom, order.IsBuy)
+		deposit := sdk.NewCoin(payDenom, order.RemainingDeposit)
+		deposits = deposits.Add(deposit)
+		return false
+	})
+	escrowAddr := market.MustGetEscrowAddress()
+	feeCollectorAddr := market.MustGetFeeCollectorAddress()
+	escrowBalances := k.bankKeeper.SpendableCoins(ctx, escrowAddr)
+	fees := escrowBalances.Sub(deposits)
+	if fees.IsAllPositive() {
+		if err := k.bankKeeper.SendCoins(ctx, escrowAddr, feeCollectorAddr, fees); err != nil {
+			return err
+		}
+	}
+	return nil
 }

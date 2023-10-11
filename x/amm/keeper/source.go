@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	utils "github.com/crescent-network/crescent/v5/types"
@@ -36,10 +38,10 @@ func (k OrderSource) ConstructMemOrderBookSide(
 		poolState.CurrentSqrtPrice.Power(2), maxPriceRatio)
 
 	reserveAddr := pool.MustGetReserveAddress()
-	accQty := utils.ZeroDec
+	accQty := utils.ZeroInt
 	accQuote := utils.ZeroDec
 	numPriceLevels := 0
-	k.IteratePoolOrders(ctx, pool, opts.IsBuy, func(price, qty, openQty sdk.Dec) (stop bool) {
+	k.IteratePoolOrders(ctx, market, pool, opts.IsBuy, func(price sdk.Dec, qty sdk.Int) (stop bool) {
 		if (opts.IsBuy && price.LT(minPrice)) ||
 			(!opts.IsBuy && price.GT(maxPrice)) {
 			return true
@@ -47,9 +49,9 @@ func (k OrderSource) ConstructMemOrderBookSide(
 		if opts.ReachedLimit(price, accQty, accQuote, numPriceLevels) {
 			return true
 		}
-		createOrder(reserveAddr, price, qty, openQty)
+		createOrder(reserveAddr, price, qty)
 		accQty = accQty.Add(qty)
-		accQuote = accQuote.Add(exchangetypes.QuoteAmount(!opts.IsBuy, price, qty))
+		accQuote = accQuote.Add(price.MulInt(qty))
 		numPriceLevels++
 		return false
 	})
@@ -61,10 +63,10 @@ func (k OrderSource) AfterOrdersExecuted(ctx sdk.Context, _ exchangetypes.Market
 	return k.AfterPoolOrdersExecuted(ctx, pool, results)
 }
 
-func (k Keeper) IteratePoolOrders(ctx sdk.Context, pool types.Pool, isBuy bool, cb func(price, qty, openQty sdk.Dec) (stop bool)) {
+func (k Keeper) IteratePoolOrders(ctx sdk.Context, market exchangetypes.Market, pool types.Pool, isBuy bool, cb func(price sdk.Dec, qty sdk.Int) (stop bool)) {
 	poolState := k.MustGetPoolState(ctx, pool.Id)
 	reserveBalance := k.bankKeeper.SpendableCoins(ctx, pool.MustGetReserveAddress()).
-		AmountOf(pool.DenomOut(isBuy)).ToDec()
+		AmountOf(pool.DenomOut(isBuy))
 	orderLiquidity := poolState.CurrentLiquidity
 	currentSqrtPrice := poolState.CurrentSqrtPrice
 
@@ -80,29 +82,31 @@ func (k Keeper) IteratePoolOrders(ctx sdk.Context, pool types.Pool, isBuy bool, 
 				)
 				if isBuy {
 					orderTick, valid = NextOrderTick(
-						true, orderLiquidity, currentSqrtPrice, pool.MinOrderQuantity, pool.MinOrderQuote, pool.TickSpacing)
+						true, orderLiquidity, currentSqrtPrice, market.OrderQuantityLimits.Min, market.OrderQuoteLimits.Min, pool.TickSpacing)
 					if !valid || orderTick < tick {
 						orderTick = tick
 					}
 				} else {
 					orderTick, valid = NextOrderTick(
-						false, orderLiquidity, currentSqrtPrice, pool.MinOrderQuantity, pool.MinOrderQuote, pool.TickSpacing)
+						false, orderLiquidity, currentSqrtPrice, market.OrderQuantityLimits.Min, market.OrderQuoteLimits.Min, pool.TickSpacing)
 					if !valid || orderTick > tick {
 						orderTick = tick
 					}
 				}
 				orderPrice := exchangetypes.PriceAtTick(orderTick)
 				orderSqrtPrice := utils.DecApproxSqrt(orderPrice)
-				var qty, openQty sdk.Dec
+				var qty sdk.Int
 				if isBuy {
-					qty = types.Amount1DeltaDec(currentSqrtPrice, orderSqrtPrice, orderLiquidity).QuoTruncate(orderPrice)
-					openQty = sdk.MinDec(reserveBalance.QuoTruncate(orderPrice), qty)
+					qty = utils.MinInt(
+						reserveBalance.ToDec().QuoTruncate(orderPrice).TruncateInt(),
+						types.Amount1DeltaDec(currentSqrtPrice, orderSqrtPrice, orderLiquidity).QuoTruncate(orderPrice).TruncateInt())
 				} else {
-					qty = types.Amount0DeltaRoundingDec(currentSqrtPrice, orderSqrtPrice, orderLiquidity, false)
-					openQty = sdk.MinDec(reserveBalance, qty)
+					qty = utils.MinInt(
+						reserveBalance,
+						types.Amount0DeltaRoundingDec(currentSqrtPrice, orderSqrtPrice, orderLiquidity, false).TruncateInt())
 				}
-				if openQty.IsPositive() && (orderTick == tick || (openQty.GTE(pool.MinOrderQuantity))) {
-					if cb(orderPrice, qty, openQty) {
+				if qty.IsPositive() && (orderTick == tick || (qty.GTE(market.OrderQuantityLimits.Min))) {
+					if cb(orderPrice, qty) {
 						return true
 					}
 					reserveBalance = reserveBalance.Sub(exchangetypes.DepositAmount(isBuy, orderPrice, qty))
@@ -131,13 +135,15 @@ func (k Keeper) IteratePoolOrders(ctx sdk.Context, pool types.Pool, isBuy bool, 
 	}
 }
 
-func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, results []*exchangetypes.MemOrder) error {
-	isBuy := results[0].IsBuy()
+func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, orders []*exchangetypes.MemOrder) error {
+	isBuy := orders[0].IsBuy
 
 	poolState := k.MustGetPoolState(ctx, pool.Id)
 	rewards := sdk.Coins{}
 
-	for len(results) > 0 {
+	queue := newOrderResultQueue(matchResultsFromMemOrders(orders))
+
+	for queue.remainingPaid.IsPositive() {
 		nextTick, found := k.nextTick(ctx, pool.Id, poolState.CurrentTick, isBuy)
 		if !found {
 			break
@@ -145,48 +151,39 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 		targetPrice := exchangetypes.PriceAtTick(nextTick)
 		targetSqrtPrice := utils.DecApproxSqrt(targetPrice)
 
-		amtOut := utils.ZeroDec
-		amtIn := utils.ZeroDec
-		fee := utils.ZeroDec
-		for len(results) > 0 && ((isBuy && results[0].Price().GTE(targetPrice)) ||
-			(!isBuy && results[0].Price().LTE(targetPrice))) {
-			result := results[0]
-			amtOut = amtOut.Add(result.PaidWithoutFee())
-			amtIn = amtIn.Add(result.Received())
-			if result.Fee().IsNegative() {
-				fee = fee.Add(result.Fee().Neg())
-			}
-			results = results[1:]
-		}
-
-		var expectedAmtOutToTargetSqrtPrice sdk.Dec
+		var amtOut sdk.Int
 		if isBuy {
-			expectedAmtOutToTargetSqrtPrice = types.Amount1DeltaDec(
+			amtOut = types.Amount1Delta(
 				targetSqrtPrice, poolState.CurrentSqrtPrice, poolState.CurrentLiquidity)
 		} else {
-			expectedAmtOutToTargetSqrtPrice = types.Amount0DeltaRoundingDec(
+			amtOut = types.Amount0DeltaRounding(
 				poolState.CurrentSqrtPrice, targetSqrtPrice, poolState.CurrentLiquidity, false)
 		}
+
 		var nextSqrtPrice sdk.Dec
-		if amtOut.GTE(expectedAmtOutToTargetSqrtPrice) {
+		if queue.remainingPaid.GTE(amtOut) {
 			nextSqrtPrice = targetSqrtPrice
 		} else {
 			nextSqrtPrice = types.NextSqrtPriceFromOutput(
-				poolState.CurrentSqrtPrice, poolState.CurrentLiquidity, amtOut, isBuy)
+				poolState.CurrentSqrtPrice, poolState.CurrentLiquidity, queue.remainingPaid, isBuy)
 		}
 
-		// Calculate expected amount in.
-		var expectedAmtIn sdk.Dec
+		paid := utils.MinInt(amtOut, queue.remainingPaid)
+		received, feeReceived := queue.pull(paid)
+
+		// Calculate CPM adjustment fee.
+		var expectedReceived sdk.Int
 		if isBuy {
-			expectedAmtIn = types.Amount0DeltaRoundingDec(
+			expectedReceived = types.Amount0DeltaRounding(
 				nextSqrtPrice, poolState.CurrentSqrtPrice, poolState.CurrentLiquidity, true)
 		} else {
-			expectedAmtIn = types.Amount1DeltaDec(
+			expectedReceived = types.Amount1Delta(
 				poolState.CurrentSqrtPrice, nextSqrtPrice, poolState.CurrentLiquidity)
 		}
-		if amtIn.GT(expectedAmtIn) {
-			fee := amtIn.Sub(expectedAmtIn).TruncateInt()
-			feeCoin := sdk.NewCoin(pool.DenomIn(isBuy), fee)
+
+		if received.GT(expectedReceived) {
+			extraReceived := received.Sub(expectedReceived)
+			feeCoin := sdk.NewCoin(pool.DenomIn(isBuy), extraReceived)
 			if !feeCoin.IsZero() {
 				rewards = rewards.Add(feeCoin)
 				poolState.FeeGrowthGlobal = poolState.FeeGrowthGlobal.Add(
@@ -194,23 +191,20 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 						MulDecTruncate(types.DecMulFactor).
 						QuoDecTruncate(poolState.CurrentLiquidity.ToDec())...)
 			}
-		} else if amtIn.LT(expectedAmtIn) {
-			panic(amtIn.Sub(expectedAmtIn))
+		} else if received.LT(expectedReceived) {
+			// XXX
 		}
 
-		if fee.IsPositive() {
-			feeCoin := sdk.NewCoin(pool.DenomOut(isBuy), fee.TruncateInt())
-			if !feeCoin.IsZero() {
-				rewards = rewards.Add(feeCoin)
-				poolState.FeeGrowthGlobal = poolState.FeeGrowthGlobal.Add(
-					sdk.NewDecCoinsFromCoins(feeCoin).
-						MulDecTruncate(types.DecMulFactor).
-						QuoDecTruncate(poolState.CurrentLiquidity.ToDec())...)
-			}
+		if feeReceived.IsPositive() {
+			feeCoin := sdk.NewCoin(pool.DenomOut(isBuy), feeReceived)
+			rewards = rewards.Add(feeCoin)
+			poolState.FeeGrowthGlobal = poolState.FeeGrowthGlobal.Add(
+				sdk.NewDecCoinsFromCoins(feeCoin).
+					MulDecTruncate(types.DecMulFactor).
+					QuoDecTruncate(poolState.CurrentLiquidity.ToDec())...)
 		}
 
 		poolState.CurrentSqrtPrice = nextSqrtPrice
-
 		if poolState.CurrentSqrtPrice.Equal(targetSqrtPrice) {
 			netLiquidity := k.crossTick(ctx, pool.Id, nextTick, poolState)
 			if isBuy {
@@ -226,6 +220,7 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 			poolState.CurrentTick = exchangetypes.TickAtPrice(poolState.CurrentSqrtPrice.Power(2))
 		}
 	}
+
 	k.SetPoolState(ctx, pool.Id, poolState)
 	if rewards.IsAllPositive() {
 		if err := k.bankKeeper.SendCoins(
@@ -254,20 +249,22 @@ func (k Keeper) nextTick(ctx sdk.Context, poolId uint64, currentTick int32, lte 
 }
 
 func NextOrderTick(
-	isBuy bool, liquidity sdk.Int, currentSqrtPrice, minOrderQty, minOrderQuote sdk.Dec, tickSpacing uint32) (tick int32, valid bool) {
+	isBuy bool, liquidity sdk.Int, currentSqrtPrice sdk.Dec, minOrderQty, minOrderQuote sdk.Int, tickSpacing uint32) (tick int32, valid bool) {
 	liquidityDec := liquidity.ToDec()
+	minOrderQtyDec := minOrderQty.ToDec()
+	minOrderQuoteDec := minOrderQuote.ToDec()
 	currentTick := exchangetypes.TickAtPrice(currentSqrtPrice.Power(2))
 	if isBuy {
 		// 1. Check min order qty
 		// L^2 + 4 * MinQty * L * sqrt(P_current)
 		intermediate := liquidityDec.Power(2).Add(
-			minOrderQty.Mul(liquidityDec).MulTruncate(currentSqrtPrice).MulInt64(4))
-		orderSqrtPrice := utils.DecApproxSqrt(intermediate).Sub(liquidityDec).QuoTruncate(minOrderQty.MulInt64(2))
+			minOrderQtyDec.Mul(liquidityDec).MulTruncate(currentSqrtPrice).MulInt64(4))
+		orderSqrtPrice := utils.DecApproxSqrt(intermediate).Sub(liquidityDec).QuoTruncate(minOrderQtyDec.MulInt64(2))
 		if !orderSqrtPrice.IsPositive() {
 			return 0, false
 		}
 		// 2. Check min order quote
-		orderSqrtPrice2 := currentSqrtPrice.Mul(liquidityDec).Sub(minOrderQuote).QuoTruncate(liquidityDec)
+		orderSqrtPrice2 := currentSqrtPrice.Mul(liquidityDec).Sub(minOrderQuoteDec).QuoTruncate(liquidityDec)
 		if !orderSqrtPrice2.IsPositive() {
 			return 0, false
 		}
@@ -283,12 +280,12 @@ func NextOrderTick(
 	}
 	// 1. Check min order qty
 	orderSqrtPrice := currentSqrtPrice.Mul(liquidityDec).
-		QuoRoundUp(liquidityDec.Sub(minOrderQty.Mul(currentSqrtPrice)))
+		QuoRoundUp(liquidityDec.Sub(minOrderQtyDec.Mul(currentSqrtPrice)))
 	if !orderSqrtPrice.IsPositive() {
 		return 0, false
 	}
 	// 2. Check min order quote
-	orderSqrtPrice2 := minOrderQuote.Mul(currentSqrtPrice).QuoRoundUp(liquidityDec).Add(currentSqrtPrice)
+	orderSqrtPrice2 := minOrderQuoteDec.Mul(currentSqrtPrice).QuoRoundUp(liquidityDec).Add(currentSqrtPrice)
 	if !orderSqrtPrice2.IsPositive() {
 		return 0, false
 	}
@@ -301,4 +298,58 @@ func NextOrderTick(
 		tick += int32(tickSpacing)
 	}
 	return tick, true
+}
+
+type orderResultQueue struct {
+	results                    []exchangetypes.MatchResult
+	remainingPaid, partialPaid sdk.Int
+}
+
+func matchResultsFromMemOrders(orders []*exchangetypes.MemOrder) []exchangetypes.MatchResult {
+	results := make([]exchangetypes.MatchResult, 0, len(orders))
+	for _, order := range orders {
+		results = append(results, order.Result())
+	}
+	return results
+}
+
+func newOrderResultQueue(results []exchangetypes.MatchResult) *orderResultQueue {
+	remainingPaid := utils.ZeroInt
+	for _, result := range results {
+		remainingPaid = remainingPaid.Add(result.Paid)
+	}
+	return &orderResultQueue{
+		results:       results,
+		remainingPaid: remainingPaid,
+		partialPaid:   utils.ZeroInt,
+	}
+}
+
+func (queue *orderResultQueue) pull(paid sdk.Int) (received, feeReceived sdk.Int) {
+	if paid.GT(queue.remainingPaid) { // sanity check
+		panic(fmt.Sprintf("paid %s > remaining %s", paid, queue.remainingPaid))
+	}
+	// We don't need to include `len(results) > 0` in the loop condition
+	// since we already checked paid <= remainingPaid.
+	received = utils.ZeroInt
+	feeReceived = utils.ZeroInt
+	for paid.IsPositive() {
+		result := queue.results[0]
+		resultRemainingPaid := result.Paid.Sub(queue.partialPaid)
+		p := sdk.MinInt(paid, resultRemainingPaid)
+
+		ratio := p.ToDec().QuoTruncate(result.Paid.ToDec())
+		received = received.Add(ratio.MulInt(result.Received).TruncateInt())
+		feeReceived = feeReceived.Add(ratio.MulInt(result.FeeReceived).TruncateInt())
+
+		if p.Equal(resultRemainingPaid) {
+			queue.results = queue.results[1:]
+			queue.partialPaid = utils.ZeroInt
+		} else {
+			queue.partialPaid = queue.partialPaid.Add(p)
+		}
+		paid = paid.Sub(p)
+		queue.remainingPaid = queue.remainingPaid.Sub(p)
+	}
+	return
 }

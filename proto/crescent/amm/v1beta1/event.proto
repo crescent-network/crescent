@@ -73,8 +73,6 @@ message EventFarmingPlanTerminated {
 }
 
 message EventPoolParameterChanged {
-  uint64 pool_id            = 1;
-  uint32 tick_spacing       = 2;
-  string min_order_quantity = 3 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
-  string min_order_quote    = 4 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+  uint64 pool_id      = 1;
+  uint32 tick_spacing = 2;
 }

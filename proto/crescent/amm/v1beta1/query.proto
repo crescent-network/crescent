@@ -192,20 +192,16 @@ message PoolResponse {
   string                   reserve_address    = 5;
   string                   rewards_pool       = 6;
   uint32                   tick_spacing       = 7;
-  string                   min_order_quantity = 8
+  int32                    current_tick       = 8;
+  string                   current_sqrt_price = 9
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
-  string min_order_quote = 9
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
-  int32  current_tick       = 10;
-  string current_sqrt_price = 11
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
-  string current_liquidity = 12
+  string current_liquidity = 10
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  string total_liquidity = 13
+  string total_liquidity = 11
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  repeated cosmos.base.v1beta1.DecCoin fee_growth_global = 14
+  repeated cosmos.base.v1beta1.DecCoin fee_growth_global = 12
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
-  repeated cosmos.base.v1beta1.DecCoin farming_rewards_growth_global = 15
+  repeated cosmos.base.v1beta1.DecCoin farming_rewards_growth_global = 13
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
 }
 

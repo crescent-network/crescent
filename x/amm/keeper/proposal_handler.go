@@ -22,18 +22,10 @@ func HandlePoolParameterChangeProposal(ctx sdk.Context, k Keeper, p *types.PoolP
 			}
 			pool.TickSpacing = change.TickSpacing
 		}
-		if change.MinOrderQuantity != nil {
-			pool.MinOrderQuantity = *change.MinOrderQuantity
-		}
-		if change.MinOrderQuote != nil {
-			pool.MinOrderQuote = *change.MinOrderQuote
-		}
 		k.SetPool(ctx, pool)
 		if err := ctx.EventManager().EmitTypedEvent(&types.EventPoolParameterChanged{
-			PoolId:           change.PoolId,
-			TickSpacing:      change.TickSpacing,
-			MinOrderQuantity: change.MinOrderQuantity,
-			MinOrderQuote:    change.MinOrderQuote,
+			PoolId:      change.PoolId,
+			TickSpacing: change.TickSpacing,
 		}); err != nil {
 			return err
 		}

@@ -7,8 +7,10 @@ import (
 	"math/big"
 	"math/rand"
 	"strings"
+	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"golang.org/x/exp/constraints"
 
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
@@ -73,6 +75,10 @@ func ParseDec(s string) sdk.Dec {
 func ParseDecP(s string) *sdk.Dec {
 	d := ParseDec(s)
 	return &d
+}
+
+func Pointer[T any](x T) *T {
+	return &x
 }
 
 // ParseCoin parses and returns sdk.Coin.
@@ -289,4 +295,26 @@ func Shuffle[E any](r *rand.Rand, s []E) {
 	r.Shuffle(len(s), func(i, j int) {
 		s[i], s[j] = s[j], s[i]
 	})
+}
+
+func AssertEqual(t *testing.T, exp, got any) {
+	t.Helper()
+	var equal bool
+	switch exp := exp.(type) {
+	case sdk.Int:
+		equal = exp.Equal(got.(sdk.Int))
+	case sdk.Dec:
+		equal = exp.Equal(got.(sdk.Dec))
+	case sdk.Coin:
+		equal = exp.IsEqual(got.(sdk.Coin))
+	case sdk.Coins:
+		equal = exp.IsEqual(got.(sdk.Coins))
+	case sdk.DecCoin:
+		equal = exp.IsEqual(got.(sdk.DecCoin))
+	case sdk.DecCoins:
+		equal = exp.IsEqual(got.(sdk.DecCoins))
+	default:
+		panic(fmt.Sprintf("unsupported type: %T", exp))
+	}
+	assert.True(t, equal, "expected:\t%v\ngot:\t\t%v", exp, got)
 }

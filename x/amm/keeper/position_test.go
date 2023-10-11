@@ -32,8 +32,8 @@ func (s *KeeperTestSuite) TestReinitializePosition() {
 		ownerAddr, pool.Id, lowerPrice, upperPrice, desiredAmt)
 
 	ordererAddr := s.FundedAccount(2, enoughCoins)
-	s.PlaceLimitOrder(market.Id, ordererAddr, true, utils.ParseDec("6"), sdk.NewDec(1000000), 0)
-	s.PlaceMarketOrder(market.Id, ordererAddr, false, sdk.NewDec(1000000))
+	s.PlaceLimitOrder(market.Id, ordererAddr, true, utils.ParseDec("6"), sdk.NewInt(1000000), 0)
+	s.PlaceMarketOrder(market.Id, ordererAddr, false, sdk.NewInt(1000000))
 
 	s.RemoveLiquidity(ownerAddr, position.Id, liquidity)
 	position, _ = s.keeper.GetPosition(s.Ctx, position.Id)
@@ -51,8 +51,8 @@ func (s *KeeperTestSuite) TestRemoveAllAndCollect() {
 
 	// Accrue fees.
 	ordererAddr := s.FundedAccount(2, enoughCoins)
-	s.PlaceLimitOrder(market.Id, ordererAddr, true, utils.ParseDec("6"), sdk.NewDec(10_000000), 0)
-	s.PlaceMarketOrder(market.Id, ordererAddr, false, sdk.NewDec(10_000000))
+	s.PlaceLimitOrder(market.Id, ordererAddr, true, utils.ParseDec("6"), sdk.NewInt(10_000000), 0)
+	s.PlaceMarketOrder(market.Id, ordererAddr, false, sdk.NewInt(10_000000))
 
 	s.RemoveLiquidity(lpAddr, position.Id, position.Liquidity)
 
@@ -97,8 +97,8 @@ func (s *KeeperTestSuite) TestRewardsPool() {
 		lpAddr, pool2.Id, utils.ParseDec("9"), utils.ParseDec("12"), utils.ParseCoins("100_000000uatom,1000_000000uusd"))
 
 	ordererAddr := s.FundedAccount(2, enoughCoins)
-	s.PlaceLimitOrder(market1.Id, ordererAddr, true, utils.ParseDec("6"), sdk.NewDec(1_000000), 0)
-	s.PlaceLimitOrder(market2.Id, ordererAddr, false, utils.ParseDec("9"), sdk.NewDec(1_000000), 0)
+	s.PlaceLimitOrder(market1.Id, ordererAddr, true, utils.ParseDec("6"), sdk.NewInt(1_000000), 0)
+	s.PlaceLimitOrder(market2.Id, ordererAddr, false, utils.ParseDec("9"), sdk.NewInt(1_000000), 0)
 
 	s.AssertEqual(utils.ParseCoins("1499ucre,2620uusd"), s.GetAllBalances(pool1.MustGetRewardsPoolAddress()))
 	s.AssertEqual(utils.ParseCoins("268uatom,14982uusd"), s.GetAllBalances(pool2.MustGetRewardsPoolAddress()))

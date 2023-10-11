@@ -33,9 +33,8 @@ func SimulateMarketParameterChangeProposal(k keeper.Keeper) simtypes.ContentSimu
 		var changes []types.MarketParameterChange
 		k.IterateAllMarkets(ctx, func(market types.Market) (stop bool) {
 			if r.Float64() <= 0.5 {
-				fees := GenFees(r)
 				changes = append(changes, types.NewMarketParameterChange(
-					market.Id, fees.DefaultMakerFeeRate, fees.DefaultTakerFeeRate, fees.DefaultOrderSourceFeeRatio))
+					market.Id, GenFees(r), GenAmountLimits(r), GenAmountLimits(r)))
 			}
 			return false
 		})

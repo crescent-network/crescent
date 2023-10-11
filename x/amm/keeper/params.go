@@ -37,24 +37,6 @@ func (k Keeper) SetDefaultTickSpacing(ctx sdk.Context, tickSpacing uint32) {
 	k.paramSpace.Set(ctx, types.KeyDefaultTickSpacing, tickSpacing)
 }
 
-func (k Keeper) GetDefaultMinOrderQuantity(ctx sdk.Context) (minOrderQty sdk.Dec) {
-	k.paramSpace.Get(ctx, types.KeyDefaultMinOrderQuantity, &minOrderQty)
-	return
-}
-
-func (k Keeper) SetDefaultMinOrderQuantity(ctx sdk.Context, minOrderQty sdk.Dec) {
-	k.paramSpace.Set(ctx, types.KeyDefaultMinOrderQuantity, minOrderQty)
-}
-
-func (k Keeper) GetDefaultMinOrderQuote(ctx sdk.Context) (minOrderQuote sdk.Dec) {
-	k.paramSpace.Get(ctx, types.KeyDefaultMinOrderQuote, &minOrderQuote)
-	return
-}
-
-func (k Keeper) SetDefaultMinOrderQuote(ctx sdk.Context, minOrderQuote sdk.Dec) {
-	k.paramSpace.Set(ctx, types.KeyDefaultMinOrderQuote, minOrderQuote)
-}
-
 func (k Keeper) GetPrivateFarmingPlanCreationFee(ctx sdk.Context) (fee sdk.Coins) {
 	k.paramSpace.Get(ctx, types.KeyPrivateFarmingPlanCreationFee, &fee)
 	return

@@ -31,11 +31,8 @@ func (k Keeper) CreatePool(ctx sdk.Context, creatorAddr sdk.AccAddress, marketId
 	// Create a new pool
 	poolId := k.GetNextPoolIdWithUpdate(ctx)
 	defaultTickSpacing := k.GetDefaultTickSpacing(ctx)
-	defaultMinOrderQty := k.GetDefaultMinOrderQuantity(ctx)
-	defaultMinOrderQuote := k.GetDefaultMinOrderQuote(ctx)
 	pool = types.NewPool(
-		poolId, marketId, market.BaseDenom, market.QuoteDenom, defaultTickSpacing,
-		defaultMinOrderQty, defaultMinOrderQuote)
+		poolId, marketId, market.BaseDenom, market.QuoteDenom, defaultTickSpacing)
 	k.SetPool(ctx, pool)
 	k.SetPoolByMarketIndex(ctx, pool)
 	k.SetPoolByReserveAddressIndex(ctx, pool)

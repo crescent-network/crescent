@@ -22,25 +22,25 @@ func (s *KeeperTestSuite) SetupSampleScenario() {
 	aliceAddr := s.FundedAccount(1, enoughCoins)
 	bobAddr := s.FundedAccount(2, enoughCoins)
 
-	s.PlaceLimitOrder(market1.Id, aliceAddr, true, utils.ParseDec("4.9999"), sdk.NewDec(10_000000), time.Hour)
-	s.PlaceLimitOrder(market1.Id, aliceAddr, true, utils.ParseDec("4.9998"), sdk.NewDec(10_000000), time.Hour)
-	s.PlaceLimitOrder(market1.Id, aliceAddr, false, utils.ParseDec("5.0001"), sdk.NewDec(10_000000), time.Hour)
-	s.PlaceLimitOrder(market1.Id, aliceAddr, false, utils.ParseDec("5.0002"), sdk.NewDec(10_000000), time.Hour)
+	s.PlaceLimitOrder(market1.Id, aliceAddr, true, utils.ParseDec("4.9999"), sdk.NewInt(10_000000), time.Hour)
+	s.PlaceLimitOrder(market1.Id, aliceAddr, true, utils.ParseDec("4.9998"), sdk.NewInt(10_000000), time.Hour)
+	s.PlaceLimitOrder(market1.Id, aliceAddr, false, utils.ParseDec("5.0001"), sdk.NewInt(10_000000), time.Hour)
+	s.PlaceLimitOrder(market1.Id, aliceAddr, false, utils.ParseDec("5.0002"), sdk.NewInt(10_000000), time.Hour)
 
-	s.PlaceLimitOrder(market1.Id, bobAddr, true, utils.ParseDec("4.99"), sdk.NewDec(100_000000), time.Hour)
-	s.PlaceLimitOrder(market1.Id, bobAddr, true, utils.ParseDec("4.98"), sdk.NewDec(100_000000), time.Hour)
-	s.PlaceLimitOrder(market1.Id, bobAddr, false, utils.ParseDec("5.01"), sdk.NewDec(100_000000), time.Hour)
-	s.PlaceLimitOrder(market1.Id, bobAddr, false, utils.ParseDec("5.02"), sdk.NewDec(100_000000), time.Hour)
+	s.PlaceLimitOrder(market1.Id, bobAddr, true, utils.ParseDec("4.99"), sdk.NewInt(100_000000), time.Hour)
+	s.PlaceLimitOrder(market1.Id, bobAddr, true, utils.ParseDec("4.98"), sdk.NewInt(100_000000), time.Hour)
+	s.PlaceLimitOrder(market1.Id, bobAddr, false, utils.ParseDec("5.01"), sdk.NewInt(100_000000), time.Hour)
+	s.PlaceLimitOrder(market1.Id, bobAddr, false, utils.ParseDec("5.02"), sdk.NewInt(100_000000), time.Hour)
 
-	s.PlaceLimitOrder(market2.Id, aliceAddr, true, utils.ParseDec("9.9999"), sdk.NewDec(10_000000), time.Hour)
-	s.PlaceLimitOrder(market2.Id, aliceAddr, true, utils.ParseDec("9.9998"), sdk.NewDec(10_000000), time.Hour)
-	s.PlaceLimitOrder(market2.Id, aliceAddr, false, utils.ParseDec("10.001"), sdk.NewDec(10_000000), time.Hour)
-	s.PlaceLimitOrder(market2.Id, aliceAddr, false, utils.ParseDec("10.002"), sdk.NewDec(10_000000), time.Hour)
+	s.PlaceLimitOrder(market2.Id, aliceAddr, true, utils.ParseDec("9.9999"), sdk.NewInt(10_000000), time.Hour)
+	s.PlaceLimitOrder(market2.Id, aliceAddr, true, utils.ParseDec("9.9998"), sdk.NewInt(10_000000), time.Hour)
+	s.PlaceLimitOrder(market2.Id, aliceAddr, false, utils.ParseDec("10.001"), sdk.NewInt(10_000000), time.Hour)
+	s.PlaceLimitOrder(market2.Id, aliceAddr, false, utils.ParseDec("10.002"), sdk.NewInt(10_000000), time.Hour)
 
-	s.PlaceLimitOrder(market2.Id, bobAddr, true, utils.ParseDec("9.99"), sdk.NewDec(100_000000), time.Hour)
-	s.PlaceLimitOrder(market2.Id, bobAddr, true, utils.ParseDec("9.98"), sdk.NewDec(100_000000), time.Hour)
-	s.PlaceLimitOrder(market2.Id, bobAddr, false, utils.ParseDec("10.01"), sdk.NewDec(100_000000), time.Hour)
-	s.PlaceLimitOrder(market2.Id, bobAddr, false, utils.ParseDec("10.02"), sdk.NewDec(100_000000), time.Hour)
+	s.PlaceLimitOrder(market2.Id, bobAddr, true, utils.ParseDec("9.99"), sdk.NewInt(100_000000), time.Hour)
+	s.PlaceLimitOrder(market2.Id, bobAddr, true, utils.ParseDec("9.98"), sdk.NewInt(100_000000), time.Hour)
+	s.PlaceLimitOrder(market2.Id, bobAddr, false, utils.ParseDec("10.01"), sdk.NewInt(100_000000), time.Hour)
+	s.PlaceLimitOrder(market2.Id, bobAddr, false, utils.ParseDec("10.02"), sdk.NewInt(100_000000), time.Hour)
 }
 
 func (s *KeeperTestSuite) TestQueryParams() {
@@ -98,9 +98,9 @@ func (s *KeeperTestSuite) TestQueryMarket() {
 			"",
 			func(resp *types.QueryMarketResponse) {
 				s.Require().EqualValues(2, resp.Market.Id)
-				s.AssertEqual(utils.ParseDec("0.0015"), resp.Market.MakerFeeRate)
-				s.AssertEqual(utils.ParseDec("0.003"), resp.Market.TakerFeeRate)
-				s.AssertEqual(utils.ParseDec("0.5"), resp.Market.OrderSourceFeeRatio)
+				s.AssertEqual(utils.ParseDec("0.0015"), resp.Market.Fees.MakerFeeRate)
+				s.AssertEqual(utils.ParseDec("0.003"), resp.Market.Fees.TakerFeeRate)
+				s.AssertEqual(utils.ParseDec("0.5"), resp.Market.Fees.OrderSourceFeeRatio)
 			},
 		},
 		{
@@ -282,15 +282,15 @@ func (s *KeeperTestSuite) TestQueryBestSwapExactAmountInRoutes() {
 			"",
 			func(resp *types.QueryBestSwapExactAmountInRoutesResponse) {
 				s.Require().Equal([]uint64{2, 1}, resp.Routes)
-				s.AssertEqual(utils.ParseDecCoin("9969723ucre"), resp.Output)
+				s.AssertEqual(utils.ParseCoin("9969722ucre"), resp.Output)
 				s.Assert().EqualValues(2, resp.Results[0].MarketId)
-				s.AssertEqual(utils.ParseDecCoin("5000000uatom"), resp.Results[0].Input)
-				s.AssertEqual(utils.ParseDecCoin("49924500uusd"), resp.Results[0].Output)
-				s.AssertEqual(utils.ParseDecCoin("74999.25uusd"), resp.Results[0].Fee)
+				s.AssertEqual(utils.ParseCoin("5000000uatom"), resp.Results[0].Input)
+				s.AssertEqual(utils.ParseCoin("49924500uusd"), resp.Results[0].Output)
+				s.AssertEqual(utils.ParseCoin("75000uusd"), resp.Results[0].Fee)
 				s.Assert().EqualValues(1, resp.Results[1].MarketId)
-				s.AssertEqual(utils.ParseDecCoin("49924500uusd"), resp.Results[1].Input)
-				s.AssertEqual(utils.ParseDecCoin("9969723ucre"), resp.Results[1].Output)
-				s.AssertEqual(utils.ParseDecCoin("14977.050458990820183596ucre"), resp.Results[1].Fee)
+				s.AssertEqual(utils.ParseCoin("49924500uusd"), resp.Results[1].Input)
+				s.AssertEqual(utils.ParseCoin("9969722ucre"), resp.Results[1].Output)
+				s.AssertEqual(utils.ParseCoin("14978ucre"), resp.Results[1].Fee)
 			},
 		},
 	} {
@@ -326,50 +326,50 @@ func (s *KeeperTestSuite) TestQueryOrderBook() {
 				s.Require().Equal(utils.ParseDec("0.0001"), resp.OrderBooks[0].PriceInterval)
 				s.Require().Len(resp.OrderBooks[0].Sells, 4)
 				s.Require().Equal(utils.ParseDec("5.0001"), resp.OrderBooks[0].Sells[0].P)
-				s.Require().Equal(sdk.NewDec(10000000), resp.OrderBooks[0].Sells[0].Q)
+				s.Require().Equal(sdk.NewInt(10000000), resp.OrderBooks[0].Sells[0].Q)
 				s.Require().Equal(utils.ParseDec("5.0002"), resp.OrderBooks[0].Sells[1].P)
-				s.Require().Equal(sdk.NewDec(10000000), resp.OrderBooks[0].Sells[1].Q)
+				s.Require().Equal(sdk.NewInt(10000000), resp.OrderBooks[0].Sells[1].Q)
 				s.Require().Equal(utils.ParseDec("5.01"), resp.OrderBooks[0].Sells[2].P)
-				s.Require().Equal(sdk.NewDec(100000000), resp.OrderBooks[0].Sells[2].Q)
+				s.Require().Equal(sdk.NewInt(100000000), resp.OrderBooks[0].Sells[2].Q)
 				s.Require().Equal(utils.ParseDec("5.02"), resp.OrderBooks[0].Sells[3].P)
-				s.Require().Equal(sdk.NewDec(100000000), resp.OrderBooks[0].Sells[3].Q)
+				s.Require().Equal(sdk.NewInt(100000000), resp.OrderBooks[0].Sells[3].Q)
 				s.Require().Len(resp.OrderBooks[0].Buys, 4)
 				s.Require().Equal(utils.ParseDec("4.9999"), resp.OrderBooks[0].Buys[0].P)
-				s.Require().Equal(sdk.NewDec(10000000), resp.OrderBooks[0].Buys[0].Q)
+				s.Require().Equal(sdk.NewInt(10000000), resp.OrderBooks[0].Buys[0].Q)
 				s.Require().Equal(utils.ParseDec("4.9998"), resp.OrderBooks[0].Buys[1].P)
-				s.Require().Equal(sdk.NewDec(10000000), resp.OrderBooks[0].Buys[1].Q)
+				s.Require().Equal(sdk.NewInt(10000000), resp.OrderBooks[0].Buys[1].Q)
 				s.Require().Equal(utils.ParseDec("4.99"), resp.OrderBooks[0].Buys[2].P)
-				s.Require().Equal(sdk.NewDec(100000000), resp.OrderBooks[0].Buys[2].Q)
+				s.Require().Equal(sdk.NewInt(100000000), resp.OrderBooks[0].Buys[2].Q)
 				s.Require().Equal(utils.ParseDec("4.98"), resp.OrderBooks[0].Buys[3].P)
-				s.Require().Equal(sdk.NewDec(100000000), resp.OrderBooks[0].Buys[3].Q)
+				s.Require().Equal(sdk.NewInt(100000000), resp.OrderBooks[0].Buys[3].Q)
 
 				s.Require().Equal(utils.ParseDec("0.001"), resp.OrderBooks[1].PriceInterval)
 				s.Require().Len(resp.OrderBooks[1].Sells, 3)
 				s.Require().Equal(utils.ParseDec("5.001"), resp.OrderBooks[1].Sells[0].P)
-				s.Require().Equal(sdk.NewDec(20000000), resp.OrderBooks[1].Sells[0].Q)
+				s.Require().Equal(sdk.NewInt(20000000), resp.OrderBooks[1].Sells[0].Q)
 				s.Require().Equal(utils.ParseDec("5.01"), resp.OrderBooks[1].Sells[1].P)
-				s.Require().Equal(sdk.NewDec(100000000), resp.OrderBooks[1].Sells[1].Q)
+				s.Require().Equal(sdk.NewInt(100000000), resp.OrderBooks[1].Sells[1].Q)
 				s.Require().Equal(utils.ParseDec("5.02"), resp.OrderBooks[1].Sells[2].P)
-				s.Require().Equal(sdk.NewDec(100000000), resp.OrderBooks[1].Sells[2].Q)
+				s.Require().Equal(sdk.NewInt(100000000), resp.OrderBooks[1].Sells[2].Q)
 				s.Require().Len(resp.OrderBooks[1].Buys, 3)
 				s.Require().Equal(utils.ParseDec("4.999"), resp.OrderBooks[1].Buys[0].P)
-				s.Require().Equal(sdk.NewDec(20000000), resp.OrderBooks[1].Buys[0].Q)
+				s.Require().Equal(sdk.NewInt(20000000), resp.OrderBooks[1].Buys[0].Q)
 				s.Require().Equal(utils.ParseDec("4.99"), resp.OrderBooks[1].Buys[1].P)
-				s.Require().Equal(sdk.NewDec(100000000), resp.OrderBooks[1].Buys[1].Q)
+				s.Require().Equal(sdk.NewInt(100000000), resp.OrderBooks[1].Buys[1].Q)
 				s.Require().Equal(utils.ParseDec("4.98"), resp.OrderBooks[1].Buys[2].P)
-				s.Require().Equal(sdk.NewDec(100000000), resp.OrderBooks[1].Buys[2].Q)
+				s.Require().Equal(sdk.NewInt(100000000), resp.OrderBooks[1].Buys[2].Q)
 
 				s.Require().Equal(utils.ParseDec("0.01"), resp.OrderBooks[2].PriceInterval)
 				s.Require().Len(resp.OrderBooks[2].Sells, 2)
 				s.Require().Equal(utils.ParseDec("5.01"), resp.OrderBooks[2].Sells[0].P)
-				s.Require().Equal(sdk.NewDec(120000000), resp.OrderBooks[2].Sells[0].Q)
+				s.Require().Equal(sdk.NewInt(120000000), resp.OrderBooks[2].Sells[0].Q)
 				s.Require().Equal(utils.ParseDec("5.02"), resp.OrderBooks[2].Sells[1].P)
-				s.Require().Equal(sdk.NewDec(100000000), resp.OrderBooks[2].Sells[1].Q)
+				s.Require().Equal(sdk.NewInt(100000000), resp.OrderBooks[2].Sells[1].Q)
 				s.Require().Len(resp.OrderBooks[2].Buys, 2)
 				s.Require().Equal(utils.ParseDec("4.99"), resp.OrderBooks[2].Buys[0].P)
-				s.Require().Equal(sdk.NewDec(120000000), resp.OrderBooks[2].Buys[0].Q)
+				s.Require().Equal(sdk.NewInt(120000000), resp.OrderBooks[2].Buys[0].Q)
 				s.Require().Equal(utils.ParseDec("4.98"), resp.OrderBooks[2].Buys[1].P)
-				s.Require().Equal(sdk.NewDec(100000000), resp.OrderBooks[2].Buys[1].Q)
+				s.Require().Equal(sdk.NewInt(100000000), resp.OrderBooks[2].Buys[1].Q)
 			},
 		},
 	} {
@@ -397,22 +397,22 @@ func (s *KeeperTestSuite) TestFindBestSwapExactAmountInRoutes() {
 	s.MakeLastPrice(3, lpAddr, utils.ParseDec("0.33333"))
 	s.MakeLastPrice(4, lpAddr, utils.ParseDec("3"))
 
-	s.createLiquidity(1, lpAddr, utils.ParseDec("5"), sdk.NewDec(10_000000))
-	s.createLiquidity(2, lpAddr, utils.ParseDec("2"), sdk.NewDec(10_000000))
-	s.createLiquidity(3, lpAddr, utils.ParseDec("0.33333"), sdk.NewDec(30_000000))
-	s.createLiquidity(4, lpAddr, utils.ParseDec("3"), sdk.NewDec(1_000000))
+	s.createLiquidity(1, lpAddr, utils.ParseDec("5"), sdk.NewInt(1000_000000))
+	s.createLiquidity(2, lpAddr, utils.ParseDec("2"), sdk.NewInt(1000_000000))
+	s.createLiquidity(3, lpAddr, utils.ParseDec("0.33333"), sdk.NewInt(3000_000000))
+	s.createLiquidity(4, lpAddr, utils.ParseDec("3"), sdk.NewInt(100_000000))
 
 	routes := s.keeper.FindAllRoutes(s.Ctx, "uusd", "stake", 3)
 	s.Require().Equal([][]uint64{{1, 2, 3}, {1, 2, 4}}, routes)
 
 	resp, err := s.querier.BestSwapExactAmountInRoutes(sdk.WrapSDKContext(s.Ctx), &types.QueryBestSwapExactAmountInRoutesRequest{
-		Input:       "20000000uusd", // 20_000000uusd
+		Input:       "2000000000uusd", // 2000_000000uusd
 		OutputDenom: "stake",
 	})
 	s.Require().NoError(err)
-	s.AssertEqual(utils.ParseDecCoin("5942989stake"), resp.Output)
+	s.AssertEqual(utils.ParseCoin("594299197stake"), resp.Output)
 
-	ordererAddr := s.FundedAccount(2, utils.ParseCoins("20000000uusd"))
-	output, _ := s.SwapExactAmountIn(ordererAddr, resp.Routes, utils.ParseDecCoin("20000000uusd"), resp.Output, false)
+	ordererAddr := s.FundedAccount(2, utils.ParseCoins("2000_000000uusd"))
+	output, _ := s.SwapExactAmountIn(ordererAddr, resp.Routes, utils.ParseCoin("2000_000000uusd"), resp.Output, false)
 	s.AssertEqual(resp.Output, output)
 }

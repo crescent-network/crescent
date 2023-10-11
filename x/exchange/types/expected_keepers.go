@@ -9,7 +9,6 @@ import (
 // AccountKeeper is the expected account keeper
 type AccountKeeper interface {
 	GetAccount(ctx sdk.Context, addr sdk.AccAddress) authtypes.AccountI
-	//GetModuleAddress(moduleName string) sdk.AccAddress
 }
 
 // BankKeeper defines the expected keeper interface of the bank module.

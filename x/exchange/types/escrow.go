@@ -5,20 +5,22 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
+// Escrow is a structure used to facilitate coin transfers between
+// escrow account and other accounts all at once.
 type Escrow struct {
 	escrowAddr sdk.AccAddress
-	deltas     map[string]sdk.DecCoins // string(addr) => delta
-	addrs      []sdk.AccAddress        // for ordered access on deltas
+	deltas     map[string]sdk.Coins // string(addr) => delta
+	addrs      []sdk.AccAddress     // for ordered access on deltas
 }
 
 func NewEscrow(escrowAddr sdk.AccAddress) *Escrow {
 	return &Escrow{
 		escrowAddr: escrowAddr,
-		deltas:     map[string]sdk.DecCoins{},
+		deltas:     map[string]sdk.Coins{},
 	}
 }
 
-func (e *Escrow) Lock(addr sdk.AccAddress, amt ...sdk.DecCoin) {
+func (e *Escrow) Escrow(addr sdk.AccAddress, amt ...sdk.Coin) {
 	saddr := addr.String()
 	before, ok := e.deltas[saddr]
 	if !ok {
@@ -27,7 +29,7 @@ func (e *Escrow) Lock(addr sdk.AccAddress, amt ...sdk.DecCoin) {
 	e.deltas[saddr], _ = before.SafeSub(amt)
 }
 
-func (e *Escrow) Unlock(addr sdk.AccAddress, amt ...sdk.DecCoin) {
+func (e *Escrow) Release(addr sdk.AccAddress, amt ...sdk.Coin) {
 	saddr := addr.String()
 	before, ok := e.deltas[saddr]
 	if !ok {
@@ -36,28 +38,33 @@ func (e *Escrow) Unlock(addr sdk.AccAddress, amt ...sdk.DecCoin) {
 	e.deltas[saddr] = before.Add(amt...)
 }
 
+// Pays returns how much coins an account would pay by summing negative
+// balance diffs up.
 func (e *Escrow) Pays(addr sdk.AccAddress) sdk.Coins {
 	var pays sdk.Coins
-	for _, decCoin := range e.deltas[addr.String()] {
-		if decCoin.IsNegative() {
-			coin := sdk.NewCoin(decCoin.Denom, decCoin.Amount.Neg().Ceil().TruncateInt())
+	for _, coin := range e.deltas[addr.String()] {
+		if coin.IsNegative() {
+			coin.Amount = coin.Amount.Neg()
 			pays = pays.Add(coin)
 		}
 	}
 	return pays
 }
 
+// Receives returns how much coins an account would receive by summing positive
+// balance diffs up.
 func (e *Escrow) Receives(addr sdk.AccAddress) sdk.Coins {
 	var receives sdk.Coins
-	for _, decCoin := range e.deltas[addr.String()] {
-		if decCoin.IsPositive() {
-			coin, _ := decCoin.TruncateDecimal()
+	for _, coin := range e.deltas[addr.String()] {
+		if coin.IsPositive() {
 			receives = receives.Add(coin)
 		}
 	}
 	return receives
 }
 
+// Transact runs the actual coin transactions between escrow account and
+// other accounts.
 func (e *Escrow) Transact(ctx sdk.Context, bankKeeper BankKeeper) error {
 	escrow := e.escrowAddr.String()
 	var (
