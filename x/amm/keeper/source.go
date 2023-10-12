@@ -61,14 +61,17 @@ func (k OrderSource) AfterOrdersExecuted(ctx sdk.Context, _ exchangetypes.Market
 	return k.AfterPoolOrdersExecuted(ctx, pool, results)
 }
 
-func (k Keeper) IteratePoolOrders(ctx sdk.Context, market exchangetypes.Market, pool types.Pool, isBuy bool, cb func(price sdk.Dec, qty sdk.Int) (stop bool)) {
+func (k Keeper) IteratePoolOrders(
+	ctx sdk.Context, market exchangetypes.Market, pool types.Pool,
+	isBuy bool, cb func(price sdk.Dec, qty sdk.Int) (stop bool)) {
 	poolState := k.MustGetPoolState(ctx, pool.Id)
 	reserveBalance := k.bankKeeper.SpendableCoins(ctx, pool.MustGetReserveAddress()).
 		AmountOf(pool.DenomOut(isBuy))
 	orderLiquidity := poolState.CurrentLiquidity
 	currentSqrtPrice := poolState.CurrentSqrtPrice
 
-	iterCb := func(tick int32, tickInfo types.TickInfo) (stop bool) {
+	// lte = true if isBuy = true
+	k.IterateTickInfos(ctx, pool.Id, poolState.CurrentTick, isBuy, func(tick int32, tickInfo types.TickInfo) (stop bool) {
 		if orderLiquidity.IsPositive() {
 			for {
 				if !reserveBalance.IsPositive() {
@@ -125,12 +128,7 @@ func (k Keeper) IteratePoolOrders(ctx sdk.Context, market exchangetypes.Market, 
 			orderLiquidity = orderLiquidity.Add(tickInfo.NetLiquidity)
 		}
 		return false
-	}
-	if isBuy {
-		k.IterateTickInfosBelow(ctx, pool.Id, poolState.CurrentTick, true, iterCb)
-	} else {
-		k.IterateTickInfosAbove(ctx, pool.Id, poolState.CurrentTick, iterCb)
-	}
+	})
 }
 
 func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, orders []*exchangetypes.MemOrder) error {
@@ -261,19 +259,11 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, orders
 }
 
 func (k Keeper) nextTick(ctx sdk.Context, poolId uint64, currentTick int32, lte bool) (nextTick int32, found bool) {
-	if lte {
-		k.IterateTickInfosBelow(ctx, poolId, currentTick, true, func(tick int32, tickInfo types.TickInfo) (stop bool) {
-			nextTick = tick
-			found = true
-			return true
-		})
-	} else {
-		k.IterateTickInfosAbove(ctx, poolId, currentTick, func(tick int32, tickInfo types.TickInfo) (stop bool) {
-			nextTick = tick
-			found = true
-			return true
-		})
-	}
+	k.IterateTickInfos(ctx, poolId, currentTick, lte, func(tick int32, tickInfo types.TickInfo) (stop bool) {
+		nextTick = tick
+		found = true
+		return true
+	})
 	return
 }
 
