@@ -20,7 +20,7 @@ func (s *KeeperTestSuite) TestBatchOneUserOrderAndPool() {
 	// The order will be matched against the pool in the next block's batch matching.
 	_, order, res := s.PlaceLimitOrder(
 		market.Id, ordererAddr, true, utils.ParseDec("5.005"), sdk.NewInt(1_000000), time.Hour)
-	s.AssertEqual(sdk.ZeroDec(), res.ExecutedQuantity)
+	s.AssertEqual(sdk.ZeroInt(), res.ExecutedQuantity)
 
 	lpAddr := s.FundedAccount(2, enoughCoins)
 	s.AddLiquidity(
@@ -35,5 +35,5 @@ func (s *KeeperTestSuite) TestBatchOneUserOrderAndPool() {
 
 	// Check that the limit order has been executed.
 	order = s.App.ExchangeKeeper.MustGetOrder(s.Ctx, order.Id)
-	s.AssertEqual(utils.ParseDec("526748.111770411957028010"), order.OpenQuantity)
+	s.AssertEqual(sdk.NewInt(526748), order.OpenQuantity)
 }

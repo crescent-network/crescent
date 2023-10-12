@@ -110,6 +110,7 @@ func (k Keeper) RemoveLiquidity(
 	if poolState.TotalLiquidity.IsZero() { // the last liquidity removal from the pool
 		amt = reserveBalances
 	} else {
+		// TODO: do not use sdk.Coins.Min here?
 		amt = reserveBalances.Min(
 			sdk.NewCoins(sdk.NewCoin(pool.Denom0, amt0), sdk.NewCoin(pool.Denom1, amt1)))
 	}
