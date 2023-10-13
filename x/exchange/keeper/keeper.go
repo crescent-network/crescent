@@ -47,10 +47,10 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 func (k *Keeper) SetOrderSources(sources ...types.OrderSource) *Keeper {
-	// Commented out below to test custom order sources.
-	//if k.sources != nil {
-	//	panic("cannot set order sources twice")
-	//}
+	// Temporarily limit the number of OrderSources.
+	if len(sources) > 1 {
+		panic("currently only one OrderSource can be set")
+	}
 	k.sources = map[string]types.OrderSource{}
 	k.sourceNames = nil
 	for _, source := range sources {

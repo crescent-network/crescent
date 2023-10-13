@@ -39,16 +39,20 @@ func (s *KeeperTestSuite) SetupTest() {
 }
 
 func (s *KeeperTestSuite) TestSetOrderSources() {
-	// Same source name
-	s.Require().PanicsWithValue("duplicate order source name: a", func() {
+	//// Same source name
+	//s.Require().PanicsWithValue("duplicate order source name: a", func() {
+	//	k := keeper.Keeper{}
+	//	k.SetOrderSources(types.NewMockOrderSource("a"), types.NewMockOrderSource("a"))
+	//})
+	//k := keeper.Keeper{}
+	//k.SetOrderSources(types.NewMockOrderSource("a"), types.NewMockOrderSource("b"))
+	//// Already set
+	//s.Require().PanicsWithValue("cannot set order sources twice", func() {
+	//	s.keeper.SetOrderSources(types.NewMockOrderSource("b"), types.NewMockOrderSource("c"))
+	//})
+	s.Require().PanicsWithValue("currently only one OrderSource can be set", func() {
 		k := keeper.Keeper{}
-		k.SetOrderSources(types.NewMockOrderSource("a"), types.NewMockOrderSource("a"))
-	})
-	k := keeper.Keeper{}
-	k.SetOrderSources(types.NewMockOrderSource("a"), types.NewMockOrderSource("b"))
-	// Already set
-	s.Require().PanicsWithValue("cannot set order sources twice", func() {
-		s.keeper.SetOrderSources(types.NewMockOrderSource("b"), types.NewMockOrderSource("c"))
+		k.SetOrderSources(types.NewMockOrderSource("a"), types.NewMockOrderSource("b"))
 	})
 }
 
