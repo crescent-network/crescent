@@ -43,9 +43,8 @@ func (k Keeper) RunBatchMatching(ctx sdk.Context, market types.Market) (err erro
 	} else {
 		lastPrice, matched = mCtx.BatchMatchOrderBookSides(buyObs, sellObs, *marketState.LastPrice)
 	}
-	// If there was no matching, exit early.
-	if !matched {
-		return
+	if !matched { // sanity check
+		panic("matched must be true")
 	}
 
 	// Apply the match results.
