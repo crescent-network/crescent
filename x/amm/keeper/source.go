@@ -143,15 +143,15 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, orders
 
 	// Make a queue of MatchResult from MemOrders.
 	results := make([]exchangetypes.MatchResult, 0, len(orders))
-	for _, order := range orders {
-		results = append(results, order.Result())
-	}
-
 	// amtRemaining holds total paid(amount out).
 	amtRemaining := utils.ZeroInt
-	for _, result := range results {
-		amtRemaining = amtRemaining.Add(result.Paid)
+	for _, order := range orders {
+		result := order.Result()
+		// We use result.Paid + result.FeeReceived instead of result.Paid.
+		amtRemaining = amtRemaining.Add(result.Paid.Add(result.FeeReceived))
+		results = append(results, result)
 	}
+
 	// prevPartialAmt is the amount that were partially processed from
 	// the foremost result in queue before.
 	prevPartialAmt := utils.ZeroInt
@@ -185,12 +185,15 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, orders
 		// Calculate received and feeReceived based on amtOut
 		received, feeReceived := utils.ZeroInt, utils.ZeroInt
 		for amt := amtOut; amt.IsPositive(); {
-			resultAmt := results[0].Paid.Sub(prevPartialAmt)
+			result := results[0]
+			resultPaid := result.Paid.Add(result.FeeReceived)
+
+			resultAmt := resultPaid.Sub(prevPartialAmt)
 			paid := utils.MinInt(amt, resultAmt)
 
-			ratio := paid.ToDec().QuoTruncate(results[0].Paid.ToDec())
-			received = received.Add(ratio.MulInt(results[0].Received).TruncateInt())
-			feeReceived = feeReceived.Add(ratio.MulInt(results[0].FeeReceived).TruncateInt())
+			ratio := paid.ToDec().QuoTruncate(resultPaid.ToDec())
+			received = received.Add(ratio.MulInt(result.Received).TruncateInt())
+			feeReceived = feeReceived.Add(ratio.MulInt(result.FeeReceived).TruncateInt())
 
 			if paid.Equal(resultAmt) {
 				results = results[1:]

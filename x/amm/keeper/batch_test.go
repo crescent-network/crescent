@@ -35,5 +35,5 @@ func (s *KeeperTestSuite) TestBatchOneUserOrderAndPool() {
 
 	// Check that the limit order has been executed.
 	order = s.App.ExchangeKeeper.MustGetOrder(s.Ctx, order.Id)
-	s.AssertEqual(sdk.NewInt(526748), order.OpenQuantity)
+	s.AssertEqual(sdk.NewInt(526751), order.OpenQuantity)
 }

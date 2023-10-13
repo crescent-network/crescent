@@ -100,14 +100,14 @@ func (s *KeeperTestSuite) TestRewardsPool() {
 	s.PlaceLimitOrder(market1.Id, ordererAddr, true, utils.ParseDec("6"), sdk.NewInt(1_000000), 0)
 	s.PlaceLimitOrder(market2.Id, ordererAddr, false, utils.ParseDec("9"), sdk.NewInt(1_000000), 0)
 
-	s.AssertEqual(utils.ParseCoins("1499ucre,2620uusd"), s.GetAllBalances(pool1.MustGetRewardsPoolAddress()))
-	s.AssertEqual(utils.ParseCoins("268uatom,14982uusd"), s.GetAllBalances(pool2.MustGetRewardsPoolAddress()))
+	s.AssertEqual(utils.ParseCoins("1498ucre,2619uusd"), s.GetAllBalances(pool1.MustGetRewardsPoolAddress()))
+	s.AssertEqual(utils.ParseCoins("268uatom,14981uusd"), s.GetAllBalances(pool2.MustGetRewardsPoolAddress()))
 
 	fee, _ := s.CollectibleCoins(position1.Id)
-	s.AssertEqual(utils.ParseCoins("1498ucre,2619uusd"), fee)
+	s.AssertEqual(utils.ParseCoins("1497ucre,2618uusd"), fee)
 	s.Collect(lpAddr, position1.Id, utils.ParseCoins("1497ucre,2618uusd"))
-	s.AssertEqual(utils.ParseCoins("2ucre,2uusd"), s.GetAllBalances(pool1.MustGetRewardsPoolAddress()))
-	s.AssertEqual(utils.ParseCoins("268uatom,14982uusd"), s.GetAllBalances(pool2.MustGetRewardsPoolAddress()))
+	s.AssertEqual(utils.ParseCoins("1ucre,1uusd"), s.GetAllBalances(pool1.MustGetRewardsPoolAddress()))
+	s.AssertEqual(utils.ParseCoins("268uatom,14981uusd"), s.GetAllBalances(pool2.MustGetRewardsPoolAddress()))
 }
 
 func (s *KeeperTestSuite) TestLastRemoveLiquidity() {
