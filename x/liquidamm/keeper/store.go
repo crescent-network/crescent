@@ -248,19 +248,6 @@ func (k Keeper) IterateAllBids(ctx sdk.Context, cb func(bid types.Bid) (stop boo
 	}
 }
 
-func (k Keeper) IterateBidsByRewardsAuction(ctx sdk.Context, publicPositionId, auctionId uint64, cb func(bid types.Bid) (stop bool)) {
-	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.GetBidsByRewardsAuctionIteratorPrefix(publicPositionId, auctionId))
-	defer iterator.Close()
-	for ; iterator.Valid(); iterator.Next() {
-		var bid types.Bid
-		k.cdc.MustUnmarshal(iterator.Value(), &bid)
-		if cb(bid) {
-			break
-		}
-	}
-}
-
 // DeleteBid deletes the bid object.
 func (k Keeper) DeleteBid(ctx sdk.Context, bid types.Bid) {
 	store := ctx.KVStore(k.storeKey)

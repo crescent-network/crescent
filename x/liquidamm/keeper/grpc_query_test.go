@@ -343,8 +343,7 @@ func (s *KeeperTestSuite) TestQueryBids() {
 			&types.QueryBidsRequest{},
 			"",
 			func(resp *types.QueryBidsResponse) {
-				// All bids have been deleted since the auction is finished.
-				s.Require().Len(resp.Bids, 2)
+				s.Require().Len(resp.Bids, 1)
 			},
 		},
 	} {

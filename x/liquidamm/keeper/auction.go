@@ -34,12 +34,10 @@ func (k Keeper) PlaceBid(
 				types.ErrInsufficientBidAmount,
 				"share amount must be greater than winning bid's share %s", auction.WinningBid.Share.Amount)
 		}
-	}
 
-	// Refund the previous bid if the bidder has placed bid before
-	prevBid, found := k.GetBid(ctx, publicPosition.Id, auction.Id, bidderAddr)
-	if found {
-		if err := k.refundBid(ctx, publicPosition, prevBid); err != nil {
+		// Since bidding amount > previous winning bid amount,
+		// refund the previous winning bid.
+		if err := k.refundBid(ctx, publicPosition, *auction.WinningBid); err != nil {
 			return bid, err
 		}
 	}
@@ -199,16 +197,6 @@ func (k Keeper) FinishRewardsAuction(ctx sdk.Context, publicPosition types.Publi
 			return err
 		}
 		k.DeleteBid(ctx, winningBid)
-	}
-
-	k.IterateBidsByRewardsAuction(ctx, publicPosition.Id, auction.Id, func(bid types.Bid) (stop bool) {
-		if err = k.refundBid(ctx, publicPosition, bid); err != nil {
-			return true
-		}
-		return false
-	})
-	if err != nil {
-		return err
 	}
 
 	auction.SetRewards(rewards)

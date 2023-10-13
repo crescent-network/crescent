@@ -36,7 +36,8 @@ func (s *KeeperTestSuite) TestPlaceBid() {
 	s.PlaceBid(bidderAddr2, publicPosition.Id, auction.Id, utils.ParseCoin("200000sb1"))
 	s.NextBlock()
 
-	s.Require().Len(s.keeper.GetAllBids(s.Ctx), 2)
+	// Previous winning bid is automatically refunded.
+	s.Require().Len(s.keeper.GetAllBids(s.Ctx), 1)
 
 	bidderAddr3 := utils.TestAddress(4)
 	s.MintShare(bidderAddr3, publicPosition.Id, utils.ParseCoins("1000_000000ucre,5000_000000uusd"), true)
@@ -297,4 +298,40 @@ func (s *KeeperTestSuite) TestMaxNumRecentRewardsAuctions() {
 		return false
 	})
 	s.Require().Equal(5+1, cnt)
+}
+
+func (s *KeeperTestSuite) TestPlaceBid_RefundPreviousWinningBid() {
+	publicPosition := s.CreateSamplePublicPosition()
+	s.AdvanceRewardsAuctions()
+	s.NextBlock()
+	s.NextBlock()
+
+	bidderAddr1 := utils.TestAddress(1)
+	bidderAddr2 := utils.TestAddress(2)
+	s.MintShare(
+		bidderAddr1, publicPosition.Id, utils.ParseCoins("100_000000ucre,500_000000uusd"), true)
+	s.MintShare(
+		bidderAddr2, publicPosition.Id, utils.ParseCoins("100_000000ucre,500_000000uusd"), true)
+
+	s.AssertEqual(utils.ParseCoin("4357388321sb1"), s.GetBalance(bidderAddr1, "sb1"))
+
+	auction, found := s.keeper.GetLastRewardsAuction(s.Ctx, publicPosition.Id)
+	s.Require().True(found)
+
+	s.PlaceBid(bidderAddr1, publicPosition.Id, auction.Id, utils.ParseCoin("1000000sb1"))
+	s.AssertEqual(utils.ParseCoin("4356388321sb1"), s.GetBalance(bidderAddr1, "sb1")) // 1000000sb1 locked
+	s.Require().Len(s.keeper.GetAllBids(s.Ctx), 1)
+
+	// A bidder modifies its bid
+	s.PlaceBid(bidderAddr1, publicPosition.Id, auction.Id, utils.ParseCoin("1500000sb1"))
+	// Previous winning bid refunded.
+	s.AssertEqual(utils.ParseCoin("4355888321sb1"), s.GetBalance(bidderAddr1, "sb1")) // 1500000sb1 locked
+	s.Require().Len(s.keeper.GetAllBids(s.Ctx), 1)
+
+	// Another bidder places new winning bid
+	s.PlaceBid(bidderAddr2, publicPosition.Id, auction.Id, utils.ParseCoin("2000000sb1"))
+	// Previous winning bid refunded.
+	s.AssertEqual(utils.ParseCoin("4357388321sb1"), s.GetBalance(bidderAddr1, "sb1")) // all refunded
+	s.AssertEqual(utils.ParseCoin("4355388321sb1"), s.GetBalance(bidderAddr2, "sb1")) // 2000000sb1 locked
+	s.Require().Len(s.keeper.GetAllBids(s.Ctx), 1)
 }
