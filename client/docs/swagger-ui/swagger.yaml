@@ -10384,6 +10384,166 @@ paths:
                       format: byte
       tags:
         - Query
+  /crescent/liquidamm/v1beta1/bids:
+    get:
+      summary: |-
+        Bids returns all bids stored in the KV store
+        Since only the winning bids are stored in the KV store, Bids effectively
+        returns all winning bids
+      operationId: LiquidAMMBids
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              bids:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    public_position_id:
+                      type: string
+                      format: uint64
+                      title: public_position_id specifies the public position's id
+                    rewards_auction_id:
+                      type: string
+                      format: uint64
+                      title: rewards_auction_id specifies the reward auction's id
+                    bidder:
+                      type: string
+                      title: >-
+                        bidder specifies the bech32-encoded address that places
+                        a bid for the auction
+                    share:
+                      title: share specifies the share amount to place a bid
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                        amount:
+                          type: string
+                      description: >-
+                        Coin defines a token with a denomination and an amount.
+
+
+                        NOTE: The amount field is an Int which implements the
+                        custom method
+
+                        signatures required by gogoproto.
+                  description: Bid defines standard bid for a rewards auction.
+              pagination:
+                type: object
+                properties:
+                  next_key:
+                    type: string
+                    format: byte
+                    title: |-
+                      next_key is the key to be passed to PageRequest.key to
+                      query the next page most efficiently
+                  total:
+                    type: string
+                    format: uint64
+                    title: >-
+                      total is total number of results available if
+                      PageRequest.count_total
+
+                      was set, its value is undefined otherwise
+                description: >-
+                  PageResponse is to be embedded in gRPC response messages where
+                  the
+
+                  corresponding request message has used PageRequest.
+
+                   message SomeResponse {
+                           repeated Bar results = 1;
+                           PageResponse page = 2;
+                   }
+            description: >-
+              QueryAllBidsResponse is response type for the Query/AllBids RPC
+              method.
+        default:
+          description: An unexpected error response
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending
+
+            order.
+          in: query
+          required: false
+          type: boolean
+          format: boolean
+      tags:
+        - Query
   /crescent/liquidamm/v1beta1/params:
     get:
       summary: Params returns parameters of the module
@@ -10859,7 +11019,6 @@ paths:
                          - AUCTION_STATUS_FINISHED: AUCTION_STATUS_FINISHED defines the finished auction status
                          - AUCTION_STATUS_SKIPPED: AUCTION_STATUS_SKIPPED defines the skipped auction status
                     winning_bid:
-                      title: winning_bid specifies the winning bid
                       type: object
                       properties:
                         public_position_id:
@@ -10878,6 +11037,7 @@ paths:
                             bidder specifies the bech32-encoded address that
                             places a bid for the auction
                         share:
+                          title: share specifies the share amount to place a bid
                           type: object
                           properties:
                             denom:
@@ -10893,8 +11053,8 @@ paths:
                             the custom method
 
                             signatures required by gogoproto.
-                          title: share specifies the share amount to place a bid
                       description: Bid defines standard bid for a rewards auction.
+                      title: winning_bid specifies the winning bid
                     rewards:
                       type: array
                       items:
@@ -11108,7 +11268,6 @@ paths:
                        - AUCTION_STATUS_FINISHED: AUCTION_STATUS_FINISHED defines the finished auction status
                        - AUCTION_STATUS_SKIPPED: AUCTION_STATUS_SKIPPED defines the skipped auction status
                   winning_bid:
-                    title: winning_bid specifies the winning bid
                     type: object
                     properties:
                       public_position_id:
@@ -11125,6 +11284,7 @@ paths:
                           bidder specifies the bech32-encoded address that
                           places a bid for the auction
                       share:
+                        title: share specifies the share amount to place a bid
                         type: object
                         properties:
                           denom:
@@ -11140,8 +11300,8 @@ paths:
                           custom method
 
                           signatures required by gogoproto.
-                        title: share specifies the share amount to place a bid
                     description: Bid defines standard bid for a rewards auction.
+                    title: winning_bid specifies the winning bid
                   rewards:
                     type: array
                     items:
@@ -11224,79 +11384,54 @@ paths:
           format: uint64
       tags:
         - Query
-  '/crescent/liquidamm/v1beta1/public_positions/{public_position_id}/rewards_auctions/{auction_id}/bids':
+  '/crescent/liquidamm/v1beta1/public_positions/{public_position_id}/winning_bid':
     get:
-      summary: Bids returns all bids for the rewards auction
-      operationId: LiquidAMMBids
+      summary: |-
+        WinningBid returns the winning bid of a public position's current
+        rewards auction
+      operationId: WinningBid
       responses:
         '200':
           description: A successful response.
           schema:
             type: object
             properties:
-              bids:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    public_position_id:
-                      type: string
-                      format: uint64
-                      title: public_position_id specifies the public position's id
-                    rewards_auction_id:
-                      type: string
-                      format: uint64
-                      title: rewards_auction_id specifies the reward auction's id
-                    bidder:
-                      type: string
-                      title: >-
-                        bidder specifies the bech32-encoded address that places
-                        a bid for the auction
-                    share:
-                      type: object
-                      properties:
-                        denom:
-                          type: string
-                        amount:
-                          type: string
-                      description: >-
-                        Coin defines a token with a denomination and an amount.
-
-
-                        NOTE: The amount field is an Int which implements the
-                        custom method
-
-                        signatures required by gogoproto.
-                      title: share specifies the share amount to place a bid
-                  description: Bid defines standard bid for a rewards auction.
-              pagination:
+              winning_bid:
                 type: object
                 properties:
-                  next_key:
-                    type: string
-                    format: byte
-                    title: |-
-                      next_key is the key to be passed to PageRequest.key to
-                      query the next page most efficiently
-                  total:
+                  public_position_id:
                     type: string
                     format: uint64
+                    title: public_position_id specifies the public position's id
+                  rewards_auction_id:
+                    type: string
+                    format: uint64
+                    title: rewards_auction_id specifies the reward auction's id
+                  bidder:
+                    type: string
                     title: >-
-                      total is total number of results available if
-                      PageRequest.count_total
+                      bidder specifies the bech32-encoded address that places a
+                      bid for the auction
+                  share:
+                    title: share specifies the share amount to place a bid
+                    type: object
+                    properties:
+                      denom:
+                        type: string
+                      amount:
+                        type: string
+                    description: >-
+                      Coin defines a token with a denomination and an amount.
 
-                      was set, its value is undefined otherwise
-                description: >-
-                  PageResponse is to be embedded in gRPC response messages where
-                  the
 
-                  corresponding request message has used PageRequest.
+                      NOTE: The amount field is an Int which implements the
+                      custom method
 
-                   message SomeResponse {
-                           repeated Bar results = 1;
-                           PageResponse page = 2;
-                   }
-            description: QueryBidsResponse is response type for the Query/Bids RPC method.
+                      signatures required by gogoproto.
+                description: Bid defines standard bid for a rewards auction.
+            description: >-
+              QueryWinningBidResponse is response type for the Query/WinningBid
+              RPC method.
         default:
           description: An unexpected error response
           schema:
@@ -11325,68 +11460,6 @@ paths:
           required: true
           type: string
           format: uint64
-        - name: auction_id
-          in: path
-          required: true
-          type: string
-          format: uint64
-        - name: pagination.key
-          description: |-
-            key is a value returned in PageResponse.next_key to begin
-            querying the next page most efficiently. Only one of offset or key
-            should be set.
-          in: query
-          required: false
-          type: string
-          format: byte
-        - name: pagination.offset
-          description: >-
-            offset is a numeric offset that can be used when key is unavailable.
-
-            It is less efficient than using key. Only one of offset or key
-            should
-
-            be set.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.limit
-          description: >-
-            limit is the total number of results to be returned in the result
-            page.
-
-            If left empty it will default to a value to be set by each app.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.count_total
-          description: >-
-            count_total is set to true  to indicate that the result set should
-            include
-
-            a count of the total number of items available for pagination in
-            UIs.
-
-            count_total is only respected when offset is used. It is ignored
-            when key
-
-            is set.
-          in: query
-          required: false
-          type: boolean
-          format: boolean
-        - name: pagination.reverse
-          description: >-
-            reverse is set to true if results are to be returned in the
-            descending
-
-            order.
-          in: query
-          required: false
-          type: boolean
-          format: boolean
       tags:
         - Query
   /crescent/marker/v1beta1/last_block_time:
@@ -19459,6 +19532,7 @@ definitions:
           bidder specifies the bech32-encoded address that places a bid for the
           auction
       share:
+        title: share specifies the share amount to place a bid
         type: object
         properties:
           denom:
@@ -19470,7 +19544,6 @@ definitions:
 
           NOTE: The amount field is an Int which implements the custom method
           signatures required by gogoproto.
-        title: share specifies the share amount to place a bid
     description: Bid defines standard bid for a rewards auction.
   crescent.liquidamm.v1beta1.Params:
     type: object
@@ -19548,6 +19621,7 @@ definitions:
                 bidder specifies the bech32-encoded address that places a bid
                 for the auction
             share:
+              title: share specifies the share amount to place a bid
               type: object
               properties:
                 denom:
@@ -19562,7 +19636,6 @@ definitions:
                 method
 
                 signatures required by gogoproto.
-              title: share specifies the share amount to place a bid
           description: Bid defines standard bid for a rewards auction.
       pagination:
         type: object
@@ -19589,7 +19662,7 @@ definitions:
                    repeated Bar results = 1;
                    PageResponse page = 2;
            }
-    description: QueryBidsResponse is response type for the Query/Bids RPC method.
+    description: QueryAllBidsResponse is response type for the Query/AllBids RPC method.
   crescent.liquidamm.v1beta1.QueryExchangeRateResponse:
     type: object
     properties:
@@ -19787,7 +19860,6 @@ definitions:
                - AUCTION_STATUS_FINISHED: AUCTION_STATUS_FINISHED defines the finished auction status
                - AUCTION_STATUS_SKIPPED: AUCTION_STATUS_SKIPPED defines the skipped auction status
           winning_bid:
-            title: winning_bid specifies the winning bid
             type: object
             properties:
               public_position_id:
@@ -19804,6 +19876,7 @@ definitions:
                   bidder specifies the bech32-encoded address that places a bid
                   for the auction
               share:
+                title: share specifies the share amount to place a bid
                 type: object
                 properties:
                   denom:
@@ -19818,8 +19891,8 @@ definitions:
                   method
 
                   signatures required by gogoproto.
-                title: share specifies the share amount to place a bid
             description: Bid defines standard bid for a rewards auction.
+            title: winning_bid specifies the winning bid
           rewards:
             type: array
             items:
@@ -19904,7 +19977,6 @@ definitions:
                  - AUCTION_STATUS_FINISHED: AUCTION_STATUS_FINISHED defines the finished auction status
                  - AUCTION_STATUS_SKIPPED: AUCTION_STATUS_SKIPPED defines the skipped auction status
             winning_bid:
-              title: winning_bid specifies the winning bid
               type: object
               properties:
                 public_position_id:
@@ -19921,6 +19993,7 @@ definitions:
                     bidder specifies the bech32-encoded address that places a
                     bid for the auction
                 share:
+                  title: share specifies the share amount to place a bid
                   type: object
                   properties:
                     denom:
@@ -19935,8 +20008,8 @@ definitions:
                     method
 
                     signatures required by gogoproto.
-                  title: share specifies the share amount to place a bid
               description: Bid defines standard bid for a rewards auction.
+              title: winning_bid specifies the winning bid
             rewards:
               type: array
               items:
@@ -20023,6 +20096,45 @@ definitions:
             NOTE: The amount field is an Int which implements the custom method
             signatures required by gogoproto.
     description: QueryRewardsResponse is response type for the Query/Rewards RPC method.
+  crescent.liquidamm.v1beta1.QueryWinningBidResponse:
+    type: object
+    properties:
+      winning_bid:
+        type: object
+        properties:
+          public_position_id:
+            type: string
+            format: uint64
+            title: public_position_id specifies the public position's id
+          rewards_auction_id:
+            type: string
+            format: uint64
+            title: rewards_auction_id specifies the reward auction's id
+          bidder:
+            type: string
+            title: >-
+              bidder specifies the bech32-encoded address that places a bid for
+              the auction
+          share:
+            title: share specifies the share amount to place a bid
+            type: object
+            properties:
+              denom:
+                type: string
+              amount:
+                type: string
+            description: >-
+              Coin defines a token with a denomination and an amount.
+
+
+              NOTE: The amount field is an Int which implements the custom
+              method
+
+              signatures required by gogoproto.
+        description: Bid defines standard bid for a rewards auction.
+    description: >-
+      QueryWinningBidResponse is response type for the Query/WinningBid RPC
+      method.
   crescent.liquidamm.v1beta1.RewardsAuction:
     type: object
     properties:
@@ -20059,7 +20171,6 @@ definitions:
            - AUCTION_STATUS_FINISHED: AUCTION_STATUS_FINISHED defines the finished auction status
            - AUCTION_STATUS_SKIPPED: AUCTION_STATUS_SKIPPED defines the skipped auction status
       winning_bid:
-        title: winning_bid specifies the winning bid
         type: object
         properties:
           public_position_id:
@@ -20076,6 +20187,7 @@ definitions:
               bidder specifies the bech32-encoded address that places a bid for
               the auction
           share:
+            title: share specifies the share amount to place a bid
             type: object
             properties:
               denom:
@@ -20090,8 +20202,8 @@ definitions:
               method
 
               signatures required by gogoproto.
-            title: share specifies the share amount to place a bid
         description: Bid defines standard bid for a rewards auction.
+        title: winning_bid specifies the winning bid
       rewards:
         type: array
         items:

@@ -39,10 +39,17 @@ service Query {
         "/crescent/liquidamm/v1beta1/public_positions/{public_position_id}/rewards_auctions/{auction_id}";
   }
 
-  // Bids returns all bids for the rewards auction
+  // Bids returns all bids stored in the KV store
+  // Since only the winning bids are stored in the KV store, Bids effectively
+  // returns all winning bids
   rpc Bids(QueryBidsRequest) returns (QueryBidsResponse) {
-    option (google.api.http).get =
-        "/crescent/liquidamm/v1beta1/public_positions/{public_position_id}/rewards_auctions/{auction_id}/bids";
+    option (google.api.http).get = "/crescent/liquidamm/v1beta1/bids";
+  }
+
+  // WinningBid returns the winning bid of a public position's current
+  // rewards auction
+  rpc WinningBid(QueryWinningBidRequest) returns (QueryWinningBidResponse) {
+    option (google.api.http).get = "/crescent/liquidamm/v1beta1/public_positions/{public_position_id}/winning_bid";
   }
 
   // Rewards returns all accumulated rewards for the public position
@@ -110,17 +117,25 @@ message QueryRewardsAuctionResponse {
   RewardsAuction rewards_auction = 1 [(gogoproto.nullable) = false];
 }
 
-// QueryBidsRequest is request type for the Query/Bids RPC method.
+// QueryAllBidsRequest is request type for the Query/AllBids RPC method.
 message QueryBidsRequest {
-  uint64                                public_position_id = 1;
-  uint64                                auction_id         = 2;
-  cosmos.base.query.v1beta1.PageRequest pagination         = 3;
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
 
-// QueryBidsResponse is response type for the Query/Bids RPC method.
+// QueryAllBidsResponse is response type for the Query/AllBids RPC method.
 message QueryBidsResponse {
   repeated Bid                           bids       = 1 [(gogoproto.nullable) = false];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryWinningBidRequest is request type for the Query/WinningBid RPC method.
+message QueryWinningBidRequest {
+  uint64 public_position_id = 1;
+}
+
+// QueryWinningBidResponse is response type for the Query/WinningBid RPC method.
+message QueryWinningBidResponse {
+  Bid winning_bid = 1;
 }
 
 // QueryRewardsRequest is request type for the Query/Rewards RPC method.

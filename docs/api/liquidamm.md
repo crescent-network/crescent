@@ -21,6 +21,7 @@ This document provides a high-level overview of what gRPC-gateway REST routes ar
 - [RewardsAuctions](#Rewardsauctions)
 - [RewardsAuction](#Rewardsauction)
 - [Bids](#Bids)
+- [WinningBid](#WinningBid)
 - [Rewards](#Rewards)
 
 ## Params
@@ -188,7 +189,7 @@ Example Request
 <!-- markdown-link-check-disable -->
 
 ```bash
-http://localhost:1317/crescent/liquidamm/v1beta1/public_positions/1/rewards_auctions/1/bids
+http://localhost:1317/crescent/liquidamm/v1beta1/bids
 ```
 
 Example Response
@@ -209,6 +210,32 @@ Example Response
   "pagination": {
     "next_key": null,
     "total": "1"
+  }
+}
+```
+
+## WinningBid
+
+Example Request
+
+<!-- markdown-link-check-disable -->
+
+```bash
+http://localhost:1317/crescent/liquidamm/v1beta1/public_positions/1/winning_bid
+```
+
+Example Response
+
+```json
+{
+  "winning_bid": {
+    "public_position_id": "1",
+    "rewards_auction_id": "1",
+    "bidder": "cre1zaavvzxez0elundtn32qnk9lkm8kmcszxclz6p",
+    "share": {
+      "denom": "sb1",
+      "amount": "1000000"
+    }
   }
 }
 ```

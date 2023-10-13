@@ -99,4 +99,7 @@ func (s *KeeperTestSuite) SetupSampleScenario() {
 	bidderShare2, _, _, _ = s.MintShare(bidderAddr2, publicPosition1.Id, utils.ParseCoins("20_000000ucre,100_000000uusd"), true)
 	s.PlaceBid(bidderAddr1, publicPosition1.Id, auction.Id, bidderShare1)
 	s.PlaceBid(bidderAddr2, publicPosition1.Id, auction.Id, bidderShare2)
+
+	s.CreatePublicPosition(
+		pool2.Id, utils.ParseDec("1"), utils.ParseDec("100"), utils.ParseDec("0.003"))
 }

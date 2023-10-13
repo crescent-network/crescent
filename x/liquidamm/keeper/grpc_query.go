@@ -200,42 +200,49 @@ func (k Querier) RewardsAuction(c context.Context, req *types.QueryRewardsAuctio
 	return &types.QueryRewardsAuctionResponse{RewardsAuction: auction}, nil
 }
 
-// Bids queries all Bid objects.
+// Bids queries all bids stored in the KV store.
+// Since only the winning bids are stored in the KV store, Bids effectively
+// returns all winning bids.
 func (k Querier) Bids(c context.Context, req *types.QueryBidsRequest) (*types.QueryBidsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+	store := ctx.KVStore(k.storeKey)
+	bidStore := prefix.NewStore(store, types.BidKeyPrefix)
+	var bids []types.Bid
+	pageRes, err := query.Paginate(bidStore, req.Pagination, func(key, value []byte) error {
+		var bid types.Bid
+		k.cdc.MustUnmarshal(value, &bid)
+		bids = append(bids, bid)
+		return nil
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	return &types.QueryBidsResponse{Bids: bids, Pagination: pageRes}, nil
+}
+
+// WinningBid queries the winning bid of a public position's current
+// rewards auction.
+func (k Querier) WinningBid(c context.Context, req *types.QueryWinningBidRequest) (*types.QueryWinningBidResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	if req.PublicPositionId == 0 {
 		return nil, status.Error(codes.InvalidArgument, "public position id must not be 0")
 	}
-	if req.AuctionId == 0 {
-		return nil, status.Error(codes.InvalidArgument, "auction id must not be 0")
-	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	if found := k.LookupPublicPosition(ctx, req.PublicPositionId); !found {
+	publicPosition, found := k.GetPublicPosition(ctx, req.PublicPositionId)
+	if !found {
 		return nil, status.Error(codes.NotFound, "public position not found")
 	}
-	if found := k.LookupRewardsAuction(ctx, req.PublicPositionId, req.AuctionId); !found {
-		return nil, status.Error(codes.NotFound, "auction not found")
+	auction, found := k.GetLastRewardsAuction(ctx, publicPosition.Id)
+	if !found {
+		return nil, status.Error(codes.NotFound, "rewards auction not started yet")
 	}
-	store := ctx.KVStore(k.storeKey)
-	bidStore := prefix.NewStore(
-		store,
-		types.GetBidsByRewardsAuctionIteratorPrefix(req.PublicPositionId, req.AuctionId))
-	var bids []types.Bid
-	pageRes, err := query.FilteredPaginate(bidStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		var bid types.Bid
-		k.cdc.MustUnmarshal(value, &bid)
-		if accumulate {
-			bids = append(bids, bid)
-		}
-		return true, nil
-	})
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-	return &types.QueryBidsResponse{Bids: bids, Pagination: pageRes}, nil
+	return &types.QueryWinningBidResponse{WinningBid: auction.WinningBid}, nil
 }
 
 // Rewards queries all rewards accumulated for the public position.

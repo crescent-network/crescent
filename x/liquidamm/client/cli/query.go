@@ -31,6 +31,7 @@ func GetQueryCmd() *cobra.Command {
 		NewQueryRewardsAuctionsCmd(),
 		NewQueryRewardsAuctionCmd(),
 		NewQueryBidsCmd(),
+		NewQueryWinningBidCmd(),
 		NewQueryRewardsCmd(),
 	)
 
@@ -261,14 +262,54 @@ $ %s query %s rewards-auction 1 1
 
 func NewQueryBidsCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "bids [public-position-id] [auction-id]",
-		Args:  cobra.ExactArgs(2),
-		Short: "Query all bids for the rewards auction",
+		Use:   "bids",
+		Args:  cobra.NoArgs,
+		Short: "Query all bids stored in the KV store",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query all bids for the rewards auction on a network.
+			fmt.Sprintf(`Query all bids stored in the KV store.
 
 Example:
-$ %s query %s bids 1 1
+$ %s query %s bids
+`,
+				version.AppName, types.ModuleName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.Bids(cmd.Context(), &types.QueryBidsRequest{
+				Pagination: pageReq,
+			})
+			if err != nil {
+				return err
+			}
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "bids")
+
+	return cmd
+}
+
+func NewQueryWinningBidCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "winning-bid [public-position-id]",
+		Args:  cobra.ExactArgs(1),
+		Short: "Query the winning bid of a public position's current rewards auction",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query the winning bid of a public position's current rewards auction'.
+
+Example:
+$ %s query %s winning-bid 1
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -282,19 +323,9 @@ $ %s query %s bids 1 1
 			if err != nil {
 				return fmt.Errorf("invalid public position id: %w", err)
 			}
-			auctionId, err := strconv.ParseUint(args[1], 10, 64)
-			if err != nil {
-				return fmt.Errorf("invalid auction id: %w", err)
-			}
-			pageReq, err := client.ReadPageRequest(cmd.Flags())
-			if err != nil {
-				return err
-			}
 			queryClient := types.NewQueryClient(clientCtx)
-			res, err := queryClient.Bids(cmd.Context(), &types.QueryBidsRequest{
+			res, err := queryClient.WinningBid(cmd.Context(), &types.QueryWinningBidRequest{
 				PublicPositionId: publicPositionId,
-				AuctionId:        auctionId,
-				Pagination:       pageReq,
 			})
 			if err != nil {
 				return err
@@ -304,7 +335,6 @@ $ %s query %s bids 1 1
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
-	flags.AddPaginationFlagsToCmd(cmd, "bids")
 
 	return cmd
 }

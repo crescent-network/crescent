@@ -226,18 +226,34 @@ crescentd query liquidamm rewards-auction 1 1 -o json | jq
 
 ## Bids
 
-Query all bids for the rewards auction
+Query all bids stored in the KV store
 
 Usage
 
 ```bash
-bids [public-position-id] [auction-id]
+bids
 ```
 
 Example
 
 ```bash
-crescentd query liquidamm bids 1 1 -o json | jq
+crescentd query liquidamm bids -o json | jq
+```
+
+## WinningBid
+
+Query the winning bid of a public position's current rewards auction
+
+Usage
+
+```bash
+winning-bid [public-position-id]
+```
+
+Example
+
+```bash
+crescentd query liquidamm winning-bid 1 -o json | jq
 ```
 
 ## Rewards

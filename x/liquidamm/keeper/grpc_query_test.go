@@ -32,7 +32,7 @@ func (s *KeeperTestSuite) TestQueryPublicPositions() {
 			&types.QueryPublicPositionsRequest{},
 			"",
 			func(resp *types.QueryPublicPositionsResponse) {
-				s.Require().Len(resp.PublicPositions, 2)
+				s.Require().Len(resp.PublicPositions, 3)
 				publicPosition := resp.PublicPositions[0]
 				s.Require().EqualValues(1, publicPosition.Id)
 				s.Require().EqualValues(2, publicPosition.LastRewardsAuctionId)
@@ -53,8 +53,9 @@ func (s *KeeperTestSuite) TestQueryPublicPositions() {
 			&types.QueryPublicPositionsRequest{PoolId: 2},
 			"",
 			func(resp *types.QueryPublicPositionsResponse) {
-				s.Require().Len(resp.PublicPositions, 1)
+				s.Require().Len(resp.PublicPositions, 2)
 				s.Require().Equal(uint64(2), resp.PublicPositions[0].PoolId)
+				s.Require().Equal(uint64(2), resp.PublicPositions[1].PoolId)
 			},
 		},
 	} {
@@ -95,7 +96,7 @@ func (s *KeeperTestSuite) TestQueryPublicPosition() {
 		{
 			"public position not found",
 			&types.QueryPublicPositionRequest{
-				PublicPositionId: 3,
+				PublicPositionId: 4,
 			},
 			"rpc error: code = NotFound desc = public position not found",
 			nil,
@@ -167,7 +168,7 @@ func (s *KeeperTestSuite) TestQueryRewardsAuctions() {
 		{
 			"public position not found",
 			&types.QueryRewardsAuctionsRequest{
-				PublicPositionId: 3,
+				PublicPositionId: 4,
 			},
 			"rpc error: code = NotFound desc = public position not found",
 			nil,
@@ -262,7 +263,7 @@ func (s *KeeperTestSuite) TestQueryRewardsAuction() {
 		{
 			"public position not found",
 			&types.QueryRewardsAuctionRequest{
-				PublicPositionId: 3,
+				PublicPositionId: 4,
 				AuctionId:        1,
 			},
 			"rpc error: code = NotFound desc = public position not found",
@@ -338,67 +339,80 @@ func (s *KeeperTestSuite) TestQueryBids() {
 			nil,
 		},
 		{
-			"invalid public position id",
-			&types.QueryBidsRequest{
-				PublicPositionId: 0,
-				AuctionId:        1,
-			},
-			"rpc error: code = InvalidArgument desc = public position id must not be 0",
-			nil,
-		},
-		{
-			"public position not found",
-			&types.QueryBidsRequest{
-				PublicPositionId: 3,
-				AuctionId:        1,
-			},
-			"rpc error: code = NotFound desc = public position not found",
-			nil,
-		},
-		{
-			"invalid auction id",
-			&types.QueryBidsRequest{
-				PublicPositionId: 1,
-				AuctionId:        0,
-			},
-			"rpc error: code = InvalidArgument desc = auction id must not be 0",
-			nil,
-		},
-		{
-			"auction not found",
-			&types.QueryBidsRequest{
-				PublicPositionId: 1,
-				AuctionId:        3,
-			},
-			"rpc error: code = NotFound desc = auction not found",
-			nil,
-		},
-		{
 			"happy case",
-			&types.QueryBidsRequest{
-				PublicPositionId: 1,
-				AuctionId:        1,
-			},
+			&types.QueryBidsRequest{},
 			"",
 			func(resp *types.QueryBidsResponse) {
 				// All bids have been deleted since the auction is finished.
-				s.Require().Empty(resp.Bids)
-			},
-		},
-		{
-			"happy case 2",
-			&types.QueryBidsRequest{
-				PublicPositionId: 1,
-				AuctionId:        2,
-			},
-			"",
-			func(resp *types.QueryBidsResponse) {
 				s.Require().Len(resp.Bids, 2)
 			},
 		},
 	} {
 		s.Run(tc.name, func() {
 			resp, err := s.querier.Bids(sdk.WrapSDKContext(s.Ctx), tc.req)
+			if tc.expectedErr == "" {
+				s.Require().NoError(err)
+				tc.postRun(resp)
+			} else {
+				s.Require().EqualError(err, tc.expectedErr)
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestQueryWinningBid() {
+	s.SetupSampleScenario()
+	for _, tc := range []struct {
+		name        string
+		req         *types.QueryWinningBidRequest
+		expectedErr string
+		postRun     func(*types.QueryWinningBidResponse)
+	}{
+		{
+			"empty request",
+			nil,
+			"rpc error: code = InvalidArgument desc = empty request",
+			nil,
+		},
+		{
+			"invalid public position id",
+			&types.QueryWinningBidRequest{
+				PublicPositionId: 0,
+			},
+			"rpc error: code = InvalidArgument desc = public position id must not be 0",
+			nil,
+		},
+		{
+			"public position not found",
+			&types.QueryWinningBidRequest{
+				PublicPositionId: 4,
+			},
+			"rpc error: code = NotFound desc = public position not found",
+			nil,
+		},
+		{
+			"rewards auction not started yet",
+			&types.QueryWinningBidRequest{
+				PublicPositionId: 3,
+			},
+			"rpc error: code = NotFound desc = rewards auction not started yet",
+			nil,
+		},
+		{
+			"happy case",
+			&types.QueryWinningBidRequest{
+				PublicPositionId: 1,
+			},
+			"",
+			func(resp *types.QueryWinningBidResponse) {
+				// All bids have been deleted since the auction is finished.
+				s.Require().NotNil(resp.WinningBid)
+				s.AssertEqual(utils.ParseCoin("814642164sb1"), resp.WinningBid.Share)
+			},
+		},
+	} {
+		s.Run(tc.name, func() {
+			resp, err := s.querier.WinningBid(sdk.WrapSDKContext(s.Ctx), tc.req)
 			if tc.expectedErr == "" {
 				s.Require().NoError(err)
 				tc.postRun(resp)
