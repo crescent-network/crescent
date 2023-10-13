@@ -133,14 +133,6 @@ func (k Keeper) RemoveLiquidity(
 			}
 		}
 	}
-	if err = ctx.EventManager().EmitTypedEvent(&types.EventRemoveLiquidity{
-		Owner:      ownerAddr.String(),
-		PositionId: positionId,
-		Liquidity:  liquidity,
-		Amount:     amt,
-	}); err != nil {
-		return
-	}
 	return
 }
 
