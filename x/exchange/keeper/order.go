@@ -378,24 +378,33 @@ func (k Keeper) cancelOrder(ctx sdk.Context, market types.Market, order types.Or
 
 func (k Keeper) CancelExpiredOrders(ctx sdk.Context) (err error) {
 	blockTime := ctx.BlockTime()
+	var markets []types.Market
 	k.IterateAllMarkets(ctx, func(market types.Market) (stop bool) {
+		markets = append(markets, market)
+		return false
+	})
+	for _, market := range markets {
 		// TODO: optimize by using timestamp queue
+		var ordersToBeCanceled []types.Order
 		k.IterateOrdersByMarket(ctx, market.Id, func(order types.Order) (stop bool) {
 			if !blockTime.Before(order.Deadline) {
-				if err = k.cancelOrder(ctx, market, order); err != nil {
-					return true
-				}
-				if err = ctx.EventManager().EmitTypedEvent(&types.EventOrderExpired{
-					OrderId: order.Id,
-				}); err != nil {
-					return true
-				}
+				ordersToBeCanceled = append(ordersToBeCanceled, order)
 			}
 			return false
 		})
-		return err != nil
-	})
-	return err
+
+		for _, order := range ordersToBeCanceled {
+			if err = k.cancelOrder(ctx, market, order); err != nil {
+				return err
+			}
+			if err = ctx.EventManager().EmitTypedEvent(&types.EventOrderExpired{
+				OrderId: order.Id,
+			}); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 func (k Keeper) CollectFees(ctx sdk.Context, market types.Market) error {
