@@ -20,7 +20,7 @@ func TestDecodeStore(t *testing.T) {
 	dec := simulation.NewDecodeStore(cdc)
 
 	pool := types.NewPool(1, 2, "ucre", "uusd", 10)
-	poolState := types.NewPoolState(123, utils.ParseDec("1.01231111"))
+	poolState := types.NewPoolState(123, utils.ParseBigDec("1.01231111"))
 	position := types.NewPosition(1, 2, utils.TestAddress(1), -500, 500)
 	tickInfo := types.NewTickInfo(sdk.NewInt(1000_000000), sdk.NewInt(1000_000000))
 	farmingPlan := types.NewFarmingPlan(

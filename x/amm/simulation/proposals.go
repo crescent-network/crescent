@@ -45,10 +45,10 @@ func SimulatePoolParameterChangeProposal(k keeper.Keeper) simtypes.ContentSimula
 					return tickSpacing > 1 && // temporarily disable tick spacing 1
 						tickSpacing < pool.TickSpacing && pool.TickSpacing%tickSpacing == 0
 				})
-				tickSpacing := uint32(0)
-				if len(allowedTickSpacings) > 0 {
-					tickSpacing = allowedTickSpacings[r.Intn(len(allowedTickSpacings))]
+				if len(allowedTickSpacings) == 0 {
+					return false
 				}
+				tickSpacing := allowedTickSpacings[r.Intn(len(allowedTickSpacings))]
 				changes = append(changes,
 					types.NewPoolParameterChange(pool.Id, tickSpacing))
 			}

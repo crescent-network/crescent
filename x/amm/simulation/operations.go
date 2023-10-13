@@ -9,6 +9,7 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
+	"github.com/crescent-network/crescent/cremath"
 	appparams "github.com/crescent-network/crescent/v5/app/params"
 	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/amm/keeper"
@@ -241,7 +242,7 @@ func findMsgAddLiquidityParams(
 				spendable.AmountOf(pool.Denom1).GT(sdk.NewInt(100_000000)) {
 				poolState := k.MustGetPoolState(ctx, pool.Id)
 				var lowerPrice, upperPrice sdk.Dec
-				currentPrice := poolState.CurrentSqrtPrice.Power(2)
+				currentPrice := poolState.CurrentSqrtPrice.Power(2).Dec()
 				if r.Float64() <= 0.2 {
 					lowerPrice = types.MinPrice
 				} else if r.Float64() <= 0.5 {
@@ -275,8 +276,8 @@ func findMsgAddLiquidityParams(
 				liquidity := utils.RandomInt(r, sdk.NewInt(10000), sdk.NewInt(100_000000))
 				amt0, amt1 := types.AmountsForLiquidity(
 					poolState.CurrentSqrtPrice,
-					utils.DecApproxSqrt(lowerPrice),
-					utils.DecApproxSqrt(upperPrice),
+					cremath.NewBigDecFromDec(lowerPrice).SqrtMut(),
+					cremath.NewBigDecFromDec(upperPrice).SqrtMut(),
 					liquidity)
 				desiredAmt := sdk.NewCoins(sdk.NewCoin(pool.Denom0, amt0), sdk.NewCoin(pool.Denom1, amt1))
 				if !spendable.IsAllGTE(desiredAmt) {

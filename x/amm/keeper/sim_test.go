@@ -48,7 +48,7 @@ func (s *KeeperTestSuite) TestSimulation() {
 					var lowerPrice, upperPrice sdk.Dec
 					var desiredAmt sdk.Coins
 					v := r.Float64()
-					currentPrice := poolState.CurrentSqrtPrice.Power(2)
+					currentPrice := poolState.CurrentSqrtPrice.Power(2).Dec()
 					switch {
 					case v <= 0.3: // lowerPrice < upperPrice <= poolPrice
 						lowerPrice = utils.RandomDec(r, minPrice, currentPrice.Mul(utils.ParseDec("0.8")))

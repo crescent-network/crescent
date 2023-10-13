@@ -17,6 +17,7 @@ import (
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
+	"github.com/crescent-network/crescent/cremath"
 	utils "github.com/crescent-network/crescent/v5/types"
 	ammkeeper "github.com/crescent-network/crescent/v5/x/amm/keeper"
 	ammtypes "github.com/crescent-network/crescent/v5/x/amm/types"
@@ -257,7 +258,8 @@ func UpgradeHandler(
 				ammKeeper.SetPoolByMarketIndex(ctx, newPool)
 				ammKeeper.SetPoolByReserveAddressIndex(ctx, newPool)
 				// Set initial pool state with the pool price we've calculated.
-				newPoolState := ammtypes.NewPoolState(exchangetypes.TickAtPrice(newPoolPrice), newPoolPrice)
+				newPoolState := ammtypes.NewPoolState(
+					exchangetypes.TickAtPrice(newPoolPrice), cremath.NewBigDecFromDec(newPoolPrice))
 				ammKeeper.SetPoolState(ctx, newPoolId, newPoolState)
 				newPoolIdByPairId[pairId] = newPoolId
 			}

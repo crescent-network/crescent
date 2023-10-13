@@ -43,7 +43,7 @@ func (s *KeeperTestSuite) TestCreatePool() {
 	// Check pool state
 	poolState, found := s.keeper.GetPoolState(s.Ctx, pool.Id)
 	s.Require().True(found)
-	s.AssertEqual(utils.ParseDec("2.236067977499789697"), poolState.CurrentSqrtPrice)
+	s.AssertEqual(utils.ParseBigDec("2.236067977499789697"), poolState.CurrentSqrtPrice)
 	s.AssertEqual(sdk.ZeroInt(), poolState.CurrentLiquidity)
 	s.Require().EqualValues(40000, poolState.CurrentTick)
 	s.AssertEqual(sdk.DecCoins{}, poolState.FeeGrowthGlobal)
@@ -237,13 +237,13 @@ func (s *KeeperTestSuite) TestPoolOrderMaxOrderPriceRatio() {
 
 	s.AddLiquidityByLiquidity(
 		mmAddr, pool.Id, utils.ParseDec("50"), utils.ParseDec("200"),
-		sdk.NewInt(1000000))
+		sdk.NewInt(100000000))
 
 	ordererAddr := s.FundedAccount(2, enoughCoins)
 	s.PlaceLimitOrder(
 		market.Id, ordererAddr, false, utils.ParseDec("5.05"), sdk.NewInt(100_000000), 0)
 
-	s.AssertEqual(utils.ParseDec("9.486832980505137996"), s.keeper.MustGetPoolState(s.Ctx, pool.Id).CurrentSqrtPrice)
+	s.AssertEqual(utils.ParseBigDec("9.48762394"), s.keeper.MustGetPoolState(s.Ctx, pool.Id).CurrentSqrtPrice)
 	s.AssertEqual(utils.ParseDec("90"), *s.App.ExchangeKeeper.MustGetMarketState(s.Ctx, market.Id).LastPrice)
 }
 

@@ -194,7 +194,7 @@ message PoolResponse {
   uint32                   tick_spacing       = 7;
   int32                    current_tick       = 8;
   string                   current_sqrt_price = 9
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+      [(gogoproto.customtype) = "github.com/crescent-network/crescent/cremath.BigDec", (gogoproto.nullable) = false];
   string current_liquidity = 10
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
   string total_liquidity = 11

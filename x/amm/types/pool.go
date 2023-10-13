@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 
+	"github.com/crescent-network/crescent/cremath"
 	utils "github.com/crescent-network/crescent/v5/types"
 )
 
@@ -80,7 +81,7 @@ func (pool Pool) Validate() error {
 	return nil
 }
 
-func NewPoolState(currentTick int32, currentSqrtPrice sdk.Dec) PoolState {
+func NewPoolState(currentTick int32, currentSqrtPrice cremath.BigDec) PoolState {
 	return PoolState{
 		CurrentTick:                currentTick,
 		CurrentSqrtPrice:           currentSqrtPrice,

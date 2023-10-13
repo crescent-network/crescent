@@ -8,6 +8,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/crescent-network/crescent/cremath"
 	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/amm/types"
 )
@@ -43,31 +44,32 @@ func TestLiquidityForAmounts(t *testing.T) {
 			utils.ParseDec("0.000000000000012345"),
 			utils.ParseDec("0.000000000000012344"), utils.ParseDec("0.000000000000012346"),
 			sdk.NewInt(100_000000), sdk.NewInt(100_000000),
-			sdk.NewInt(274331),
+			sdk.NewInt(274342),
 		},
 		{
 			utils.ParseDec("0.000000000000012345"),
 			utils.ParseDec("0.000000000000012344"), utils.ParseDec("0.000000000000012346"),
 			utils.ParseInt("1000000000000000000"), sdk.NewInt(10000),
-			sdk.NewInt(2222116054455176),
+			sdk.NewInt(2222116108121897),
 		},
 		{
 			utils.ParseDec("0.000000000000012345"),
 			utils.ParseDec("0.000000000000012345"), utils.ParseDec("0.000000000000012346"),
 			utils.ParseInt("1000000000000000000"), sdk.NewInt(0),
-			sdk.NewInt(2743313825323908),
+			sdk.NewInt(2743424551587600),
 		},
 		{
 			utils.ParseDec("0.000000000000012345"),
 			utils.ParseDec("0.000000000000012344"), utils.ParseDec("0.000000000000012345"),
 			sdk.NewInt(0), sdk.NewInt(10000),
-			sdk.NewInt(2222116054455176),
+			sdk.NewInt(2222116108121897),
 		},
 	} {
 		t.Run(fmt.Sprint(i), func(t *testing.T) {
 			liquidity := types.LiquidityForAmounts(
-				utils.DecApproxSqrt(tc.currentPrice),
-				utils.DecApproxSqrt(tc.priceA), utils.DecApproxSqrt(tc.priceB),
+				cremath.NewBigDecFromDec(tc.currentPrice).SqrtMut(),
+				cremath.NewBigDecFromDec(tc.priceA).SqrtMut(),
+				cremath.NewBigDecFromDec(tc.priceB).SqrtMut(),
 				tc.amt0, tc.amt1)
 			require.Equal(t, tc.expected, liquidity)
 		})
@@ -88,7 +90,9 @@ func TestAmount0Delta(t *testing.T) {
 	} {
 		t.Run(fmt.Sprint(i), func(t *testing.T) {
 			amt0 := types.Amount0Delta(
-				utils.DecApproxSqrt(tc.priceA), utils.DecApproxSqrt(tc.priceB), tc.liquidity)
+				cremath.NewBigDecFromDec(tc.priceA).SqrtMut(),
+				cremath.NewBigDecFromDec(tc.priceB).SqrtMut(),
+				tc.liquidity)
 			require.Equal(t, tc.expected, amt0)
 		})
 	}
@@ -108,7 +112,9 @@ func TestAmount1Delta(t *testing.T) {
 	} {
 		t.Run(fmt.Sprint(i), func(t *testing.T) {
 			amt1 := types.Amount1Delta(
-				utils.DecApproxSqrt(tc.priceA), utils.DecApproxSqrt(tc.priceB), tc.liquidity)
+				cremath.NewBigDecFromDec(tc.priceA).SqrtMut(),
+				cremath.NewBigDecFromDec(tc.priceB).SqrtMut(),
+				tc.liquidity)
 			require.Equal(t, tc.expected, amt1)
 		})
 	}
@@ -116,29 +122,29 @@ func TestAmount1Delta(t *testing.T) {
 
 func TestNextSqrtPriceFromOutput(t *testing.T) {
 	for i, tc := range []struct {
-		price     sdk.Dec
-		liquidity sdk.Int
-		amt       sdk.Int
-		isBuy     bool
-		nextPrice sdk.Dec
+		currentSqrtPrice cremath.BigDec
+		liquidity        sdk.Int
+		amt              sdk.Int
+		isBuy            bool
+		nextSqrtPrice    cremath.BigDec
 	}{
 		{
-			utils.ParseDec("1"), sdk.NewInt(1000000000), sdk.NewInt(100000), true,
-			utils.ParseDec("0.999800010000000000"),
+			utils.ParseBigDec("1"), sdk.NewInt(1000000000), sdk.NewInt(100000), true,
+			utils.ParseBigDec("0.9999"),
 		},
 		{
-			utils.ParseDec("1"), sdk.NewInt(1000000000), sdk.NewInt(123456), true,
-			utils.ParseDec("0.999753103241383936"),
+			utils.ParseBigDec("1"), sdk.NewInt(1000000000), sdk.NewInt(123456), true,
+			utils.ParseBigDec("0.999876544"),
 		},
 		{
-			utils.ParseDec("1"), sdk.NewInt(1000000000), sdk.NewInt(123456), false,
-			utils.ParseDec("1.000246957731679532"),
+			utils.ParseBigDec("1"), sdk.NewInt(1000000000), sdk.NewInt(123456), false,
+			utils.ParseBigDec("1.000123471243265808623669443734845730"),
 		},
 	} {
 		t.Run(fmt.Sprint(i), func(t *testing.T) {
 			nextSqrtPrice := types.NextSqrtPriceFromOutput(
-				utils.DecApproxSqrt(tc.price), tc.liquidity, tc.amt, tc.isBuy)
-			require.Equal(t, tc.nextPrice, nextSqrtPrice.Power(2))
+				tc.currentSqrtPrice, tc.liquidity, tc.amt, tc.isBuy)
+			utils.AssertEqual(t, tc.nextSqrtPrice, nextSqrtPrice)
 		})
 	}
 }

@@ -14,7 +14,6 @@ import (
 	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/amm/keeper"
 	"github.com/crescent-network/crescent/v5/x/amm/types"
-	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
 func BenchmarkPlaceMarketOrder(b *testing.B) {
@@ -84,7 +83,6 @@ func BenchmarkPlaceMarketOrder(b *testing.B) {
 func (s *KeeperTestSuite) TestOrderGas() {
 	currentPrice := utils.ParseDec("67.855")
 	market, pool := s.CreateMarketAndPool("ucre", "uusd", currentPrice)
-	poolState := s.keeper.MustGetPoolState(s.Ctx, pool.Id)
 	lpAddr := s.FundedAccount(1, enoughCoins)
 	for _, info := range []struct {
 		lowerPrice, upperPrice sdk.Dec
@@ -94,24 +92,8 @@ func (s *KeeperTestSuite) TestOrderGas() {
 		{utils.ParseDec("78.05"), utils.ParseDec("125.5"), sdk.NewInt(2572344642)},
 		{utils.ParseDec("64.60"), utils.ParseDec("164"), sdk.NewInt(96518823)},
 	} {
-		lowerTick := exchangetypes.TickAtPrice(info.lowerPrice)
-		upperTick := exchangetypes.TickAtPrice(info.upperPrice)
-		sqrtPriceA := types.SqrtPriceAtTick(lowerTick)
-		sqrtPriceB := types.SqrtPriceAtTick(upperTick)
-		amt0 := utils.ZeroInt
-		amt1 := utils.ZeroInt
-		if poolState.CurrentTick < lowerTick {
-			amt0 = types.Amount0Delta(sqrtPriceA, sqrtPriceB, info.liquidity)
-		} else if poolState.CurrentTick < upperTick {
-			currentSqrtPrice := utils.DecApproxSqrt(poolState.CurrentSqrtPrice)
-			amt0 = types.Amount0Delta(currentSqrtPrice, sqrtPriceB, info.liquidity)
-			amt1 = types.Amount1Delta(sqrtPriceA, currentSqrtPrice, info.liquidity)
-		} else {
-			amt1 = types.Amount1Delta(sqrtPriceA, sqrtPriceB, info.liquidity)
-		}
-		desiredAmt := sdk.NewCoins(sdk.NewCoin(pool.Denom0, amt0), sdk.NewCoin(pool.Denom1, amt1))
-		s.AddLiquidity(
-			lpAddr, pool.Id, info.lowerPrice, info.upperPrice, desiredAmt)
+		s.AddLiquidityByLiquidity(
+			lpAddr, pool.Id, info.lowerPrice, info.upperPrice, info.liquidity)
 	}
 	ordererAddr := s.FundedAccount(2, enoughCoins)
 	gasConsumedBefore := s.Ctx.GasMeter().GasConsumed()

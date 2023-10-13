@@ -1,8 +1,11 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/crescent-network/crescent/cremath"
 	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/amm/types"
 	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
@@ -33,7 +36,7 @@ func (k OrderSource) ConstructMemOrderBookSide(
 	maxPriceRatio := k.exchangeKeeper.GetMaxOrderPriceRatio(ctx)
 	poolState := k.MustGetPoolState(ctx, pool.Id)
 	minPrice, maxPrice := exchangetypes.OrderPriceLimit(
-		poolState.CurrentSqrtPrice.Power(2), maxPriceRatio)
+		poolState.CurrentSqrtPrice.Power(2).Dec(), maxPriceRatio)
 
 	reserveAddr := pool.MustGetReserveAddress()
 	accQty := utils.ZeroInt
@@ -95,16 +98,18 @@ func (k Keeper) IteratePoolOrders(
 					}
 				}
 				orderPrice := exchangetypes.PriceAtTick(orderTick)
-				orderSqrtPrice := utils.DecApproxSqrt(orderPrice)
+				orderSqrtPrice := cremath.NewBigDecFromDec(orderPrice).SqrtMut()
 				var qty sdk.Int
 				if isBuy {
 					qty = utils.MinInt(
 						reserveBalance.ToDec().QuoTruncate(orderPrice).TruncateInt(),
-						types.Amount1DeltaDec(currentSqrtPrice, orderSqrtPrice, orderLiquidity).QuoTruncate(orderPrice).TruncateInt())
+						cremath.NewBigDecFromInt(
+							types.Amount1DeltaRounding(currentSqrtPrice, orderSqrtPrice, orderLiquidity, false)).
+							QuoTruncateMut(cremath.NewBigDecFromDec(orderPrice)).TruncateInt())
 				} else {
 					qty = utils.MinInt(
 						reserveBalance,
-						types.Amount0DeltaRoundingDec(currentSqrtPrice, orderSqrtPrice, orderLiquidity, false).TruncateInt())
+						types.Amount0DeltaRounding(currentSqrtPrice, orderSqrtPrice, orderLiquidity, false))
 				}
 				if qty.IsPositive() && (orderTick == tick || (qty.GTE(market.OrderQuantityLimits.Min))) {
 					if cb(orderPrice, qty) {
@@ -157,26 +162,26 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, orders
 			break
 		}
 		targetPrice := exchangetypes.PriceAtTick(nextTick)
-		targetSqrtPrice := utils.DecApproxSqrt(targetPrice)
+		targetSqrtPrice := cremath.NewBigDecFromDec(targetPrice).SqrtMut()
 
 		var expectedAmtOut sdk.Int
 		if isBuy {
-			expectedAmtOut = types.Amount1Delta(
-				targetSqrtPrice, poolState.CurrentSqrtPrice, poolState.CurrentLiquidity)
+			expectedAmtOut = types.Amount1DeltaRounding(
+				targetSqrtPrice, poolState.CurrentSqrtPrice, poolState.CurrentLiquidity, false)
 		} else {
 			expectedAmtOut = types.Amount0DeltaRounding(
 				poolState.CurrentSqrtPrice, targetSqrtPrice, poolState.CurrentLiquidity, false)
 		}
 
-		var nextSqrtPrice sdk.Dec
+		var nextSqrtPrice cremath.BigDec
 		if amtRemaining.GTE(expectedAmtOut) {
 			nextSqrtPrice = targetSqrtPrice
 		} else {
 			nextSqrtPrice = types.NextSqrtPriceFromOutput(
 				poolState.CurrentSqrtPrice, poolState.CurrentLiquidity, amtRemaining, isBuy)
 		}
-
 		amtOut := utils.MinInt(expectedAmtOut, amtRemaining)
+
 		// Calculate received and feeReceived based on amtOut
 		received, feeReceived := utils.ZeroInt, utils.ZeroInt
 		for amt := amtOut; amt.IsPositive(); {
@@ -188,7 +193,7 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, orders
 			feeReceived = feeReceived.Add(ratio.MulInt(results[0].FeeReceived).TruncateInt())
 
 			if paid.Equal(resultAmt) {
-				results = results[:1]
+				results = results[1:]
 				prevPartialAmt = utils.ZeroInt
 			} else {
 				prevPartialAmt = prevPartialAmt.Add(paid)
@@ -203,8 +208,8 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, orders
 			expectedReceived = types.Amount0DeltaRounding(
 				nextSqrtPrice, poolState.CurrentSqrtPrice, poolState.CurrentLiquidity, true)
 		} else {
-			expectedReceived = types.Amount1Delta(
-				poolState.CurrentSqrtPrice, nextSqrtPrice, poolState.CurrentLiquidity)
+			expectedReceived = types.Amount1DeltaRounding(
+				poolState.CurrentSqrtPrice, nextSqrtPrice, poolState.CurrentLiquidity, true)
 		}
 
 		if received.GT(expectedReceived) {
@@ -217,6 +222,9 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, orders
 					QuoDecTruncate(poolState.CurrentLiquidity.ToDec())...)
 		} else if received.LT(expectedReceived) {
 			// TODO: store receivedDiff
+			if received.Sub(expectedReceived).GT(utils.OneInt) {
+				panic(fmt.Sprintln(received, expectedReceived))
+			}
 		}
 
 		if feeReceived.IsPositive() {
@@ -241,7 +249,8 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, orders
 				poolState.CurrentTick = nextTick
 			}
 		} else {
-			poolState.CurrentTick = exchangetypes.TickAtPrice(poolState.CurrentSqrtPrice.Power(2))
+			poolState.CurrentTick = exchangetypes.TickAtPrice(
+				poolState.CurrentSqrtPrice.Power(2).Dec())
 		}
 	}
 	if !amtRemaining.IsZero() { // sanity check
@@ -267,52 +276,53 @@ func (k Keeper) nextTick(ctx sdk.Context, poolId uint64, currentTick int32, lte 
 	return
 }
 
+// TODO: return order qty as well
 func NextOrderTick(
-	isBuy bool, liquidity sdk.Int, currentSqrtPrice sdk.Dec, minOrderQty, minOrderQuote sdk.Int, tickSpacing uint32) (tick int32, valid bool) {
-	liquidityDec := liquidity.ToDec()
-	minOrderQtyDec := minOrderQty.ToDec()
-	minOrderQuoteDec := minOrderQuote.ToDec()
-	currentTick := exchangetypes.TickAtPrice(currentSqrtPrice.Power(2))
+	isBuy bool, liquidity sdk.Int, currentSqrtPrice cremath.BigDec, minOrderQty, minOrderQuote sdk.Int, tickSpacing uint32) (tick int32, valid bool) {
+	liquidityBigDec := cremath.NewBigDecFromInt(liquidity)
+	minOrderQtyBigDec := cremath.NewBigDecFromInt(minOrderQty)
+	minOrderQuoteBigDec := cremath.NewBigDecFromInt(minOrderQuote)
+	currentTick := exchangetypes.TickAtPrice(currentSqrtPrice.Power(2).Dec())
 	if isBuy {
 		// 1. Check min order qty
 		// L^2 + 4 * MinQty * L * sqrt(P_current)
-		intermediate := liquidityDec.Power(2).Add(
-			minOrderQtyDec.Mul(liquidityDec).MulTruncate(currentSqrtPrice).MulInt64(4))
-		orderSqrtPrice := utils.DecApproxSqrt(intermediate).Sub(liquidityDec).QuoTruncate(minOrderQtyDec.MulInt64(2))
+		intermediate := liquidityBigDec.Power(2).AddMut(
+			minOrderQtyBigDec.Mul(liquidityBigDec).MulTruncateMut(currentSqrtPrice).MulInt64Mut(4))
+		orderSqrtPrice := intermediate.SqrtMut().SubMut(liquidityBigDec).QuoTruncateMut(minOrderQtyBigDec.MulInt64(2))
 		if !orderSqrtPrice.IsPositive() {
 			return 0, false
 		}
 		// 2. Check min order quote
-		orderSqrtPrice2 := currentSqrtPrice.Mul(liquidityDec).Sub(minOrderQuoteDec).QuoTruncate(liquidityDec)
+		orderSqrtPrice2 := currentSqrtPrice.Mul(liquidityBigDec).SubMut(minOrderQuoteBigDec).QuoTruncateMut(liquidityBigDec)
 		if !orderSqrtPrice2.IsPositive() {
 			return 0, false
 		}
-		orderSqrtPrice = sdk.MinDec(orderSqrtPrice, orderSqrtPrice2)
+		orderSqrtPrice = cremath.MinBigDec(orderSqrtPrice, orderSqrtPrice2)
 		if orderSqrtPrice.GT(currentSqrtPrice) {
 			return 0, false
 		}
-		tick = types.AdjustPriceToTickSpacing(orderSqrtPrice.Power(2), tickSpacing, false)
+		tick = types.AdjustPriceToTickSpacing(orderSqrtPrice.Power(2).Dec(), tickSpacing, false)
 		if tick == currentTick {
 			tick -= int32(tickSpacing)
 		}
 		return tick, true
 	}
 	// 1. Check min order qty
-	orderSqrtPrice := currentSqrtPrice.Mul(liquidityDec).
-		QuoRoundUp(liquidityDec.Sub(minOrderQtyDec.Mul(currentSqrtPrice)))
+	orderSqrtPrice := currentSqrtPrice.Mul(liquidityBigDec).
+		QuoRoundUpMut(liquidityBigDec.Sub(minOrderQtyBigDec.Mul(currentSqrtPrice)))
 	if !orderSqrtPrice.IsPositive() {
 		return 0, false
 	}
 	// 2. Check min order quote
-	orderSqrtPrice2 := minOrderQuoteDec.Mul(currentSqrtPrice).QuoRoundUp(liquidityDec).Add(currentSqrtPrice)
+	orderSqrtPrice2 := minOrderQuoteBigDec.Mul(currentSqrtPrice).QuoRoundUpMut(liquidityBigDec).AddMut(currentSqrtPrice)
 	if !orderSqrtPrice2.IsPositive() {
 		return 0, false
 	}
-	orderSqrtPrice = sdk.MaxDec(orderSqrtPrice, orderSqrtPrice2)
+	orderSqrtPrice = cremath.MaxBigDec(orderSqrtPrice, orderSqrtPrice2)
 	if orderSqrtPrice.LT(currentSqrtPrice) {
 		return 0, false
 	}
-	tick = types.AdjustPriceToTickSpacing(orderSqrtPrice.Power(2), tickSpacing, true)
+	tick = types.AdjustPriceToTickSpacing(orderSqrtPrice.Power(2).Dec(), tickSpacing, true)
 	if tick == currentTick {
 		tick += int32(tickSpacing)
 	}
