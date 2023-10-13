@@ -108,7 +108,8 @@ func (k Keeper) GetPreviousRewardsAuction(ctx sdk.Context, publicPosition types.
 // sets the next auction end time.
 func (k Keeper) AdvanceRewardsAuctions(ctx sdk.Context, nextEndTime time.Time) (err error) {
 	maxNumRecentAuctions := k.GetMaxNumRecentRewardsAuctions(ctx)
-	k.IterateAllPublicPositions(ctx, func(publicPosition types.PublicPosition) (stop bool) {
+	publicPositions := k.GetAllPublicPositions(ctx)
+	for _, publicPosition := range publicPositions {
 		if publicPosition.LastRewardsAuctionId != 0 {
 			auction, found := k.GetRewardsAuction(ctx, publicPosition.Id, publicPosition.LastRewardsAuctionId)
 			if !found { // sanity check
@@ -116,25 +117,29 @@ func (k Keeper) AdvanceRewardsAuctions(ctx sdk.Context, nextEndTime time.Time) (
 			}
 			if auction.WinningBid == nil {
 				if err = k.SkipRewardsAuction(ctx, publicPosition, auction); err != nil {
-					return true
+					return err
 				}
 			} else {
 				if err = k.FinishRewardsAuction(ctx, publicPosition, auction); err != nil {
-					return true
+					return err
 				}
 			}
 		}
+
 		// Prune old rewards auctions.
 		lastAuctionId := k.StartNewRewardsAuction(ctx, publicPosition, nextEndTime)
+		var auctionsToDelete []types.RewardsAuction
 		k.IterateRewardsAuctionsByPublicPosition(ctx, publicPosition.Id, func(auction types.RewardsAuction) (stop bool) {
 			if auction.Id+uint64(maxNumRecentAuctions) >= lastAuctionId {
 				return true
 			}
-			k.DeleteRewardsAuction(ctx, auction)
+			auctionsToDelete = append(auctionsToDelete, auction)
 			return false
 		})
-		return false
-	})
+		for _, auction := range auctionsToDelete {
+			k.DeleteRewardsAuction(ctx, auction)
+		}
+	}
 	k.SetNextRewardsAuctionEndTime(ctx, nextEndTime)
 	return
 }
