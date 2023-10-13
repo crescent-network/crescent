@@ -53,7 +53,9 @@ message SwapRouteResult {
   uint64 market_id         = 1;
   string executed_quantity = 2
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
-  cosmos.base.v1beta1.Coin input  = 3 [(gogoproto.nullable) = false];
-  cosmos.base.v1beta1.Coin output = 4 [(gogoproto.nullable) = false];
-  cosmos.base.v1beta1.Coin fee    = 5 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin input        = 3 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin paid         = 4 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin received     = 5 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin fee_paid     = 6 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin fee_received = 7 [(gogoproto.nullable) = false];
 }

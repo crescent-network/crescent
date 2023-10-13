@@ -30,6 +30,8 @@ func (k Keeper) PlaceLimitOrder(
 		ExecutedQuantity: res.ExecutedQuantity,
 		Paid:             res.Paid,
 		Received:         res.Received,
+		FeePaid:          res.FeePaid,
+		FeeReceived:      res.FeeReceived,
 	}); err != nil {
 		return
 	}
@@ -79,6 +81,8 @@ func (k Keeper) PlaceMMLimitOrder(
 		ExecutedQuantity: res.ExecutedQuantity,
 		Paid:             res.Paid,
 		Received:         res.Received,
+		FeePaid:          res.FeePaid,
+		FeeReceived:      res.FeeReceived,
 	}); err != nil {
 		return
 	}
@@ -290,6 +294,8 @@ func (k Keeper) PlaceMarketOrder(
 		ExecutedQuantity: res.ExecutedQuantity,
 		Paid:             res.Paid,
 		Received:         res.Received,
+		FeePaid:          res.FeePaid,
+		FeeReceived:      res.FeeReceived,
 	}); err != nil {
 		return
 	}
@@ -332,15 +338,14 @@ func (k Keeper) CancelAllOrders(ctx sdk.Context, ordererAddr sdk.AccAddress, mar
 		if order.MsgHeight == ctx.BlockHeight() {
 			return false
 		}
-		if err = k.cancelOrder(ctx, market, order); err != nil {
-			return true
-		}
 		orders = append(orders, order)
 		cancelledOrderIds = append(cancelledOrderIds, order.Id)
 		return false
 	})
-	if err != nil {
-		return nil, err
+	for _, order := range orders {
+		if err = k.cancelOrder(ctx, market, order); err != nil {
+			return nil, err
+		}
 	}
 	if err = ctx.EventManager().EmitTypedEvent(&types.EventCancelAllOrders{
 		Orderer:           ordererAddr.String(),

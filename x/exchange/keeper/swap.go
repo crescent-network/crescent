@@ -76,9 +76,10 @@ func (k Keeper) SwapExactAmountIn(
 			MarketId:         marketId,
 			ExecutedQuantity: res.ExecutedQuantity,
 			Input:            currentIn,
-			Output:           output,
-			// TODO: add Paid field?
-			Fee:              res.FeePaid,
+			Paid:             res.Paid,
+			Received:         res.Received,
+			FeePaid:          res.FeePaid,
+			FeeReceived:      res.FeeReceived,
 		})
 		currentIn = output
 	}

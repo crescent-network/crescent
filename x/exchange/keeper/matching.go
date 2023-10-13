@@ -107,6 +107,8 @@ func (k Keeper) finalizeMatching(
 		if memOrder.IsMatched() {
 			paidCoin := sdk.NewCoin(payDenom, res.Paid)
 			receivedCoin := sdk.NewCoin(receiveDenom, res.Received)
+			feePaidCoin := sdk.NewCoin(receiveDenom, res.FeePaid)
+			feeReceivedCoin := sdk.NewCoin(payDenom, res.FeePaid)
 			if memOrder.Type == types.UserMemOrder {
 				order := *memOrder.Order
 				order.OpenQuantity = order.OpenQuantity.Sub(res.ExecutedQuantity)
@@ -118,6 +120,8 @@ func (k Keeper) finalizeMatching(
 					ExecutedQuantity: res.ExecutedQuantity,
 					Paid:             paidCoin,
 					Received:         receivedCoin,
+					FeePaid:          feePaidCoin,
+					FeeReceived:      feeReceivedCoin,
 				}); err != nil {
 					return err
 				}
@@ -165,6 +169,7 @@ func (k Keeper) finalizeMatching(
 					isBuy            bool
 					totalPaid        sdk.Int
 					totalReceived    sdk.Int
+					totalFeePaid     sdk.Int // NOTE: this will always be 0
 					totalFeeReceived sdk.Int
 				)
 				for _, order := range m[ordererAddr.String()] {
@@ -174,6 +179,7 @@ func (k Keeper) finalizeMatching(
 						isBuy = order.IsBuy
 						totalPaid = res.Paid
 						totalReceived = res.Received
+						totalFeePaid = res.FeePaid
 						totalFeeReceived = res.FeeReceived
 					} else {
 						if order.IsBuy != isBuy { // sanity check
@@ -181,20 +187,25 @@ func (k Keeper) finalizeMatching(
 						}
 						totalPaid = totalPaid.Add(res.Paid)
 						totalReceived = totalReceived.Add(res.Received)
+						totalFeePaid = totalFeePaid.Add(res.FeePaid)
 						totalFeeReceived = totalFeeReceived.Add(res.FeeReceived)
 					}
 				}
 				payDenom, receiveDenom := types.PayReceiveDenoms(market.BaseDenom, market.QuoteDenom, isBuy)
-				paid := sdk.NewCoin(payDenom, totalPaid)
-				received := sdk.NewCoin(receiveDenom, totalReceived)
+				paidCoin := sdk.NewCoin(payDenom, totalPaid)
+				receivedCoin := sdk.NewCoin(receiveDenom, totalReceived)
+				feePaidCoin := sdk.NewCoin(receiveDenom, totalFeePaid)
+				feeReceivedCoin := sdk.NewCoin(payDenom, totalFeeReceived)
 				if err := ctx.EventManager().EmitTypedEvent(&types.EventOrderSourceOrdersFilled{
 					MarketId:         market.Id,
 					SourceName:       sourceName,
 					Orderer:          ordererAddr.String(),
 					IsBuy:            isBuy,
 					ExecutedQuantity: totalExecQty,
-					Paid:             paid,
-					Received:         received,
+					Paid:             paidCoin,
+					Received:         receivedCoin,
+					FeePaid:          feePaidCoin,
+					FeeReceived:      feeReceivedCoin,
 				}); err != nil {
 					return err
 				}

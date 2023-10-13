@@ -11518,7 +11518,7 @@ paths:
                         custom method
 
                         signatures required by gogoproto.
-                    output:
+                    paid:
                       type: object
                       properties:
                         denom:
@@ -11533,7 +11533,37 @@ paths:
                         custom method
 
                         signatures required by gogoproto.
-                    fee:
+                    received:
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                        amount:
+                          type: string
+                      description: >-
+                        Coin defines a token with a denomination and an amount.
+
+
+                        NOTE: The amount field is an Int which implements the
+                        custom method
+
+                        signatures required by gogoproto.
+                    fee_paid:
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                        amount:
+                          type: string
+                      description: >-
+                        Coin defines a token with a denomination and an amount.
+
+
+                        NOTE: The amount field is an Int which implements the
+                        custom method
+
+                        signatures required by gogoproto.
+                    fee_received:
                       type: object
                       properties:
                         denom:
@@ -20556,7 +20586,7 @@ definitions:
                 method
 
                 signatures required by gogoproto.
-            output:
+            paid:
               type: object
               properties:
                 denom:
@@ -20571,7 +20601,37 @@ definitions:
                 method
 
                 signatures required by gogoproto.
-            fee:
+            received:
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+              description: >-
+                Coin defines a token with a denomination and an amount.
+
+
+                NOTE: The amount field is an Int which implements the custom
+                method
+
+                signatures required by gogoproto.
+            fee_paid:
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+              description: >-
+                Coin defines a token with a denomination and an amount.
+
+
+                NOTE: The amount field is an Int which implements the custom
+                method
+
+                signatures required by gogoproto.
+            fee_received:
               type: object
               properties:
                 denom:
@@ -20780,7 +20840,7 @@ definitions:
 
           NOTE: The amount field is an Int which implements the custom method
           signatures required by gogoproto.
-      output:
+      paid:
         type: object
         properties:
           denom:
@@ -20792,7 +20852,31 @@ definitions:
 
           NOTE: The amount field is an Int which implements the custom method
           signatures required by gogoproto.
-      fee:
+      received:
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
+      fee_paid:
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
+      fee_received:
         type: object
         properties:
           denom:
