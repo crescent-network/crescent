@@ -74,8 +74,8 @@ func (ms *MatchState) Result() MatchResult {
 
 type MatchResult struct {
 	ExecutedQuantity sdk.Int
-	Paid             sdk.Int
-	Received         sdk.Int
+	Paid             sdk.Int // Real paid amount(FeeReceived excluded)
+	Received         sdk.Int // Real received amount(FeePaid excluded)
 	FeePaid          sdk.Int
 	FeeReceived      sdk.Int
 }

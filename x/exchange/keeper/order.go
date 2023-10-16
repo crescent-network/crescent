@@ -30,6 +30,8 @@ func (k Keeper) PlaceLimitOrder(
 		ExecutedQuantity: res.ExecutedQuantity,
 		Paid:             res.Paid,
 		Received:         res.Received,
+		FeePaid:          res.FeePaid,
+		FeeReceived:      res.FeeReceived,
 	}); err != nil {
 		return
 	}
@@ -79,6 +81,8 @@ func (k Keeper) PlaceMMLimitOrder(
 		ExecutedQuantity: res.ExecutedQuantity,
 		Paid:             res.Paid,
 		Received:         res.Received,
+		FeePaid:          res.FeePaid,
+		FeeReceived:      res.FeeReceived,
 	}); err != nil {
 		return
 	}
@@ -130,31 +134,11 @@ func (k Keeper) placeLimitOrder(
 		err = sdkerrors.Wrap(sdkerrors.ErrNotFound, "market not found")
 		return
 	}
-	if qty.LT(market.OrderQuantityLimits.Min) {
-		err = sdkerrors.Wrapf(
-			sdkerrors.ErrInvalidRequest,
-			"quantity is less than the minimum order quantity allowed: %s < %s",
-			qty, market.OrderQuantityLimits.Min)
-		return
-	} else if qty.GT(market.OrderQuantityLimits.Max) {
-		err = sdkerrors.Wrapf(
-			sdkerrors.ErrInvalidRequest,
-			"quantity is greater than the maximum order quantity allowed: %s > %s",
-			qty, market.OrderQuantityLimits.Max)
-		return
+	if err := market.CheckOrderQuantityLimits(qty); err != nil {
+		return 0, order, res, err
 	}
-	if quote := price.MulInt(qty).TruncateInt(); quote.LT(market.OrderQuoteLimits.Min) {
-		err = sdkerrors.Wrapf(
-			sdkerrors.ErrInvalidRequest,
-			"quantity * price is less than the minimum order quote allowed: %s < %s",
-			quote, market.OrderQuoteLimits.Min)
-		return
-	} else if quote := price.MulInt(qty).Ceil().TruncateInt(); quote.GT(market.OrderQuoteLimits.Max) {
-		err = sdkerrors.Wrapf(
-			sdkerrors.ErrInvalidRequest,
-			"quantity * price is greater than the maximum order quote allowed: %s > %s",
-			quote, market.OrderQuoteLimits.Max)
-		return
+	if err := market.CheckOrderQuoteLimits(price, qty); err != nil {
+		return 0, order, res, err
 	}
 
 	var (
@@ -233,18 +217,8 @@ func (k Keeper) PlaceMarketOrder(
 		err = sdkerrors.Wrap(sdkerrors.ErrNotFound, "market not found")
 		return
 	}
-	if qty.LT(market.OrderQuantityLimits.Min) {
-		err = sdkerrors.Wrapf(
-			sdkerrors.ErrInvalidRequest,
-			"quantity is less than the minimum order quantity allowed: %s < %s",
-			qty, market.OrderQuantityLimits.Min)
-		return
-	} else if qty.GT(market.OrderQuantityLimits.Max) {
-		err = sdkerrors.Wrapf(
-			sdkerrors.ErrInvalidRequest,
-			"quantity is greater than the maximum order quantity allowed: %s > %s",
-			qty, market.OrderQuantityLimits.Max)
-		return
+	if err := market.CheckOrderQuantityLimits(qty); err != nil {
+		return 0, res, err
 	}
 	marketState := k.MustGetMarketState(ctx, market.Id)
 	if marketState.LastPrice == nil {
@@ -290,6 +264,8 @@ func (k Keeper) PlaceMarketOrder(
 		ExecutedQuantity: res.ExecutedQuantity,
 		Paid:             res.Paid,
 		Received:         res.Received,
+		FeePaid:          res.FeePaid,
+		FeeReceived:      res.FeeReceived,
 	}); err != nil {
 		return
 	}
@@ -332,15 +308,14 @@ func (k Keeper) CancelAllOrders(ctx sdk.Context, ordererAddr sdk.AccAddress, mar
 		if order.MsgHeight == ctx.BlockHeight() {
 			return false
 		}
-		if err = k.cancelOrder(ctx, market, order); err != nil {
-			return true
-		}
 		orders = append(orders, order)
 		cancelledOrderIds = append(cancelledOrderIds, order.Id)
 		return false
 	})
-	if err != nil {
-		return nil, err
+	for _, order := range orders {
+		if err = k.cancelOrder(ctx, market, order); err != nil {
+			return nil, err
+		}
 	}
 	if err = ctx.EventManager().EmitTypedEvent(&types.EventCancelAllOrders{
 		Orderer:           ordererAddr.String(),
@@ -378,24 +353,33 @@ func (k Keeper) cancelOrder(ctx sdk.Context, market types.Market, order types.Or
 
 func (k Keeper) CancelExpiredOrders(ctx sdk.Context) (err error) {
 	blockTime := ctx.BlockTime()
+	var markets []types.Market
 	k.IterateAllMarkets(ctx, func(market types.Market) (stop bool) {
+		markets = append(markets, market)
+		return false
+	})
+	for _, market := range markets {
 		// TODO: optimize by using timestamp queue
+		var ordersToBeCanceled []types.Order
 		k.IterateOrdersByMarket(ctx, market.Id, func(order types.Order) (stop bool) {
 			if !blockTime.Before(order.Deadline) {
-				if err = k.cancelOrder(ctx, market, order); err != nil {
-					return true
-				}
-				if err = ctx.EventManager().EmitTypedEvent(&types.EventOrderExpired{
-					OrderId: order.Id,
-				}); err != nil {
-					return true
-				}
+				ordersToBeCanceled = append(ordersToBeCanceled, order)
 			}
 			return false
 		})
-		return err != nil
-	})
-	return err
+
+		for _, order := range ordersToBeCanceled {
+			if err = k.cancelOrder(ctx, market, order); err != nil {
+				return err
+			}
+			if err = ctx.EventManager().EmitTypedEvent(&types.EventOrderExpired{
+				OrderId: order.Id,
+			}); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 func (k Keeper) CollectFees(ctx sdk.Context, market types.Market) error {

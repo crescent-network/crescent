@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	utils "github.com/crescent-network/crescent/v5/types"
 )
@@ -89,6 +90,38 @@ func (market Market) FeeRate(isOrderSourceOrder, isMaker, halveFees bool) (feeRa
 		feeRate = feeRate.QuoInt64(2)
 	}
 	return feeRate
+}
+
+func (market Market) CheckOrderQuantityLimits(qty sdk.Int) error {
+	if qty.LT(market.OrderQuantityLimits.Min) {
+		return sdkerrors.Wrapf(
+			ErrBadOrderAmount,
+			"quantity is less than the minimum order quantity allowed: %s < %s",
+			qty, market.OrderQuantityLimits.Min)
+	}
+	if qty.GT(market.OrderQuantityLimits.Max) {
+		return sdkerrors.Wrapf(
+			ErrBadOrderAmount,
+			"quantity is greater than the maximum order quantity allowed: %s > %s",
+			qty, market.OrderQuantityLimits.Max)
+	}
+	return nil
+}
+
+func (market Market) CheckOrderQuoteLimits(price sdk.Dec, qty sdk.Int) error {
+	if quote := price.MulInt(qty).TruncateInt(); quote.LT(market.OrderQuoteLimits.Min) {
+		return sdkerrors.Wrapf(
+			ErrBadOrderAmount,
+			"quote(=price*qty) is less than the minimum order quote allowed: %s < %s",
+			quote, market.OrderQuoteLimits.Min)
+	}
+	if quote := price.MulInt(qty).Ceil().TruncateInt(); quote.GT(market.OrderQuoteLimits.Max) {
+		return sdkerrors.Wrapf(
+			ErrBadOrderAmount,
+			"quote(=price*qty) is greater than the maximum order quote allowed: %s > %s",
+			quote, market.OrderQuoteLimits.Max)
+	}
+	return nil
 }
 
 func NewMarketState(lastPrice *sdk.Dec) MarketState {

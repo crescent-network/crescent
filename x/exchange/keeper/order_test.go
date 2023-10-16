@@ -389,3 +389,51 @@ func (s *KeeperTestSuite) TestMaxOrderPriceRatio() {
 	s.AssertEqual(utils.ParseDec("4.5"), res.LastPrice)
 	s.AssertEqual(sdk.NewInt(1_000000), res.ExecutedQuantity)
 }
+
+func (s *KeeperTestSuite) TestPlaceLimitOrder_BadOrderAmount() {
+	market := s.CreateMarket("ucre", "uusd")
+	market.OrderQuantityLimits = types.NewAmountLimits(sdk.NewInt(10000), sdk.NewInt(1000_000000))
+	market.OrderQuoteLimits = types.NewAmountLimits(sdk.NewInt(1000), sdk.NewInt(100_000000))
+	s.keeper.SetMarket(s.Ctx, market)
+
+	ordererAddr := s.FundedAccount(1, enoughCoins)
+	// qty < minQty
+	_, _, _, err := s.keeper.PlaceLimitOrder(
+		s.Ctx, market.Id, ordererAddr, true, utils.ParseDec("5"), sdk.NewInt(9999), time.Hour)
+	s.Require().EqualError(
+		err, "quantity is less than the minimum order quantity allowed: 9999 < 10000: bad order amount")
+	_, _, _, err = s.keeper.PlaceLimitOrder(
+		s.Ctx, market.Id, ordererAddr, false, utils.ParseDec("5"), sdk.NewInt(9999), time.Hour)
+	s.Require().EqualError(
+		err, "quantity is less than the minimum order quantity allowed: 9999 < 10000: bad order amount")
+
+	// qty > maxQty
+	_, _, _, err = s.keeper.PlaceLimitOrder(
+		s.Ctx, market.Id, ordererAddr, true, utils.ParseDec("5"), sdk.NewInt(1000_000001), time.Hour)
+	s.Require().EqualError(
+		err, "quantity is greater than the maximum order quantity allowed: 1000000001 > 1000000000: bad order amount")
+	_, _, _, err = s.keeper.PlaceLimitOrder(
+		s.Ctx, market.Id, ordererAddr, false, utils.ParseDec("5"), sdk.NewInt(1000_000001), time.Hour)
+	s.Require().EqualError(
+		err, "quantity is greater than the maximum order quantity allowed: 1000000001 > 1000000000: bad order amount")
+
+	// quote < minQuote
+	_, _, _, err = s.keeper.PlaceLimitOrder(
+		s.Ctx, market.Id, ordererAddr, true, utils.ParseDec("0.05"), sdk.NewInt(10000), time.Hour)
+	s.Require().EqualError(
+		err, "quote(=price*qty) is less than the minimum order quote allowed: 500 < 1000: bad order amount")
+	_, _, _, err = s.keeper.PlaceLimitOrder(
+		s.Ctx, market.Id, ordererAddr, false, utils.ParseDec("0.05"), sdk.NewInt(10000), time.Hour)
+	s.Require().EqualError(
+		err, "quote(=price*qty) is less than the minimum order quote allowed: 500 < 1000: bad order amount")
+
+	// quote > maxQuote
+	_, _, _, err = s.keeper.PlaceLimitOrder(
+		s.Ctx, market.Id, ordererAddr, true, utils.ParseDec("50"), sdk.NewInt(2_000001), time.Hour)
+	s.Require().EqualError(
+		err, "quote(=price*qty) is greater than the maximum order quote allowed: 100000050 > 100000000: bad order amount")
+	_, _, _, err = s.keeper.PlaceLimitOrder(
+		s.Ctx, market.Id, ordererAddr, false, utils.ParseDec("50"), sdk.NewInt(2_000001), time.Hour)
+	s.Require().EqualError(
+		err, "quote(=price*qty) is greater than the maximum order quote allowed: 100000050 > 100000000: bad order amount")
+}

@@ -217,16 +217,16 @@ func NewAmountLimits(min, max sdk.Int) AmountLimits {
 	return AmountLimits{Min: min, Max: max}
 }
 
-func (r AmountLimits) Validate() error {
-	if r.Min.IsNegative() {
-		return fmt.Errorf("the minimum value must not be negative: %s", r.Min)
+func (limits AmountLimits) Validate() error {
+	if limits.Min.IsNegative() {
+		return fmt.Errorf("the minimum value must not be negative: %s", limits.Min)
 	}
-	if r.Max.IsNegative() {
-		return fmt.Errorf("the maximum value must not be negative: %s", r.Max)
+	if limits.Max.IsNegative() {
+		return fmt.Errorf("the maximum value must not be negative: %s", limits.Max)
 	}
-	if r.Min.GT(r.Max) {
+	if limits.Min.GT(limits.Max) {
 		return fmt.Errorf(
-			"the minimum value is greater than the maximum value: %s > %s", r.Min, r.Max)
+			"the minimum value is greater than the maximum value: %s > %s", limits.Min, limits.Max)
 	}
 	return nil
 }
