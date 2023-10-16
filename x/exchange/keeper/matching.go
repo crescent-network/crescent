@@ -128,7 +128,7 @@ func (k Keeper) finalizeMatching(
 				// Update user orders
 				executableQty := order.ExecutableQuantity()
 				if executableQty.IsZero() ||
-					!order.IsBuy && order.Price.MulInt(executableQty).TruncateDec().IsZero() {
+					(!order.IsBuy && order.Price.MulInt(executableQty).TruncateDec().IsZero()) {
 					if err := k.cancelOrder(ctx, market, order); err != nil {
 						return err
 					}

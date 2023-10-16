@@ -125,3 +125,16 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn_MaxOrderPriceRatio() {
 	// cannot sell CRE fully.
 	s.Require().EqualError(err, "in market 1; paid 30000000ucre < input 50000000ucre: not enough liquidity in the market")
 }
+
+func (s *KeeperTestSuite) TestSwapExactAmountIn_MinOrderQuantity() {
+	mmAddr := s.FundedAccount(1, enoughCoins)
+	market := s.CreateMarket("ucre", "uusd")
+	s.MakeLastPrice(market.Id, mmAddr, utils.ParseDec("5"))
+
+	s.createLiquidity2(market.Id, mmAddr, utils.ParseDec("5"), utils.ParseDec("0.1"), sdk.NewInt(1_000000))
+
+	ordererAddr := s.FundedAccount(2, enoughCoins)
+	_, _, err := s.keeper.SwapExactAmountIn(
+		s.Ctx, ordererAddr, []uint64{market.Id}, utils.ParseCoin("500ucre"), utils.ParseCoin("1uusd"), false)
+	s.Require().EqualError(err, "quantity is less than the minimum order quantity allowed: 500 < 10000: bad order amount")
+}

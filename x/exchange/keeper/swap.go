@@ -46,10 +46,14 @@ func (k Keeper) SwapExactAmountIn(
 		)
 		switch currentIn.Denom {
 		case market.BaseDenom:
+			if err := market.CheckOrderQuantityLimits(currentIn.Amount); err != nil {
+				return output, nil, err
+			}
 			isBuy = false
 			qtyLimit = &currentIn.Amount
 			priceLimit = minPrice
 		case market.QuoteDenom:
+			// Cannot check order quote limit here.
 			isBuy = true
 			quoteLimit = &currentIn.Amount
 			priceLimit = maxPrice

@@ -134,31 +134,11 @@ func (k Keeper) placeLimitOrder(
 		err = sdkerrors.Wrap(sdkerrors.ErrNotFound, "market not found")
 		return
 	}
-	if qty.LT(market.OrderQuantityLimits.Min) {
-		err = sdkerrors.Wrapf(
-			sdkerrors.ErrInvalidRequest,
-			"quantity is less than the minimum order quantity allowed: %s < %s",
-			qty, market.OrderQuantityLimits.Min)
-		return
-	} else if qty.GT(market.OrderQuantityLimits.Max) {
-		err = sdkerrors.Wrapf(
-			sdkerrors.ErrInvalidRequest,
-			"quantity is greater than the maximum order quantity allowed: %s > %s",
-			qty, market.OrderQuantityLimits.Max)
-		return
+	if err := market.CheckOrderQuantityLimits(qty); err != nil {
+		return 0, order, res, err
 	}
-	if quote := price.MulInt(qty).TruncateInt(); quote.LT(market.OrderQuoteLimits.Min) {
-		err = sdkerrors.Wrapf(
-			sdkerrors.ErrInvalidRequest,
-			"quantity * price is less than the minimum order quote allowed: %s < %s",
-			quote, market.OrderQuoteLimits.Min)
-		return
-	} else if quote := price.MulInt(qty).Ceil().TruncateInt(); quote.GT(market.OrderQuoteLimits.Max) {
-		err = sdkerrors.Wrapf(
-			sdkerrors.ErrInvalidRequest,
-			"quantity * price is greater than the maximum order quote allowed: %s > %s",
-			quote, market.OrderQuoteLimits.Max)
-		return
+	if err := market.CheckOrderQuoteLimits(price, qty); err != nil {
+		return 0, order, res, err
 	}
 
 	var (
@@ -237,18 +217,8 @@ func (k Keeper) PlaceMarketOrder(
 		err = sdkerrors.Wrap(sdkerrors.ErrNotFound, "market not found")
 		return
 	}
-	if qty.LT(market.OrderQuantityLimits.Min) {
-		err = sdkerrors.Wrapf(
-			sdkerrors.ErrInvalidRequest,
-			"quantity is less than the minimum order quantity allowed: %s < %s",
-			qty, market.OrderQuantityLimits.Min)
-		return
-	} else if qty.GT(market.OrderQuantityLimits.Max) {
-		err = sdkerrors.Wrapf(
-			sdkerrors.ErrInvalidRequest,
-			"quantity is greater than the maximum order quantity allowed: %s > %s",
-			qty, market.OrderQuantityLimits.Max)
-		return
+	if err := market.CheckOrderQuantityLimits(qty); err != nil {
+		return 0, res, err
 	}
 	marketState := k.MustGetMarketState(ctx, market.Id)
 	if marketState.LastPrice == nil {
