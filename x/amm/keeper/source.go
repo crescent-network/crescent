@@ -85,13 +85,13 @@ func (k Keeper) IteratePoolOrders(
 					valid     bool
 				)
 				if isBuy {
-					orderTick, valid = NextOrderTick(
+					orderTick, valid = types.NextOrderTick(
 						true, orderLiquidity, currentSqrtPrice, market.OrderQuantityLimits.Min, market.OrderQuoteLimits.Min, pool.TickSpacing)
 					if !valid || orderTick < tick {
 						orderTick = tick
 					}
 				} else {
-					orderTick, valid = NextOrderTick(
+					orderTick, valid = types.NextOrderTick(
 						false, orderLiquidity, currentSqrtPrice, market.OrderQuantityLimits.Min, market.OrderQuoteLimits.Min, pool.TickSpacing)
 					if !valid || orderTick > tick {
 						orderTick = tick
@@ -279,70 +279,4 @@ func (k Keeper) nextTick(ctx sdk.Context, poolId uint64, currentTick int32, lte 
 		return true
 	})
 	return
-}
-
-func NextOrderTick(
-	isBuy bool, liquidity sdk.Int, currentSqrtPrice cremath.BigDec, minOrderQty, minOrderQuote sdk.Int, tickSpacing uint32) (tick int32, valid bool) {
-	// Q = minimum order qty
-	// q = minimum order quote
-	// P_c = current price
-	// P_o = order price
-	// L = liquidity
-	liquidityBigDec := cremath.NewBigDecFromInt(liquidity)
-	minOrderQtyBigDec := cremath.NewBigDecFromInt(minOrderQty)
-	minOrderQuoteBigDec := cremath.NewBigDecFromInt(minOrderQuote)
-	currentTick := exchangetypes.TickAtPrice(currentSqrtPrice.Power(2).Dec())
-	if isBuy {
-		// 1. Check min order qty
-		// L*(sqrt(P_c) - sqrt(P_o)) / P_o >= Q
-		// -> sqrt(P_o) <= (sqrt(L^2 + 4*Q*L*sqrt(P_c)) - L) / 2*Q (quadratic formula)
-		intermediate := liquidityBigDec.Power(2).AddMut(
-			minOrderQtyBigDec.Mul(liquidityBigDec).MulTruncateMut(currentSqrtPrice).MulInt64Mut(4))
-		orderSqrtPrice := intermediate.SqrtMut().SubMut(liquidityBigDec).QuoTruncateMut(minOrderQtyBigDec.MulInt64(2))
-		if !orderSqrtPrice.IsPositive() {
-			return 0, false
-		}
-		// 2. Check min order quote
-		// L*(sqrt(P_c) - sqrt(P_o))>= q
-		// -> sqrt(P_o) <= (L*sqrt(P_c) - q) / L
-		orderSqrtPrice2 := currentSqrtPrice.Mul(liquidityBigDec).SubMut(minOrderQuoteBigDec).QuoTruncateMut(liquidityBigDec)
-		if !orderSqrtPrice2.IsPositive() {
-			return 0, false
-		}
-		orderSqrtPrice = cremath.MinBigDec(orderSqrtPrice, orderSqrtPrice2)
-		if orderSqrtPrice.GT(currentSqrtPrice) {
-			return 0, false
-		}
-		tick = types.AdjustPriceToTickSpacing(orderSqrtPrice.Power(2).Dec(), tickSpacing, false)
-		if tick == currentTick {
-			tick -= int32(tickSpacing)
-		}
-		return tick, true
-	}
-	// 1. Check min order qty
-	// L*(sqrt(P_o) - sqrt(P_c)) / sqrt(P_o)*sqrt(P_c) >= Q
-	// -> sqrt(P_o) >= L*sqrt(P_c) / (L - Q*sqrt(P_c))
-	orderSqrtPrice := currentSqrtPrice.Mul(liquidityBigDec).
-		QuoRoundUpMut(liquidityBigDec.Sub(minOrderQtyBigDec.Mul(currentSqrtPrice)))
-	if !orderSqrtPrice.IsPositive() {
-		return 0, false
-	}
-	// 2. Check min order quote
-	// L*(sqrt(P_o) - sqrt(P_c)) / sqrt(P_o)*sqrt(P_c) * sqrt(P_o) >= q
-	// -> L*(sqrt(P_o) - sqrt(P_c)) / sqrt(P_c) >= q
-	// -> sqrt(P_o) >= (q + L)*sqrt(P_c) / L
-	orderSqrtPrice2 := minOrderQuoteBigDec.Add(liquidityBigDec).MulRoundUpMut(currentSqrtPrice).
-		QuoRoundUpMut(liquidityBigDec)
-	if !orderSqrtPrice2.IsPositive() {
-		return 0, false
-	}
-	orderSqrtPrice = cremath.MaxBigDec(orderSqrtPrice, orderSqrtPrice2)
-	if orderSqrtPrice.LT(currentSqrtPrice) {
-		return 0, false
-	}
-	tick = types.AdjustPriceToTickSpacing(orderSqrtPrice.Power(2).Dec(), tickSpacing, true)
-	if tick == currentTick {
-		tick += int32(tickSpacing)
-	}
-	return tick, true
 }
