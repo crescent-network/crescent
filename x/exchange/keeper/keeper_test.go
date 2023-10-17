@@ -105,3 +105,18 @@ func (s *KeeperTestSuite) getEventOrderFilled(orderId uint64) (event *types.Even
 	}
 	return nil
 }
+
+func (s *KeeperTestSuite) getEventOrderSourceOrdersFilled(sourceName string) (event *types.EventOrderSourceOrdersFilled) {
+	orderSourceOrdersFilledEventType := proto.MessageName(event)
+	for _, abciEvent := range s.Ctx.EventManager().ABCIEvents() {
+		if abciEvent.Type == orderSourceOrdersFilledEventType {
+			e, err := sdk.ParseTypedEvent(abciEvent)
+			s.Require().NoError(err)
+			event = e.(*types.EventOrderSourceOrdersFilled)
+			if event.SourceName == sourceName {
+				return event
+			}
+		}
+	}
+	return nil
+}
