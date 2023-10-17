@@ -458,6 +458,18 @@ func (s *decimalTestSuite) TestSqrt() {
 	}
 }
 
+func (s *decimalTestSuite) TestSqrt_MutativeAndNonMutative() {
+	start := cremath.NewBigDec(400)
+
+	sqrt := start.Sqrt()
+	s.Require().Equal(cremath.NewBigDec(20), sqrt)
+	s.Require().Equal(cremath.NewBigDec(400), start)
+
+	sqrt = start.SqrtMut()
+	s.Require().Equal(cremath.NewBigDec(20), sqrt)
+	s.Require().Equal(cremath.NewBigDec(20), start)
+}
+
 func (s *decimalTestSuite) TestDecEncoding() {
 	testCases := []struct {
 		input   cremath.BigDec

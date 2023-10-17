@@ -734,10 +734,11 @@ func (d BigDec) SqrtMut() BigDec {
 		panic("square root of negative number")
 	}
 	d.i.Mul(d.i, precisionReuse)
-	r := new(big.Int).Sqrt(d.i)
-	c := new(big.Int).Mul(r, r)
-	if c.Cmp(d.i) == -1 {
-		r.Add(r, oneInt)
+	t := new(big.Int).Set(d.i)
+	d.i.Sqrt(d.i)
+	c := new(big.Int).Mul(d.i, d.i)
+	if c.Cmp(t) == -1 {
+		d.i.Add(d.i, oneInt)
 	}
-	return BigDec{r}
+	return d
 }
