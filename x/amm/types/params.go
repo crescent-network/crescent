@@ -5,6 +5,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
@@ -155,6 +156,43 @@ func validateMaxFarmingBlockTime(i interface{}) error {
 	}
 	if v <= 0 {
 		return fmt.Errorf("max farming block time must be positive: %v", v)
+	}
+	return nil
+}
+
+// ValidatePriceRange validates a price range of a position defined by
+// lowerPrice and upperPrice.
+func ValidatePriceRange(lowerPrice, upperPrice sdk.Dec) error {
+	if !lowerPrice.IsPositive() {
+		return sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidRequest, "lower price must be positive: %s", lowerPrice)
+	}
+	if !upperPrice.IsPositive() {
+		return sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidRequest, "upper price must be positive: %s", upperPrice)
+	}
+	if lowerPrice.GTE(upperPrice) {
+		return sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidRequest,
+			"lower price must be lower than upper price: %s >= %s", lowerPrice, upperPrice)
+	}
+	lowerTick, valid := exchangetypes.ValidateTickPrice(lowerPrice)
+	if !valid {
+		return sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidRequest, "invalid lower tick price: %s", lowerPrice)
+	}
+	if lowerTick < MinTick {
+		return sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidRequest, "lower tick must not be lower than the minimum %d", MinTick)
+	}
+	upperTick, valid := exchangetypes.ValidateTickPrice(upperPrice)
+	if !valid {
+		return sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidRequest, "invalid upper tick price: %s", upperPrice)
+	}
+	if upperTick > MaxTick {
+		return sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidRequest, "upper tick must not be higher than the maximum %d", MaxTick)
 	}
 	return nil
 }

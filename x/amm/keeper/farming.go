@@ -212,7 +212,7 @@ func (k Keeper) AllocateFarmingRewards(ctx sdk.Context) error {
 			continue
 		}
 		if err := k.bankKeeper.SendCoins(
-			ctx, farmingPoolAddr, types.RewardsPoolAddress, totalRewards); err != nil {
+			ctx, farmingPoolAddr, types.FarmingRewardsPoolAddress, totalRewards); err != nil {
 			return err
 		}
 		for poolId, rewards := range allocatedRewardsByFarmingPool[farmingPool] {
