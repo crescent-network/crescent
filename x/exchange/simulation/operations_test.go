@@ -95,7 +95,7 @@ func (s *SimTestSuite) TestSimulateMsgPlaceLimitOrder() {
 	s.Require().EqualValues(1, msg.MarketId)
 	s.Require().Equal(false, msg.IsBuy)
 	s.AssertEqual(utils.ParseDec("7.6119"), msg.Price)
-	s.AssertEqual(sdk.NewInt(78990524), msg.Quantity)
+	s.AssertEqual(sdk.NewInt(79000424), msg.Quantity)
 	s.Require().Equal(2*time.Hour, msg.Lifespan)
 }
 
@@ -121,7 +121,7 @@ func (s *SimTestSuite) TestSimulateMsgPlaceMMLimitOrder() {
 	s.Require().EqualValues(1, msg.MarketId)
 	s.Require().Equal(false, msg.IsBuy)
 	s.AssertEqual(utils.ParseDec("7.6119"), msg.Price)
-	s.AssertEqual(sdk.NewInt(78990524), msg.Quantity)
+	s.AssertEqual(sdk.NewInt(79000424), msg.Quantity)
 	s.Require().Equal(2*time.Hour, msg.Lifespan)
 }
 
@@ -149,7 +149,7 @@ func (s *SimTestSuite) TestSimulateMsgPlaceMarketOrder() {
 	s.Require().Equal("cosmos1r6vgn9cwpvja7448fg0fgglj63rcs6y84p8egu", msg.Sender)
 	s.Require().EqualValues(1, msg.MarketId)
 	s.Require().Equal(false, msg.IsBuy)
-	s.AssertEqual(sdk.NewInt(103992), msg.Quantity)
+	s.AssertEqual(sdk.NewInt(113892), msg.Quantity)
 }
 
 func (s *SimTestSuite) TestSimulateMsgCancelOrder() {
