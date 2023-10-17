@@ -54,7 +54,7 @@ func (k Keeper) AddLiquidity(
 	liquidity = types.LiquidityForAmounts(
 		poolState.CurrentSqrtPrice, lowerSqrtPrice, upperSqrtPrice, desiredAmt0, desiredAmt1)
 	if liquidity.IsZero() {
-		err = sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "minted liquidity is zero")
+		err = sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "added liquidity is zero")
 		return
 	}
 
@@ -94,11 +94,14 @@ func (k Keeper) RemoveLiquidity(
 		return
 	}
 	if ownerAddr.String() != position.Owner {
-		err = sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "position is not owned by the user")
+		err = sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "position is not owned by the address")
 		return
 	}
 	if position.Liquidity.LT(liquidity) {
-		err = sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "position liquidity is smaller than the liquidity specified")
+		err = sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidRequest,
+			"liquidity in position is smaller than liquidity specified: %s < %s",
+			position.Liquidity, liquidity)
 		return
 	}
 
@@ -147,7 +150,7 @@ func (k Keeper) Collect(
 		return sdkerrors.Wrap(sdkerrors.ErrNotFound, "position not found")
 	}
 	if ownerAddr.String() != position.Owner {
-		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "position is not owned by the user")
+		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "position is not owned by the address")
 	}
 	pool := k.MustGetPool(ctx, position.PoolId)
 
@@ -163,7 +166,8 @@ func (k Keeper) Collect(
 	collectible := position.OwedFee.Add(position.OwedFarmingRewards...)
 	if !collectible.IsAllGTE(amt) {
 		return sdkerrors.Wrapf(
-			sdkerrors.ErrInsufficientFunds, "collectible %s is smaller than %s", collectible, amt)
+			sdkerrors.ErrInvalidRequest,
+			"cannot collect %s from collectible coins %s", amt, collectible)
 	}
 	// Collect fee from the pool's rewards pool first.
 	fee := amt.Min(position.OwedFee)
