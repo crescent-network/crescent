@@ -472,7 +472,7 @@ func (suite *AnteTestSuite) TestMixedBatchMsg() {
 	)
 
 	msg := testdata.NewTestMsg(acc)
-	batchMsg := exchangetypes.NewMsgPlaceBatchLimitOrder(acc, 1, true, utils.ParseDec("1.2"), utils.ParseDec("1000000"), 0)
+	batchMsg := exchangetypes.NewMsgPlaceBatchLimitOrder(acc, 1, true, utils.ParseDec("1.2"), sdk.NewInt(1000000), 0)
 	authzMsg := authz.NewMsgExec(acc, []sdk.Msg{batchMsg, msg})
 	authzMsg2 := authz.NewMsgExec(acc, []sdk.Msg{batchMsg})
 	authzMsg3 := authz.NewMsgExec(acc, []sdk.Msg{batchMsg, batchMsg})
