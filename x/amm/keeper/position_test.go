@@ -383,3 +383,23 @@ func (s *KeeperTestSuite) TestRemoveSmallLiquidity() {
 		}
 	}
 }
+
+func (s *KeeperTestSuite) TestAddLiquidity_MinMaxPrice() {
+	_, pool := s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("5"))
+
+	lpAddr := s.FundedAccount(1, enoughCoins)
+	_, _, _, err := s.keeper.AddLiquidity(
+		s.Ctx, lpAddr, lpAddr, pool.Id, sdk.NewDecWithPrec(1, sdk.Precision), utils.ParseDec("10"),
+		utils.ParseCoins("1000_000000ucre,5000_000000uusd"))
+	s.Require().EqualError(
+		err, "lower price must not be lower than the minimum: "+
+			"0.000000000000000001 < 0.000000000000010000: invalid request")
+
+	_, _, _, err = s.keeper.AddLiquidity(
+		s.Ctx, lpAddr, lpAddr, pool.Id, utils.ParseDec("4"), sdk.NewDecFromInt(sdk.NewIntWithDecimal(1, 40)),
+		utils.ParseCoins("1000_000000ucre,5000_000000uusd"))
+	s.Require().EqualError(
+		err, "upper price must not be higher than the maximum: "+
+			"10000000000000000000000000000000000000000.000000000000000000 > "+
+			"1000000000000000000000000.000000000000000000: invalid request")
+}

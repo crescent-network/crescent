@@ -23,6 +23,16 @@ var (
 	MaxPrice = exchangetypes.PriceAtTick(MaxTick) // 1000000000000000000000000
 )
 
+func init() {
+	// sanity checks
+	if !MinPrice.Equal(exchangetypes.MinPrice) {
+		panic(fmt.Sprintf("%s != %s", MinPrice, exchangetypes.MinPrice))
+	}
+	if !MaxPrice.Equal(exchangetypes.MaxPrice) {
+		panic(fmt.Sprintf("%s != %s", MaxPrice, exchangetypes.MaxPrice))
+	}
+}
+
 var (
 	KeyPoolCreationFee               = []byte("PoolCreationFee")
 	KeyDefaultTickSpacing            = []byte("DefaultTickSpacing")
@@ -167,32 +177,32 @@ func ValidatePriceRange(lowerPrice, upperPrice sdk.Dec) error {
 		return sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidRequest, "lower price must be positive: %s", lowerPrice)
 	}
+	if lowerPrice.LT(MinPrice) {
+		return sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidRequest,
+			"lower price must not be lower than the minimum: %s < %s", lowerPrice, MinPrice)
+	}
 	if !upperPrice.IsPositive() {
 		return sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidRequest, "upper price must be positive: %s", upperPrice)
+	}
+	if upperPrice.GT(MaxPrice) {
+		return sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidRequest,
+			"upper price must not be higher than the maximum: %s > %s", upperPrice, MaxPrice)
 	}
 	if lowerPrice.GTE(upperPrice) {
 		return sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidRequest,
 			"lower price must be lower than upper price: %s >= %s", lowerPrice, upperPrice)
 	}
-	lowerTick, valid := exchangetypes.ValidateTickPrice(lowerPrice)
-	if !valid {
+	if _, valid := exchangetypes.ValidateTickPrice(lowerPrice); !valid {
 		return sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidRequest, "invalid lower tick price: %s", lowerPrice)
 	}
-	if lowerTick < MinTick {
-		return sdkerrors.Wrapf(
-			sdkerrors.ErrInvalidRequest, "lower tick must not be lower than the minimum %d", MinTick)
-	}
-	upperTick, valid := exchangetypes.ValidateTickPrice(upperPrice)
-	if !valid {
+	if _, valid := exchangetypes.ValidateTickPrice(upperPrice); !valid {
 		return sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidRequest, "invalid upper tick price: %s", upperPrice)
-	}
-	if upperTick > MaxTick {
-		return sdkerrors.Wrapf(
-			sdkerrors.ErrInvalidRequest, "upper tick must not be higher than the maximum %d", MaxTick)
 	}
 	return nil
 }

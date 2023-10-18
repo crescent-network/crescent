@@ -139,3 +139,15 @@ func TestPlan_IsActiveAt(t *testing.T) {
 	require.True(t, plan.IsActiveAt(utils.ParseTime("2022-12-31T23:59:59Z")))
 	require.False(t, plan.IsActiveAt(utils.ParseTime("2023-01-01T00:00:00Z")))
 }
+
+func TestFarmingPlan_MustGetAddresses(t *testing.T) {
+	plan := types.NewFarmingPlan(
+		1, "Farming Plan", utils.TestAddress(1), utils.TestAddress(2),
+		[]types.FarmingRewardAllocation{
+			types.NewFarmingRewardAllocation(1, utils.ParseCoins("100_000000ucre")),
+		},
+		utils.ParseTime("2022-01-01T00:00:00Z"),
+		utils.ParseTime("2023-01-01T00:00:00Z"), false)
+	require.Equal(t, plan.FarmingPoolAddress, plan.MustGetFarmingPoolAddress().String())
+	require.Equal(t, plan.TerminationAddress, plan.MustGetTerminationAddress().String())
+}

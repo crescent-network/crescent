@@ -93,8 +93,7 @@ func TestPosition_Validate(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			position := types.NewPosition(
-				1, 2, utils.TestAddress(1), -500, 500)
+			position := types.NewPosition(1, 2, utils.TestAddress(1), -500, 500)
 			tc.malleate(&position)
 			err := position.Validate()
 			if tc.expectedErr == "" {
@@ -104,4 +103,9 @@ func TestPosition_Validate(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestPosition_MustGetAddress(t *testing.T) {
+	position := types.NewPosition(1, 2, utils.TestAddress(1), -500, 500)
+	require.Equal(t, position.Owner, position.MustGetOwnerAddress().String())
 }
