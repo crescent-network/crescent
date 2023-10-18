@@ -155,6 +155,15 @@ func (k Keeper) IterateAllPools(ctx sdk.Context, cb func(pool types.Pool) (stop 
 	}
 }
 
+func (k Keeper) GetAllPools(ctx sdk.Context) []types.Pool {
+	var pools []types.Pool
+	k.IterateAllPools(ctx, func(pool types.Pool) (stop bool) {
+		pools = append(pools, pool)
+		return false
+	})
+	return pools
+}
+
 func (k Keeper) GetPoolState(ctx sdk.Context, poolId uint64) (state types.PoolState, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.GetPoolStateKey(poolId))

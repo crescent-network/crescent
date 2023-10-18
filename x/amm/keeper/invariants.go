@@ -67,7 +67,8 @@ func RewardsGrowthOutsideInvariant(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		msg := ""
 		cnt := 0
-		k.IterateAllPools(ctx, func(pool types.Pool) (stop bool) {
+		pools := k.GetAllPools(ctx)
+		for _, pool := range pools {
 			poolState := k.MustGetPoolState(ctx, pool.Id)
 			k.IterateTickInfosByPool(ctx, pool.Id, func(tick int32, tickInfo types.TickInfo) (stop bool) {
 				if _, hasNeg := poolState.FeeGrowthGlobal.SafeSub(tickInfo.FeeGrowthOutside); hasNeg {
@@ -84,8 +85,7 @@ func RewardsGrowthOutsideInvariant(k Keeper) sdk.Invariant {
 				}
 				return false
 			})
-			return false
-		})
+		}
 		broken := cnt != 0
 		return sdk.FormatInvariant(
 			types.ModuleName, "rewards growth outside",
