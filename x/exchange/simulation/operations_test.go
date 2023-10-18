@@ -222,25 +222,32 @@ func (s *SimTestSuite) TestSimulateMsgSwapExactAmountIn() {
 	r := rand.New(rand.NewSource(0))
 	accs := s.getTestingAccounts(r, 2)
 
+	lpAddr := accs[1].Address
+	s.FundAccount(
+		lpAddr, sdk.NewCoins(
+			sdk.NewCoin("denom1", sdk.NewIntWithDecimal(1, 60)),
+			sdk.NewCoin("denom2", sdk.NewIntWithDecimal(1, 60)),
+			sdk.NewCoin("denom3", sdk.NewIntWithDecimal(1, 60))))
+
 	mmAddr := accs[0].Address
 	market1 := s.CreateMarket("denom1", "denom2")
 	s.MakeLastPrice(market1.Id, mmAddr, utils.ParseDec("1"))
 	pool1 := s.CreatePool(market1.Id, utils.ParseDec("1"))
 	s.AddLiquidity(
-		accs[1].Address, pool1.Id, utils.ParseDec("0.5"), utils.ParseDec("2"),
-		utils.ParseCoins("10_000000denom1,10_0000000denom2"))
+		lpAddr, pool1.Id, utils.ParseDec("0.5"), utils.ParseDec("2"),
+		utils.ParseCoins("100_000000denom1,100_0000000denom2"))
 	market2 := s.CreateMarket("denom2", "denom3")
 	s.MakeLastPrice(market2.Id, mmAddr, utils.ParseDec("5"))
 	pool2 := s.CreatePool(market2.Id, utils.ParseDec("5"))
 	s.AddLiquidity(
-		accs[1].Address, pool2.Id, utils.ParseDec("1"), utils.ParseDec("20"),
-		utils.ParseCoins("10_000000denom2,50_000000denom3"))
+		lpAddr, pool2.Id, utils.ParseDec("1"), utils.ParseDec("25"),
+		utils.ParseCoins("100_000000denom2,500_000000denom3"))
 	market3 := s.CreateMarket("denom3", "denom1")
-	s.MakeLastPrice(market3.Id, mmAddr, utils.ParseDec("0.05"))
-	pool3 := s.CreatePool(market3.Id, utils.ParseDec("0.05"))
+	s.MakeLastPrice(market3.Id, mmAddr, utils.ParseDec("0.19"))
+	pool3 := s.CreatePool(market3.Id, utils.ParseDec("0.19"))
 	s.AddLiquidity(
-		accs[1].Address, pool3.Id, utils.ParseDec("0.0001"), utils.ParseDec("1000"),
-		utils.ParseCoins("10_000000denom3,50_000000denom1"))
+		lpAddr, pool3.Id, utils.ParseDec("0.1"), utils.ParseDec("0.4"),
+		utils.ParseCoins("1000_000000denom3,100_000000denom1"))
 
 	op := simulation.SimulateMsgSwapExactAmountIn(
 		s.App.AccountKeeper, s.App.BankKeeper, s.keeper)
@@ -256,6 +263,6 @@ func (s *SimTestSuite) TestSimulateMsgSwapExactAmountIn() {
 	s.Require().Equal(types.ModuleName, msg.Route())
 	s.Require().Equal("cosmos12jszjrc0qhjt0ugt2uh4ptwu0h55pq6qfp9ecl", msg.Sender)
 	s.Require().Equal([]uint64{2, 1, 3}, msg.Routes)
-	s.AssertEqual(utils.ParseCoin("82823denom3"), msg.Input)
-	s.AssertEqual(utils.ParseCoin("310336denom3"), msg.MinOutput) // Arbitrage!
+	s.AssertEqual(utils.ParseCoin("8070437denom3"), msg.Input)
+	s.AssertEqual(utils.ParseCoin("8269769denom3"), msg.MinOutput) // Arbitrage!
 }
