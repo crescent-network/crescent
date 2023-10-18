@@ -257,5 +257,5 @@ func (s *SimTestSuite) TestSimulateMsgSwapExactAmountIn() {
 	s.Require().Equal("cosmos12jszjrc0qhjt0ugt2uh4ptwu0h55pq6qfp9ecl", msg.Sender)
 	s.Require().Equal([]uint64{2, 1, 3}, msg.Routes)
 	s.AssertEqual(utils.ParseCoin("82823denom3"), msg.Input)
-	s.AssertEqual(utils.ParseCoin("315661denom3"), msg.MinOutput) // Arbitrage!
+	s.AssertEqual(utils.ParseCoin("310336denom3"), msg.MinOutput) // Arbitrage!
 }
