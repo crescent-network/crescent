@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"math"
 	"math/big"
 
@@ -45,9 +46,9 @@ func ValidateTickPrice(price sdk.Dec) (tick int32, valid bool) {
 
 func PriceAtTick(tick int32) sdk.Dec {
 	q, r := utils.DivMod(int(tick), 9*p)
-	//if q < prec-sdk.Precision {
-	//	panic("price underflow")
-	//}
+	if q < TickPrecision-sdk.Precision {
+		panic(fmt.Sprintf("price underflow: %d", tick))
+	}
 	return sdk.NewDecFromIntWithPrec(
 		sdk.NewIntWithDecimal(int64(p+r), sdk.Precision+q-TickPrecision), sdk.Precision)
 }
