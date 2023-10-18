@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -247,7 +246,7 @@ func (s *KeeperTestSuite) TestPoolOrderMaxOrderPriceRatio() {
 	s.AssertEqual(utils.ParseDec("90"), *s.App.ExchangeKeeper.MustGetMarketState(s.Ctx, market.Id).LastPrice)
 }
 
-func (s *KeeperTestSuite) TestPoolOrdersMatching() {
+func (s *KeeperTestSuite) TestPoolOrdersMatchingInterval() {
 	market, pool := s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("5"))
 
 	lpAddr := s.FundedAccount(1, enoughCoins)
@@ -263,5 +262,9 @@ func (s *KeeperTestSuite) TestPoolOrdersMatching() {
 	_, _, res := s.PlaceLimitOrder(
 		market.Id, ordererAddr, true, utils.ParseDec("5.1"), sdk.NewInt(20_000000), 0)
 
-	fmt.Println(res.IsMatched(), res.ExecutedQuantity)
+	s.Require().True(res.IsMatched())
+	s.AssertEqual(sdk.NewInt(19_999998), res.ExecutedQuantity)
+	s.AssertEqual(
+		utils.ParseBigDec("2.247220505424423186459814044549067943"),
+		s.keeper.MustGetPoolState(s.Ctx, pool.Id).CurrentSqrtPrice)
 }
