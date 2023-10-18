@@ -271,6 +271,14 @@ func MinInt(a, b sdk.Int) sdk.Int {
 	return b
 }
 
+// MaxInt works like sdk.MaxInt, but without allocations.
+func MaxInt(a, b sdk.Int) sdk.Int {
+	if a.GT(b) {
+		return a
+	}
+	return b
+}
+
 func Uint32ToBigEndian(i uint32) []byte {
 	b := make([]byte, 4)
 	binary.BigEndian.PutUint32(b, i)

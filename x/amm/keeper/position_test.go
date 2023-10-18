@@ -49,7 +49,7 @@ func (s *KeeperTestSuite) TestAddLiquidity() {
 	s.Require().EqualError(err, "pool doesn't have denom uatom: invalid request")
 
 	// Added liquidity is zero
-	_, liquidity, amt, err := s.keeper.AddLiquidity(
+	_, _, _, err = s.keeper.AddLiquidity(
 		s.Ctx, lpAddr, lpAddr, pool.Id, utils.ParseDec("0.8"), utils.ParseDec("0.9"),
 		utils.ParseCoins("1_000000ucre"))
 	s.Require().EqualError(err, "added liquidity is zero: invalid request")
