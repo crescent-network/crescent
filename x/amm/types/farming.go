@@ -66,6 +66,14 @@ func (plan FarmingPlan) Validate() error {
 	return nil
 }
 
+func (plan FarmingPlan) MustGetFarmingPoolAddress() sdk.AccAddress {
+	return sdk.MustAccAddressFromBech32(plan.FarmingPoolAddress)
+}
+
+func (plan FarmingPlan) MustGetTerminationAddress() sdk.AccAddress {
+	return sdk.MustAccAddressFromBech32(plan.TerminationAddress)
+}
+
 func NewFarmingRewardAllocation(poolId uint64, rewardsPerDay sdk.Coins) FarmingRewardAllocation {
 	return FarmingRewardAllocation{
 		PoolId:        poolId,

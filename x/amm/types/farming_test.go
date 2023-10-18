@@ -24,6 +24,13 @@ func TestFarmingPlan_Validate(t *testing.T) {
 			"",
 		},
 		{
+			"invalid farming plan id",
+			func(plan *types.FarmingPlan) {
+				plan.Id = 0
+			},
+			"plan id must be positive",
+		},
+		{
 			"too long description",
 			func(plan *types.FarmingPlan) {
 				plan.Description = strings.Repeat("x", types.MaxPlanDescriptionLen+1)
