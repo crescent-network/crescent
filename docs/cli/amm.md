@@ -26,8 +26,8 @@ Note that [jq](https://stedolan.github.io/jq/) is recommended to be installed as
   - [Pool](#Pool)
   - [AllPositions](#AllPositions)
   - [Position](#Position)
-  - [AddLiquiditySimulation](#AddLiquiditySimulation)
-  - [RemoveLiquiditySimulation](#RemoveLiquiditySimulation)
+  - [SimulateAddLiquidity](#SimulateAddLiquidity)
+  - [SimulateRemoveLiquidity](#SimulateRemoveLiquidity)
   - [CollectibleCoins](#CollectibleCoins)
   - [AllTickInfos](#AllTickInfos)
   - [TickInfo](#TickInfo)
@@ -324,7 +324,7 @@ Example
 crescentd q amm position 1 -o json | jq
 ```
 
-## AddLiquiditySimulation
+## SimulateAddLiquidity
 
 Query expected result for add-liquidity
 
@@ -340,7 +340,7 @@ Example
 crescentd q amm add-liquidity-simulation 1 9 11 10000000uatom,10000000uusd -o json | jq
 ```
 
-## RemoveLiquiditySimulation
+## SimulateRemoveLiquidity
 
 Query expected result for remove-liquidity
 

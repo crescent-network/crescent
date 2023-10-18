@@ -376,32 +376,32 @@ func (s *KeeperTestSuite) TestQueryPositionAssets() {
 	}
 }
 
-func (s *KeeperTestSuite) TestQueryAddLiquiditySimulation() {
+func (s *KeeperTestSuite) TestQuerySimulateAddLiquidity() {
 	s.SetupSampleScenario()
 
 	for _, tc := range []struct {
 		name        string
-		req         *types.QueryAddLiquiditySimulationRequest
+		req         *types.QuerySimulateAddLiquidityRequest
 		expectedErr string
-		postRun     func(resp *types.QueryAddLiquiditySimulationResponse)
+		postRun     func(resp *types.QuerySimulateAddLiquidityResponse)
 	}{
 		{
 			"happy case",
-			&types.QueryAddLiquiditySimulationRequest{
+			&types.QuerySimulateAddLiquidityRequest{
 				PoolId:        2,
 				LowerPrice:    "4.5",
 				UpperPrice:    "5.5",
 				DesiredAmount: "100000000ucre,500000000uusd",
 			},
 			"",
-			func(resp *types.QueryAddLiquiditySimulationResponse) {
+			func(resp *types.QuerySimulateAddLiquidityResponse) {
 				s.AssertEqual(sdk.NewInt(2224212598), resp.Liquidity)
 				s.AssertEqual(utils.ParseCoins("100000000ucre,434000uusd"), resp.Amount)
 			},
 		},
 		{
 			"pool not found",
-			&types.QueryAddLiquiditySimulationRequest{
+			&types.QuerySimulateAddLiquidityRequest{
 				PoolId:        0,
 				LowerPrice:    "4.5",
 				UpperPrice:    "5.5",
@@ -412,7 +412,7 @@ func (s *KeeperTestSuite) TestQueryAddLiquiditySimulation() {
 		},
 		{
 			"pool not found 2",
-			&types.QueryAddLiquiditySimulationRequest{
+			&types.QuerySimulateAddLiquidityRequest{
 				PoolId:        3,
 				LowerPrice:    "4.5",
 				UpperPrice:    "5.5",
@@ -423,7 +423,7 @@ func (s *KeeperTestSuite) TestQueryAddLiquiditySimulation() {
 		},
 		{
 			"invalid lower price",
-			&types.QueryAddLiquiditySimulationRequest{
+			&types.QuerySimulateAddLiquidityRequest{
 				PoolId:        2,
 				LowerPrice:    "4.5?",
 				UpperPrice:    "5.5",
@@ -434,7 +434,7 @@ func (s *KeeperTestSuite) TestQueryAddLiquiditySimulation() {
 		},
 		{
 			"invalid upper price",
-			&types.QueryAddLiquiditySimulationRequest{
+			&types.QuerySimulateAddLiquidityRequest{
 				PoolId:        2,
 				LowerPrice:    "4.5",
 				UpperPrice:    "5.5?",
@@ -445,7 +445,7 @@ func (s *KeeperTestSuite) TestQueryAddLiquiditySimulation() {
 		},
 		{
 			"invalid desired amount",
-			&types.QueryAddLiquiditySimulationRequest{
+			&types.QuerySimulateAddLiquidityRequest{
 				PoolId:        2,
 				LowerPrice:    "4.5",
 				UpperPrice:    "5.5",
@@ -457,7 +457,7 @@ func (s *KeeperTestSuite) TestQueryAddLiquiditySimulation() {
 	} {
 		s.Run(tc.name, func() {
 			cacheCtx, _ := s.Ctx.CacheContext()
-			resp, err := s.querier.AddLiquiditySimulation(sdk.WrapSDKContext(cacheCtx), tc.req)
+			resp, err := s.querier.SimulateAddLiquidity(sdk.WrapSDKContext(cacheCtx), tc.req)
 			if tc.expectedErr == "" {
 				s.Require().NoError(err)
 				tc.postRun(resp)
@@ -468,29 +468,29 @@ func (s *KeeperTestSuite) TestQueryAddLiquiditySimulation() {
 	}
 }
 
-func (s *KeeperTestSuite) TestQueryRemoveLiquiditySimulation() {
+func (s *KeeperTestSuite) TestQuerySimulateRemoveLiquidity() {
 	s.SetupSampleScenario()
 
 	for _, tc := range []struct {
 		name        string
-		req         *types.QueryRemoveLiquiditySimulationRequest
+		req         *types.QuerySimulateRemoveLiquidityRequest
 		expectedErr string
-		postRun     func(resp *types.QueryRemoveLiquiditySimulationResponse)
+		postRun     func(resp *types.QuerySimulateRemoveLiquidityResponse)
 	}{
 		{
 			"happy case",
-			&types.QueryRemoveLiquiditySimulationRequest{
+			&types.QuerySimulateRemoveLiquidityRequest{
 				PositionId: 1,
 				Liquidity:  "10000000",
 			},
 			"",
-			func(resp *types.QueryRemoveLiquiditySimulationResponse) {
+			func(resp *types.QuerySimulateRemoveLiquidityResponse) {
 				s.Require().Equal("631128ucre,1215154uusd", resp.Amount.String())
 			},
 		},
 		{
 			"position not found",
-			&types.QueryRemoveLiquiditySimulationRequest{
+			&types.QuerySimulateRemoveLiquidityRequest{
 				PositionId: 0,
 				Liquidity:  "10000000",
 			},
@@ -499,7 +499,7 @@ func (s *KeeperTestSuite) TestQueryRemoveLiquiditySimulation() {
 		},
 		{
 			"position not found 2",
-			&types.QueryRemoveLiquiditySimulationRequest{
+			&types.QuerySimulateRemoveLiquidityRequest{
 				PositionId: 5,
 				Liquidity:  "10000000",
 			},
@@ -508,7 +508,7 @@ func (s *KeeperTestSuite) TestQueryRemoveLiquiditySimulation() {
 		},
 		{
 			"invalid liquidity",
-			&types.QueryRemoveLiquiditySimulationRequest{
+			&types.QuerySimulateRemoveLiquidityRequest{
 				PositionId: 2,
 				Liquidity:  "10000000?",
 			},
@@ -518,7 +518,7 @@ func (s *KeeperTestSuite) TestQueryRemoveLiquiditySimulation() {
 	} {
 		s.Run(tc.name, func() {
 			cacheCtx, _ := s.Ctx.CacheContext()
-			resp, err := s.querier.RemoveLiquiditySimulation(sdk.WrapSDKContext(cacheCtx), tc.req)
+			resp, err := s.querier.SimulateRemoveLiquidity(sdk.WrapSDKContext(cacheCtx), tc.req)
 			if tc.expectedErr == "" {
 				s.Require().NoError(err)
 				tc.postRun(resp)

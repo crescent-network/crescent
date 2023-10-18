@@ -13699,9 +13699,9 @@ paths:
           format: uint64
       tags:
         - Query
-  /crescent/amm/v1beta1/simulation/add_liquidity:
+  /crescent/amm/v1beta1/simulate_add_liquidity:
     get:
-      operationId: AddLiquiditySimulation
+      operationId: SimulateAddLiquidity
       responses:
         '200':
           description: A successful response.
@@ -13769,9 +13769,9 @@ paths:
           type: string
       tags:
         - Query
-  /crescent/amm/v1beta1/simulation/remove_liquidity:
+  /crescent/amm/v1beta1/simulate_remove_liquidity:
     get:
-      operationId: RemoveLiquiditySimulation
+      operationId: SimulateRemoveLiquidity
       responses:
         '200':
           description: A successful response.
@@ -21146,25 +21146,6 @@ definitions:
 
             NOTE: The amount field is an Int which implements the custom method
             signatures required by gogoproto.
-  crescent.amm.v1beta1.QueryAddLiquiditySimulationResponse:
-    type: object
-    properties:
-      liquidity:
-        type: string
-      amount:
-        type: array
-        items:
-          type: object
-          properties:
-            denom:
-              type: string
-            amount:
-              type: string
-          description: |-
-            Coin defines a token with a denomination and an amount.
-
-            NOTE: The amount field is an Int which implements the custom method
-            signatures required by gogoproto.
   crescent.amm.v1beta1.QueryAllFarmingPlansResponse:
     type: object
     properties:
@@ -21900,7 +21881,26 @@ definitions:
                 method
 
                 signatures required by gogoproto.
-  crescent.amm.v1beta1.QueryRemoveLiquiditySimulationResponse:
+  crescent.amm.v1beta1.QuerySimulateAddLiquidityResponse:
+    type: object
+    properties:
+      liquidity:
+        type: string
+      amount:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            Coin defines a token with a denomination and an amount.
+
+            NOTE: The amount field is an Int which implements the custom method
+            signatures required by gogoproto.
+  crescent.amm.v1beta1.QuerySimulateRemoveLiquidityResponse:
     type: object
     properties:
       amount:
