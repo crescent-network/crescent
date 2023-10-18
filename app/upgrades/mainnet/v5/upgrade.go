@@ -259,7 +259,8 @@ func UpgradeHandler(
 				ammKeeper.SetPoolByReserveAddressIndex(ctx, newPool)
 				// Set initial pool state with the pool price we've calculated.
 				newPoolState := ammtypes.NewPoolState(
-					exchangetypes.TickAtPrice(newPoolPrice), cremath.NewBigDecFromDec(newPoolPrice))
+					exchangetypes.TickAtPrice(newPoolPrice),
+					cremath.NewBigDecFromDec(newPoolPrice).SqrtMut())
 				ammKeeper.SetPoolState(ctx, newPoolId, newPoolState)
 				newPoolIdByPairId[pairId] = newPoolId
 			}
