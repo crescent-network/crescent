@@ -87,6 +87,9 @@ func (k Keeper) AddLiquidity(
 
 func (k Keeper) RemoveLiquidity(
 	ctx sdk.Context, ownerAddr, toAddr sdk.AccAddress, positionId uint64, liquidity sdk.Int) (position types.Position, amt sdk.Coins, err error) {
+	if liquidity.IsNegative() { // sanity check
+		panic("liquidity is negative")
+	}
 	var found bool
 	position, found = k.GetPosition(ctx, positionId)
 	if !found {
@@ -245,6 +248,9 @@ func (k Keeper) modifyPosition(
 	var found bool
 	position, found = k.GetPositionByParams(ctx, ownerAddr, pool.Id, lowerTick, upperTick)
 	if !found {
+		if liquidityDelta.IsNegative() {
+			panic("liquidityDelta is negative")
+		}
 		positionId := k.GetNextPositionIdWithUpdate(ctx)
 		position = types.NewPosition(positionId, pool.Id, ownerAddr, lowerTick, upperTick)
 		k.SetPositionByParamsIndex(ctx, position)
