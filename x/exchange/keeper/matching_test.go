@@ -57,6 +57,8 @@ func (s *KeeperTestSuite) TestOrderSourceMatchingAsMaker() {
 
 	ordererAddr := s.FundedAccount(2, enoughCoins)
 	_, res := s.PlaceMarketOrder(market.Id, ordererAddr, true, sdk.NewInt(10_000001))
+	// check last prices
+
 	s.AssertEqual(sdk.NewInt(10_000001), res.ExecutedQuantity)
 	s.AssertEqual(utils.ParseCoin("25_860003uusd"), res.Paid)
 	s.AssertEqual(utils.ParseCoin("9_970000ucre"), res.Received)
