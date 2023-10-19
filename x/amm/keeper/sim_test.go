@@ -1,11 +1,13 @@
 package keeper_test
 
 import (
+	"fmt"
 	"math/rand"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	utils "github.com/crescent-network/crescent/v5/types"
+	"github.com/crescent-network/crescent/v5/x/amm/keeper"
 	"github.com/crescent-network/crescent/v5/x/amm/types"
 	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 )
@@ -38,6 +40,8 @@ func (s *KeeperTestSuite) TestSimulation() {
 			lpAddrs[i] = s.FundedAccount(1+i, enoughCoins)
 		}
 		ordererAddr := s.FundedAccount(100, enoughCoins)
+
+		fmt.Println("========================== seed", seed)
 
 		for i := 0; i < 100; i++ {
 			poolState := s.keeper.MustGetPoolState(s.Ctx, pool.Id)
@@ -75,6 +79,11 @@ func (s *KeeperTestSuite) TestSimulation() {
 				}
 			}
 
+			msg, broken := keeper.CanRemoveLiquidityInvariant(s.keeper)(s.Ctx)
+			if broken {
+				panic(msg)
+			}
+
 			// Randomly remove liquidity
 			for _, lpAddr := range lpAddrs {
 				if r.Float64() <= 0.2 {
@@ -96,6 +105,10 @@ func (s *KeeperTestSuite) TestSimulation() {
 			isBuy := r.Float64() <= 0.5
 			qty := utils.RandomInt(r, sdk.NewInt(10000), sdk.NewInt(10_000000))
 			s.PlaceMarketOrder(market.Id, ordererAddr, isBuy, qty)
+			//msg, broken := keeper.CanRemoveLiquidityInvariant(s.keeper)(s.Ctx)
+			//if broken {
+			//	panic(msg)
+			//}
 		}
 	}
 }
