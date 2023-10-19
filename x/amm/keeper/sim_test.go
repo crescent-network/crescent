@@ -96,6 +96,8 @@ func (s *KeeperTestSuite) TestSimulation() {
 			isBuy := r.Float64() <= 0.5
 			qty := utils.RandomInt(r, sdk.NewInt(10000), sdk.NewInt(10_000000))
 			s.PlaceMarketOrder(market.Id, ordererAddr, isBuy, qty)
+
+			s.NextBlock()
 		}
 	}
 }

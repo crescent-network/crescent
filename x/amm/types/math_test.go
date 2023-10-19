@@ -292,30 +292,25 @@ func TestAmountsForLiquidity(t *testing.T) {
 	}
 }
 
-func TestNextSqrtPriceFromOutput(t *testing.T) {
+func TestNextSqrtPriceFromAmount0InputBigDec(t *testing.T) {
 	for i, tc := range []struct {
 		currentSqrtPrice cremath.BigDec
 		liquidity        sdk.Int
-		amt              sdk.Int
-		isBuy            bool
+		amt              cremath.BigDec
 		nextSqrtPrice    cremath.BigDec
 	}{
 		{
-			utils.ParseBigDec("1"), sdk.NewInt(1000000000), sdk.NewInt(100000), true,
-			utils.ParseBigDec("0.9999"),
+			utils.ParseBigDec("1"), sdk.NewInt(1000000000), cremath.NewBigDec(100000),
+			utils.ParseBigDec("0.999900009999000099990000999900010000"),
 		},
 		{
-			utils.ParseBigDec("1"), sdk.NewInt(1000000000), sdk.NewInt(123456), true,
-			utils.ParseBigDec("0.999876544"),
-		},
-		{
-			utils.ParseBigDec("1"), sdk.NewInt(1000000000), sdk.NewInt(123456), false,
-			utils.ParseBigDec("1.000123471243265808623669443734845730"),
+			utils.ParseBigDec("1"), sdk.NewInt(1000000000), cremath.NewBigDec(123456),
+			utils.ParseBigDec("0.999876559239502527975906206523367452"),
 		},
 	} {
 		t.Run(fmt.Sprint(i), func(t *testing.T) {
-			nextSqrtPrice := types.NextSqrtPriceFromOutput(
-				tc.currentSqrtPrice, tc.liquidity, tc.amt, tc.isBuy)
+			nextSqrtPrice := types.NextSqrtPriceFromAmount0InputBigDec(
+				tc.currentSqrtPrice, tc.liquidity, tc.amt)
 			utils.AssertEqual(t, tc.nextSqrtPrice, nextSqrtPrice)
 		})
 	}
