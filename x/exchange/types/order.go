@@ -11,8 +11,8 @@ import (
 
 func NewOrder(
 	orderId uint64, typ OrderType, ordererAddr sdk.AccAddress, marketId uint64,
-	isBuy bool, price, qty sdk.Dec, msgHeight int64,
-	openQty, remainingDeposit sdk.Dec, deadline time.Time) Order {
+	isBuy bool, price sdk.Dec, qty sdk.Int, msgHeight int64,
+	openQty, remainingDeposit sdk.Int, deadline time.Time) Order {
 	return Order{
 		Id:               orderId,
 		Type:             typ,
@@ -62,39 +62,22 @@ func (order Order) Validate() error {
 	return nil
 }
 
-func (order Order) ExecutableQuantity() sdk.Dec {
+func (order Order) ExecutableQuantity() sdk.Int {
 	if order.IsBuy {
-		return sdk.MinDec(
+		return utils.MinInt(
 			order.OpenQuantity,
-			order.RemainingDeposit.QuoTruncate(order.Price))
+			order.RemainingDeposit.ToDec().QuoTruncate(order.Price).TruncateInt())
 	}
-	return sdk.MinDec(order.OpenQuantity, order.RemainingDeposit)
+	return utils.MinInt(order.OpenQuantity, order.RemainingDeposit)
 }
 
 func (order Order) MustGetOrdererAddress() sdk.AccAddress {
 	return sdk.MustAccAddressFromBech32(order.Orderer)
 }
 
-type ExecuteOrderResult struct {
-	LastPrice        sdk.Dec
-	ExecutedQuantity sdk.Dec
-	ExecutedQuote    sdk.Dec
-	Paid             sdk.DecCoin
-	Received         sdk.DecCoin
-	Fee              sdk.DecCoin
-	FullyExecuted    bool
-}
-
-func NewExecuteOrderResult(payDenom, receiveDenom string) ExecuteOrderResult {
-	return ExecuteOrderResult{
-		ExecutedQuantity: utils.ZeroDec,
-		ExecutedQuote:    utils.ZeroDec,
-		Paid:             sdk.NewDecCoin(payDenom, utils.ZeroInt),
-		Received:         sdk.NewDecCoin(receiveDenom, utils.ZeroInt),
-		Fee:              sdk.NewDecCoin(receiveDenom, utils.ZeroInt), // always taker
+func DepositAmount(isBuy bool, price sdk.Dec, qty sdk.Int) sdk.Int {
+	if isBuy {
+		return price.MulInt(qty).Ceil().TruncateInt()
 	}
-}
-
-func (res ExecuteOrderResult) Executed() bool {
-	return !res.LastPrice.IsNil()
+	return qty
 }

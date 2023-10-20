@@ -8,8 +8,8 @@ import (
 )
 
 func (k Keeper) ConstructMemOrderBookSide(
-	ctx sdk.Context, market types.Market, opts types.MemOrderBookSideOptions, escrow *types.Escrow) *types.MemOrderBookSide {
-	accQty := utils.ZeroDec
+	ctx sdk.Context, market types.Market, opts types.MemOrderBookSideOptions) *types.MemOrderBookSide {
+	accQty := utils.ZeroInt
 	accQuote := utils.ZeroDec
 	obs := types.NewMemOrderBookSide(opts.IsBuy)
 	numPriceLevels := 0
@@ -20,69 +20,86 @@ func (k Keeper) ConstructMemOrderBookSide(
 		for _, order := range orders {
 			obs.AddOrder(types.NewUserMemOrder(order))
 			accQty = accQty.Add(order.OpenQuantity)
-			accQuote = accQuote.Add(types.QuoteAmount(!opts.IsBuy, order.Price, order.OpenQuantity))
+			accQuote = accQuote.Add(order.Price.MulInt(order.OpenQuantity))
 		}
 		numPriceLevels++
 		return false
 	})
 	for _, name := range k.sourceNames {
 		source := k.sources[name]
-		if err := source.ConstructMemOrderBookSide(ctx, market, func(ordererAddr sdk.AccAddress, price, qty, openQty sdk.Dec) {
-			deposit := types.DepositAmount(opts.IsBuy, price, openQty)
-			if escrow != nil {
-				payDenom, _ := types.PayReceiveDenoms(market.BaseDenom, market.QuoteDenom, opts.IsBuy)
-				escrow.Lock(ordererAddr, sdk.NewDecCoinFromDec(payDenom, deposit))
-			}
-			obs.AddOrder(types.NewOrderSourceMemOrder(ordererAddr, opts.IsBuy, price, qty, openQty, source))
+		if err := source.ConstructMemOrderBookSide(ctx, market, func(ordererAddr sdk.AccAddress, price sdk.Dec, qty sdk.Int) {
+			deposit := types.DepositAmount(opts.IsBuy, price, qty)
+			obs.AddOrder(types.NewOrderSourceMemOrder(
+				ordererAddr, opts.IsBuy, price, qty, qty, deposit, source))
 		}, opts); err != nil {
 			panic(err)
 		}
 	}
 	if opts.MaxNumPriceLevels > 0 {
-		// TODO: can refund?
 		obs.Limit(opts.MaxNumPriceLevels)
 	}
 	return obs
 }
 
 func (k Keeper) executeOrder(
-	ctx sdk.Context, market types.Market, ordererAddr sdk.AccAddress,
-	opts types.MemOrderBookSideOptions, halveFees, simulate bool) (res types.ExecuteOrderResult, err error) {
+	ctx sdk.Context, market types.Market, ordererAddr sdk.AccAddress, isBuy bool,
+	opts types.MemOrderBookSideOptions, halveFees, simulate bool) (res types.ExecuteOrderResult, full bool, err error) {
 	if simulate {
 		ctx, _ = ctx.CacheContext()
 	}
-	escrow := types.NewEscrow(market.MustGetEscrowAddress())
 	mCtx := types.NewMatchingContext(market, halveFees)
-	obs := k.ConstructMemOrderBookSide(ctx, market, opts, escrow)
-	res = mCtx.ExecuteOrder(obs, opts.QuantityLimit, opts.QuoteLimit)
-	if res.Executed() {
-		res.Paid.Amount = res.Paid.Amount.Ceil()
-		res.Received.Amount = res.Received.Amount.TruncateDec()
-		// TODO fee?
+	obs := k.ConstructMemOrderBookSide(ctx, market, opts)
+	mr, full, lastPrice := mCtx.ExecuteOrder(isBuy, obs, opts.QuantityLimit, opts.QuoteLimit)
+	if mr.IsMatched() {
 		if !simulate {
-			escrow.Lock(ordererAddr, res.Paid)
-			escrow.Unlock(ordererAddr, res.Received)
-			if err = k.finalizeMatching(ctx, market, obs.Orders(), escrow); err != nil {
+			ledger := types.NewLedger(market.BaseDenom, market.QuoteDenom)
+			payDenom, receiveDenom := types.PayReceiveDenoms(
+				market.BaseDenom, market.QuoteDenom, isBuy)
+			ledger.FeedMatchResult(isBuy, mr)
+			ledger.Pay(ordererAddr, sdk.NewCoin(payDenom, mr.Paid))
+			ledger.Receive(ordererAddr, sdk.NewCoin(receiveDenom, mr.Received))
+			if err = k.finalizeMatching(ctx, market, obs.Orders(), ledger); err != nil {
 				return
 			}
 			state := k.MustGetMarketState(ctx, market.Id)
-			state.LastPrice = &res.LastPrice
+			state.LastPrice = &lastPrice
 			state.LastMatchingHeight = ctx.BlockHeight()
 			k.SetMarketState(ctx, market.Id, state)
 		}
 	}
-	return
+	payDenom, receiveDenom := types.PayReceiveDenoms(market.BaseDenom, market.QuoteDenom, isBuy)
+	return types.ExecuteOrderResult{
+		LastPrice:        lastPrice,
+		ExecutedQuantity: mr.ExecutedQuantity,
+		Paid:             sdk.NewCoin(payDenom, mr.Paid),
+		Received:         sdk.NewCoin(receiveDenom, mr.Received),
+		FeePaid:          sdk.NewCoin(receiveDenom, mr.FeePaid),
+		FeeReceived:      sdk.NewCoin(payDenom, mr.FeeReceived),
+	}, full, nil
 }
 
-func (k Keeper) finalizeMatching(ctx sdk.Context, market types.Market, orders []*types.MemOrder, escrow *types.Escrow) error {
-	if escrow == nil {
-		escrow = types.NewEscrow(market.MustGetEscrowAddress())
+func (k Keeper) finalizeMatching(
+	ctx sdk.Context, market types.Market, orders []*types.MemOrder,
+	ledger *types.Ledger) error {
+	if ledger == nil {
+		ledger = types.NewLedger(market.BaseDenom, market.QuoteDenom)
 	}
 	var sourceNames []string
 	ordersBySource := map[string][]*types.MemOrder{}
 	for _, memOrder := range orders {
-		if memOrder.IsMatched() && memOrder.Type() == types.OrderSourceMemOrder {
-			sourceName := memOrder.Source().Name()
+		if !memOrder.IsMatched() {
+			continue
+		}
+		res := memOrder.Result()
+		ledger.FeedMatchResult(memOrder.IsBuy, res)
+		payDenom, receiveDenom := types.PayReceiveDenoms(
+			market.BaseDenom, market.QuoteDenom, memOrder.IsBuy)
+		ledger.Receive(memOrder.OrdererAddress, sdk.NewCoin(receiveDenom, res.Received))
+
+		if memOrder.Type == types.OrderSourceMemOrder {
+			ledger.Pay(memOrder.OrdererAddress, sdk.NewCoin(payDenom, res.Paid))
+
+			sourceName := memOrder.Source.Name()
 			results, ok := ordersBySource[sourceName]
 			if !ok {
 				sourceNames = append(sourceNames, sourceName)
@@ -90,108 +107,126 @@ func (k Keeper) finalizeMatching(ctx sdk.Context, market types.Market, orders []
 			ordersBySource[sourceName] = append(results, memOrder)
 		}
 
-		payDenom, receiveDenom := types.PayReceiveDenoms(market.BaseDenom, market.QuoteDenom, memOrder.IsBuy())
-		ordererAddr := memOrder.OrdererAddress()
-		if memOrder.IsMatched() {
-			receivedCoin := sdk.NewDecCoinFromDec(receiveDenom, memOrder.Received())
-			if memOrder.Type() == types.UserMemOrder {
-				paid := memOrder.Paid().Ceil()
-				receivedCoin.Amount = receivedCoin.Amount.TruncateDec()
-				order := memOrder.Order()
-				order.OpenQuantity = order.OpenQuantity.Sub(memOrder.ExecutedQuantity())
-				order.RemainingDeposit = order.RemainingDeposit.Sub(paid)
-				if err := ctx.EventManager().EmitTypedEvent(&types.EventOrderFilled{
-					MarketId:         market.Id,
-					OrderId:          order.Id,
-					Orderer:          order.Orderer,
-					IsBuy:            order.IsBuy,
-					Price:            order.Price,
-					Quantity:         order.Quantity,
-					OpenQuantity:     order.OpenQuantity,
-					ExecutedQuantity: memOrder.ExecutedQuantity(),
-					Paid:             sdk.NewDecCoinFromDec(payDenom, paid),
-					Received:         receivedCoin,
+		if memOrder.Type == types.UserMemOrder {
+			order := *memOrder.Order
+			order.OpenQuantity = order.OpenQuantity.Sub(res.ExecutedQuantity)
+			order.RemainingDeposit = order.RemainingDeposit.Sub(res.Paid)
+			if err := ctx.EventManager().EmitTypedEvent(&types.EventOrderFilled{
+				OrderId:          order.Id,
+				Quantity:         order.Quantity,
+				OpenQuantity:     order.OpenQuantity,
+				ExecutedQuantity: res.ExecutedQuantity,
+				Paid:             sdk.NewCoin(payDenom, res.Paid),
+				Received:         sdk.NewCoin(receiveDenom, res.Received),
+				FeePaid:          sdk.NewCoin(receiveDenom, res.FeePaid),
+				FeeReceived:      sdk.NewCoin(payDenom, res.FeePaid),
+			}); err != nil {
+				return err
+			}
+			// Update user orders
+			executableQty := order.ExecutableQuantity()
+			if executableQty.IsZero() ||
+				(!order.IsBuy && order.Price.MulInt(executableQty).TruncateDec().IsZero()) {
+				if err := k.cancelOrder(ctx, market, order); err != nil {
+					return err
+				}
+				if err := ctx.EventManager().EmitTypedEvent(&types.EventOrderCompleted{
+					OrderId: order.Id,
 				}); err != nil {
 					return err
 				}
-				// Update user orders
-				executableQty := order.ExecutableQuantity()
-				if executableQty.TruncateDec().IsZero() ||
-					!order.IsBuy && executableQty.MulTruncate(order.Price).TruncateDec().IsZero() {
-					if err := k.cancelOrder(ctx, market, order); err != nil {
-						return err
-					}
-					if err := ctx.EventManager().EmitTypedEvent(&types.EventOrderCompleted{
-						OrderId: order.Id,
-					}); err != nil {
-						return err
-					}
-				} else {
-					k.SetOrder(ctx, order)
-				}
+			} else {
+				k.SetOrder(ctx, order)
 			}
-			escrow.Unlock(ordererAddr, receivedCoin)
-		}
-		// Should refund deposit
-		if memOrder.Type() == types.OrderSourceMemOrder && memOrder.RemainingDeposit().IsPositive() {
-			escrow.Unlock(ordererAddr, sdk.NewDecCoinFromDec(payDenom, memOrder.RemainingDeposit()))
 		}
 	}
-	if err := escrow.Transact(ctx, k.bankKeeper); err != nil {
+	escrowAddr := market.MustGetEscrowAddress()
+	feeCollectorAddr := market.MustGetFeeCollectorAddress()
+	quoteDust, err := ledger.Transact(ctx, k.bankKeeper, escrowAddr, feeCollectorAddr)
+	if err != nil {
 		return err
 	}
+	collectedDust := false
 	for _, sourceName := range sourceNames {
 		results := ordersBySource[sourceName]
 		if len(results) > 0 {
 			source := k.sources[sourceName]
-			// TODO: pass grouped results
-			totalExecQty := utils.ZeroDec
-			ordererAddrs, m := types.GroupMemOrdersByOrderer(results) // TODO: bit redundant
+			totalExecQty := utils.ZeroInt
+			ordererAddrs, m := types.GroupMemOrdersByOrderer(results)
 			for _, ordererAddr := range ordererAddrs {
+				// NOTE: In this version, there must be only one OrderSource(amm),
+				//   and we'll use the pool's reserve address as the dust collector.
+				// TODO(future): change dust collector when there could be
+				//   more than one OrderSource
+				if quoteDust.IsPositive() {
+					dustCollectorAddr := ordererAddr
+					if err := k.bankKeeper.SendCoins(ctx, escrowAddr, dustCollectorAddr,
+						sdk.NewCoins(quoteDust)); err != nil {
+						return err
+					}
+					collectedDust = true
+				}
+
 				if err := source.AfterOrdersExecuted(ctx, market, ordererAddr, results); err != nil {
 					return err
 				}
 				var (
-					isBuy         bool
-					totalPaid     sdk.Dec
-					totalReceived sdk.Dec
-					totalFee      sdk.Dec
+					isBuy            bool
+					totalPaid        sdk.Int
+					totalReceived    sdk.Int
+					totalFeePaid     sdk.Int // NOTE: this will always be 0
+					totalFeeReceived sdk.Int
 				)
 				for _, order := range m[ordererAddr.String()] {
-					totalExecQty = totalExecQty.Add(order.ExecutedQuantity())
+					res := order.Result()
+					totalExecQty = totalExecQty.Add(res.ExecutedQuantity)
 					if totalPaid.IsNil() {
-						isBuy = order.IsBuy()
-						totalPaid = order.Paid()
-						totalReceived = order.Received()
-						totalFee = order.Fee()
+						isBuy = order.IsBuy
+						totalPaid = res.Paid
+						totalReceived = res.Received
+						totalFeePaid = res.FeePaid
+						totalFeeReceived = res.FeeReceived
 					} else {
-						if order.IsBuy() != isBuy { // sanity check
+						if order.IsBuy != isBuy { // sanity check
 							panic("inconsistent isBuy")
 						}
-						totalPaid = totalPaid.Add(order.Paid())
-						totalReceived = totalReceived.Add(order.Received())
-						totalFee = totalFee.Add(order.Fee())
+						totalPaid = totalPaid.Add(res.Paid)
+						totalReceived = totalReceived.Add(res.Received)
+						totalFeePaid = totalFeePaid.Add(res.FeePaid)
+						totalFeeReceived = totalFeeReceived.Add(res.FeeReceived)
 					}
 				}
 				payDenom, receiveDenom := types.PayReceiveDenoms(market.BaseDenom, market.QuoteDenom, isBuy)
-				paid := sdk.NewDecCoinFromDec(payDenom, totalPaid)
-				if totalFee.IsNegative() {
-					paid.Amount = paid.Amount.Add(totalFee)
+				paidCoin := sdk.NewCoin(payDenom, totalPaid)
+				receivedCoin := sdk.NewCoin(receiveDenom, totalReceived)
+				if paidCoin.Denom == market.QuoteDenom {
+					paidCoin = paidCoin.Sub(quoteDust)
+				} else { // receivedCoin.Denom == market.QuoteDenom
+					receivedCoin = receivedCoin.Add(quoteDust)
 				}
-				paid.Amount = paid.Amount.Ceil()
-				received := sdk.NewDecCoinFromDec(receiveDenom, totalReceived.TruncateDec())
+				feePaidCoin := sdk.NewCoin(receiveDenom, totalFeePaid)
+				feeReceivedCoin := sdk.NewCoin(payDenom, totalFeeReceived)
 				if err := ctx.EventManager().EmitTypedEvent(&types.EventOrderSourceOrdersFilled{
 					MarketId:         market.Id,
 					SourceName:       sourceName,
 					Orderer:          ordererAddr.String(),
 					IsBuy:            isBuy,
 					ExecutedQuantity: totalExecQty,
-					Paid:             paid,
-					Received:         received,
+					Paid:             paidCoin,
+					Received:         receivedCoin,
+					FeePaid:          feePaidCoin,
+					FeeReceived:      feeReceivedCoin,
 				}); err != nil {
 					return err
 				}
 			}
+		}
+	}
+	if !collectedDust && quoteDust.IsPositive() {
+		dustCollectorAddr := market.MustGetFeeCollectorAddress()
+		if err := k.bankKeeper.SendCoins(
+			ctx, escrowAddr, dustCollectorAddr, sdk.NewCoins(quoteDust)); err != nil {
+			return err
 		}
 	}
 	return nil
@@ -203,9 +238,9 @@ func (k Keeper) getBestPrice(ctx sdk.Context, market types.Market, isBuy bool) (
 	obs := k.ConstructMemOrderBookSide(ctx, market, types.MemOrderBookSideOptions{
 		IsBuy:             isBuy,
 		MaxNumPriceLevels: 1,
-	}, nil)
-	if len(obs.Levels()) > 0 {
-		return obs.Levels()[0].Price(), true
+	})
+	if len(obs.Levels) > 0 {
+		return obs.Levels[0].Price, true
 	}
 	return bestPrice, false
 }

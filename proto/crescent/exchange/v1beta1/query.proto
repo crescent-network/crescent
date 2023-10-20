@@ -86,9 +86,9 @@ message QueryBestSwapExactAmountInRoutesRequest {
 }
 
 message QueryBestSwapExactAmountInRoutesResponse {
-  repeated uint64             routes  = 1;
-  cosmos.base.v1beta1.DecCoin output  = 2 [(gogoproto.nullable) = false];
-  repeated SwapRouteResult    results = 3 [(gogoproto.nullable) = false];
+  repeated uint64          routes  = 1;
+  cosmos.base.v1beta1.Coin output  = 2 [(gogoproto.nullable) = false];
+  repeated SwapRouteResult results = 3 [(gogoproto.nullable) = false];
 }
 
 message QueryOrderBookRequest {
@@ -100,16 +100,14 @@ message QueryOrderBookResponse {
 }
 
 message MarketResponse {
-  uint64 id             = 1;
-  string base_denom     = 2;
-  string quote_denom    = 3;
-  string escrow_address = 4;
-  string maker_fee_rate = 5
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
-  string taker_fee_rate = 6
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
-  string order_source_fee_ratio = 7
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
-  string last_price           = 8 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
-  int64  last_matching_height = 9;
+  uint64       id                    = 1;
+  string       base_denom            = 2;
+  string       quote_denom           = 3;
+  string       escrow_address        = 4;
+  string       fee_collector         = 5;
+  Fees         fees                  = 6 [(gogoproto.nullable) = false];
+  AmountLimits order_quantity_limits = 7 [(gogoproto.nullable) = false];
+  AmountLimits order_quote_limits    = 8 [(gogoproto.nullable) = false];
+  string       last_price            = 9 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+  int64        last_matching_height  = 10;
 }

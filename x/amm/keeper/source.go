@@ -11,7 +11,6 @@ import (
 )
 
 var _ exchangetypes.OrderSource = OrderSource{}
-var threshold = sdk.NewDecWithPrec(1, 16) // XXX
 
 type OrderSource struct {
 	Keeper
@@ -38,10 +37,10 @@ func (k OrderSource) ConstructMemOrderBookSide(
 	minPrice, maxPrice := exchangetypes.OrderPriceLimit(poolState.CurrentPrice, maxPriceRatio)
 
 	reserveAddr := pool.MustGetReserveAddress()
-	accQty := utils.ZeroDec
+	accQty := utils.ZeroInt
 	accQuote := utils.ZeroDec
 	numPriceLevels := 0
-	k.IteratePoolOrders(ctx, pool, opts.IsBuy, func(price, qty, openQty sdk.Dec) (stop bool) {
+	k.IteratePoolOrders(ctx, market, pool, opts.IsBuy, func(price sdk.Dec, qty sdk.Int) (stop bool) {
 		if (opts.IsBuy && price.LT(minPrice)) ||
 			(!opts.IsBuy && price.GT(maxPrice)) {
 			return true
@@ -49,9 +48,9 @@ func (k OrderSource) ConstructMemOrderBookSide(
 		if opts.ReachedLimit(price, accQty, accQuote, numPriceLevels) {
 			return true
 		}
-		createOrder(reserveAddr, price, qty, openQty)
+		createOrder(reserveAddr, price, qty)
 		accQty = accQty.Add(qty)
-		accQuote = accQuote.Add(exchangetypes.QuoteAmount(!opts.IsBuy, price, qty))
+		accQuote = accQuote.Add(price.MulInt(qty))
 		numPriceLevels++
 		return false
 	})
@@ -63,14 +62,14 @@ func (k OrderSource) AfterOrdersExecuted(ctx sdk.Context, _ exchangetypes.Market
 	return k.AfterPoolOrdersExecuted(ctx, pool, results)
 }
 
-func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, results []*exchangetypes.MemOrder) error {
+func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, orders []*exchangetypes.MemOrder) error {
 	reserveAddr := pool.MustGetReserveAddress()
 	poolState := k.MustGetPoolState(ctx, pool.Id)
 	accruedRewards := sdk.NewCoins()
 
-	// TODO: check if results are sorted?
-	isBuy := results[0].IsBuy()
-	firstOrderTick := exchangetypes.TickAtPrice(results[0].Price())
+	// TODO: check if orders are sorted?
+	isBuy := orders[0].IsBuy
+	firstOrderTick := exchangetypes.TickAtPrice(orders[0].Price)
 	var targetTick int32
 	foundTargetTick := false
 	if isBuy {
@@ -127,8 +126,8 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 		extraAmt0 = utils.ZeroDec
 		extraAmt1 = utils.ZeroDec
 	}
-	for i, result := range results {
-		orderTick := exchangetypes.TickAtPrice(result.Price())
+	for i, order := range orders {
+		orderTick := exchangetypes.TickAtPrice(order.Price)
 
 		if isBuy && max && poolState.CurrentTick == targetTick {
 			accrueFees()
@@ -171,16 +170,18 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 			}
 		}
 
+		res := order.Result()
+
 		currentSqrtPrice := utils.DecApproxSqrt(poolState.CurrentPrice)
 		var nextSqrtPrice, nextPrice sdk.Dec
 		max = false
-		if i < len(results)-1 || result.Quantity().Sub(result.ExecutedQuantity()).LTE(utils.SmallestDec) {
-			nextSqrtPrice = utils.DecApproxSqrt(result.Price())
-			nextPrice = result.Price()
+		if i < len(orders)-1 {
+			nextSqrtPrice = utils.DecApproxSqrt(order.Price)
+			nextPrice = order.Price
 			max = true
 		} else { // Partially executed
 			nextSqrtPrice = types.NextSqrtPriceFromOutput(
-				currentSqrtPrice, poolState.CurrentLiquidity, result.PaidWithoutFee(), isBuy)
+				currentSqrtPrice, poolState.CurrentLiquidity, res.Paid, isBuy)
 			nextPrice = nextSqrtPrice.Power(2)
 		}
 
@@ -192,7 +193,7 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 			expectedAmtIn = types.Amount1DeltaDec(
 				currentSqrtPrice, nextSqrtPrice, poolState.CurrentLiquidity)
 		}
-		amtInDiff := result.Received().Sub(expectedAmtIn)
+		amtInDiff := res.Received.ToDec().Sub(expectedAmtIn)
 		if amtInDiff.IsPositive() {
 			if isBuy {
 				extraAmt0 = extraAmt0.Add(amtInDiff)
@@ -200,13 +201,11 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, result
 				extraAmt1 = extraAmt1.Add(amtInDiff)
 			}
 		} else if amtInDiff.IsNegative() { // sanity check
-			if result.ExecutedQuantity().GT(threshold) {
-				panic(fmt.Sprintf("amtInDiff is negative: %s", amtInDiff))
-			}
+			panic(fmt.Sprintf("amtInDiff is negative: %s", amtInDiff))
 		}
 
-		if result.Fee().IsNegative() { // extra fees
-			fee := result.Fee().Neg()
+		if res.FeeReceived.IsPositive() { // extra fees
+			fee := res.FeeReceived.ToDec()
 			if isBuy {
 				extraAmt1 = extraAmt1.Add(fee)
 			} else {

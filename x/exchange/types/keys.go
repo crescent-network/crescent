@@ -59,7 +59,7 @@ func GetOrderBookOrderIndexKey(marketId uint64, isBuy bool, price sdk.Dec, order
 	return utils.Key(
 		OrderBookOrderIndexKeyPrefix,
 		sdk.Uint64ToBigEndian(marketId),
-		isBuyToBytes(isBuy),
+		IsBuyToBytes(isBuy),
 		PriceToBytes(price),
 		sdk.Uint64ToBigEndian(orderId))
 }
@@ -68,14 +68,14 @@ func GetOrderBookSideIteratorPrefix(marketId uint64, isBuy bool) []byte {
 	return utils.Key(
 		OrderBookOrderIndexKeyPrefix,
 		sdk.Uint64ToBigEndian(marketId),
-		isBuyToBytes(isBuy))
+		IsBuyToBytes(isBuy))
 }
 
 func GetOrderBookSidePriceLimitIteratorPrefix(marketId uint64, isBuy bool, priceLimit sdk.Dec) []byte {
 	return utils.Key(
 		OrderBookOrderIndexKeyPrefix,
 		sdk.Uint64ToBigEndian(marketId),
-		isBuyToBytes(isBuy),
+		IsBuyToBytes(isBuy),
 		PriceToBytes(priceLimit))
 }
 
@@ -120,7 +120,7 @@ func ParseMarketByDenomsIndexKey(key []byte) (baseDenom, quoteDenom string) {
 
 func ParseOrderIdFromOrderBookOrderIndexKey(key []byte) (orderId uint64) {
 	isBuy := key[1+8] == 0
-	orderId = sdk.BigEndianToUint64(key[1+8+1+32:])
+	orderId = sdk.BigEndianToUint64(key[1+8+1+5:]) // prefix + marketId + isBuy + sign + tick
 	if isBuy {
 		orderId = -orderId
 	}
@@ -128,7 +128,7 @@ func ParseOrderIdFromOrderBookOrderIndexKey(key []byte) (orderId uint64) {
 }
 
 func ParsePriceFromOrderBookOrderIndexKey(key []byte) (price sdk.Dec) {
-	price = BytesToPrice(key[1+8+1 : 1+8+1+32])
+	price = BytesToPrice(key[1+8+1 : 1+8+1+5]) // prefix + marketId + isBuy
 	return
 }
 
@@ -146,13 +146,33 @@ func ParseNumMMOrdersKey(key []byte) (ordererAddr sdk.AccAddress, marketId uint6
 }
 
 var (
-	buyBytes  = []byte{0}
-	sellBytes = []byte{1}
+	zeroByte = []byte{0}
+	oneByte  = []byte{1}
 )
 
-func isBuyToBytes(isBuy bool) []byte {
+func IsBuyToBytes(isBuy bool) []byte {
 	if isBuy {
-		return buyBytes
+		return zeroByte
 	}
-	return sellBytes
+	return oneByte
+}
+
+func PriceToBytes(d sdk.Dec) []byte {
+	tick, valid := ValidateTickPrice(d)
+	if !valid {
+		panic("invalid tick price")
+	}
+	// signByte ensures ticks to be properly ordered in KVStore by placing
+	// positive ticks after negative ticks.
+	var signByte []byte
+	if tick < 0 {
+		signByte = zeroByte
+	} else {
+		signByte = oneByte
+	}
+	return utils.Key(signByte, utils.Uint32ToBigEndian(uint32(tick)))
+}
+
+func BytesToPrice(bz []byte) sdk.Dec {
+	return PriceAtTick(int32(utils.BigEndianToUint32(bz[1:])))
 }

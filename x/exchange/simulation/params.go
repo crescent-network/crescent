@@ -14,7 +14,7 @@ import (
 // on the simulation.
 func ParamChanges(_ *rand.Rand) []simtypes.ParamChange {
 	return []simtypes.ParamChange{
-		simulation.NewSimParamChange(types.ModuleName, string(types.KeyFees),
+		simulation.NewSimParamChange(types.ModuleName, string(types.KeyDefaultFees),
 			func(r *rand.Rand) string {
 				bz, _ := json.Marshal(GenFees(r))
 				return string(bz)

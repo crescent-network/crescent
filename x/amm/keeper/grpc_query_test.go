@@ -68,13 +68,13 @@ func (s *KeeperTestSuite) SetupSampleScenario() {
 	ordererAddr := s.FundedAccount(4, enoughCoins)
 	s.SwapExactAmountIn(
 		ordererAddr, []uint64{atomUsdMarket.Id, creUsdMarket.Id},
-		utils.ParseDecCoin("20_000000uatom"), utils.ParseDecCoin("38_000000ucre"), false)
+		utils.ParseCoin("20_000000uatom"), utils.ParseCoin("38_000000ucre"), false)
 	s.SwapExactAmountIn(
 		ordererAddr, []uint64{creUsdMarket.Id, atomUsdMarket.Id},
-		utils.ParseDecCoin("50_000000ucre"), utils.ParseDecCoin("20_000000uatom"), false)
+		utils.ParseCoin("50_000000ucre"), utils.ParseCoin("20_000000uatom"), false)
 	s.SwapExactAmountIn(
 		ordererAddr, []uint64{creUsdMarket.Id, atomUsdMarket.Id},
-		utils.ParseDecCoin("50_000000ucre"), utils.ParseDecCoin("20_000000uatom"), false)
+		utils.ParseCoin("50_000000ucre"), utils.ParseCoin("20_000000uatom"), false)
 }
 
 func (s *KeeperTestSuite) TestQueryParams() {
@@ -158,7 +158,6 @@ func (s *KeeperTestSuite) TestQueryPool() {
 				s.AssertEqual(utils.ParseCoin("71750979uatom"), resp.Pool.Balance0)
 				s.AssertEqual(utils.ParseCoin("1390716291uusd"), resp.Pool.Balance1)
 				s.Require().Equal("cosmos1srphgsfqllr85ndknjme24txux8m0sz0hhpnnksn2339d3a788rsawjx77", resp.Pool.RewardsPool)
-				s.AssertEqual(utils.ParseDec("1"), resp.Pool.MinOrderQuantity)
 				s.AssertEqual(sdk.NewInt(12470981864), resp.Pool.TotalLiquidity)
 			},
 		},
@@ -920,10 +919,10 @@ func (s *KeeperTestSuite) TestQueryOrderBookEdgecase() {
 	})
 	s.Require().NoError(err)
 	expected := []exchangetypes.OrderBookPriceLevel{
-		{P: utils.ParseDec("0.000000000002420000"), Q: utils.ParseDec("210247167454518.426965889361986342")},
-		{P: utils.ParseDec("0.000000000002425000"), Q: utils.ParseDec("106646637502197.215845362922175345")},
-		{P: utils.ParseDec("0.000000000002430000"), Q: utils.ParseDec("106317311667972.575612265795090924")},
-		{P: utils.ParseDec("0.000000000002435000"), Q: utils.ParseDec("105989677315106.625670065116473178")},
+		{P: utils.ParseDec("0.000000000002420000"), Q: sdk.NewInt(210247167454518)},
+		{P: utils.ParseDec("0.000000000002425000"), Q: sdk.NewInt(106646637502197)},
+		{P: utils.ParseDec("0.000000000002430000"), Q: sdk.NewInt(106317311667972)},
+		{P: utils.ParseDec("0.000000000002435000"), Q: sdk.NewInt(105989677315106)},
 	}
 	s.Require().GreaterOrEqual(len(resp.OrderBooks[0].Sells), len(expected))
 	for i, level := range expected {
@@ -931,10 +930,10 @@ func (s *KeeperTestSuite) TestQueryOrderBookEdgecase() {
 		s.AssertEqual(level.Q, resp.OrderBooks[0].Sells[i].Q)
 	}
 	expected = []exchangetypes.OrderBookPriceLevel{
-		{P: utils.ParseDec("0.000000000002410000"), Q: utils.ParseDec("4041069947696.441682987551867219")},
-		{P: utils.ParseDec("0.000000000002405000"), Q: utils.ParseDec("107756725726365.156645322245322245")},
-		{P: utils.ParseDec("0.000000000002400000"), Q: utils.ParseDec("108093523942782.413913333333333333")},
-		{P: utils.ParseDec("0.000000000002395000"), Q: utils.ParseDec("108432080322133.934602087682672233")},
+		{P: utils.ParseDec("0.000000000002410000"), Q: sdk.NewInt(4041069947696)},
+		{P: utils.ParseDec("0.000000000002405000"), Q: sdk.NewInt(107756725726365)},
+		{P: utils.ParseDec("0.000000000002400000"), Q: sdk.NewInt(108093523942782)},
+		{P: utils.ParseDec("0.000000000002395000"), Q: sdk.NewInt(108432080322133)},
 	}
 	s.Require().GreaterOrEqual(len(resp.OrderBooks[0].Buys), len(expected))
 	for i, level := range expected {
@@ -973,9 +972,9 @@ func (s *KeeperTestSuite) TestQueryOrderBookEdgecase3() {
 	s.AddLiquidityByLiquidity(
 		lpAddr, pool.Id, types.MinPrice, types.MaxPrice, sdk.NewInt(1000))
 
-	s.PlaceLimitOrder(market.Id, lpAddr, true, utils.ParseDec("4.99"), sdk.NewDec(3_000000), time.Hour)
-	s.PlaceLimitOrder(market.Id, lpAddr, true, utils.ParseDec("4.98"), sdk.NewDec(2_000000), time.Hour)
-	s.PlaceLimitOrder(market.Id, lpAddr, true, utils.ParseDec("4.97"), sdk.NewDec(1_000000), time.Hour)
+	s.PlaceLimitOrder(market.Id, lpAddr, true, utils.ParseDec("4.99"), sdk.NewInt(3_000000), time.Hour)
+	s.PlaceLimitOrder(market.Id, lpAddr, true, utils.ParseDec("4.98"), sdk.NewInt(2_000000), time.Hour)
+	s.PlaceLimitOrder(market.Id, lpAddr, true, utils.ParseDec("4.97"), sdk.NewInt(1_000000), time.Hour)
 
 	querier := exchangekeeper.Querier{Keeper: s.App.ExchangeKeeper}
 	resp, err := querier.OrderBook(sdk.WrapSDKContext(s.Ctx), &exchangetypes.QueryOrderBookRequest{
@@ -985,10 +984,10 @@ func (s *KeeperTestSuite) TestQueryOrderBookEdgecase3() {
 	ob := resp.OrderBooks[0]
 	s.Require().Empty(ob.Sells)
 	expected := []exchangetypes.OrderBookPriceLevel{
-		{P: utils.ParseDec("941"), Q: utils.ParseDec("1.006432838818128160")},
-		{P: utils.ParseDec("4.99"), Q: utils.ParseDec("3_000000")},
-		{P: utils.ParseDec("4.98"), Q: utils.ParseDec("2_000000")},
-		{P: utils.ParseDec("4.97"), Q: utils.ParseDec("1_000000")},
+		{P: utils.ParseDec("941"), Q: sdk.NewInt(1)},
+		{P: utils.ParseDec("4.99"), Q: sdk.NewInt(3_000000)},
+		{P: utils.ParseDec("4.98"), Q: sdk.NewInt(2_000000)},
+		{P: utils.ParseDec("4.97"), Q: sdk.NewInt(1_000000)},
 	}
 	s.Require().GreaterOrEqual(len(ob.Buys), len(expected))
 	for i, level := range expected {
@@ -999,8 +998,8 @@ func (s *KeeperTestSuite) TestQueryOrderBookEdgecase3() {
 	ob = resp.OrderBooks[1]
 	s.Require().Empty(ob.Sells)
 	expected = []exchangetypes.OrderBookPriceLevel{
-		{P: utils.ParseDec("941"), Q: utils.ParseDec("1.006432838818128160")},
-		{P: utils.ParseDec("4.9"), Q: utils.ParseDec("6_000000")},
+		{P: utils.ParseDec("941"), Q: sdk.NewInt(1)},
+		{P: utils.ParseDec("4.9"), Q: sdk.NewInt(6_000000)},
 	}
 	s.Require().GreaterOrEqual(len(ob.Buys), len(expected))
 	for i, level := range expected {
@@ -1011,8 +1010,8 @@ func (s *KeeperTestSuite) TestQueryOrderBookEdgecase3() {
 	ob = resp.OrderBooks[2]
 	s.Require().Empty(ob.Sells)
 	expected = []exchangetypes.OrderBookPriceLevel{
-		{P: utils.ParseDec("941"), Q: utils.ParseDec("1.006432838818128160")},
-		{P: utils.ParseDec("4"), Q: utils.ParseDec("6_000000")},
+		{P: utils.ParseDec("941"), Q: sdk.NewInt(1)},
+		{P: utils.ParseDec("4"), Q: sdk.NewInt(6_000000)},
 	}
 	s.Require().GreaterOrEqual(len(ob.Buys), len(expected))
 	for i, level := range expected {

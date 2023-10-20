@@ -13,28 +13,32 @@ import (
 var _ paramstypes.ParamSet = (*Params)(nil)
 
 var (
-	KeyMarketCreationFee  = []byte("MarketCreationFee")
-	KeyFees               = []byte("Fees")
-	KeyMaxOrderLifespan   = []byte("MaxOrderLifespan")
-	KeyMaxOrderPriceRatio = []byte("MaxOrderPriceRatio")
-	KeyMaxSwapRoutesLen   = []byte("MaxSwapRoutesLen")
-	KeyMaxNumMMOrders     = []byte("MaxNumMMOrders")
+	KeyMarketCreationFee          = []byte("MarketCreationFee")
+	KeyDefaultFees                = []byte("DefaultFees")
+	KeyMaxOrderLifespan           = []byte("MaxOrderLifespan")
+	KeyMaxOrderPriceRatio         = []byte("MaxOrderPriceRatio")
+	KeyDefaultOrderQuantityLimits = []byte("DefaultOrderQuantityLimits")
+	KeyDefaultOrderQuoteLimits    = []byte("DefaultOrderQuoteLimits")
+	KeyMaxSwapRoutesLen           = []byte("MaxSwapRoutesLen")
+	KeyMaxNumMMOrders             = []byte("MaxNumMMOrders")
 )
 
 var (
 	DefaultMarketCreationFee = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000))
 	DefaultFees              = Fees{
-		DefaultMakerFeeRate:        sdk.NewDecWithPrec(15, 4), // 0.15%
-		DefaultTakerFeeRate:        sdk.NewDecWithPrec(3, 3),  // 0.3%
-		DefaultOrderSourceFeeRatio: sdk.NewDecWithPrec(5, 1),  // 50%
+		MakerFeeRate:        sdk.NewDecWithPrec(15, 4), // 0.15%
+		TakerFeeRate:        sdk.NewDecWithPrec(3, 3),  // 0.3%
+		OrderSourceFeeRatio: sdk.NewDecWithPrec(5, 1),  // 50%
 	}
-	DefaultMaxOrderLifespan          = 7 * 24 * time.Hour
-	DefaultMaxOrderPriceRatio        = sdk.NewDecWithPrec(1, 1) // 10%
-	DefaultMaxSwapRoutesLen   uint32 = 3
-	DefaultMaxNumMMOrders     uint32 = 15
+	DefaultMaxOrderLifespan           = 7 * 24 * time.Hour
+	DefaultMaxOrderPriceRatio         = sdk.NewDecWithPrec(1, 1) // 10%
+	DefaultOrderQuantityLimits        = NewAmountLimits(sdk.NewInt(10000), sdk.NewIntWithDecimal(1, 30))
+	DefaultOrderQuoteLimits           = NewAmountLimits(sdk.NewInt(10000), sdk.NewIntWithDecimal(1, 30))
+	DefaultMaxSwapRoutesLen    uint32 = 3
+	DefaultMaxNumMMOrders      uint32 = 15
 
-	MinPrice = sdk.NewDecWithPrec(1, 14)
-	MaxPrice = sdk.NewDecFromInt(sdk.NewIntWithDecimal(1, 40))
+	MinPrice = sdk.NewDecWithPrec(1, 14)                       // 10^-14
+	MaxPrice = sdk.NewDecFromInt(sdk.NewIntWithDecimal(1, 24)) // 10^24
 )
 
 func ParamKeyTable() paramstypes.KeyTable {
@@ -42,15 +46,18 @@ func ParamKeyTable() paramstypes.KeyTable {
 }
 
 func NewParams(
-	marketCreationFee sdk.Coins, fees Fees, maxOrderLifespan time.Duration, maxOrderPriceRatio sdk.Dec,
+	marketCreationFee sdk.Coins, defaultFees Fees, maxOrderLifespan time.Duration,
+	maxOrderPriceRatio sdk.Dec, defaultOrderQtyLimits, defaultOrderQuoteLimits AmountLimits,
 	maxSwapRoutesLen, maxNumMMOrders uint32) Params {
 	return Params{
-		MarketCreationFee:  marketCreationFee,
-		Fees:               fees,
-		MaxOrderLifespan:   maxOrderLifespan,
-		MaxOrderPriceRatio: maxOrderPriceRatio,
-		MaxSwapRoutesLen:   maxSwapRoutesLen,
-		MaxNumMMOrders:     maxNumMMOrders,
+		MarketCreationFee:          marketCreationFee,
+		DefaultFees:                defaultFees,
+		MaxOrderLifespan:           maxOrderLifespan,
+		MaxOrderPriceRatio:         maxOrderPriceRatio,
+		DefaultOrderQuantityLimits: defaultOrderQtyLimits,
+		DefaultOrderQuoteLimits:    defaultOrderQuoteLimits,
+		MaxSwapRoutesLen:           maxSwapRoutesLen,
+		MaxNumMMOrders:             maxNumMMOrders,
 	}
 }
 
@@ -58,6 +65,7 @@ func NewParams(
 func DefaultParams() Params {
 	return NewParams(
 		DefaultMarketCreationFee, DefaultFees, DefaultMaxOrderLifespan, DefaultMaxOrderPriceRatio,
+		DefaultOrderQuantityLimits, DefaultOrderQuoteLimits,
 		DefaultMaxSwapRoutesLen, DefaultMaxNumMMOrders)
 }
 
@@ -65,9 +73,11 @@ func DefaultParams() Params {
 func (params *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 	return paramstypes.ParamSetPairs{
 		paramstypes.NewParamSetPair(KeyMarketCreationFee, &params.MarketCreationFee, validateMarketCreationFee),
-		paramstypes.NewParamSetPair(KeyFees, &params.Fees, validateFees),
+		paramstypes.NewParamSetPair(KeyDefaultFees, &params.DefaultFees, validateDefaultFees),
 		paramstypes.NewParamSetPair(KeyMaxOrderLifespan, &params.MaxOrderLifespan, validateMaxOrderLifespan),
 		paramstypes.NewParamSetPair(KeyMaxOrderPriceRatio, &params.MaxOrderPriceRatio, validateMaxOrderPriceRatio),
+		paramstypes.NewParamSetPair(KeyDefaultOrderQuantityLimits, &params.DefaultOrderQuantityLimits, validateDefaultOrderQuantityLimits),
+		paramstypes.NewParamSetPair(KeyDefaultOrderQuoteLimits, &params.DefaultOrderQuoteLimits, validateDefaultOrderQuoteLimits),
 		paramstypes.NewParamSetPair(KeyMaxSwapRoutesLen, &params.MaxSwapRoutesLen, validateMaxSwapRoutesLen),
 		paramstypes.NewParamSetPair(KeyMaxNumMMOrders, &params.MaxNumMMOrders, validateMaxNumMMOrders),
 	}
@@ -80,9 +90,11 @@ func (params Params) Validate() error {
 		validateFunc func(i interface{}) error
 	}{
 		{params.MarketCreationFee, validateMarketCreationFee},
-		{params.Fees, validateFees},
+		{params.DefaultFees, validateDefaultFees},
 		{params.MaxOrderLifespan, validateMaxOrderLifespan},
 		{params.MaxOrderPriceRatio, validateMaxOrderPriceRatio},
+		{params.DefaultOrderQuantityLimits, validateDefaultOrderQuantityLimits},
+		{params.DefaultOrderQuoteLimits, validateDefaultOrderQuoteLimits},
 		{params.MaxSwapRoutesLen, validateMaxSwapRoutesLen},
 		{params.MaxNumMMOrders, validateMaxNumMMOrders},
 	} {
@@ -104,12 +116,15 @@ func validateMarketCreationFee(i interface{}) error {
 	return nil
 }
 
-func validateFees(i interface{}) error {
+func validateDefaultFees(i interface{}) error {
 	v, ok := i.(Fees)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
-	return ValidateFees(v.DefaultMakerFeeRate, v.DefaultTakerFeeRate, v.DefaultOrderSourceFeeRatio)
+	if err := v.Validate(); err != nil {
+		return fmt.Errorf("invalid default fees: %w", err)
+	}
+	return nil
 }
 
 func validateMaxOrderLifespan(i interface{}) error {
@@ -134,6 +149,28 @@ func validateMaxOrderPriceRatio(i interface{}) error {
 	return nil
 }
 
+func validateDefaultOrderQuantityLimits(i interface{}) error {
+	v, ok := i.(AmountLimits)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	if err := v.Validate(); err != nil {
+		return fmt.Errorf("invalid default order quantity limits: %w", err)
+	}
+	return nil
+}
+
+func validateDefaultOrderQuoteLimits(i interface{}) error {
+	v, ok := i.(AmountLimits)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	if err := v.Validate(); err != nil {
+		return fmt.Errorf("invalid default order quote limits: %w", err)
+	}
+	return nil
+}
+
 func validateMaxSwapRoutesLen(i interface{}) error {
 	v, ok := i.(uint32)
 	if !ok {
@@ -148,6 +185,48 @@ func validateMaxSwapRoutesLen(i interface{}) error {
 func validateMaxNumMMOrders(i interface{}) error {
 	if _, ok := i.(uint32); !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	return nil
+}
+
+func NewFees(
+	makerFeeRate, takerFeeRate, orderSourceFeeRatio sdk.Dec) Fees {
+	return Fees{
+		MakerFeeRate:        makerFeeRate,
+		TakerFeeRate:        takerFeeRate,
+		OrderSourceFeeRatio: orderSourceFeeRatio,
+	}
+}
+
+// Validate validates Fees.
+// Validate returns an error if any of fee params is out of range [0, 1].
+func (fees Fees) Validate() error {
+	if fees.MakerFeeRate.GT(utils.OneDec) || fees.MakerFeeRate.IsNegative() {
+		return fmt.Errorf("maker fee rate must be in range [0, 1]: %s", fees.MakerFeeRate)
+	}
+	if fees.TakerFeeRate.GT(utils.OneDec) || fees.TakerFeeRate.IsNegative() {
+		return fmt.Errorf("taker fee rate must be in range [0, 1]: %s", fees.TakerFeeRate)
+	}
+	if fees.OrderSourceFeeRatio.GT(utils.OneDec) || fees.OrderSourceFeeRatio.IsNegative() {
+		return fmt.Errorf("order source fee ratio must be in range [0, 1]: %s", fees.OrderSourceFeeRatio)
+	}
+	return nil
+}
+
+func NewAmountLimits(min, max sdk.Int) AmountLimits {
+	return AmountLimits{Min: min, Max: max}
+}
+
+func (limits AmountLimits) Validate() error {
+	if limits.Min.IsNegative() {
+		return fmt.Errorf("the minimum value must not be negative: %s", limits.Min)
+	}
+	if limits.Max.IsNegative() {
+		return fmt.Errorf("the maximum value must not be negative: %s", limits.Max)
+	}
+	if limits.Min.GT(limits.Max) {
+		return fmt.Errorf(
+			"the minimum value is greater than the maximum value: %s > %s", limits.Min, limits.Max)
 	}
 	return nil
 }

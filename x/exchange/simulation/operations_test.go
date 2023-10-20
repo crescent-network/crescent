@@ -95,7 +95,7 @@ func (s *SimTestSuite) TestSimulateMsgPlaceLimitOrder() {
 	s.Require().EqualValues(1, msg.MarketId)
 	s.Require().Equal(false, msg.IsBuy)
 	s.AssertEqual(utils.ParseDec("7.6119"), msg.Price)
-	s.AssertEqual(utils.ParseDec("60659250"), msg.Quantity)
+	s.AssertEqual(sdk.NewInt(78990524), msg.Quantity)
 	s.Require().Equal(2*time.Hour, msg.Lifespan)
 }
 
@@ -121,7 +121,7 @@ func (s *SimTestSuite) TestSimulateMsgPlaceMMLimitOrder() {
 	s.Require().EqualValues(1, msg.MarketId)
 	s.Require().Equal(false, msg.IsBuy)
 	s.AssertEqual(utils.ParseDec("7.6119"), msg.Price)
-	s.AssertEqual(utils.ParseDec("60659250"), msg.Quantity)
+	s.AssertEqual(sdk.NewInt(78990524), msg.Quantity)
 	s.Require().Equal(2*time.Hour, msg.Lifespan)
 }
 
@@ -149,7 +149,7 @@ func (s *SimTestSuite) TestSimulateMsgPlaceMarketOrder() {
 	s.Require().Equal("cosmos1r6vgn9cwpvja7448fg0fgglj63rcs6y84p8egu", msg.Sender)
 	s.Require().EqualValues(1, msg.MarketId)
 	s.Require().Equal(false, msg.IsBuy)
-	s.AssertEqual(utils.ParseDec("118906"), msg.Quantity)
+	s.AssertEqual(sdk.NewInt(103992), msg.Quantity)
 }
 
 func (s *SimTestSuite) TestSimulateMsgCancelOrder() {
@@ -158,11 +158,11 @@ func (s *SimTestSuite) TestSimulateMsgCancelOrder() {
 
 	market := s.CreateMarket("denom1", "denom2")
 	s.PlaceLimitOrder(
-		market.Id, accs[0].Address, true, utils.ParseDec("1.2"), sdk.NewDec(10_000000), time.Hour)
+		market.Id, accs[0].Address, true, utils.ParseDec("1.2"), sdk.NewInt(10_000000), time.Hour)
 	s.PlaceLimitOrder(
-		market.Id, accs[0].Address, true, utils.ParseDec("1.21"), sdk.NewDec(10_000000), time.Hour)
+		market.Id, accs[0].Address, true, utils.ParseDec("1.21"), sdk.NewInt(10_000000), time.Hour)
 	s.PlaceLimitOrder(
-		market.Id, accs[0].Address, true, utils.ParseDec("1.22"), sdk.NewDec(10_000000), time.Hour)
+		market.Id, accs[0].Address, true, utils.ParseDec("1.22"), sdk.NewInt(10_000000), time.Hour)
 	s.NextBlock()
 
 	op := simulation.SimulateMsgCancelOrder(
@@ -188,19 +188,19 @@ func (s *SimTestSuite) TestSimulateMsgCancelAllOrders() {
 	// The order state doesn't matter but...
 	market1 := s.CreateMarket("denom1", "denom2")
 	s.PlaceLimitOrder(
-		market1.Id, accs[0].Address, true, utils.ParseDec("1.2"), sdk.NewDec(10_000000), time.Hour)
+		market1.Id, accs[0].Address, true, utils.ParseDec("1.2"), sdk.NewInt(10_000000), time.Hour)
 	s.PlaceLimitOrder(
-		market1.Id, accs[0].Address, true, utils.ParseDec("1.21"), sdk.NewDec(10_000000), time.Hour)
+		market1.Id, accs[0].Address, true, utils.ParseDec("1.21"), sdk.NewInt(10_000000), time.Hour)
 	market2 := s.CreateMarket("denom2", "denom3")
 	s.PlaceLimitOrder(
-		market2.Id, accs[0].Address, false, utils.ParseDec("5"), sdk.NewDec(10_000000), time.Hour)
+		market2.Id, accs[0].Address, false, utils.ParseDec("5"), sdk.NewInt(10_000000), time.Hour)
 	s.PlaceLimitOrder(
-		market2.Id, accs[0].Address, false, utils.ParseDec("4.99"), sdk.NewDec(10_000000), time.Hour)
+		market2.Id, accs[0].Address, false, utils.ParseDec("4.99"), sdk.NewInt(10_000000), time.Hour)
 	s.NextBlock()
 	s.PlaceLimitOrder(
-		market1.Id, accs[0].Address, true, utils.ParseDec("1.22"), sdk.NewDec(10_000000), time.Hour)
+		market1.Id, accs[0].Address, true, utils.ParseDec("1.22"), sdk.NewInt(10_000000), time.Hour)
 	s.PlaceLimitOrder(
-		market2.Id, accs[0].Address, false, utils.ParseDec("4.98"), sdk.NewDec(10_000000), time.Hour)
+		market2.Id, accs[0].Address, false, utils.ParseDec("4.98"), sdk.NewInt(10_000000), time.Hour)
 
 	op := simulation.SimulateMsgCancelAllOrders(
 		s.App.AccountKeeper, s.App.BankKeeper, s.keeper)
@@ -256,6 +256,6 @@ func (s *SimTestSuite) TestSimulateMsgSwapExactAmountIn() {
 	s.Require().Equal(types.ModuleName, msg.Route())
 	s.Require().Equal("cosmos12jszjrc0qhjt0ugt2uh4ptwu0h55pq6qfp9ecl", msg.Sender)
 	s.Require().Equal([]uint64{2, 1, 3}, msg.Routes)
-	s.AssertEqual(utils.ParseDecCoin("82823denom3"), msg.Input)
-	s.AssertEqual(utils.ParseDecCoin("317178denom3"), msg.MinOutput) // Arbitrage!
+	s.AssertEqual(utils.ParseCoin("82823denom3"), msg.Input)
+	s.AssertEqual(utils.ParseCoin("315661denom3"), msg.MinOutput) // Arbitrage!
 }

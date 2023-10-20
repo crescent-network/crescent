@@ -10,4 +10,5 @@ var (
 	ErrSwapNotEnoughLiquidity = sdkerrors.Register(ModuleName, 4, "not enough liquidity in the market")
 	ErrOrderPriceOutOfRange   = sdkerrors.Register(ModuleName, 5, "order price out of range")
 	ErrMaxNumMMOrdersExceeded = sdkerrors.Register(ModuleName, 6, "number of MM orders exceeded the limit")
+	ErrBadOrderAmount         = sdkerrors.Register(ModuleName, 7, "bad order amount")
 )

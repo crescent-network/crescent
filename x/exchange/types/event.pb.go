@@ -76,12 +76,14 @@ type EventPlaceLimitOrder struct {
 	Orderer          string                                 `protobuf:"bytes,3,opt,name=orderer,proto3" json:"orderer,omitempty"`
 	IsBuy            bool                                   `protobuf:"varint,4,opt,name=is_buy,json=isBuy,proto3" json:"is_buy,omitempty"`
 	Price            github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,5,opt,name=price,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"price"`
-	Quantity         github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,6,opt,name=quantity,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"quantity"`
+	Quantity         github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,6,opt,name=quantity,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"quantity"`
 	Lifespan         time.Duration                          `protobuf:"bytes,7,opt,name=lifespan,proto3,stdduration" json:"lifespan"`
 	Deadline         time.Time                              `protobuf:"bytes,8,opt,name=deadline,proto3,stdtime" json:"deadline"`
-	ExecutedQuantity github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,9,opt,name=executed_quantity,json=executedQuantity,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"executed_quantity"`
-	Paid             types.DecCoin                          `protobuf:"bytes,10,opt,name=paid,proto3" json:"paid"`
-	Received         types.DecCoin                          `protobuf:"bytes,11,opt,name=received,proto3" json:"received"`
+	ExecutedQuantity github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,9,opt,name=executed_quantity,json=executedQuantity,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"executed_quantity"`
+	Paid             types.Coin                             `protobuf:"bytes,10,opt,name=paid,proto3" json:"paid"`
+	Received         types.Coin                             `protobuf:"bytes,11,opt,name=received,proto3" json:"received"`
+	FeePaid          types.Coin                             `protobuf:"bytes,12,opt,name=fee_paid,json=feePaid,proto3" json:"fee_paid"`
+	FeeReceived      types.Coin                             `protobuf:"bytes,13,opt,name=fee_received,json=feeReceived,proto3" json:"fee_received"`
 }
 
 func (m *EventPlaceLimitOrder) Reset()         { *m = EventPlaceLimitOrder{} }
@@ -123,7 +125,7 @@ type EventPlaceBatchLimitOrder struct {
 	Orderer  string                                 `protobuf:"bytes,3,opt,name=orderer,proto3" json:"orderer,omitempty"`
 	IsBuy    bool                                   `protobuf:"varint,4,opt,name=is_buy,json=isBuy,proto3" json:"is_buy,omitempty"`
 	Price    github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,5,opt,name=price,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"price"`
-	Quantity github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,6,opt,name=quantity,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"quantity"`
+	Quantity github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,6,opt,name=quantity,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"quantity"`
 	Lifespan time.Duration                          `protobuf:"bytes,7,opt,name=lifespan,proto3,stdduration" json:"lifespan"`
 	Deadline time.Time                              `protobuf:"bytes,8,opt,name=deadline,proto3,stdtime" json:"deadline"`
 }
@@ -167,12 +169,14 @@ type EventPlaceMMLimitOrder struct {
 	Orderer          string                                 `protobuf:"bytes,3,opt,name=orderer,proto3" json:"orderer,omitempty"`
 	IsBuy            bool                                   `protobuf:"varint,4,opt,name=is_buy,json=isBuy,proto3" json:"is_buy,omitempty"`
 	Price            github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,5,opt,name=price,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"price"`
-	Quantity         github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,6,opt,name=quantity,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"quantity"`
+	Quantity         github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,6,opt,name=quantity,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"quantity"`
 	Lifespan         time.Duration                          `protobuf:"bytes,7,opt,name=lifespan,proto3,stdduration" json:"lifespan"`
 	Deadline         time.Time                              `protobuf:"bytes,8,opt,name=deadline,proto3,stdtime" json:"deadline"`
-	ExecutedQuantity github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,9,opt,name=executed_quantity,json=executedQuantity,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"executed_quantity"`
-	Paid             types.DecCoin                          `protobuf:"bytes,10,opt,name=paid,proto3" json:"paid"`
-	Received         types.DecCoin                          `protobuf:"bytes,11,opt,name=received,proto3" json:"received"`
+	ExecutedQuantity github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,9,opt,name=executed_quantity,json=executedQuantity,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"executed_quantity"`
+	Paid             types.Coin                             `protobuf:"bytes,10,opt,name=paid,proto3" json:"paid"`
+	Received         types.Coin                             `protobuf:"bytes,11,opt,name=received,proto3" json:"received"`
+	FeePaid          types.Coin                             `protobuf:"bytes,12,opt,name=fee_paid,json=feePaid,proto3" json:"fee_paid"`
+	FeeReceived      types.Coin                             `protobuf:"bytes,13,opt,name=fee_received,json=feeReceived,proto3" json:"fee_received"`
 }
 
 func (m *EventPlaceMMLimitOrder) Reset()         { *m = EventPlaceMMLimitOrder{} }
@@ -214,7 +218,7 @@ type EventPlaceMMBatchLimitOrder struct {
 	Orderer  string                                 `protobuf:"bytes,3,opt,name=orderer,proto3" json:"orderer,omitempty"`
 	IsBuy    bool                                   `protobuf:"varint,4,opt,name=is_buy,json=isBuy,proto3" json:"is_buy,omitempty"`
 	Price    github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,5,opt,name=price,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"price"`
-	Quantity github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,6,opt,name=quantity,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"quantity"`
+	Quantity github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,6,opt,name=quantity,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"quantity"`
 	Lifespan time.Duration                          `protobuf:"bytes,7,opt,name=lifespan,proto3,stdduration" json:"lifespan"`
 	Deadline time.Time                              `protobuf:"bytes,8,opt,name=deadline,proto3,stdtime" json:"deadline"`
 }
@@ -257,10 +261,12 @@ type EventPlaceMarketOrder struct {
 	OrderId          uint64                                 `protobuf:"varint,2,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
 	Orderer          string                                 `protobuf:"bytes,3,opt,name=orderer,proto3" json:"orderer,omitempty"`
 	IsBuy            bool                                   `protobuf:"varint,4,opt,name=is_buy,json=isBuy,proto3" json:"is_buy,omitempty"`
-	Quantity         github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,5,opt,name=quantity,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"quantity"`
-	ExecutedQuantity github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,6,opt,name=executed_quantity,json=executedQuantity,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"executed_quantity"`
-	Paid             types.DecCoin                          `protobuf:"bytes,7,opt,name=paid,proto3" json:"paid"`
-	Received         types.DecCoin                          `protobuf:"bytes,8,opt,name=received,proto3" json:"received"`
+	Quantity         github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,5,opt,name=quantity,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"quantity"`
+	ExecutedQuantity github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,6,opt,name=executed_quantity,json=executedQuantity,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"executed_quantity"`
+	Paid             types.Coin                             `protobuf:"bytes,7,opt,name=paid,proto3" json:"paid"`
+	Received         types.Coin                             `protobuf:"bytes,8,opt,name=received,proto3" json:"received"`
+	FeePaid          types.Coin                             `protobuf:"bytes,9,opt,name=fee_paid,json=feePaid,proto3" json:"fee_paid"`
+	FeeReceived      types.Coin                             `protobuf:"bytes,10,opt,name=fee_received,json=feeReceived,proto3" json:"fee_received"`
 }
 
 func (m *EventPlaceMarketOrder) Reset()         { *m = EventPlaceMarketOrder{} }
@@ -376,8 +382,8 @@ var xxx_messageInfo_EventCancelAllOrders proto.InternalMessageInfo
 type EventSwapExactAmountIn struct {
 	Orderer string            `protobuf:"bytes,1,opt,name=orderer,proto3" json:"orderer,omitempty"`
 	Routes  []uint64          `protobuf:"varint,2,rep,packed,name=routes,proto3" json:"routes,omitempty"`
-	Input   types.DecCoin     `protobuf:"bytes,3,opt,name=input,proto3" json:"input"`
-	Output  types.DecCoin     `protobuf:"bytes,4,opt,name=output,proto3" json:"output"`
+	Input   types.Coin        `protobuf:"bytes,3,opt,name=input,proto3" json:"input"`
+	Output  types.Coin        `protobuf:"bytes,4,opt,name=output,proto3" json:"output"`
 	Results []SwapRouteResult `protobuf:"bytes,5,rep,name=results,proto3" json:"results"`
 }
 
@@ -415,16 +421,14 @@ func (m *EventSwapExactAmountIn) XXX_DiscardUnknown() {
 var xxx_messageInfo_EventSwapExactAmountIn proto.InternalMessageInfo
 
 type EventOrderFilled struct {
-	MarketId         uint64                                 `protobuf:"varint,1,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
-	OrderId          uint64                                 `protobuf:"varint,2,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
-	Orderer          string                                 `protobuf:"bytes,3,opt,name=orderer,proto3" json:"orderer,omitempty"`
-	IsBuy            bool                                   `protobuf:"varint,4,opt,name=is_buy,json=isBuy,proto3" json:"is_buy,omitempty"`
-	Price            github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,5,opt,name=price,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"price"`
-	Quantity         github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,6,opt,name=quantity,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"quantity"`
-	OpenQuantity     github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,7,opt,name=open_quantity,json=openQuantity,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"open_quantity"`
-	ExecutedQuantity github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,8,opt,name=executed_quantity,json=executedQuantity,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"executed_quantity"`
-	Paid             types.DecCoin                          `protobuf:"bytes,9,opt,name=paid,proto3" json:"paid"`
-	Received         types.DecCoin                          `protobuf:"bytes,10,opt,name=received,proto3" json:"received"`
+	OrderId          uint64                                 `protobuf:"varint,1,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
+	Quantity         github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,2,opt,name=quantity,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"quantity"`
+	OpenQuantity     github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,3,opt,name=open_quantity,json=openQuantity,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"open_quantity"`
+	ExecutedQuantity github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,4,opt,name=executed_quantity,json=executedQuantity,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"executed_quantity"`
+	Paid             types.Coin                             `protobuf:"bytes,5,opt,name=paid,proto3" json:"paid"`
+	Received         types.Coin                             `protobuf:"bytes,6,opt,name=received,proto3" json:"received"`
+	FeePaid          types.Coin                             `protobuf:"bytes,7,opt,name=fee_paid,json=feePaid,proto3" json:"fee_paid"`
+	FeeReceived      types.Coin                             `protobuf:"bytes,8,opt,name=fee_received,json=feeReceived,proto3" json:"fee_received"`
 }
 
 func (m *EventOrderFilled) Reset()         { *m = EventOrderFilled{} }
@@ -465,9 +469,11 @@ type EventOrderSourceOrdersFilled struct {
 	SourceName       string                                 `protobuf:"bytes,2,opt,name=source_name,json=sourceName,proto3" json:"source_name,omitempty"`
 	Orderer          string                                 `protobuf:"bytes,3,opt,name=orderer,proto3" json:"orderer,omitempty"`
 	IsBuy            bool                                   `protobuf:"varint,4,opt,name=is_buy,json=isBuy,proto3" json:"is_buy,omitempty"`
-	ExecutedQuantity github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,5,opt,name=executed_quantity,json=executedQuantity,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"executed_quantity"`
-	Paid             types.DecCoin                          `protobuf:"bytes,6,opt,name=paid,proto3" json:"paid"`
-	Received         types.DecCoin                          `protobuf:"bytes,7,opt,name=received,proto3" json:"received"`
+	ExecutedQuantity github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,5,opt,name=executed_quantity,json=executedQuantity,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"executed_quantity"`
+	Paid             types.Coin                             `protobuf:"bytes,6,opt,name=paid,proto3" json:"paid"`
+	Received         types.Coin                             `protobuf:"bytes,7,opt,name=received,proto3" json:"received"`
+	FeePaid          types.Coin                             `protobuf:"bytes,8,opt,name=fee_paid,json=feePaid,proto3" json:"fee_paid"`
+	FeeReceived      types.Coin                             `protobuf:"bytes,9,opt,name=fee_received,json=feeReceived,proto3" json:"fee_received"`
 }
 
 func (m *EventOrderSourceOrdersFilled) Reset()         { *m = EventOrderSourceOrdersFilled{} }
@@ -578,10 +584,10 @@ func (m *EventOrderExpired) XXX_DiscardUnknown() {
 var xxx_messageInfo_EventOrderExpired proto.InternalMessageInfo
 
 type EventMarketParameterChanged struct {
-	MarketId            uint64                                 `protobuf:"varint,1,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
-	MakerFeeRate        github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=maker_fee_rate,json=makerFeeRate,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"maker_fee_rate"`
-	TakerFeeRate        github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,3,opt,name=taker_fee_rate,json=takerFeeRate,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"taker_fee_rate"`
-	OrderSourceFeeRatio github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,4,opt,name=order_source_fee_ratio,json=orderSourceFeeRatio,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"order_source_fee_ratio"`
+	MarketId            uint64       `protobuf:"varint,1,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
+	Fees                Fees         `protobuf:"bytes,2,opt,name=fees,proto3" json:"fees"`
+	OrderQuantityLimits AmountLimits `protobuf:"bytes,3,opt,name=order_quantity_limits,json=orderQuantityLimits,proto3" json:"order_quantity_limits"`
+	OrderQuoteLimits    AmountLimits `protobuf:"bytes,4,opt,name=order_quote_limits,json=orderQuoteLimits,proto3" json:"order_quote_limits"`
 }
 
 func (m *EventMarketParameterChanged) Reset()         { *m = EventMarketParameterChanged{} }
@@ -639,71 +645,76 @@ func init() {
 }
 
 var fileDescriptor_b894146a4e451bc4 = []byte{
-	// 1019 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xec, 0x58, 0x4f, 0x6f, 0x1b, 0x45,
-	0x14, 0xf7, 0xfa, 0xef, 0xfa, 0x19, 0x50, 0xb3, 0x69, 0xa3, 0x4d, 0x5a, 0x6c, 0xcb, 0x12, 0xc8,
-	0x42, 0xea, 0x2e, 0x2d, 0x02, 0x55, 0x1c, 0x80, 0x3a, 0x49, 0x51, 0x2a, 0x42, 0xdb, 0x4d, 0xc5,
-	0x01, 0x0e, 0xd6, 0x78, 0xf7, 0xc5, 0x19, 0xc5, 0xbb, 0xb3, 0x9d, 0x9d, 0x4d, 0x9d, 0x03, 0x5f,
-	0x00, 0x71, 0xe8, 0x11, 0xc4, 0x89, 0x4f, 0xc1, 0x57, 0x88, 0xc4, 0xa5, 0x47, 0xc4, 0xa1, 0x40,
-	0x72, 0x42, 0x7c, 0x09, 0x34, 0xb3, 0xbb, 0xfe, 0x53, 0x5a, 0x93, 0x38, 0x01, 0x45, 0x6a, 0x4e,
-	0xde, 0x99, 0x79, 0xbf, 0xdf, 0xbc, 0x79, 0xef, 0xf7, 0xde, 0xce, 0x1a, 0xde, 0x72, 0x39, 0x46,
-	0x2e, 0x06, 0xc2, 0xc6, 0xa1, 0xbb, 0x43, 0x82, 0x3e, 0xda, 0x7b, 0x37, 0x7a, 0x28, 0xc8, 0x0d,
-	0x1b, 0xf7, 0x30, 0x10, 0x56, 0xc8, 0x99, 0x60, 0xc6, 0x72, 0x66, 0x66, 0x65, 0x66, 0x56, 0x6a,
-	0xb6, 0x72, 0xb9, 0xcf, 0xfa, 0x4c, 0x59, 0xd9, 0xf2, 0x29, 0x01, 0xac, 0xd4, 0x5d, 0x16, 0xf9,
-	0x2c, 0xb2, 0x7b, 0x24, 0x1a, 0x33, 0xba, 0x8c, 0x06, 0xe9, 0x7a, 0xa3, 0xcf, 0x58, 0x7f, 0x80,
-	0xb6, 0x1a, 0xf5, 0xe2, 0x6d, 0x5b, 0x50, 0x1f, 0x23, 0x41, 0xfc, 0x30, 0x23, 0x78, 0xde, 0xc0,
-	0x8b, 0x39, 0x11, 0x94, 0x65, 0x04, 0xed, 0x19, 0x8e, 0x67, 0x2e, 0x2a, 0xcb, 0xd6, 0x37, 0x1a,
-	0x2c, 0xac, 0xcb, 0xb3, 0xac, 0x72, 0x24, 0x02, 0x37, 0x09, 0xdf, 0x45, 0x61, 0x98, 0x50, 0x71,
-	0xe5, 0x98, 0x71, 0x53, 0x6b, 0x6a, 0xed, 0xaa, 0x93, 0x0d, 0x8d, 0x37, 0x01, 0xa4, 0xd7, 0x5d,
-	0x0f, 0x03, 0xe6, 0x9b, 0x79, 0xb5, 0x58, 0x95, 0x33, 0x6b, 0x72, 0xc2, 0x68, 0x40, 0xed, 0x51,
-	0xcc, 0x44, 0xb6, 0x5e, 0x50, 0xeb, 0xa0, 0xa6, 0x12, 0x83, 0xab, 0x50, 0xf5, 0xd5, 0x1e, 0x5d,
-	0xea, 0x99, 0xc5, 0xa6, 0xd6, 0x2e, 0x3a, 0x7a, 0x32, 0xb1, 0xe1, 0xb5, 0xfe, 0x2c, 0xc2, 0x65,
-	0xe5, 0xcc, 0xfd, 0x01, 0x71, 0xf1, 0x33, 0xea, 0x53, 0x71, 0x8f, 0x7b, 0xc8, 0xa7, 0x51, 0xda,
-	0x34, 0xca, 0x58, 0x06, 0x9d, 0x49, 0x2b, 0xb9, 0x96, 0x57, 0x6b, 0x15, 0x35, 0xde, 0xf0, 0xe4,
-	0x39, 0xd4, 0x23, 0xf2, 0xd4, 0x95, 0x6c, 0x68, 0x5c, 0x81, 0x32, 0x8d, 0xba, 0xbd, 0x78, 0x5f,
-	0x39, 0xa1, 0x3b, 0x25, 0x1a, 0x75, 0xe2, 0x7d, 0x63, 0x0d, 0x4a, 0x21, 0xa7, 0x2e, 0x9a, 0x25,
-	0x69, 0xde, 0xb1, 0x0e, 0x9e, 0x35, 0x72, 0xbf, 0x3e, 0x6b, 0xbc, 0xdd, 0xa7, 0x62, 0x27, 0xee,
-	0x59, 0x2e, 0xf3, 0xed, 0x34, 0x77, 0xc9, 0xcf, 0xf5, 0xc8, 0xdb, 0xb5, 0xc5, 0x7e, 0x88, 0x91,
-	0xb5, 0x86, 0xae, 0x93, 0x80, 0x8d, 0xbb, 0xa0, 0x3f, 0x8a, 0x49, 0x20, 0xa8, 0xd8, 0x37, 0xcb,
-	0x73, 0x11, 0x8d, 0xf0, 0xc6, 0xc7, 0xa0, 0x0f, 0xe8, 0x36, 0x46, 0x21, 0x09, 0xcc, 0x4a, 0x53,
-	0x6b, 0xd7, 0x6e, 0x2e, 0x5b, 0x49, 0xf6, 0xad, 0x2c, 0xfb, 0xd6, 0x5a, 0x9a, 0xfd, 0x8e, 0x2e,
-	0xb7, 0xf9, 0xee, 0xb7, 0x86, 0xe6, 0x8c, 0x40, 0xc6, 0x27, 0xa0, 0x7b, 0x48, 0xbc, 0x01, 0x0d,
-	0xd0, 0xd4, 0x15, 0xc1, 0xca, 0x3f, 0x08, 0x1e, 0x66, 0xfa, 0x4a, 0x18, 0x9e, 0x28, 0x86, 0x0c,
-	0x65, 0x7c, 0x05, 0x0b, 0x38, 0x44, 0x37, 0x16, 0xe8, 0x75, 0x47, 0xe7, 0xaa, 0xce, 0x75, 0xae,
-	0x4b, 0x19, 0xd1, 0x83, 0xec, 0x7c, 0x1f, 0x40, 0x31, 0x24, 0xd4, 0x33, 0x41, 0xb9, 0x76, 0xcd,
-	0x4a, 0x60, 0x96, 0x94, 0x54, 0x56, 0x45, 0x12, 0xb9, 0xca, 0x68, 0xd0, 0x29, 0xca, 0xdd, 0x1c,
-	0x65, 0x6f, 0x7c, 0x04, 0x3a, 0x47, 0x17, 0xe9, 0x1e, 0x7a, 0x66, 0xed, 0xd8, 0xd8, 0x11, 0xa6,
-	0xf5, 0x7d, 0x01, 0x96, 0xc7, 0x5a, 0xeb, 0x10, 0xe1, 0xee, 0x5c, 0x08, 0xee, 0x7c, 0x08, 0xae,
-	0xf5, 0x57, 0x11, 0x96, 0xc6, 0xb9, 0xd9, 0xdc, 0xbc, 0x48, 0xcc, 0x45, 0x27, 0xf8, 0xef, 0x3a,
-	0xc1, 0x0f, 0x05, 0xb8, 0x3a, 0xa9, 0xb6, 0x8b, 0x5e, 0x70, 0x9e, 0x7a, 0xc1, 0x8f, 0x05, 0xb8,
-	0x32, 0x91, 0x1d, 0x15, 0xf7, 0xff, 0x39, 0x2f, 0x93, 0x11, 0x2d, 0x9d, 0x32, 0xa2, 0x2f, 0xac,
-	0xa0, 0xf2, 0x19, 0x57, 0x50, 0xe5, 0x14, 0x15, 0xa4, 0xcf, 0x51, 0x41, 0x9f, 0xc2, 0xa5, 0xe4,
-	0x0e, 0x49, 0x02, 0x17, 0x07, 0x49, 0x76, 0x26, 0xa2, 0xac, 0x4d, 0x47, 0xf9, 0xe5, 0xa9, 0x69,
-	0x7d, 0x9d, 0xde, 0xff, 0x12, 0xa2, 0xdb, 0x83, 0x84, 0x2b, 0x9a, 0x41, 0x36, 0x25, 0x82, 0xfc,
-	0x73, 0x22, 0xb0, 0x60, 0xd1, 0x55, 0x4c, 0x03, 0xf4, 0xba, 0xd9, 0x9e, 0x91, 0x59, 0x68, 0x16,
-	0xda, 0x45, 0x67, 0x61, 0xb4, 0x74, 0x2f, 0xd9, 0x3d, 0x6a, 0x7d, 0x9b, 0x4f, 0xdf, 0x3b, 0x5b,
-	0x8f, 0x49, 0xb8, 0x3e, 0x24, 0xae, 0xb8, 0xed, 0xb3, 0x38, 0x10, 0x1b, 0xc1, 0x0c, 0x0f, 0x96,
-	0xa0, 0xcc, 0x59, 0x2c, 0x30, 0x32, 0xf3, 0x8a, 0x37, 0x1d, 0x19, 0xb7, 0xa0, 0x44, 0x83, 0x30,
-	0x16, 0x4a, 0x64, 0xc7, 0x8b, 0x68, 0x02, 0x30, 0x3e, 0x84, 0x32, 0x8b, 0x85, 0x84, 0x16, 0x8f,
-	0x0d, 0x4d, 0x11, 0xc6, 0x5d, 0xa8, 0x70, 0x8c, 0xe2, 0x81, 0x88, 0xcc, 0x52, 0xb3, 0xd0, 0xae,
-	0xdd, 0x7c, 0xc7, 0x7a, 0xe9, 0xd7, 0x89, 0x25, 0x8f, 0xe9, 0x48, 0x6f, 0x1d, 0x05, 0x49, 0xa9,
-	0x32, 0x82, 0xd6, 0x4f, 0xc5, 0x34, 0xaf, 0x2a, 0x40, 0x77, 0xa8, 0x8c, 0xd5, 0xab, 0xdc, 0x0d,
-	0xb7, 0xe0, 0x75, 0x16, 0x62, 0x30, 0xae, 0xdb, 0xca, 0x5c, 0x84, 0xaf, 0x49, 0x92, 0x07, 0x33,
-	0x1b, 0x82, 0x7e, 0xc6, 0x0d, 0xa1, 0x7a, 0x8a, 0x86, 0x00, 0x73, 0x34, 0x84, 0xc3, 0x3c, 0x5c,
-	0x1b, 0x2b, 0x67, 0x8b, 0xc5, 0xdc, 0xc5, 0xa4, 0x94, 0x8f, 0xa3, 0xa2, 0x06, 0xd4, 0x22, 0x05,
-	0xe9, 0x06, 0xc4, 0xc7, 0xf4, 0x23, 0x13, 0x92, 0xa9, 0xcf, 0x89, 0x8f, 0x27, 0xd7, 0xd2, 0x0b,
-	0x83, 0x5c, 0x3a, 0xe3, 0x20, 0x97, 0x4f, 0x11, 0xe4, 0xca, 0x1c, 0x41, 0x7e, 0x17, 0x16, 0xc7,
-	0x31, 0x5e, 0x65, 0x7e, 0x38, 0x40, 0x81, 0xd3, 0x35, 0xa8, 0x4d, 0xb7, 0x57, 0x2b, 0xfd, 0xd6,
-	0x57, 0x88, 0xf5, 0x61, 0x48, 0xf9, 0x6c, 0xfb, 0x9f, 0xf3, 0xe9, 0xcd, 0x28, 0x79, 0xed, 0xde,
-	0x27, 0x9c, 0xf8, 0x28, 0x90, 0xaf, 0xaa, 0x36, 0xf2, 0x2f, 0x59, 0x7c, 0x08, 0x6f, 0xf8, 0x64,
-	0x17, 0x79, 0x77, 0x1b, 0xb1, 0xcb, 0x89, 0x48, 0x13, 0x79, 0xf2, 0x72, 0x51, 0x2c, 0x77, 0x10,
-	0x1d, 0x22, 0x50, 0xb2, 0x8a, 0x69, 0xd6, 0xc2, 0x7c, 0xac, 0x62, 0x92, 0xd5, 0x85, 0xa5, 0x24,
-	0x06, 0xa9, 0xee, 0x52, 0x72, 0xca, 0x94, 0x8c, 0x4e, 0xce, 0xbe, 0xc8, 0xc6, 0xba, 0x4f, 0xf6,
-	0xa0, 0xac, 0xf3, 0xc5, 0xc1, 0x1f, 0xf5, 0xdc, 0xc1, 0x61, 0x5d, 0x7b, 0x7a, 0x58, 0xd7, 0x7e,
-	0x3f, 0xac, 0x6b, 0x4f, 0x8e, 0xea, 0xb9, 0xa7, 0x47, 0xf5, 0xdc, 0x2f, 0x47, 0xf5, 0xdc, 0x97,
-	0xb7, 0x26, 0xa9, 0xd3, 0x8e, 0x7d, 0x3d, 0x40, 0xf1, 0x98, 0xf1, 0xdd, 0xd1, 0x84, 0xbd, 0xf7,
-	0xbe, 0x3d, 0x1c, 0xff, 0xa7, 0xa3, 0x36, 0xec, 0x95, 0xd5, 0x4d, 0xea, 0xbd, 0xbf, 0x03, 0x00,
-	0x00, 0xff, 0xff, 0x89, 0x4e, 0x3d, 0x65, 0xae, 0x12, 0x00, 0x00,
+	// 1099 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xec, 0x58, 0x4d, 0x6f, 0x1b, 0x45,
+	0x18, 0xce, 0xda, 0x6b, 0x7b, 0x3d, 0x6e, 0xa5, 0x64, 0xd3, 0x54, 0x9b, 0x14, 0xec, 0xc8, 0x12,
+	0xc5, 0x42, 0xea, 0x2e, 0x6d, 0x55, 0xf1, 0x75, 0x80, 0x3a, 0x49, 0x51, 0x2a, 0x42, 0xd3, 0x0d,
+	0xe2, 0x40, 0x0f, 0xd6, 0x78, 0xf7, 0xb5, 0xb3, 0xca, 0xee, 0xce, 0x76, 0x77, 0x36, 0x4d, 0x0e,
+	0x5c, 0x39, 0x70, 0xea, 0x11, 0x54, 0xf1, 0x33, 0xf8, 0x0f, 0x39, 0xf6, 0x88, 0x10, 0x2a, 0x90,
+	0x88, 0xff, 0x81, 0xe6, 0xcb, 0x1f, 0xa5, 0x31, 0xa9, 0x1d, 0xa1, 0x0a, 0xe5, 0x64, 0xcf, 0xcc,
+	0xfb, 0x3c, 0xef, 0xcc, 0xbc, 0xcf, 0x33, 0x33, 0x36, 0x7a, 0xc7, 0x4b, 0x21, 0xf3, 0x20, 0xa6,
+	0x0e, 0x1c, 0x78, 0xbb, 0x38, 0xee, 0x83, 0xb3, 0x7f, 0xb3, 0x0b, 0x14, 0xdf, 0x74, 0x60, 0x1f,
+	0x62, 0x6a, 0x27, 0x29, 0xa1, 0xc4, 0x5c, 0x56, 0x61, 0xb6, 0x0a, 0xb3, 0x65, 0xd8, 0xca, 0x95,
+	0x3e, 0xe9, 0x13, 0x1e, 0xe5, 0xb0, 0x6f, 0x02, 0xb0, 0x52, 0xf7, 0x48, 0x16, 0x91, 0xcc, 0xe9,
+	0xe2, 0x6c, 0xc8, 0xe8, 0x91, 0x20, 0x96, 0xe3, 0x8d, 0x3e, 0x21, 0xfd, 0x10, 0x1c, 0xde, 0xea,
+	0xe6, 0x3d, 0x87, 0x06, 0x11, 0x64, 0x14, 0x47, 0x89, 0x22, 0x78, 0x39, 0xc0, 0xcf, 0x53, 0x4c,
+	0x03, 0xa2, 0x08, 0x5a, 0x13, 0x26, 0xae, 0xa6, 0x28, 0x22, 0xaf, 0x9f, 0x1e, 0x99, 0xe0, 0x14,
+	0x47, 0x99, 0x88, 0x6b, 0x7e, 0xaf, 0xa1, 0x85, 0x0d, 0xb6, 0xe6, 0xb5, 0x14, 0x30, 0x85, 0x2d,
+	0x9c, 0xee, 0x01, 0x35, 0x2d, 0x54, 0xf1, 0x58, 0x9b, 0xa4, 0x96, 0xb6, 0xaa, 0xb5, 0xaa, 0xae,
+	0x6a, 0x9a, 0x6f, 0x23, 0xc4, 0x56, 0xd7, 0xf1, 0x21, 0x26, 0x91, 0x55, 0xe0, 0x83, 0x55, 0xd6,
+	0xb3, 0xce, 0x3a, 0xcc, 0x06, 0xaa, 0x3d, 0xce, 0x09, 0x55, 0xe3, 0x45, 0x3e, 0x8e, 0x78, 0x97,
+	0x08, 0xb8, 0x86, 0xaa, 0x11, 0xcf, 0xd1, 0x09, 0x7c, 0x4b, 0x5f, 0xd5, 0x5a, 0xba, 0x6b, 0x88,
+	0x8e, 0x4d, 0xbf, 0x79, 0x52, 0x42, 0x57, 0xf8, 0x64, 0xb6, 0x43, 0xec, 0xc1, 0x17, 0x41, 0x14,
+	0xd0, 0x07, 0xa9, 0x0f, 0xe9, 0x38, 0x4a, 0x1b, 0x47, 0x99, 0xcb, 0xc8, 0x20, 0x2c, 0x8a, 0x8d,
+	0x15, 0xf8, 0x58, 0x85, 0xb7, 0x37, 0x7d, 0xb6, 0x0e, 0xfe, 0x15, 0x52, 0x39, 0x15, 0xd5, 0x34,
+	0x97, 0x50, 0x39, 0xc8, 0x3a, 0xdd, 0xfc, 0x90, 0x4f, 0xc2, 0x70, 0x4b, 0x41, 0xd6, 0xce, 0x0f,
+	0xcd, 0x75, 0x54, 0x4a, 0xd2, 0xc0, 0x03, 0xab, 0xc4, 0xc2, 0xdb, 0xf6, 0xd1, 0x8b, 0xc6, 0xdc,
+	0xaf, 0x2f, 0x1a, 0xd7, 0xfb, 0x01, 0xdd, 0xcd, 0xbb, 0xb6, 0x47, 0x22, 0x47, 0xd6, 0x58, 0x7c,
+	0xdc, 0xc8, 0xfc, 0x3d, 0x87, 0x1e, 0x26, 0x90, 0xd9, 0xeb, 0xe0, 0xb9, 0x02, 0x6c, 0xde, 0x47,
+	0xc6, 0xe3, 0x1c, 0xc7, 0x34, 0xa0, 0x87, 0x56, 0xf9, 0xb5, 0x89, 0x36, 0x63, 0xea, 0x0e, 0xf0,
+	0xe6, 0xa7, 0xc8, 0x08, 0x83, 0x1e, 0x64, 0x09, 0x8e, 0xad, 0xca, 0xaa, 0xd6, 0xaa, 0xdd, 0x5a,
+	0xb6, 0x85, 0x4a, 0x6c, 0xa5, 0x12, 0x7b, 0x5d, 0xaa, 0xa4, 0x6d, 0xb0, 0x34, 0x3f, 0xfc, 0xde,
+	0xd0, 0xdc, 0x01, 0xc8, 0xfc, 0x0c, 0x19, 0x3e, 0x60, 0x3f, 0x0c, 0x62, 0xb0, 0x0c, 0x4e, 0xb0,
+	0xf2, 0x0f, 0x82, 0xaf, 0x94, 0x0e, 0x05, 0xc3, 0x53, 0xce, 0xa0, 0x50, 0xe6, 0x23, 0xb4, 0x00,
+	0x07, 0xe0, 0xe5, 0x14, 0xfc, 0xce, 0x60, 0x5d, 0xd5, 0xa9, 0xd6, 0x35, 0xaf, 0x88, 0x1e, 0xaa,
+	0xf5, 0xdd, 0x46, 0x7a, 0x82, 0x03, 0xdf, 0x42, 0x72, 0x6d, 0x02, 0x66, 0x33, 0x49, 0x29, 0xb7,
+	0xd9, 0x6b, 0x24, 0x88, 0xdb, 0x3a, 0x4b, 0xe5, 0xf2, 0x60, 0xf3, 0x13, 0x64, 0xa4, 0xe0, 0x41,
+	0xb0, 0x0f, 0xbe, 0x55, 0x3b, 0x1b, 0x70, 0x00, 0x30, 0x3f, 0x46, 0x46, 0x0f, 0xa0, 0xc3, 0xb3,
+	0x5e, 0x3a, 0x1b, 0xb8, 0xd2, 0x03, 0xd8, 0x66, 0x89, 0xdb, 0xe8, 0x12, 0xc3, 0x0e, 0x92, 0x5f,
+	0x3e, 0x1b, 0xbe, 0xd6, 0x03, 0x70, 0x25, 0xa6, 0xf9, 0x63, 0x11, 0x2d, 0x0f, 0x55, 0xde, 0xc6,
+	0xd4, 0xdb, 0xbd, 0x90, 0xfa, 0x9b, 0x21, 0xf5, 0xe6, 0x5f, 0x25, 0x74, 0x75, 0x58, 0x9b, 0xad,
+	0xad, 0x8b, 0xc2, 0x5c, 0x9c, 0x41, 0xff, 0xc7, 0x33, 0xe8, 0x59, 0x11, 0x5d, 0x1b, 0xd5, 0xf9,
+	0xc5, 0x29, 0xf4, 0x26, 0x9d, 0x42, 0xcf, 0x74, 0xb4, 0x34, 0x52, 0x1d, 0xbe, 0xef, 0xff, 0x71,
+	0x5d, 0x46, 0x77, 0xb4, 0x34, 0xe3, 0x8e, 0xbe, 0xd2, 0xbb, 0xe5, 0x73, 0xf6, 0x6e, 0x65, 0x5a,
+	0xef, 0x1a, 0xb3, 0x78, 0xb7, 0x3a, 0xa3, 0x77, 0xd1, 0x14, 0xde, 0xfd, 0x1c, 0xcd, 0x8b, 0x17,
+	0x3b, 0x8e, 0x3d, 0x08, 0x85, 0x2e, 0x46, 0xea, 0xab, 0x8d, 0xd7, 0xf7, 0x74, 0x51, 0x34, 0xbf,
+	0x95, 0xaf, 0x6d, 0x41, 0x74, 0x37, 0x14, 0x5c, 0xd9, 0x04, 0xb2, 0x31, 0xf9, 0x15, 0x5e, 0x92,
+	0x9f, 0x8d, 0x16, 0x3d, 0xce, 0x14, 0x82, 0xdf, 0x51, 0x39, 0x33, 0xab, 0xb8, 0x5a, 0x6c, 0xe9,
+	0xee, 0xc2, 0x60, 0xe8, 0x81, 0xc8, 0x9e, 0x35, 0xbf, 0x2b, 0xc8, 0xbb, 0x76, 0xe7, 0x09, 0x4e,
+	0x36, 0x0e, 0xb0, 0x47, 0xef, 0x46, 0x24, 0x8f, 0xe9, 0x66, 0x3c, 0x61, 0x06, 0x57, 0x51, 0x39,
+	0x25, 0x39, 0x85, 0xcc, 0x2a, 0x70, 0x5e, 0xd9, 0x32, 0xef, 0xa0, 0x52, 0x10, 0x27, 0x39, 0xe5,
+	0xf2, 0x3e, 0xc3, 0x8e, 0x8a, 0x68, 0xf3, 0x03, 0x54, 0x26, 0x39, 0x65, 0x38, 0xfd, 0x6c, 0x38,
+	0x19, 0x6e, 0xde, 0x47, 0x95, 0x14, 0xb2, 0x3c, 0xa4, 0x99, 0x55, 0x5a, 0x2d, 0xb6, 0x6a, 0xb7,
+	0xde, 0xb3, 0x4f, 0xfd, 0xb5, 0x68, 0xb3, 0x05, 0xba, 0x6c, 0x9e, 0x2e, 0x87, 0x28, 0x51, 0x48,
+	0x82, 0xe6, 0x4f, 0xba, 0xac, 0x28, 0xdf, 0x9a, 0x7b, 0x01, 0xdb, 0xa5, 0xb1, 0xba, 0x69, 0xe3,
+	0x66, 0x1e, 0xf5, 0x66, 0x61, 0x46, 0x6f, 0xee, 0xa0, 0xcb, 0x24, 0x81, 0x78, 0xe8, 0xcb, 0xe2,
+	0x54, 0x84, 0x97, 0x18, 0xc9, 0xc3, 0x89, 0x86, 0xd7, 0xcf, 0xd9, 0xf0, 0xa5, 0x69, 0x0d, 0x5f,
+	0x9e, 0xc5, 0xf0, 0x95, 0x19, 0x0d, 0x6f, 0x4c, 0x61, 0xf8, 0xdf, 0x8a, 0xe8, 0xad, 0xa1, 0x3e,
+	0x76, 0x48, 0x9e, 0x7a, 0x20, 0xac, 0x2a, 0xb5, 0x32, 0xf1, 0x56, 0x68, 0xa0, 0x5a, 0xc6, 0x21,
+	0x9d, 0x18, 0x47, 0x20, 0x7f, 0xb2, 0x23, 0xd1, 0xf5, 0x25, 0x8e, 0xe0, 0xf5, 0xef, 0x86, 0x57,
+	0x96, 0xb7, 0x74, 0xce, 0xe5, 0x2d, 0x4f, 0x5b, 0xde, 0xca, 0x2c, 0xe5, 0x35, 0x66, 0x2c, 0x6f,
+	0x75, 0x8a, 0xf2, 0xbe, 0x8f, 0x16, 0x87, 0xd5, 0x5d, 0x23, 0x51, 0x12, 0x02, 0x9d, 0x78, 0x00,
+	0x34, 0x6d, 0xf9, 0x9f, 0x0d, 0x47, 0x6c, 0x1c, 0x24, 0x41, 0x3a, 0x39, 0xfe, 0xe7, 0x82, 0x7c,
+	0xed, 0x89, 0xa7, 0xc4, 0x36, 0x4e, 0x71, 0x04, 0x14, 0xd2, 0x35, 0x7e, 0x4c, 0xfd, 0x8b, 0x7e,
+	0x3e, 0x42, 0x7a, 0x0f, 0xf8, 0x79, 0xcb, 0x96, 0xd6, 0x98, 0x70, 0xcc, 0xdd, 0x03, 0xc8, 0x54,
+	0x59, 0x18, 0xc4, 0xc4, 0x68, 0x49, 0x4c, 0x49, 0xa9, 0xa4, 0x13, 0xb2, 0x27, 0x66, 0x26, 0x0f,
+	0xe9, 0x77, 0x27, 0x70, 0x89, 0xab, 0x80, 0xbf, 0x48, 0x15, 0xe7, 0x22, 0xe7, 0x52, 0x42, 0x11,
+	0x43, 0xe6, 0x23, 0x64, 0xaa, 0x14, 0x84, 0x82, 0xe2, 0xd7, 0xa7, 0xe1, 0x9f, 0x97, 0xfc, 0x84,
+	0x82, 0xec, 0xff, 0xfa, 0xe8, 0xcf, 0xfa, 0xdc, 0xd1, 0x71, 0x5d, 0x7b, 0x7e, 0x5c, 0xd7, 0xfe,
+	0x38, 0xae, 0x6b, 0x4f, 0x4f, 0xea, 0x73, 0xcf, 0x4f, 0xea, 0x73, 0xbf, 0x9c, 0xd4, 0xe7, 0xbe,
+	0xf9, 0x70, 0x54, 0xe3, 0x32, 0xd1, 0x8d, 0x18, 0xe8, 0x13, 0x92, 0xee, 0x0d, 0x3a, 0x9c, 0xfd,
+	0x3b, 0xce, 0xc1, 0xf0, 0x3f, 0x38, 0xae, 0xfc, 0x6e, 0x99, 0xbf, 0x03, 0x6f, 0xff, 0x1d, 0x00,
+	0x00, 0xff, 0xff, 0x5a, 0xec, 0xe2, 0x77, 0x88, 0x14, 0x00, 0x00,
 }
 
 func (m *EventCreateMarket) Marshal() (dAtA []byte, err error) {
@@ -776,6 +787,26 @@ func (m *EventPlaceLimitOrder) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	var l int
 	_ = l
 	{
+		size, err := m.FeeReceived.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintEvent(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x6a
+	{
+		size, err := m.FeePaid.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintEvent(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x62
+	{
 		size, err := m.Received.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
 			return 0, err
@@ -805,20 +836,20 @@ func (m *EventPlaceLimitOrder) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	}
 	i--
 	dAtA[i] = 0x4a
-	n3, err3 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.Deadline, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.Deadline):])
-	if err3 != nil {
-		return 0, err3
+	n5, err5 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.Deadline, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.Deadline):])
+	if err5 != nil {
+		return 0, err5
 	}
-	i -= n3
-	i = encodeVarintEvent(dAtA, i, uint64(n3))
+	i -= n5
+	i = encodeVarintEvent(dAtA, i, uint64(n5))
 	i--
 	dAtA[i] = 0x42
-	n4, err4 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.Lifespan, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.Lifespan):])
-	if err4 != nil {
-		return 0, err4
+	n6, err6 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.Lifespan, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.Lifespan):])
+	if err6 != nil {
+		return 0, err6
 	}
-	i -= n4
-	i = encodeVarintEvent(dAtA, i, uint64(n4))
+	i -= n6
+	i = encodeVarintEvent(dAtA, i, uint64(n6))
 	i--
 	dAtA[i] = 0x3a
 	{
@@ -891,20 +922,20 @@ func (m *EventPlaceBatchLimitOrder) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	_ = i
 	var l int
 	_ = l
-	n5, err5 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.Deadline, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.Deadline):])
-	if err5 != nil {
-		return 0, err5
+	n7, err7 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.Deadline, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.Deadline):])
+	if err7 != nil {
+		return 0, err7
 	}
-	i -= n5
-	i = encodeVarintEvent(dAtA, i, uint64(n5))
+	i -= n7
+	i = encodeVarintEvent(dAtA, i, uint64(n7))
 	i--
 	dAtA[i] = 0x42
-	n6, err6 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.Lifespan, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.Lifespan):])
-	if err6 != nil {
-		return 0, err6
+	n8, err8 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.Lifespan, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.Lifespan):])
+	if err8 != nil {
+		return 0, err8
 	}
-	i -= n6
-	i = encodeVarintEvent(dAtA, i, uint64(n6))
+	i -= n8
+	i = encodeVarintEvent(dAtA, i, uint64(n8))
 	i--
 	dAtA[i] = 0x3a
 	{
@@ -978,6 +1009,26 @@ func (m *EventPlaceMMLimitOrder) MarshalToSizedBuffer(dAtA []byte) (int, error) 
 	var l int
 	_ = l
 	{
+		size, err := m.FeeReceived.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintEvent(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x6a
+	{
+		size, err := m.FeePaid.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintEvent(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x62
+	{
 		size, err := m.Received.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
 			return 0, err
@@ -1007,20 +1058,20 @@ func (m *EventPlaceMMLimitOrder) MarshalToSizedBuffer(dAtA []byte) (int, error) 
 	}
 	i--
 	dAtA[i] = 0x4a
-	n9, err9 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.Deadline, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.Deadline):])
-	if err9 != nil {
-		return 0, err9
+	n13, err13 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.Deadline, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.Deadline):])
+	if err13 != nil {
+		return 0, err13
 	}
-	i -= n9
-	i = encodeVarintEvent(dAtA, i, uint64(n9))
+	i -= n13
+	i = encodeVarintEvent(dAtA, i, uint64(n13))
 	i--
 	dAtA[i] = 0x42
-	n10, err10 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.Lifespan, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.Lifespan):])
-	if err10 != nil {
-		return 0, err10
+	n14, err14 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.Lifespan, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.Lifespan):])
+	if err14 != nil {
+		return 0, err14
 	}
-	i -= n10
-	i = encodeVarintEvent(dAtA, i, uint64(n10))
+	i -= n14
+	i = encodeVarintEvent(dAtA, i, uint64(n14))
 	i--
 	dAtA[i] = 0x3a
 	{
@@ -1093,20 +1144,20 @@ func (m *EventPlaceMMBatchLimitOrder) MarshalToSizedBuffer(dAtA []byte) (int, er
 	_ = i
 	var l int
 	_ = l
-	n11, err11 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.Deadline, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.Deadline):])
-	if err11 != nil {
-		return 0, err11
+	n15, err15 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.Deadline, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.Deadline):])
+	if err15 != nil {
+		return 0, err15
 	}
-	i -= n11
-	i = encodeVarintEvent(dAtA, i, uint64(n11))
+	i -= n15
+	i = encodeVarintEvent(dAtA, i, uint64(n15))
 	i--
 	dAtA[i] = 0x42
-	n12, err12 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.Lifespan, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.Lifespan):])
-	if err12 != nil {
-		return 0, err12
+	n16, err16 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.Lifespan, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.Lifespan):])
+	if err16 != nil {
+		return 0, err16
 	}
-	i -= n12
-	i = encodeVarintEvent(dAtA, i, uint64(n12))
+	i -= n16
+	i = encodeVarintEvent(dAtA, i, uint64(n16))
 	i--
 	dAtA[i] = 0x3a
 	{
@@ -1179,6 +1230,26 @@ func (m *EventPlaceMarketOrder) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	{
+		size, err := m.FeeReceived.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintEvent(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x52
+	{
+		size, err := m.FeePaid.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintEvent(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x4a
 	{
 		size, err := m.Received.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
@@ -1305,20 +1376,20 @@ func (m *EventCancelAllOrders) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	var l int
 	_ = l
 	if len(m.CancelledOrderIds) > 0 {
-		dAtA16 := make([]byte, len(m.CancelledOrderIds)*10)
-		var j15 int
+		dAtA22 := make([]byte, len(m.CancelledOrderIds)*10)
+		var j21 int
 		for _, num := range m.CancelledOrderIds {
 			for num >= 1<<7 {
-				dAtA16[j15] = uint8(uint64(num)&0x7f | 0x80)
+				dAtA22[j21] = uint8(uint64(num)&0x7f | 0x80)
 				num >>= 7
-				j15++
+				j21++
 			}
-			dAtA16[j15] = uint8(num)
-			j15++
+			dAtA22[j21] = uint8(num)
+			j21++
 		}
-		i -= j15
-		copy(dAtA[i:], dAtA16[:j15])
-		i = encodeVarintEvent(dAtA, i, uint64(j15))
+		i -= j21
+		copy(dAtA[i:], dAtA22[:j21])
+		i = encodeVarintEvent(dAtA, i, uint64(j21))
 		i--
 		dAtA[i] = 0x1a
 	}
@@ -1392,20 +1463,20 @@ func (m *EventSwapExactAmountIn) MarshalToSizedBuffer(dAtA []byte) (int, error) 
 	i--
 	dAtA[i] = 0x1a
 	if len(m.Routes) > 0 {
-		dAtA20 := make([]byte, len(m.Routes)*10)
-		var j19 int
+		dAtA26 := make([]byte, len(m.Routes)*10)
+		var j25 int
 		for _, num := range m.Routes {
 			for num >= 1<<7 {
-				dAtA20[j19] = uint8(uint64(num)&0x7f | 0x80)
+				dAtA26[j25] = uint8(uint64(num)&0x7f | 0x80)
 				num >>= 7
-				j19++
+				j25++
 			}
-			dAtA20[j19] = uint8(num)
-			j19++
+			dAtA26[j25] = uint8(num)
+			j25++
 		}
-		i -= j19
-		copy(dAtA[i:], dAtA20[:j19])
-		i = encodeVarintEvent(dAtA, i, uint64(j19))
+		i -= j25
+		copy(dAtA[i:], dAtA26[:j25])
+		i = encodeVarintEvent(dAtA, i, uint64(j25))
 		i--
 		dAtA[i] = 0x12
 	}
@@ -1440,6 +1511,26 @@ func (m *EventOrderFilled) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	var l int
 	_ = l
 	{
+		size, err := m.FeeReceived.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintEvent(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x42
+	{
+		size, err := m.FeePaid.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintEvent(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x3a
+	{
 		size, err := m.Received.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
 			return 0, err
@@ -1448,7 +1539,7 @@ func (m *EventOrderFilled) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i = encodeVarintEvent(dAtA, i, uint64(size))
 	}
 	i--
-	dAtA[i] = 0x52
+	dAtA[i] = 0x32
 	{
 		size, err := m.Paid.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
@@ -1458,7 +1549,7 @@ func (m *EventOrderFilled) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i = encodeVarintEvent(dAtA, i, uint64(size))
 	}
 	i--
-	dAtA[i] = 0x4a
+	dAtA[i] = 0x2a
 	{
 		size := m.ExecutedQuantity.Size()
 		i -= size
@@ -1468,7 +1559,7 @@ func (m *EventOrderFilled) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i = encodeVarintEvent(dAtA, i, uint64(size))
 	}
 	i--
-	dAtA[i] = 0x42
+	dAtA[i] = 0x22
 	{
 		size := m.OpenQuantity.Size()
 		i -= size
@@ -1478,7 +1569,7 @@ func (m *EventOrderFilled) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i = encodeVarintEvent(dAtA, i, uint64(size))
 	}
 	i--
-	dAtA[i] = 0x3a
+	dAtA[i] = 0x1a
 	{
 		size := m.Quantity.Size()
 		i -= size
@@ -1488,41 +1579,9 @@ func (m *EventOrderFilled) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i = encodeVarintEvent(dAtA, i, uint64(size))
 	}
 	i--
-	dAtA[i] = 0x32
-	{
-		size := m.Price.Size()
-		i -= size
-		if _, err := m.Price.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintEvent(dAtA, i, uint64(size))
-	}
-	i--
-	dAtA[i] = 0x2a
-	if m.IsBuy {
-		i--
-		if m.IsBuy {
-			dAtA[i] = 1
-		} else {
-			dAtA[i] = 0
-		}
-		i--
-		dAtA[i] = 0x20
-	}
-	if len(m.Orderer) > 0 {
-		i -= len(m.Orderer)
-		copy(dAtA[i:], m.Orderer)
-		i = encodeVarintEvent(dAtA, i, uint64(len(m.Orderer)))
-		i--
-		dAtA[i] = 0x1a
-	}
+	dAtA[i] = 0x12
 	if m.OrderId != 0 {
 		i = encodeVarintEvent(dAtA, i, uint64(m.OrderId))
-		i--
-		dAtA[i] = 0x10
-	}
-	if m.MarketId != 0 {
-		i = encodeVarintEvent(dAtA, i, uint64(m.MarketId))
 		i--
 		dAtA[i] = 0x8
 	}
@@ -1549,6 +1608,26 @@ func (m *EventOrderSourceOrdersFilled) MarshalToSizedBuffer(dAtA []byte) (int, e
 	_ = i
 	var l int
 	_ = l
+	{
+		size, err := m.FeeReceived.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintEvent(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x4a
+	{
+		size, err := m.FeePaid.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintEvent(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x42
 	{
 		size, err := m.Received.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
@@ -1688,31 +1767,31 @@ func (m *EventMarketParameterChanged) MarshalToSizedBuffer(dAtA []byte) (int, er
 	var l int
 	_ = l
 	{
-		size := m.OrderSourceFeeRatio.Size()
-		i -= size
-		if _, err := m.OrderSourceFeeRatio.MarshalTo(dAtA[i:]); err != nil {
+		size, err := m.OrderQuoteLimits.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
 			return 0, err
 		}
+		i -= size
 		i = encodeVarintEvent(dAtA, i, uint64(size))
 	}
 	i--
 	dAtA[i] = 0x22
 	{
-		size := m.TakerFeeRate.Size()
-		i -= size
-		if _, err := m.TakerFeeRate.MarshalTo(dAtA[i:]); err != nil {
+		size, err := m.OrderQuantityLimits.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
 			return 0, err
 		}
+		i -= size
 		i = encodeVarintEvent(dAtA, i, uint64(size))
 	}
 	i--
 	dAtA[i] = 0x1a
 	{
-		size := m.MakerFeeRate.Size()
-		i -= size
-		if _, err := m.MakerFeeRate.MarshalTo(dAtA[i:]); err != nil {
+		size, err := m.Fees.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
 			return 0, err
 		}
+		i -= size
 		i = encodeVarintEvent(dAtA, i, uint64(size))
 	}
 	i--
@@ -1793,6 +1872,10 @@ func (m *EventPlaceLimitOrder) Size() (n int) {
 	n += 1 + l + sovEvent(uint64(l))
 	l = m.Received.Size()
 	n += 1 + l + sovEvent(uint64(l))
+	l = m.FeePaid.Size()
+	n += 1 + l + sovEvent(uint64(l))
+	l = m.FeeReceived.Size()
+	n += 1 + l + sovEvent(uint64(l))
 	return n
 }
 
@@ -1859,6 +1942,10 @@ func (m *EventPlaceMMLimitOrder) Size() (n int) {
 	n += 1 + l + sovEvent(uint64(l))
 	l = m.Received.Size()
 	n += 1 + l + sovEvent(uint64(l))
+	l = m.FeePaid.Size()
+	n += 1 + l + sovEvent(uint64(l))
+	l = m.FeeReceived.Size()
+	n += 1 + l + sovEvent(uint64(l))
 	return n
 }
 
@@ -1918,6 +2005,10 @@ func (m *EventPlaceMarketOrder) Size() (n int) {
 	l = m.Paid.Size()
 	n += 1 + l + sovEvent(uint64(l))
 	l = m.Received.Size()
+	n += 1 + l + sovEvent(uint64(l))
+	l = m.FeePaid.Size()
+	n += 1 + l + sovEvent(uint64(l))
+	l = m.FeeReceived.Size()
 	n += 1 + l + sovEvent(uint64(l))
 	return n
 }
@@ -1997,21 +2088,9 @@ func (m *EventOrderFilled) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if m.MarketId != 0 {
-		n += 1 + sovEvent(uint64(m.MarketId))
-	}
 	if m.OrderId != 0 {
 		n += 1 + sovEvent(uint64(m.OrderId))
 	}
-	l = len(m.Orderer)
-	if l > 0 {
-		n += 1 + l + sovEvent(uint64(l))
-	}
-	if m.IsBuy {
-		n += 2
-	}
-	l = m.Price.Size()
-	n += 1 + l + sovEvent(uint64(l))
 	l = m.Quantity.Size()
 	n += 1 + l + sovEvent(uint64(l))
 	l = m.OpenQuantity.Size()
@@ -2021,6 +2100,10 @@ func (m *EventOrderFilled) Size() (n int) {
 	l = m.Paid.Size()
 	n += 1 + l + sovEvent(uint64(l))
 	l = m.Received.Size()
+	n += 1 + l + sovEvent(uint64(l))
+	l = m.FeePaid.Size()
+	n += 1 + l + sovEvent(uint64(l))
+	l = m.FeeReceived.Size()
 	n += 1 + l + sovEvent(uint64(l))
 	return n
 }
@@ -2050,6 +2133,10 @@ func (m *EventOrderSourceOrdersFilled) Size() (n int) {
 	l = m.Paid.Size()
 	n += 1 + l + sovEvent(uint64(l))
 	l = m.Received.Size()
+	n += 1 + l + sovEvent(uint64(l))
+	l = m.FeePaid.Size()
+	n += 1 + l + sovEvent(uint64(l))
+	l = m.FeeReceived.Size()
 	n += 1 + l + sovEvent(uint64(l))
 	return n
 }
@@ -2087,11 +2174,11 @@ func (m *EventMarketParameterChanged) Size() (n int) {
 	if m.MarketId != 0 {
 		n += 1 + sovEvent(uint64(m.MarketId))
 	}
-	l = m.MakerFeeRate.Size()
+	l = m.Fees.Size()
 	n += 1 + l + sovEvent(uint64(l))
-	l = m.TakerFeeRate.Size()
+	l = m.OrderQuantityLimits.Size()
 	n += 1 + l + sovEvent(uint64(l))
-	l = m.OrderSourceFeeRatio.Size()
+	l = m.OrderQuoteLimits.Size()
 	n += 1 + l + sovEvent(uint64(l))
 	return n
 }
@@ -2617,6 +2704,72 @@ func (m *EventPlaceLimitOrder) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if err := m.Received.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 12:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FeePaid", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.FeePaid.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 13:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FeeReceived", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.FeeReceived.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -3268,6 +3421,72 @@ func (m *EventPlaceMMLimitOrder) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+		case 12:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FeePaid", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.FeePaid.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 13:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FeeReceived", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.FeeReceived.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipEvent(dAtA[iNdEx:])
@@ -3813,6 +4032,72 @@ func (m *EventPlaceMarketOrder) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if err := m.Received.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 9:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FeePaid", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.FeePaid.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 10:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FeeReceived", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.FeeReceived.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -4404,25 +4689,6 @@ func (m *EventOrderFilled) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MarketId", wireType)
-			}
-			m.MarketId = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEvent
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.MarketId |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 2:
-			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field OrderId", wireType)
 			}
 			m.OrderId = 0
@@ -4440,93 +4706,7 @@ func (m *EventOrderFilled) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Orderer", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEvent
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthEvent
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthEvent
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Orderer = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 4:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field IsBuy", wireType)
-			}
-			var v int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEvent
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				v |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			m.IsBuy = bool(v != 0)
-		case 5:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Price", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEvent
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthEvent
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthEvent
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.Price.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 6:
+		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Quantity", wireType)
 			}
@@ -4560,7 +4740,7 @@ func (m *EventOrderFilled) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 7:
+		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field OpenQuantity", wireType)
 			}
@@ -4594,7 +4774,7 @@ func (m *EventOrderFilled) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 8:
+		case 4:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ExecutedQuantity", wireType)
 			}
@@ -4628,7 +4808,7 @@ func (m *EventOrderFilled) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 9:
+		case 5:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Paid", wireType)
 			}
@@ -4661,7 +4841,7 @@ func (m *EventOrderFilled) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 10:
+		case 6:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Received", wireType)
 			}
@@ -4691,6 +4871,72 @@ func (m *EventOrderFilled) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if err := m.Received.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FeePaid", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.FeePaid.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FeeReceived", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.FeeReceived.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -4947,6 +5193,72 @@ func (m *EventOrderSourceOrdersFilled) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FeePaid", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.FeePaid.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 9:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FeeReceived", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.FeeReceived.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipEvent(dAtA[iNdEx:])
@@ -5156,9 +5468,9 @@ func (m *EventMarketParameterChanged) Unmarshal(dAtA []byte) error {
 			}
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MakerFeeRate", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Fees", wireType)
 			}
-			var stringLen uint64
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowEvent
@@ -5168,31 +5480,30 @@ func (m *EventMarketParameterChanged) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
+			if msglen < 0 {
 				return ErrInvalidLengthEvent
 			}
-			postIndex := iNdEx + intStringLen
+			postIndex := iNdEx + msglen
 			if postIndex < 0 {
 				return ErrInvalidLengthEvent
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.MakerFeeRate.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.Fees.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TakerFeeRate", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field OrderQuantityLimits", wireType)
 			}
-			var stringLen uint64
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowEvent
@@ -5202,31 +5513,30 @@ func (m *EventMarketParameterChanged) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
+			if msglen < 0 {
 				return ErrInvalidLengthEvent
 			}
-			postIndex := iNdEx + intStringLen
+			postIndex := iNdEx + msglen
 			if postIndex < 0 {
 				return ErrInvalidLengthEvent
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.TakerFeeRate.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.OrderQuantityLimits.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field OrderSourceFeeRatio", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field OrderQuoteLimits", wireType)
 			}
-			var stringLen uint64
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowEvent
@@ -5236,23 +5546,22 @@ func (m *EventMarketParameterChanged) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
+			if msglen < 0 {
 				return ErrInvalidLengthEvent
 			}
-			postIndex := iNdEx + intStringLen
+			postIndex := iNdEx + msglen
 			if postIndex < 0 {
 				return ErrInvalidLengthEvent
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.OrderSourceFeeRatio.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.OrderQuoteLimits.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

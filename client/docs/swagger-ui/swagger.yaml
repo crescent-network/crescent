@@ -11555,11 +11555,10 @@ paths:
                   amount:
                     type: string
                 description: >-
-                  DecCoin defines a token with a denomination and a decimal
-                  amount.
+                  Coin defines a token with a denomination and an amount.
 
 
-                  NOTE: The amount field is an Dec which implements the custom
+                  NOTE: The amount field is an Int which implements the custom
                   method
 
                   signatures required by gogoproto.
@@ -11581,15 +11580,14 @@ paths:
                         amount:
                           type: string
                       description: >-
-                        DecCoin defines a token with a denomination and a
-                        decimal amount.
+                        Coin defines a token with a denomination and an amount.
 
 
-                        NOTE: The amount field is an Dec which implements the
+                        NOTE: The amount field is an Int which implements the
                         custom method
 
                         signatures required by gogoproto.
-                    output:
+                    paid:
                       type: object
                       properties:
                         denom:
@@ -11597,15 +11595,14 @@ paths:
                         amount:
                           type: string
                       description: >-
-                        DecCoin defines a token with a denomination and a
-                        decimal amount.
+                        Coin defines a token with a denomination and an amount.
 
 
-                        NOTE: The amount field is an Dec which implements the
+                        NOTE: The amount field is an Int which implements the
                         custom method
 
                         signatures required by gogoproto.
-                    fee:
+                    received:
                       type: object
                       properties:
                         denom:
@@ -11613,11 +11610,40 @@ paths:
                         amount:
                           type: string
                       description: >-
-                        DecCoin defines a token with a denomination and a
-                        decimal amount.
+                        Coin defines a token with a denomination and an amount.
 
 
-                        NOTE: The amount field is an Dec which implements the
+                        NOTE: The amount field is an Int which implements the
+                        custom method
+
+                        signatures required by gogoproto.
+                    fee_paid:
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                        amount:
+                          type: string
+                      description: >-
+                        Coin defines a token with a denomination and an amount.
+
+
+                        NOTE: The amount field is an Int which implements the
+                        custom method
+
+                        signatures required by gogoproto.
+                    fee_received:
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                        amount:
+                          type: string
+                      description: >-
+                        Coin defines a token with a denomination and an amount.
+
+
+                        NOTE: The amount field is an Int which implements the
                         custom method
 
                         signatures required by gogoproto.
@@ -11677,12 +11703,31 @@ paths:
                       type: string
                     escrow_address:
                       type: string
-                    maker_fee_rate:
+                    fee_collector:
                       type: string
-                    taker_fee_rate:
-                      type: string
-                    order_source_fee_ratio:
-                      type: string
+                    fees:
+                      type: object
+                      properties:
+                        maker_fee_rate:
+                          type: string
+                        taker_fee_rate:
+                          type: string
+                        order_source_fee_ratio:
+                          type: string
+                    order_quantity_limits:
+                      type: object
+                      properties:
+                        min:
+                          type: string
+                        max:
+                          type: string
+                    order_quote_limits:
+                      type: object
+                      properties:
+                        min:
+                          type: string
+                        max:
+                          type: string
                     last_price:
                       type: string
                     last_matching_height:
@@ -11818,12 +11863,31 @@ paths:
                     type: string
                   escrow_address:
                     type: string
-                  maker_fee_rate:
+                  fee_collector:
                     type: string
-                  taker_fee_rate:
-                    type: string
-                  order_source_fee_ratio:
-                    type: string
+                  fees:
+                    type: object
+                    properties:
+                      maker_fee_rate:
+                        type: string
+                      taker_fee_rate:
+                        type: string
+                      order_source_fee_ratio:
+                        type: string
+                  order_quantity_limits:
+                    type: object
+                    properties:
+                      min:
+                        type: string
+                      max:
+                        type: string
+                  order_quote_limits:
+                    type: object
+                    properties:
+                      min:
+                        type: string
+                      max:
+                        type: string
                   last_price:
                     type: string
                   last_matching_height:
@@ -12194,14 +12258,14 @@ paths:
                         custom method
 
                         signatures required by gogoproto.
-                  fees:
+                  default_fees:
                     type: object
                     properties:
-                      default_maker_fee_rate:
+                      maker_fee_rate:
                         type: string
-                      default_taker_fee_rate:
+                      taker_fee_rate:
                         type: string
-                      default_order_source_fee_ratio:
+                      order_source_fee_ratio:
                         type: string
                   max_order_lifespan:
                     type: string
@@ -12210,6 +12274,20 @@ paths:
                     title: >-
                       max_order_price_ratio defines the ratio of the maximum
                       possible order price compared to the market's last price
+                  default_order_quantity_limits:
+                    type: object
+                    properties:
+                      min:
+                        type: string
+                      max:
+                        type: string
+                  default_order_quote_limits:
+                    type: object
+                    properties:
+                      min:
+                        type: string
+                      max:
+                        type: string
                   max_swap_routes_len:
                     type: integer
                     format: int64
@@ -12616,10 +12694,6 @@ paths:
                   default_tick_spacing:
                     type: integer
                     format: int64
-                  default_min_order_quantity:
-                    type: string
-                  default_min_order_quote:
-                    type: string
                   private_farming_plan_creation_fee:
                     type: array
                     items:
@@ -12723,10 +12797,6 @@ paths:
                     tick_spacing:
                       type: integer
                       format: int64
-                    min_order_quantity:
-                      type: string
-                    min_order_quote:
-                      type: string
                     current_tick:
                       type: integer
                       format: int32
@@ -12941,10 +13011,6 @@ paths:
                   tick_spacing:
                     type: integer
                     format: int64
-                  min_order_quantity:
-                    type: string
-                  min_order_quote:
-                    type: string
                   current_tick:
                     type: integer
                     format: int32
@@ -20251,14 +20317,21 @@ definitions:
     properties:
       params:
         type: object
+  crescent.exchange.v1beta1.AmountLimits:
+    type: object
+    properties:
+      min:
+        type: string
+      max:
+        type: string
   crescent.exchange.v1beta1.Fees:
     type: object
     properties:
-      default_maker_fee_rate:
+      maker_fee_rate:
         type: string
-      default_taker_fee_rate:
+      taker_fee_rate:
         type: string
-      default_order_source_fee_ratio:
+      order_source_fee_ratio:
         type: string
   crescent.exchange.v1beta1.MarketResponse:
     type: object
@@ -20272,12 +20345,31 @@ definitions:
         type: string
       escrow_address:
         type: string
-      maker_fee_rate:
+      fee_collector:
         type: string
-      taker_fee_rate:
-        type: string
-      order_source_fee_ratio:
-        type: string
+      fees:
+        type: object
+        properties:
+          maker_fee_rate:
+            type: string
+          taker_fee_rate:
+            type: string
+          order_source_fee_ratio:
+            type: string
+      order_quantity_limits:
+        type: object
+        properties:
+          min:
+            type: string
+          max:
+            type: string
+      order_quote_limits:
+        type: object
+        properties:
+          min:
+            type: string
+          max:
+            type: string
       last_price:
         type: string
       last_matching_height:
@@ -20378,14 +20470,14 @@ definitions:
 
             NOTE: The amount field is an Int which implements the custom method
             signatures required by gogoproto.
-      fees:
+      default_fees:
         type: object
         properties:
-          default_maker_fee_rate:
+          maker_fee_rate:
             type: string
-          default_taker_fee_rate:
+          taker_fee_rate:
             type: string
-          default_order_source_fee_ratio:
+          order_source_fee_ratio:
             type: string
       max_order_lifespan:
         type: string
@@ -20394,6 +20486,20 @@ definitions:
         title: >-
           max_order_price_ratio defines the ratio of the maximum possible order
           price compared to the market's last price
+      default_order_quantity_limits:
+        type: object
+        properties:
+          min:
+            type: string
+          max:
+            type: string
+      default_order_quote_limits:
+        type: object
+        properties:
+          min:
+            type: string
+          max:
+            type: string
       max_swap_routes_len:
         type: integer
         format: int64
@@ -20417,12 +20523,31 @@ definitions:
               type: string
             escrow_address:
               type: string
-            maker_fee_rate:
+            fee_collector:
               type: string
-            taker_fee_rate:
-              type: string
-            order_source_fee_ratio:
-              type: string
+            fees:
+              type: object
+              properties:
+                maker_fee_rate:
+                  type: string
+                taker_fee_rate:
+                  type: string
+                order_source_fee_ratio:
+                  type: string
+            order_quantity_limits:
+              type: object
+              properties:
+                min:
+                  type: string
+                max:
+                  type: string
+            order_quote_limits:
+              type: object
+              properties:
+                min:
+                  type: string
+                max:
+                  type: string
             last_price:
               type: string
             last_matching_height:
@@ -20534,9 +20659,9 @@ definitions:
           amount:
             type: string
         description: |-
-          DecCoin defines a token with a denomination and a decimal amount.
+          Coin defines a token with a denomination and an amount.
 
-          NOTE: The amount field is an Dec which implements the custom method
+          NOTE: The amount field is an Int which implements the custom method
           signatures required by gogoproto.
       results:
         type: array
@@ -20556,15 +20681,14 @@ definitions:
                 amount:
                   type: string
               description: >-
-                DecCoin defines a token with a denomination and a decimal
-                amount.
+                Coin defines a token with a denomination and an amount.
 
 
-                NOTE: The amount field is an Dec which implements the custom
+                NOTE: The amount field is an Int which implements the custom
                 method
 
                 signatures required by gogoproto.
-            output:
+            paid:
               type: object
               properties:
                 denom:
@@ -20572,15 +20696,14 @@ definitions:
                 amount:
                   type: string
               description: >-
-                DecCoin defines a token with a denomination and a decimal
-                amount.
+                Coin defines a token with a denomination and an amount.
 
 
-                NOTE: The amount field is an Dec which implements the custom
+                NOTE: The amount field is an Int which implements the custom
                 method
 
                 signatures required by gogoproto.
-            fee:
+            received:
               type: object
               properties:
                 denom:
@@ -20588,11 +20711,40 @@ definitions:
                 amount:
                   type: string
               description: >-
-                DecCoin defines a token with a denomination and a decimal
-                amount.
+                Coin defines a token with a denomination and an amount.
 
 
-                NOTE: The amount field is an Dec which implements the custom
+                NOTE: The amount field is an Int which implements the custom
+                method
+
+                signatures required by gogoproto.
+            fee_paid:
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+              description: >-
+                Coin defines a token with a denomination and an amount.
+
+
+                NOTE: The amount field is an Int which implements the custom
+                method
+
+                signatures required by gogoproto.
+            fee_received:
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+              description: >-
+                Coin defines a token with a denomination and an amount.
+
+
+                NOTE: The amount field is an Int which implements the custom
                 method
 
                 signatures required by gogoproto.
@@ -20611,12 +20763,31 @@ definitions:
             type: string
           escrow_address:
             type: string
-          maker_fee_rate:
+          fee_collector:
             type: string
-          taker_fee_rate:
-            type: string
-          order_source_fee_ratio:
-            type: string
+          fees:
+            type: object
+            properties:
+              maker_fee_rate:
+                type: string
+              taker_fee_rate:
+                type: string
+              order_source_fee_ratio:
+                type: string
+          order_quantity_limits:
+            type: object
+            properties:
+              min:
+                type: string
+              max:
+                type: string
+          order_quote_limits:
+            type: object
+            properties:
+              min:
+                type: string
+              max:
+                type: string
           last_price:
             type: string
           last_matching_height:
@@ -20715,14 +20886,14 @@ definitions:
                 method
 
                 signatures required by gogoproto.
-          fees:
+          default_fees:
             type: object
             properties:
-              default_maker_fee_rate:
+              maker_fee_rate:
                 type: string
-              default_taker_fee_rate:
+              taker_fee_rate:
                 type: string
-              default_order_source_fee_ratio:
+              order_source_fee_ratio:
                 type: string
           max_order_lifespan:
             type: string
@@ -20731,6 +20902,20 @@ definitions:
             title: >-
               max_order_price_ratio defines the ratio of the maximum possible
               order price compared to the market's last price
+          default_order_quantity_limits:
+            type: object
+            properties:
+              min:
+                type: string
+              max:
+                type: string
+          default_order_quote_limits:
+            type: object
+            properties:
+              min:
+                type: string
+              max:
+                type: string
           max_swap_routes_len:
             type: integer
             format: int64
@@ -20753,11 +20938,11 @@ definitions:
           amount:
             type: string
         description: |-
-          DecCoin defines a token with a denomination and a decimal amount.
+          Coin defines a token with a denomination and an amount.
 
-          NOTE: The amount field is an Dec which implements the custom method
+          NOTE: The amount field is an Int which implements the custom method
           signatures required by gogoproto.
-      output:
+      paid:
         type: object
         properties:
           denom:
@@ -20765,11 +20950,11 @@ definitions:
           amount:
             type: string
         description: |-
-          DecCoin defines a token with a denomination and a decimal amount.
+          Coin defines a token with a denomination and an amount.
 
-          NOTE: The amount field is an Dec which implements the custom method
+          NOTE: The amount field is an Int which implements the custom method
           signatures required by gogoproto.
-      fee:
+      received:
         type: object
         properties:
           denom:
@@ -20777,9 +20962,33 @@ definitions:
           amount:
             type: string
         description: |-
-          DecCoin defines a token with a denomination and a decimal amount.
+          Coin defines a token with a denomination and an amount.
 
-          NOTE: The amount field is an Dec which implements the custom method
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
+      fee_paid:
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
+      fee_received:
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
           signatures required by gogoproto.
   crescent.amm.v1beta1.FarmingPlan:
     type: object
@@ -20870,10 +21079,6 @@ definitions:
       default_tick_spacing:
         type: integer
         format: int64
-      default_min_order_quantity:
-        type: string
-      default_min_order_quote:
-        type: string
       private_farming_plan_creation_fee:
         type: array
         items:
@@ -20933,10 +21138,6 @@ definitions:
       tick_spacing:
         type: integer
         format: int64
-      min_order_quantity:
-        type: string
-      min_order_quote:
-        type: string
       current_tick:
         type: integer
         format: int32
@@ -21196,10 +21397,6 @@ definitions:
             tick_spacing:
               type: integer
               format: int64
-            min_order_quantity:
-              type: string
-            min_order_quote:
-              type: string
             current_tick:
               type: integer
               format: int32
@@ -21572,10 +21769,6 @@ definitions:
           default_tick_spacing:
             type: integer
             format: int64
-          default_min_order_quantity:
-            type: string
-          default_min_order_quote:
-            type: string
           private_farming_plan_creation_fee:
             type: array
             items:
@@ -21647,10 +21840,6 @@ definitions:
           tick_spacing:
             type: integer
             format: int64
-          min_order_quantity:
-            type: string
-          min_order_quote:
-            type: string
           current_tick:
             type: integer
             format: int32

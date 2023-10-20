@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
@@ -62,22 +61,33 @@ func (p MarketParameterChangeProposal) String() string {
 `, p.Title, p.Description))
 	for _, change := range p.Changes {
 		b.WriteString(fmt.Sprintf(`    Market Parameter Change:
-      Market Id:              %d
-      Maker Fee Rate:         %s
-      Taker Fee Rate:         %s
-      Order Source Fee Ratio: %s
-`, change.MarketId, change.MakerFeeRate, change.TakerFeeRate, change.OrderSourceFeeRatio))
+      Market Id: %d
+      Fees:
+        Maker Fee Rate:         %s
+        Taker Fee Rate:         %s
+        Order Source Fee Ratio: %s
+      Order Quantity Limits:
+        Min: %s
+        Max: %s
+      Order Quote Limits:
+        Min: %s
+        Max: %s
+`, change.MarketId,
+change.Fees.MakerFeeRate, change.Fees.TakerFeeRate, change.Fees.OrderSourceFeeRatio,
+			change.OrderQuantityLimits.Min, change.OrderQuantityLimits.Max,
+			change.OrderQuoteLimits.Min, change.OrderQuoteLimits.Max))
 	}
 	return b.String()
 }
 
 func NewMarketParameterChange(
-	marketId uint64, makerFeeRate, takerFeeRate, orderSourceRatio sdk.Dec) MarketParameterChange {
+	marketId uint64, fees Fees,
+	orderQtyLimits, orderQuoteLimits AmountLimits) MarketParameterChange {
 	return MarketParameterChange{
 		MarketId:            marketId,
-		MakerFeeRate:        makerFeeRate,
-		TakerFeeRate:        takerFeeRate,
-		OrderSourceFeeRatio: orderSourceRatio,
+		Fees: fees,
+		OrderQuantityLimits: orderQtyLimits,
+		OrderQuoteLimits: orderQuoteLimits,
 	}
 }
 
@@ -85,9 +95,14 @@ func (change MarketParameterChange) Validate() error {
 	if change.MarketId == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "market id must not be 0")
 	}
-	if err := ValidateFees(
-		change.MakerFeeRate, change.TakerFeeRate, change.OrderSourceFeeRatio); err != nil {
+	if err := change.Fees.Validate(); err != nil {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+	if err := change.OrderQuantityLimits.Validate(); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid order quantity limits: %s", err)
+	}
+	if err := change.OrderQuoteLimits.Validate(); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid order quote limits: %s", err)
 	}
 	return nil
 }

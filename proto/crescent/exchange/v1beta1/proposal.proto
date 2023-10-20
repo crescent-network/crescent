@@ -3,6 +3,7 @@ syntax = "proto3";
 package crescent.exchange.v1beta1;
 
 import "gogoproto/gogo.proto";
+import "crescent/exchange/v1beta1/params.proto";
 
 option go_package                      = "github.com/crescent-network/crescent/v5/x/exchange/types";
 option (gogoproto.goproto_getters_all) = false;
@@ -15,11 +16,8 @@ message MarketParameterChangeProposal {
 }
 
 message MarketParameterChange {
-  uint64 market_id      = 1;
-  string maker_fee_rate = 2
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
-  string taker_fee_rate = 3
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
-  string order_source_fee_ratio = 4
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  uint64       market_id             = 1;
+  Fees         fees                  = 2 [(gogoproto.nullable) = false];
+  AmountLimits order_quantity_limits = 3 [(gogoproto.nullable) = false];
+  AmountLimits order_quote_limits    = 4 [(gogoproto.nullable) = false];
 }

@@ -87,27 +87,27 @@ func AmountsForLiquidity(currentSqrtPrice, sqrtPriceA, sqrtPriceB sdk.Dec, liqui
 	return
 }
 
-func nextSqrtPriceFromAmount0RoundingUp(sqrtPrice sdk.Dec, liquidity sdk.Int, amt sdk.Dec, add bool) sdk.Dec {
+func nextSqrtPriceFromAmount0RoundingUp(sqrtPrice sdk.Dec, liquidity, amt sdk.Int, add bool) sdk.Dec {
 	numerator := liquidity.ToDec()
 	if add {
 		// TODO: check overflow
-		return numerator.QuoRoundUp(numerator.QuoTruncate(sqrtPrice).Add(amt))
+		return numerator.QuoRoundUp(numerator.QuoTruncate(sqrtPrice).Add(amt.ToDec()))
 	}
-	product := sqrtPrice.Mul(amt)
+	product := sqrtPrice.Mul(amt.ToDec())
 	denominator := numerator.Sub(product)
 	return numerator.Mul(sqrtPrice).QuoRoundUp(denominator)
 }
 
-func nextSqrtPriceFromAmount1RoundingDown(sqrtPrice sdk.Dec, liquidity sdk.Int, amt sdk.Dec, add bool) sdk.Dec {
+func nextSqrtPriceFromAmount1RoundingDown(sqrtPrice sdk.Dec, liquidity, amt sdk.Int, add bool) sdk.Dec {
 	if add {
-		quotient := amt.QuoTruncate(liquidity.ToDec())
+		quotient := amt.ToDec().QuoTruncate(liquidity.ToDec())
 		return sqrtPrice.Add(quotient)
 	}
-	quotient := amt.QuoRoundUp(liquidity.ToDec())
+	quotient := amt.ToDec().QuoRoundUp(liquidity.ToDec())
 	return sqrtPrice.Sub(quotient)
 }
 
-func NextSqrtPriceFromOutput(sqrtPrice sdk.Dec, liquidity sdk.Int, amt sdk.Dec, isBuy bool) sdk.Dec {
+func NextSqrtPriceFromOutput(sqrtPrice sdk.Dec, liquidity, amt sdk.Int, isBuy bool) sdk.Dec {
 	if isBuy {
 		return nextSqrtPriceFromAmount1RoundingDown(sqrtPrice, liquidity, amt, false)
 	}

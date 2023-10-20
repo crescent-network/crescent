@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	utils "github.com/crescent-network/crescent/v5/types"
 )
@@ -13,16 +14,22 @@ func DeriveMarketEscrowAddress(marketId uint64) sdk.AccAddress {
 	return address.Module(ModuleName, []byte(fmt.Sprintf("MarketEscrowAddress/%d", marketId)))
 }
 
+func DeriveFeeCollector(marketId uint64) sdk.AccAddress {
+	return address.Module(ModuleName, []byte(fmt.Sprintf("FeeCollector/%d", marketId)))
+}
+
 func NewMarket(
-	marketId uint64, baseDenom, quoteDenom string, makerFeeRate, takerFeeRate, orderSourceFeeRatio sdk.Dec) Market {
+	marketId uint64, baseDenom, quoteDenom string,
+	fees Fees, orderQtyLimits, orderQuoteLimits AmountLimits) Market {
 	return Market{
 		Id:                  marketId,
 		BaseDenom:           baseDenom,
 		QuoteDenom:          quoteDenom,
 		EscrowAddress:       DeriveMarketEscrowAddress(marketId).String(),
-		MakerFeeRate:        makerFeeRate,
-		TakerFeeRate:        takerFeeRate,
-		OrderSourceFeeRatio: orderSourceFeeRatio,
+		FeeCollector:        DeriveFeeCollector(marketId).String(),
+		Fees:                fees,
+		OrderQuantityLimits: orderQtyLimits,
+		OrderQuoteLimits:    orderQuoteLimits,
 	}
 }
 
@@ -42,15 +49,79 @@ func (market Market) Validate() error {
 	if _, err := sdk.AccAddressFromBech32(market.EscrowAddress); err != nil {
 		return fmt.Errorf("invalid escrow address: %w", err)
 	}
-	if err := ValidateFees(
-		market.MakerFeeRate, market.TakerFeeRate, market.OrderSourceFeeRatio); err != nil {
+	if _, err := sdk.AccAddressFromBech32(market.FeeCollector); err != nil {
+		return fmt.Errorf("invalid fee collector: %w", err)
+	}
+	if err := market.Fees.Validate(); err != nil {
 		return err
+	}
+	if err := market.OrderQuantityLimits.Validate(); err != nil {
+		return fmt.Errorf("invalid order quantity limits: %w", err)
+	}
+	if err := market.OrderQuoteLimits.Validate(); err != nil {
+		return fmt.Errorf("invalid order quote limits: %w", err)
 	}
 	return nil
 }
 
 func (market Market) MustGetEscrowAddress() sdk.AccAddress {
 	return sdk.MustAccAddressFromBech32(market.EscrowAddress)
+}
+
+func (market Market) MustGetFeeCollectorAddress() sdk.AccAddress {
+	return sdk.MustAccAddressFromBech32(market.FeeCollector)
+}
+
+func (market Market) FeeRate(isOrderSourceOrder, isMaker, halveFees bool) (feeRate sdk.Dec) {
+	if !isOrderSourceOrder { // user order
+		if isMaker {
+			feeRate = market.Fees.MakerFeeRate
+		} else {
+			feeRate = market.Fees.TakerFeeRate
+		}
+	} else { // order source order
+		if isMaker {
+			feeRate = market.Fees.TakerFeeRate.Neg().Mul(market.Fees.OrderSourceFeeRatio)
+		} else {
+			feeRate = utils.ZeroDec
+		}
+	}
+	if halveFees {
+		feeRate = feeRate.QuoInt64(2)
+	}
+	return feeRate
+}
+
+func (market Market) CheckOrderQuantityLimits(qty sdk.Int) error {
+	if qty.LT(market.OrderQuantityLimits.Min) {
+		return sdkerrors.Wrapf(
+			ErrBadOrderAmount,
+			"quantity is less than the minimum order quantity allowed: %s < %s",
+			qty, market.OrderQuantityLimits.Min)
+	}
+	if qty.GT(market.OrderQuantityLimits.Max) {
+		return sdkerrors.Wrapf(
+			ErrBadOrderAmount,
+			"quantity is greater than the maximum order quantity allowed: %s > %s",
+			qty, market.OrderQuantityLimits.Max)
+	}
+	return nil
+}
+
+func (market Market) CheckOrderQuoteLimits(price sdk.Dec, qty sdk.Int) error {
+	if quote := price.MulInt(qty).TruncateInt(); quote.LT(market.OrderQuoteLimits.Min) {
+		return sdkerrors.Wrapf(
+			ErrBadOrderAmount,
+			"quote(=price*qty) is less than the minimum order quote allowed: %s < %s",
+			quote, market.OrderQuoteLimits.Min)
+	}
+	if quote := price.MulInt(qty).Ceil().TruncateInt(); quote.GT(market.OrderQuoteLimits.Max) {
+		return sdkerrors.Wrapf(
+			ErrBadOrderAmount,
+			"quote(=price*qty) is greater than the maximum order quote allowed: %s > %s",
+			quote, market.OrderQuoteLimits.Max)
+	}
+	return nil
 }
 
 func NewMarketState(lastPrice *sdk.Dec) MarketState {
@@ -82,7 +153,14 @@ func (marketState MarketState) Validate() error {
 }
 
 func OrderPriceLimit(basePrice, maxOrderPriceRatio sdk.Dec) (minPrice, maxPrice sdk.Dec) {
-	minPrice = basePrice.Mul(utils.OneDec.Sub(maxOrderPriceRatio))
-	maxPrice = basePrice.Mul(utils.OneDec.Add(maxOrderPriceRatio))
+	// Manually round up the min tick.
+	minTick, valid := ValidateTickPrice(basePrice.Mul(utils.OneDec.Sub(maxOrderPriceRatio)))
+	if !valid {
+		minTick++
+	}
+	minPrice = PriceAtTick(minTick)
+	// TickAtPrice automatically rounds down the tick.
+	maxPrice = PriceAtTick(
+		TickAtPrice(basePrice.Mul(utils.OneDec.Add(maxOrderPriceRatio))))
 	return
 }

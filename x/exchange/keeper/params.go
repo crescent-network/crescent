@@ -28,13 +28,13 @@ func (k Keeper) SetMarketCreationFee(ctx sdk.Context, fee sdk.Coins) {
 	k.paramSpace.Set(ctx, types.KeyMarketCreationFee, fee)
 }
 
-func (k Keeper) GetFees(ctx sdk.Context) (fees types.Fees) {
-	k.paramSpace.Get(ctx, types.KeyFees, &fees)
+func (k Keeper) GetDefaultFees(ctx sdk.Context) (fees types.Fees) {
+	k.paramSpace.Get(ctx, types.KeyDefaultFees, &fees)
 	return
 }
 
-func (k Keeper) SetFees(ctx sdk.Context, fees types.Fees) {
-	k.paramSpace.Set(ctx, types.KeyFees, fees)
+func (k Keeper) SetDefaultFees(ctx sdk.Context, fees types.Fees) {
+	k.paramSpace.Set(ctx, types.KeyDefaultFees, fees)
 }
 
 func (k Keeper) GetMaxOrderLifespan(ctx sdk.Context) (maxLifespan time.Duration) {
@@ -54,6 +54,25 @@ func (k Keeper) GetMaxOrderPriceRatio(ctx sdk.Context) (maxRatio sdk.Dec) {
 func (k Keeper) SetMaxOrderPriceRatio(ctx sdk.Context, maxRatio sdk.Dec) {
 	k.paramSpace.Set(ctx, types.KeyMaxOrderPriceRatio, maxRatio)
 }
+
+func (k Keeper) GetDefaultOrderQuantityLimits(ctx sdk.Context) (orderQtyLimits types.AmountLimits) {
+	k.paramSpace.Get(ctx, types.KeyDefaultOrderQuantityLimits, &orderQtyLimits)
+	return
+}
+
+func (k Keeper) SetDefaultOrderQuantityLimits(ctx sdk.Context, orderQtyLimits types.AmountLimits) {
+	k.paramSpace.Set(ctx, types.KeyDefaultOrderQuantityLimits, orderQtyLimits)
+}
+
+func (k Keeper) GetDefaultOrderQuoteLimits(ctx sdk.Context) (orderQuoteLimits types.AmountLimits) {
+	k.paramSpace.Get(ctx, types.KeyDefaultOrderQuoteLimits, &orderQuoteLimits)
+	return
+}
+
+func (k Keeper) SetDefaultOrderQuoteLimits(ctx sdk.Context, orderQuoteLimits sdk.Int) {
+	k.paramSpace.Set(ctx, types.KeyDefaultOrderQuoteLimits, orderQuoteLimits)
+}
+
 
 func (k Keeper) GetMaxSwapRoutesLen(ctx sdk.Context) (maxLen uint32) {
 	k.paramSpace.Get(ctx, types.KeyMaxSwapRoutesLen, &maxLen)

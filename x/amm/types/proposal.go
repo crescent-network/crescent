@@ -68,20 +68,16 @@ func (p PoolParameterChangeProposal) String() string {
 		b.WriteString(fmt.Sprintf(`    Pool Parameter Change:
       Pool Id:            %d
       Tick Spacing:       %d
-      Min Order Quantity: %s
-      Min Order Quote:    %s
-`, change.PoolId, change.TickSpacing, change.MinOrderQuantity, change.MinOrderQuote))
+`, change.PoolId, change.TickSpacing))
 	}
 	return b.String()
 }
 
 func NewPoolParameterChange(
-	poolId uint64, tickSpacing uint32, minOrderQty, minOrderQuote *sdk.Dec) PoolParameterChange {
+	poolId uint64, tickSpacing uint32) PoolParameterChange {
 	return PoolParameterChange{
-		PoolId:           poolId,
-		TickSpacing:      tickSpacing,
-		MinOrderQuantity: minOrderQty,
-		MinOrderQuote:    minOrderQuote,
+		PoolId:      poolId,
+		TickSpacing: tickSpacing,
 	}
 }
 
@@ -89,24 +85,12 @@ func (change PoolParameterChange) Validate() error {
 	if change.PoolId == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "pool id must not be 0")
 	}
-	if change.TickSpacing == 0 && change.MinOrderQuantity == nil && change.MinOrderQuote == nil {
+	if change.TickSpacing == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "no changes")
 	}
 	if change.TickSpacing != 0 {
 		if !IsAllowedTickSpacing(change.TickSpacing) {
 			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "tick spacing %d is not allowed", change.TickSpacing)
-		}
-	}
-	if change.MinOrderQuantity != nil {
-		if change.MinOrderQuantity.IsNegative() {
-			return sdkerrors.Wrapf(
-				sdkerrors.ErrInvalidRequest, "min order quantity must not be negative: %s", change.MinOrderQuantity)
-		}
-	}
-	if change.MinOrderQuote != nil {
-		if change.MinOrderQuote.IsNegative() {
-			return sdkerrors.Wrapf(
-				sdkerrors.ErrInvalidRequest, "min order quote must not be negative: %s", change.MinOrderQuote)
 		}
 	}
 	return nil
