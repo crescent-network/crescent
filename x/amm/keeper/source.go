@@ -11,11 +11,7 @@ import (
 	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
-var (
-	_ exchangetypes.OrderSource = OrderSource{}
-
-	minusOneBigDec = cremath.NewBigDec(-1)
-)
+var _ exchangetypes.OrderSource = OrderSource{}
 
 type OrderSource struct {
 	Keeper
