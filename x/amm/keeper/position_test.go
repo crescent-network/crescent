@@ -1,8 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	utils "github.com/crescent-network/crescent/v5/types"
@@ -222,7 +220,7 @@ func (s *KeeperTestSuite) TestReinitializePosition() {
 
 	s.RemoveLiquidity(ownerAddr, position.Id, liquidity)
 	position, _ = s.keeper.GetPosition(s.Ctx, position.Id)
-	fmt.Println(position.Liquidity)
+	// fmt.Println(position.Liquidity)
 	s.AddLiquidity(
 		ownerAddr, pool.Id, lowerPrice, upperPrice, desiredAmt)
 }

@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	utils "github.com/crescent-network/crescent/v5/types"
+	"github.com/crescent-network/crescent/v5/x/amm/keeper"
 	"github.com/crescent-network/crescent/v5/x/amm/types"
 	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 )
@@ -96,6 +97,9 @@ func (s *KeeperTestSuite) TestSimulation() {
 			isBuy := r.Float64() <= 0.5
 			qty := utils.RandomInt(r, sdk.NewInt(10000), sdk.NewInt(10_000000))
 			s.PlaceMarketOrder(market.Id, ordererAddr, isBuy, qty)
+
+			_, broken := keeper.CanRemoveLiquidityInvariant(s.keeper)(s.Ctx)
+			s.Require().False(broken)
 
 			s.NextBlock()
 		}

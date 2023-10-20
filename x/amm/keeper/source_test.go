@@ -7,6 +7,7 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
 	utils "github.com/crescent-network/crescent/v5/types"
+	"github.com/crescent-network/crescent/v5/x/amm/keeper"
 	"github.com/crescent-network/crescent/v5/x/amm/types"
 	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 )
@@ -72,13 +73,17 @@ func (s *KeeperTestSuite) TestPoolOrdersMatching_FindEdgecase() {
 		}
 
 		for j := 0; j < 300; j++ { // Execute 300 random market orders
-			isBuy := r.Float64() < 0.5
-			qty := randInt(r, sdk.NewInt(10000), sdk.NewInt(5_000000))
-			s.PlaceMarketOrder(market.Id, ordererAddr, isBuy, qty)
+			for k := 0; k < 10; k++ { // Execute 10 random market orders per block
+				isBuy := r.Float64() < 0.5
+				qty := randInt(r, sdk.NewInt(10000), sdk.NewInt(5_000000))
+				s.PlaceMarketOrder(market.Id, ordererAddr, isBuy, qty)
+			}
+			_, broken := keeper.CanRemoveLiquidityInvariant(s.keeper)(s.Ctx)
+			s.Require().False(broken)
 
 			s.NextBlock()
-		}
-	}
+		} // End of 300 random market orders
+	} // End of 5 different random seeds
 }
 
 func randInt(r *rand.Rand, min, max sdk.Int) sdk.Int {

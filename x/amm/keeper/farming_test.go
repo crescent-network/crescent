@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -196,14 +195,14 @@ func (s *KeeperTestSuite) TestFarming() {
 	_, pool := s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("5"))
 	lpAddr1 := s.FundedAccount(1, utils.ParseCoins("10000_000000ucre,10000_000000uusd"))
 	lpAddr2 := s.FundedAccount(2, utils.ParseCoins("10000_000000ucre,10000_000000uusd"))
-	position1, liquidity1, _ := s.AddLiquidity(
+	position1, _, _ := s.AddLiquidity(
 		lpAddr1, pool.Id, utils.ParseDec("4"), utils.ParseDec("6"),
 		utils.ParseCoins("100_000000ucre,500_000000uusd"))
-	position2, liquidity2, _ := s.AddLiquidity(
+	position2, _, _ := s.AddLiquidity(
 		lpAddr2, pool.Id, utils.ParseDec("4.8"), utils.ParseDec("5.2"),
 		utils.ParseCoins("100_000000ucre,500_000000uusd"))
-	fmt.Println(liquidity1)
-	fmt.Println(liquidity2)
+	// fmt.Println(liquidity1)
+	// fmt.Println(liquidity2)
 
 	s.FundAccount(utils.TestAddress(0), utils.ParseCoins("1uatom")) // make initial supply
 	s.CreatePrivateFarmingPlan(
@@ -222,8 +221,8 @@ func (s *KeeperTestSuite) TestFarming() {
 	s.PlaceLimitOrder(
 		pool.MarketId, ordererAddr, true, utils.ParseDec("6"), sdk.NewInt(120_000000), 0)
 
-	poolState := s.App.AMMKeeper.MustGetPoolState(s.Ctx, pool.Id)
-	fmt.Println(poolState.CurrentSqrtPrice)
+	// poolState := s.App.AMMKeeper.MustGetPoolState(s.Ctx, pool.Id)
+	// fmt.Println(poolState.CurrentSqrtPrice)
 
 	s.NextBlock()
 

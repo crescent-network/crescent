@@ -66,6 +66,9 @@ func (ms *MatchState) Result() MatchResult {
 	feePaid := ms.feePaid.Ceil().TruncateInt()
 	feeReceived := ms.paid.Add(ms.feeReceived).Ceil().TruncateInt().Sub(paid)
 	received := ms.received.Add(ms.feePaid).TruncateInt().Sub(feePaid)
+	if received.IsNegative() {
+		received = ms.received.Add(ms.feePaid).Ceil().TruncateInt().Sub(feePaid)
+	}
 	return MatchResult{
 		ExecutedQuantity: ms.executedQty,
 		Paid:             paid,
