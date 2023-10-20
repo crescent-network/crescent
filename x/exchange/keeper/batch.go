@@ -22,15 +22,14 @@ func (k Keeper) RunBatchMatching(ctx sdk.Context, market types.Market) (err erro
 	}
 
 	// Construct order book sides with the price limits we obtained previously.
-	escrow := types.NewEscrow(market.MustGetEscrowAddress())
 	buyObs := k.ConstructMemOrderBookSide(ctx, market, types.MemOrderBookSideOptions{
 		IsBuy:      true,
 		PriceLimit: &bestSellPrice,
-	}, escrow)
+	})
 	sellObs := k.ConstructMemOrderBookSide(ctx, market, types.MemOrderBookSideOptions{
 		IsBuy:      false,
 		PriceLimit: &bestBuyPrice,
-	}, escrow)
+	})
 
 	marketState := k.MustGetMarketState(ctx, market.Id)
 	mCtx := types.NewMatchingContext(market, false)
@@ -49,7 +48,7 @@ func (k Keeper) RunBatchMatching(ctx sdk.Context, market types.Market) (err erro
 
 	// Apply the match results.
 	memOrders := append(append(([]*types.MemOrder)(nil), buyObs.Orders()...), sellObs.Orders()...)
-	if err = k.finalizeMatching(ctx, market, memOrders, escrow); err != nil {
+	if err = k.finalizeMatching(ctx, market, memOrders, nil); err != nil {
 		return
 	}
 	marketState.LastPrice = &lastPrice

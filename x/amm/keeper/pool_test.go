@@ -176,12 +176,12 @@ func (s *KeeperTestSuite) TestPoolMinOrderQuantity() {
 	buyObs := s.App.ExchangeKeeper.ConstructMemOrderBookSide(s.Ctx, market, exchangetypes.MemOrderBookSideOptions{
 		IsBuy:      true,
 		PriceLimit: utils.ParseDecP("4.995"),
-	}, nil)
+	})
 	s.Require().Empty(buyObs.Levels)
 	sellObs := s.App.ExchangeKeeper.ConstructMemOrderBookSide(s.Ctx, market, exchangetypes.MemOrderBookSideOptions{
 		IsBuy:      false,
 		PriceLimit: utils.ParseDecP("5.005"),
-	}, nil)
+	})
 	s.Require().Empty(sellObs.Levels)
 }
 
@@ -216,12 +216,12 @@ func (s *KeeperTestSuite) TestPoolOrdersEdgecase() {
 	obs := s.App.ExchangeKeeper.ConstructMemOrderBookSide(s.Ctx, market, exchangetypes.MemOrderBookSideOptions{
 		IsBuy:             false,
 		MaxNumPriceLevels: 1,
-	}, nil)
+	})
 	s.Require().Len(obs.Levels, 1)
 	obs = s.App.ExchangeKeeper.ConstructMemOrderBookSide(s.Ctx, market, exchangetypes.MemOrderBookSideOptions{
 		IsBuy:             true,
 		MaxNumPriceLevels: 1,
-	}, nil)
+	})
 	s.Require().Len(obs.Levels, 1)
 }
 

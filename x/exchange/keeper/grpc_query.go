@@ -221,13 +221,13 @@ func (k Querier) MakeOrderBooks(ctx sdk.Context, market types.Market, lastPrice 
 		IsBuy:             false,
 		PriceLimit:        &maxPrice,
 		MaxNumPriceLevels: maxNumPriceLevels * 100,
-	}, nil)
+	})
 	// Read at most one level to check if any buy order exists.
 	buyObs := k.ConstructMemOrderBookSide(ctx, market, types.MemOrderBookSideOptions{
 		IsBuy:             true,
 		PriceLimit:        &minPrice,
 		MaxNumPriceLevels: maxNumPriceLevels * 100,
-	}, nil)
+	})
 
 	// Since price intervals among all price levels in an order book must be
 	// consistent, we have to group price levels together below the price
