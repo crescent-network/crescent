@@ -19,7 +19,8 @@ func (s *KeeperTestSuite) TestPoolOrdersMatching_FindEdgecase() {
 	for i := 0; i < 5; i++ { // For 5 different random seeds
 		s.SetupTest()
 
-		r := rand.New(rand.NewSource(r.Int63()))
+		seed := r.Int63()
+		r := rand.New(rand.NewSource(seed))
 
 		var initialPoolPrice sdk.Dec
 		f := r.Float64()
@@ -43,7 +44,7 @@ func (s *KeeperTestSuite) TestPoolOrdersMatching_FindEdgecase() {
 
 		basicLiquidity := randInt(r, sdk.NewIntWithDecimal(1, 6), sdk.NewIntWithDecimal(1, 8))
 		s.AddLiquidityByLiquidity(lpAddr, pool.Id, types.MinPrice, types.MaxPrice, basicLiquidity)
-		for j := 0; j < 10; j++ { // Create 10 positions
+		for j := 0; j < 10; j++ { // Create 10 random positions
 			var basePrice sdk.Dec
 			f := r.Float64()
 			switch {
@@ -70,7 +71,7 @@ func (s *KeeperTestSuite) TestPoolOrdersMatching_FindEdgecase() {
 				lpAddr, pool.Id, lowerPrice, upperPrice, liquidity)
 		}
 
-		for i := 0; i < 100; i++ { // Execute 100 market orders
+		for j := 0; j < 300; j++ { // Execute 300 random market orders
 			isBuy := r.Float64() < 0.5
 			qty := randInt(r, sdk.NewInt(10000), sdk.NewInt(5_000000))
 			s.PlaceMarketOrder(market.Id, ordererAddr, isBuy, qty)

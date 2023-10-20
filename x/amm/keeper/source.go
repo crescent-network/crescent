@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/crescent-network/crescent/cremath"
@@ -190,12 +192,13 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, orders
 
 		// Calculate executedQuote and feeReceived based on qty
 		executedQuote, feeReceived := cremath.ZeroBigDec(), cremath.ZeroBigDec()
-		for remainingQty := qty; remainingQty.IsPositive(); {
+		numResults := 0
+		for remainingQty := qty; remainingQty.IsPositive(); numResults++ {
 			result := results[0] // The foremost result in the queue.
 
-			remainingExecutedQty := cremath.NewBigDecFromInt(result.ExecutedQuantity).
+			resultRemainingQty := cremath.NewBigDecFromInt(result.ExecutedQuantity).
 				Sub(prevExecutedQty)
-			executedQty := cremath.MinBigDec(remainingQty, remainingExecutedQty)
+			executedQty := cremath.MinBigDec(remainingQty, resultRemainingQty)
 
 			if isBuy {
 				executedQuote = executedQuote.Add(
@@ -208,7 +211,7 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, orders
 			feeReceived = feeReceived.Add(
 				executedQty.MulInt(result.FeeReceived).QuoInt(result.ExecutedQuantity))
 
-			if executedQty.Equal(remainingExecutedQty) {
+			if executedQty.Equal(resultRemainingQty) {
 				results = results[1:]
 				prevExecutedQty = cremath.ZeroBigDec()
 			} else {
@@ -221,12 +224,12 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, orders
 		var extraQuote cremath.BigDec
 		if isBuy {
 			expectedAmtOut := types.Amount1DeltaRoundingBigDec(
-				poolState.CurrentSqrtPrice, nextSqrtPrice, poolState.CurrentLiquidity, false).TruncateInt()
-			extraQuote = cremath.NewBigDecFromInt(expectedAmtOut).Sub(executedQuote)
+				poolState.CurrentSqrtPrice, nextSqrtPrice, poolState.CurrentLiquidity, false)
+			extraQuote = expectedAmtOut.Sub(executedQuote)
 		} else {
 			expectedAmtIn := types.Amount1DeltaRoundingBigDec(
-				poolState.CurrentSqrtPrice, nextSqrtPrice, poolState.CurrentLiquidity, true).Ceil().TruncateInt()
-			extraQuote = executedQuote.Sub(cremath.NewBigDecFromInt(expectedAmtIn))
+				poolState.CurrentSqrtPrice, nextSqrtPrice, poolState.CurrentLiquidity, true)
+			extraQuote = executedQuote.Sub(expectedAmtIn)
 		}
 		if extraQuote.GTE(utils.OneBigDec) {
 			feeCoin := sdk.NewCoin(pool.Denom1, extraQuote.TruncateInt())
@@ -237,11 +240,14 @@ func (k Keeper) AfterPoolOrdersExecuted(ctx sdk.Context, pool types.Pool, orders
 						MulDecTruncate(types.DecMulFactor).
 						QuoDecTruncate(poolState.CurrentLiquidity.ToDec())...)
 			}
-		} else {
-			if extraQuote.LT(minusOneBigDec) { // receivedDiff < -1
-				// TODO: currently panics with value of -6 in
-				//  test-sim-nondeterminism-long after ~600s
-				panic(extraQuote)
+		} else if extraQuote.IsNegative() {
+			// extraQuote can be -(number of orders executed), due to
+			// quote coin truncation/ceiling mechanism in the order book.
+			// This is acceptable because extraQuote is more often positive
+			// and likely to be larger than negative amount.
+			if extraQuote.LT(cremath.NewBigDec(int64(-numResults))) {
+				panic(fmt.Sprintf("insufficient quote: extraQuote=%s numResults=%d",
+					extraQuote, numResults))
 			}
 		}
 
