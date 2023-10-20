@@ -199,7 +199,9 @@ func (k Keeper) finalizeMatching(
 				payDenom, receiveDenom := types.PayReceiveDenoms(market.BaseDenom, market.QuoteDenom, isBuy)
 				paidCoin := sdk.NewCoin(payDenom, totalPaid)
 				receivedCoin := sdk.NewCoin(receiveDenom, totalReceived)
-				if quoteDust.IsPositive() {
+				if paidCoin.Denom == market.QuoteDenom {
+					paidCoin = paidCoin.Sub(quoteDust)
+				} else { // receivedCoin.Denom == market.QuoteDenom
 					receivedCoin = receivedCoin.Add(quoteDust)
 				}
 				feePaidCoin := sdk.NewCoin(receiveDenom, totalFeePaid)

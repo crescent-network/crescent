@@ -52,7 +52,7 @@ func TestFillMemOrderBasic(t *testing.T) {
 	utils.AssertEqual(t, sdk.NewInt(5499), res.Paid)
 	utils.AssertEqual(t, sdk.NewInt(5500), res.Received)
 	utils.AssertEqual(t, sdk.NewInt(0), res.FeePaid)
-	utils.AssertEqual(t, sdk.NewInt(8), res.FeeReceived)
+	utils.AssertEqual(t, sdk.NewInt(9), res.FeeReceived)
 
 	order = newOrderSourceMemOrder(false, utils.ParseDec("1.001"), sdk.NewInt(10000), nil)
 	ctx.FillOrder(order, sdk.NewInt(5500), utils.ParseDec("1.0013"), true)
