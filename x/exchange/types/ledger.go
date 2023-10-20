@@ -1,6 +1,8 @@
 package types
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
@@ -69,7 +71,9 @@ func (ledger *Ledger) FeedMatchResult(isBuy bool, res MatchResult) {
 }
 
 // Transact runs the actual coin transactions between escrow and other addresses.
-func (ledger *Ledger) Transact(ctx sdk.Context, bankKeeper BankKeeper, escrowAddr sdk.AccAddress) error {
+// Contract: do not call this method twice.
+func (ledger *Ledger) Transact(
+	ctx sdk.Context, bankKeeper BankKeeper, escrowAddr, feeCollectorAddr sdk.AccAddress) (quoteDust sdk.Coin, err error) {
 	escrow := escrowAddr.String()
 	var (
 		payInputs, receiveInputs   []banktypes.Input
@@ -95,11 +99,25 @@ func (ledger *Ledger) Transact(ctx sdk.Context, bankKeeper BankKeeper, escrowAdd
 			receiveOutputs = append(receiveOutputs, banktypes.Output{Address: addrStr, Coins: receives})
 		}
 	}
-	if err := bankKeeper.InputOutputCoins(ctx, payInputs, payOutputs); err != nil {
-		return err
+	if err = bankKeeper.InputOutputCoins(ctx, payInputs, payOutputs); err != nil {
+		return
 	}
-	if err := bankKeeper.InputOutputCoins(ctx, receiveInputs, receiveOutputs); err != nil {
-		return err
+	if err = bankKeeper.InputOutputCoins(ctx, receiveInputs, receiveOutputs); err != nil {
+		return
 	}
-	return nil
+	if !ledger.baseDelta.Equal(ledger.baseFeeDelta) {
+		err = fmt.Errorf("baseDelta must be same as baseFeeDelta: %s != %s",
+			ledger.baseDelta, ledger.baseFeeDelta)
+		return
+	}
+	fees := sdk.NewCoins(
+		sdk.NewCoin(ledger.baseDenom, ledger.baseFeeDelta),
+		sdk.NewCoin(ledger.quoteDenom, ledger.quoteFeeDelta))
+	if fees.IsAllPositive() {
+		if err = bankKeeper.SendCoins(ctx, escrowAddr, feeCollectorAddr, fees); err != nil {
+			return
+		}
+	}
+	quoteDust = sdk.NewCoin(ledger.quoteDenom, ledger.quoteDelta.Sub(ledger.quoteFeeDelta))
+	return quoteDust, nil
 }

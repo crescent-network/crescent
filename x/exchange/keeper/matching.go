@@ -140,12 +140,13 @@ func (k Keeper) finalizeMatching(
 			}
 		}
 	}
-	if err := ledger.Transact(ctx, k.bankKeeper, market.MustGetEscrowAddress()); err != nil {
+	escrowAddr := market.MustGetEscrowAddress()
+	feeCollectorAddr := market.MustGetFeeCollectorAddress()
+	quoteDust, err := ledger.Transact(ctx, k.bankKeeper, escrowAddr, feeCollectorAddr)
+	if err != nil {
 		return err
 	}
-	if err := k.CollectFees(ctx, market); err != nil {
-		return err
-	}
+	collectedDust := false
 	for _, sourceName := range sourceNames {
 		results := ordersBySource[sourceName]
 		if len(results) > 0 {
@@ -153,6 +154,19 @@ func (k Keeper) finalizeMatching(
 			totalExecQty := utils.ZeroInt
 			ordererAddrs, m := types.GroupMemOrdersByOrderer(results)
 			for _, ordererAddr := range ordererAddrs {
+				// NOTE: In this version, there must be only one OrderSource(amm),
+				//   and we'll use the pool's reserve address as the dust collector.
+				// TODO(future): change dust collector when there could be
+				//   more than one OrderSource
+				if quoteDust.IsPositive() {
+					dustCollectorAddr := ordererAddr
+					if err := k.bankKeeper.SendCoins(ctx, escrowAddr, dustCollectorAddr,
+						sdk.NewCoins(quoteDust)); err != nil {
+						return err
+					}
+					collectedDust = true
+				}
+
 				if err := source.AfterOrdersExecuted(ctx, market, ordererAddr, results); err != nil {
 					return err
 				}
@@ -185,6 +199,9 @@ func (k Keeper) finalizeMatching(
 				payDenom, receiveDenom := types.PayReceiveDenoms(market.BaseDenom, market.QuoteDenom, isBuy)
 				paidCoin := sdk.NewCoin(payDenom, totalPaid)
 				receivedCoin := sdk.NewCoin(receiveDenom, totalReceived)
+				if quoteDust.IsPositive() {
+					receivedCoin = receivedCoin.Add(quoteDust)
+				}
 				feePaidCoin := sdk.NewCoin(receiveDenom, totalFeePaid)
 				feeReceivedCoin := sdk.NewCoin(payDenom, totalFeeReceived)
 				if err := ctx.EventManager().EmitTypedEvent(&types.EventOrderSourceOrdersFilled{
@@ -201,6 +218,13 @@ func (k Keeper) finalizeMatching(
 					return err
 				}
 			}
+		}
+	}
+	if !collectedDust && quoteDust.IsPositive() {
+		dustCollectorAddr := market.MustGetFeeCollectorAddress()
+		if err := k.bankKeeper.SendCoins(
+			ctx, escrowAddr, dustCollectorAddr, sdk.NewCoins(quoteDust)); err != nil {
+			return err
 		}
 	}
 	return nil

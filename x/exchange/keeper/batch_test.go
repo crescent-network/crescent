@@ -555,8 +555,8 @@ func (s *KeeperTestSuite) TestBatchMatchingWithOrderSourceOrderWithoutMatchingWi
 
 	osBalanceAfterMatching := s.GetAllBalances(os.Address)
 	osBalanceDiff := osBalanceAfterMatching.Sub(osBalanceBeforeMatching)
-	expectedOsBalancDiff := sdk.Coins{}
-	s.AssertEqual(expectedOsBalancDiff, osBalanceDiff)
+	expectedOsBalancesDiff := sdk.Coins{}
+	s.AssertEqual(expectedOsBalancesDiff, osBalanceDiff)
 }
 
 func (s *KeeperTestSuite) TestBatchMatchingWithOrderSourceOrderWithoutMatchingWithLastPrice() {
@@ -641,8 +641,8 @@ func (s *KeeperTestSuite) TestBatchMatchingWithOrderSourceOrderWithoutMatchingWi
 
 	osBalanceAfterMatching := s.GetAllBalances(os.Address)
 	osBalanceDiff := osBalanceAfterMatching.Sub(osBalanceBeforeMatching)
-	expectedOsBalancDiff := sdk.Coins{}
-	s.AssertEqual(expectedOsBalancDiff, osBalanceDiff)
+	expectedOsBalancesDiff := sdk.Coins{}
+	s.AssertEqual(expectedOsBalancesDiff, osBalanceDiff)
 }
 
 func (s *KeeperTestSuite) TestBatchMatchingWithOrderSourceOrderWithoutLastPrice() {
@@ -745,9 +745,9 @@ func (s *KeeperTestSuite) TestBatchMatchingWithOrderSourceOrderWithoutLastPrice(
 
 	osBalanceAfterMatching := s.GetAllBalances(os.Address)
 	osBalanceDiff, _ := osBalanceAfterMatching.SafeSub(osBalanceBeforeMatching)
-	expectedOsBalancDiff := sdk.Coins{sdk.Coin{Denom: "uusd", Amount: sdk.NewInt(-3006600)},
+	expectedOsBalancesDiff := sdk.Coins{sdk.Coin{Denom: "uusd", Amount: sdk.NewInt(-3006600)},
 		utils.ParseCoin("3_000000ucre")}
-	s.AssertEqual(expectedOsBalancDiff, osBalanceDiff)
+	s.AssertEqual(expectedOsBalancesDiff, osBalanceDiff)
 	s.AssertEqual(expectedOsBalanceDiffManual, osBalanceDiff)
 }
 
@@ -855,9 +855,9 @@ func (s *KeeperTestSuite) TestBatchMatchingWithOrderSourceOrderAsMaker() {
 
 	osBalanceAfterMatching := s.GetAllBalances(os.Address)
 	osBalanceDiff, _ := osBalanceAfterMatching.SafeSub(osBalanceBeforeMatching)
-	expectedOsBalancDiff := sdk.Coins{sdk.Coin{Denom: "ucre", Amount: sdk.NewInt(-5991000)},
+	expectedOsBalancesDiff := sdk.Coins{sdk.Coin{Denom: "ucre", Amount: sdk.NewInt(-5991000)},
 		utils.ParseCoin("6_001800uusd")}
-	s.AssertEqual(expectedOsBalancDiff, osBalanceDiff)
+	s.AssertEqual(expectedOsBalancesDiff, osBalanceDiff)
 	s.AssertEqual(expectedOsBalanceDiffManual, osBalanceDiff)
 }
 
@@ -932,14 +932,14 @@ func (s *KeeperTestSuite) TestBatchMatchingEdgeCase() {
 	s.AssertEqual(sdk.NewInt(5_000001), ev.ExecutedQuantity)
 	s.AssertEqual(utils.ParseCoin("5_012802uusd"), ev.Paid)
 	s.AssertEqual(utils.ParseCoin("4_985000ucre"), ev.Received)
-	expectedFee = expectedFee.Add(utils.ParseCoin("7501ucre"), utils.ParseCoin("1uusd")) // half fee due to order source order + dust
+	expectedFee = expectedFee.Add(utils.ParseCoin("7501ucre")) // half fee due to order source order + dust
 
-	ev_os := s.getEventOrderSourceOrdersFilled("mockOrderSource")
-	s.AssertEqual(sdk.NewInt(15_000001), ev_os.ExecutedQuantity)
-	s.AssertEqual(utils.ParseCoin("14_977501ucre"), ev_os.Paid)
-	s.AssertEqual(utils.ParseCoin("15_030001uusd"), ev_os.Received)
+	evOs := s.getEventOrderSourceOrdersFilled("mockOrderSource")
+	s.AssertEqual(sdk.NewInt(15_000001), evOs.ExecutedQuantity)
+	s.AssertEqual(utils.ParseCoin("14_977501ucre"), evOs.Paid)
+	s.AssertEqual(utils.ParseCoin("15_030002uusd"), evOs.Received)
 	expectedOsBalanceDiffManual, _ = expectedOsBalanceDiffManual.SafeSub(sdk.Coins{utils.ParseCoin("14_977501ucre")})
-	expectedOsBalanceDiffManual = expectedOsBalanceDiffManual.Add(utils.ParseCoin("15_030001uusd"))
+	expectedOsBalanceDiffManual = expectedOsBalanceDiffManual.Add(utils.ParseCoin("15_030002uusd"))
 
 	_, found := s.keeper.GetOrder(s.Ctx, order1.Id)
 	s.Require().False(found)
@@ -951,15 +951,15 @@ func (s *KeeperTestSuite) TestBatchMatchingEdgeCase() {
 
 	feeAmountAfterMatching := s.GetAllBalances(feeCollector)
 	feeAmount := feeAmountAfterMatching.Sub(feeAmountBeforeMatching)
-	expectedFeeManual := sdk.Coins{utils.ParseCoin("22501ucre"), utils.ParseCoin("1uusd")}
+	expectedFeeManual := sdk.Coins{utils.ParseCoin("22501ucre")}
 	s.AssertEqual(expectedFee, feeAmount)
 	s.AssertEqual(expectedFeeManual, feeAmount)
 
 	osBalanceAfterMatching := s.GetAllBalances(os.Address)
 	osBalanceDiff, _ := osBalanceAfterMatching.SafeSub(osBalanceBeforeMatching)
-	expectedOsBalancDiff := sdk.Coins{sdk.Coin{Denom: "ucre", Amount: sdk.NewInt(-14977501)},
-		utils.ParseCoin("15_030001uusd")}
-	s.AssertEqual(expectedOsBalancDiff, osBalanceDiff)
+	expectedOsBalancesDiff := sdk.Coins{sdk.Coin{Denom: "ucre", Amount: sdk.NewInt(-14977501)},
+		utils.ParseCoin("15_030002uusd")}
+	s.AssertEqual(expectedOsBalancesDiff, osBalanceDiff)
 	s.AssertEqual(expectedOsBalanceDiffManual, osBalanceDiff)
 }
 
@@ -1068,15 +1068,15 @@ func (s *KeeperTestSuite) TestBatchMatchingEdgeCase() {
 
 // 	os1BalanceAfterMatching := s.GetAllBalances(os1.Address)
 // 	os1BalanceDiff, _ := os1BalanceAfterMatching.SafeSub(os1BalanceBeforeMatching)
-// 	expectedOs1BalancDiff := sdk.Coins{sdk.Coin{Denom: "ucre", Amount: sdk.NewInt(-5995500)},
+// 	expectedOs1BalancesDiff := sdk.Coins{sdk.Coin{Denom: "ucre", Amount: sdk.NewInt(-5995500)},
 // 		utils.ParseCoin("6_001800uusd")}
-// 	s.AssertEqual(expectedOs1BalancDiff, os1BalanceDiff)
+// 	s.AssertEqual(expectedOs1BalancesDiff, os1BalanceDiff)
 // 	s.AssertEqual(expectedOs1BalanceDiffManual, os1BalanceDiff)
 
 // 	os2BalanceAfterMatching := s.GetAllBalances(os2.Address)
 // 	os2BalanceDiff, _ := os2BalanceAfterMatching.SafeSub(os2BalanceBeforeMatching)
-// 	expectedOs2BalancDiff := sdk.Coins{sdk.Coin{Denom: "uusd", Amount: sdk.NewInt(-3009000)},
+// 	expectedOs2BalancesDiff := sdk.Coins{sdk.Coin{Denom: "uusd", Amount: sdk.NewInt(-3009000)},
 // 		utils.ParseCoin("3_000000ucre")}
-// 	s.AssertEqual(expectedOs2BalancDiff, os2BalanceDiff)
+// 	s.AssertEqual(expectedOs2BalancesDiff, os2BalanceDiff)
 // 	s.AssertEqual(expectedOs2BalanceDiffManual, os2BalanceDiff)
 // }

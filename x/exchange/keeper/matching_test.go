@@ -60,16 +60,16 @@ func (s *KeeperTestSuite) TestOrderSourceMatchingAsMaker() {
 	s.AssertEqual(sdk.NewInt(10_000001), res.ExecutedQuantity)
 	s.AssertEqual(utils.ParseCoin("25_860003uusd"), res.Paid)
 	s.AssertEqual(utils.ParseCoin("9_970000ucre"), res.Received)
-	expectedFee := sdk.Coins{utils.ParseCoin("15001ucre"), utils.ParseCoin("1uusd")}
-	expectedOsBalancesDiff := sdk.Coins{sdk.Coin{Denom: "ucre", Amount: sdk.NewInt(-9985001)},
-		utils.ParseCoin("25_860002uusd")}
 
 	feeAmountAfterMatching := s.GetAllBalances(feeCollector)
 	feeAmount := feeAmountAfterMatching.Sub(feeAmountBeforeMatching)
-	s.AssertEqual(expectedFee, feeAmount)
+	s.AssertEqual(utils.ParseCoins("15001ucre"), feeAmount)
 
 	osBalanceAfterMatching := s.GetAllBalances(os.Address)
 	osBalanceDiff, _ := osBalanceAfterMatching.SafeSub(osBalanceBeforeMatching)
+	expectedOsBalancesDiff := sdk.Coins{
+		sdk.Coin{Denom: "ucre", Amount: sdk.NewInt(-9985001)},
+		utils.ParseCoin("25_860003uusd")}
 	s.AssertEqual(expectedOsBalancesDiff, osBalanceDiff)
 }
 

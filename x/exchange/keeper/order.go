@@ -381,23 +381,3 @@ func (k Keeper) CancelExpiredOrders(ctx sdk.Context) (err error) {
 	}
 	return nil
 }
-
-func (k Keeper) CollectFees(ctx sdk.Context, market types.Market) error {
-	var deposits sdk.Coins
-	k.IterateOrdersByMarket(ctx, market.Id, func(order types.Order) (stop bool) {
-		payDenom, _ := types.PayReceiveDenoms(market.BaseDenom, market.QuoteDenom, order.IsBuy)
-		deposit := sdk.NewCoin(payDenom, order.RemainingDeposit)
-		deposits = deposits.Add(deposit)
-		return false
-	})
-	escrowAddr := market.MustGetEscrowAddress()
-	feeCollectorAddr := market.MustGetFeeCollectorAddress()
-	escrowBalances := k.bankKeeper.SpendableCoins(ctx, escrowAddr)
-	fees := escrowBalances.Sub(deposits)
-	if fees.IsAllPositive() {
-		if err := k.bankKeeper.SendCoins(ctx, escrowAddr, feeCollectorAddr, fees); err != nil {
-			return err
-		}
-	}
-	return nil
-}
