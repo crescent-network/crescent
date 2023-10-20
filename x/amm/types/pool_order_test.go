@@ -29,13 +29,13 @@ func TestNextOrderTick(t *testing.T) {
 			true, sdk.NewInt(10000000), utils.ParseBigDec("1"),
 			sdk.NewInt(10000),
 			sdk.NewInt(10000),
-			-200, true,
+			-210, true,
 		},
 		{ // 1
 			true, sdk.NewInt(10000000), utils.ParseBigDec("1"),
 			sdk.NewInt(1),
 			sdk.NewInt(10000),
-			-200, true,
+			-210, true,
 		},
 		{ // 2
 			true, sdk.NewInt(10000000), utils.ParseBigDec("1"),
@@ -89,7 +89,7 @@ func TestNextOrderTick(t *testing.T) {
 			true, sdk.NewInt(2385592), utils.ParseBigDec("5").SqrtMut(),
 			sdk.NewInt(10000),
 			sdk.NewInt(1),
-			39080, true,
+			39070, true,
 		},
 		{ // 11
 			true, sdk.NewInt(2385592), utils.ParseBigDec("5").SqrtMut(),
@@ -119,7 +119,7 @@ func TestNextOrderTick(t *testing.T) {
 			true, sdk.NewInt(1000), utils.ParseBigDec("100").SqrtMut(),
 			sdk.NewInt(10000),
 			sdk.NewInt(1),
-			-9520, true,
+			-181980, true,
 		},
 		{ // 16
 			false, sdk.NewInt(1000), utils.ParseBigDec("0.01").SqrtMut(),
@@ -145,16 +145,8 @@ func TestNextOrderTick(t *testing.T) {
 
 				orderPrice := exchangetypes.PriceAtTick(tick)
 				orderSqrtPrice := cremath.NewBigDecFromDec(orderPrice).SqrtMut()
-				var qty sdk.Int
-				if tc.isBuy {
-					qty = cremath.NewBigDecFromInt(
-						types.Amount1DeltaRounding(
-							tc.currentSqrtPrice, orderSqrtPrice, tc.liquidity, false)).
-						QuoTruncateMut(cremath.NewBigDecFromDec(orderPrice)).TruncateInt()
-				} else {
-					qty = types.Amount0DeltaRounding(
-						tc.currentSqrtPrice, orderSqrtPrice, tc.liquidity, false)
-				}
+				qty := types.Amount0DeltaRounding(
+					tc.currentSqrtPrice, orderSqrtPrice, tc.liquidity, false)
 				require.True(
 					t, qty.GTE(tc.minOrderQty), "expected %s >= %s", qty, tc.minOrderQty)
 				quote := orderPrice.MulInt(qty).Ceil().TruncateInt()

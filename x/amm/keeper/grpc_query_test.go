@@ -980,7 +980,7 @@ func (s *KeeperTestSuite) TestQueryOrderBookEdgecase3() {
 	pool := s.CreatePool(market.Id, utils.ParseDec("1000"))
 
 	s.AddLiquidityByLiquidity(
-		lpAddr, pool.Id, types.MinPrice, types.MaxPrice, sdk.NewInt(2000))
+		lpAddr, pool.Id, types.MinPrice, types.MaxPrice, sdk.NewInt(1000))
 
 	s.PlaceLimitOrder(market.Id, lpAddr, true, utils.ParseDec("4.99"), sdk.NewInt(3_000000), time.Hour)
 	s.PlaceLimitOrder(market.Id, lpAddr, true, utils.ParseDec("4.98"), sdk.NewInt(2_000000), time.Hour)
@@ -994,7 +994,7 @@ func (s *KeeperTestSuite) TestQueryOrderBookEdgecase3() {
 	ob := resp.OrderBooks[0]
 	s.Require().Empty(ob.Sells)
 	expected := []exchangetypes.OrderBookPriceLevel{
-		{P: utils.ParseDec("940"), Q: sdk.NewInt(1)},
+		{P: utils.ParseDec("939.5"), Q: sdk.NewInt(1)},
 		{P: utils.ParseDec("4.99"), Q: sdk.NewInt(3_000000)},
 		{P: utils.ParseDec("4.98"), Q: sdk.NewInt(2_000000)},
 		{P: utils.ParseDec("4.97"), Q: sdk.NewInt(1_000000)},
@@ -1008,7 +1008,7 @@ func (s *KeeperTestSuite) TestQueryOrderBookEdgecase3() {
 	ob = resp.OrderBooks[1]
 	s.Require().Empty(ob.Sells)
 	expected = []exchangetypes.OrderBookPriceLevel{
-		{P: utils.ParseDec("940"), Q: sdk.NewInt(1)},
+		{P: utils.ParseDec("939.5"), Q: sdk.NewInt(1)},
 		{P: utils.ParseDec("4.9"), Q: sdk.NewInt(6_000000)},
 	}
 	s.Require().GreaterOrEqual(len(ob.Buys), len(expected))
@@ -1020,7 +1020,7 @@ func (s *KeeperTestSuite) TestQueryOrderBookEdgecase3() {
 	ob = resp.OrderBooks[2]
 	s.Require().Empty(ob.Sells)
 	expected = []exchangetypes.OrderBookPriceLevel{
-		{P: utils.ParseDec("940"), Q: sdk.NewInt(1)},
+		{P: utils.ParseDec("939"), Q: sdk.NewInt(1)},
 		{P: utils.ParseDec("4"), Q: sdk.NewInt(6_000000)},
 	}
 	s.Require().GreaterOrEqual(len(ob.Buys), len(expected))

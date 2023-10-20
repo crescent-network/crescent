@@ -20,20 +20,25 @@ func NextOrderTick(
 	currentTick := exchangetypes.TickAtPrice(currentSqrtPrice.Power(2).Dec())
 	if isBuy {
 		// 1. Check min order qty
-		// L*(sqrt(P_c) - sqrt(P_o)) / P_o >= Q
-		// -> sqrt(P_o) <= (sqrt(L^2 + 4*Q*L*sqrt(P_c)) - L) / 2*Q (quadratic formula)
-		intermediate := liquidityBigDec.Power(2).AddMut(
-			minOrderQtyBigDec.Mul(liquidityBigDec).MulTruncateMut(currentSqrtPrice).MulInt64Mut(4))
-		orderSqrtPrice := intermediate.SqrtMut().SubMut(liquidityBigDec).
-			QuoTruncateMut(minOrderQtyBigDec.MulInt64(2))
+		// L*(sqrt(P_c) - sqrt(P_o)) / (sqrt(P_c)*sqrt(P_o)) >= Q
+		// -> sqrt(P_o) <= L*sqrt(P_c) / (L + Q*sqrt(P_c))
+		orderSqrtPrice := currentSqrtPrice.Mul(liquidityBigDec).
+			QuoTruncateMut(liquidityBigDec.Add(minOrderQtyBigDec.Mul(currentSqrtPrice)))
 		if !orderSqrtPrice.IsPositive() {
 			return 0, false
 		}
 		// 2. Check min order quote
-		// L*(sqrt(P_c) - sqrt(P_o)) >= q
-		// -> sqrt(P_o) <= (L*sqrt(P_c) - q) / L
-		orderSqrtPrice2 := currentSqrtPrice.Mul(liquidityBigDec).SubMut(minOrderQuoteBigDec).
-			QuoTruncateMut(liquidityBigDec)
+		// L*(sqrt(P_c) - sqrt(P_o)) / (sqrt(P_c)*sqrt(P_o)) * P_o >= q
+		// -> L*P_o - L*sqrt(P_c)*sqrt(P_o) + q*sqrt(P_c) <= 0
+		// -> sqrt(P_o) <= (L*sqrt(P_c) + sqrt(L^2*P_c - 4qL*sqrt(P_c))) / 2L
+		// NOTE: if intermediate is negative, it indicates that there's no solution.
+		intermediate := liquidityBigDec.Power(2).MulMut(currentSqrtPrice.Power(2)).
+			SubMut(minOrderQuoteBigDec.Mul(liquidityBigDec).MulMut(currentSqrtPrice).MulInt64Mut(4))
+		if intermediate.IsNegative() {
+			return 0, false
+		}
+		orderSqrtPrice2 := liquidityBigDec.Mul(currentSqrtPrice).AddMut(intermediate.SqrtMut()).
+			QuoTruncateMut(liquidityBigDec.MulInt64(2))
 		if !orderSqrtPrice2.IsPositive() {
 			return 0, false
 		}
@@ -48,22 +53,23 @@ func NextOrderTick(
 		return tick, true
 	}
 	// 1. Check min order qty
-	// L*(sqrt(P_o) - sqrt(P_c)) / sqrt(P_o)*sqrt(P_c) >= Q
+	// L*(sqrt(P_o) - sqrt(P_c)) / (sqrt(P_o)*sqrt(P_c)) >= Q
 	// -> sqrt(P_o) >= L*sqrt(P_c) / (L - Q*sqrt(P_c))
-	// NOTE: if the divisor is not positive, it indicates that there's no solution.
-	if !liquidityBigDec.Sub(minOrderQtyBigDec.Mul(currentSqrtPrice)).IsPositive() {
+	// NOTE: if denominator is not positive, it indicates that there's no solution.
+	denominator := liquidityBigDec.Sub(minOrderQtyBigDec.Mul(currentSqrtPrice))
+	if !denominator.IsPositive() {
 		return 0, false
 	}
-	orderSqrtPrice := currentSqrtPrice.Mul(liquidityBigDec).
-		QuoRoundUpMut(liquidityBigDec.Sub(minOrderQtyBigDec.Mul(currentSqrtPrice)))
+	orderSqrtPrice := currentSqrtPrice.Mul(liquidityBigDec).QuoRoundUpMut(denominator)
 	if !orderSqrtPrice.IsPositive() {
 		return 0, false
 	}
 	// 2. Check min order quote
-	// L*(sqrt(P_o) - sqrt(P_c)) / sqrt(P_o)*sqrt(P_c) * P_o >= q
-	// XXX
+	// L*(sqrt(P_o) - sqrt(P_c)) / (sqrt(P_o)*sqrt(P_c)) * P_o >= q
+	// -> L*P_o - L*sqrt(P_c)*sqrt(P_o) - q*sqrt(P_c) <= 0
+	// -> sqrt(P_o) >= (L*sqrt(P_c) + sqrt(L^2*P_c + 4qL*sqrt(P_c))) / 2L
 	intermediate := liquidityBigDec.Power(2).MulMut(currentSqrtPrice.Power(2)).
-		Add(minOrderQuoteBigDec.Mul(liquidityBigDec).MulMut(currentSqrtPrice).MulInt64Mut(4))
+		AddMut(minOrderQuoteBigDec.Mul(liquidityBigDec).MulMut(currentSqrtPrice).MulInt64Mut(4))
 	orderSqrtPrice2 := liquidityBigDec.Mul(currentSqrtPrice).AddMut(intermediate.SqrtMut()).
 		QuoRoundUpMut(liquidityBigDec.MulInt64(2))
 	if !orderSqrtPrice2.IsPositive() {
