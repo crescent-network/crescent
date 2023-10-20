@@ -61,7 +61,7 @@ func (s *KeeperTestSuite) TestOrderSourceMatchingAsMaker() {
 	s.AssertEqual(utils.ParseCoin("25_860003uusd"), res.Paid)
 	s.AssertEqual(utils.ParseCoin("9_970000ucre"), res.Received)
 	expectedFee := sdk.Coins{utils.ParseCoin("15001ucre"), utils.ParseCoin("1uusd")}
-	expectedOsBalancDiff := sdk.Coins{sdk.Coin{Denom: "ucre", Amount: sdk.NewInt(-9985001)},
+	expectedOsBalancesDiff := sdk.Coins{sdk.Coin{Denom: "ucre", Amount: sdk.NewInt(-9985001)},
 		utils.ParseCoin("25_860002uusd")}
 
 	feeAmountAfterMatching := s.GetAllBalances(feeCollector)
@@ -70,7 +70,7 @@ func (s *KeeperTestSuite) TestOrderSourceMatchingAsMaker() {
 
 	osBalanceAfterMatching := s.GetAllBalances(os.Address)
 	osBalanceDiff, _ := osBalanceAfterMatching.SafeSub(osBalanceBeforeMatching)
-	s.AssertEqual(expectedOsBalancDiff, osBalanceDiff)
+	s.AssertEqual(expectedOsBalancesDiff, osBalanceDiff)
 }
 
 // With having the 10% price change limit, there could be no matching even though there are enough orders.
@@ -107,7 +107,7 @@ func (s *KeeperTestSuite) TestMatchingByMaxPriceLimit() {
 	s.AssertEqual(utils.ParseCoin("0uusd"), res.Paid)
 	s.AssertEqual(utils.ParseCoin("0ucre"), res.Received)
 	expectedFee := sdk.Coins{}
-	expectedOsBalancDiff := sdk.Coins{}
+	expectedOsBalancesDiff := sdk.Coins{}
 
 	feeAmountAfterMatching := s.GetAllBalances(feeCollector)
 	feeAmount := feeAmountAfterMatching.Sub(feeAmountBeforeMatching)
@@ -115,5 +115,5 @@ func (s *KeeperTestSuite) TestMatchingByMaxPriceLimit() {
 
 	osBalanceAfterMatching := s.GetAllBalances(os.Address)
 	osBalanceDiff, _ := osBalanceAfterMatching.SafeSub(osBalanceBeforeMatching)
-	s.AssertEqual(expectedOsBalancDiff, osBalanceDiff)
+	s.AssertEqual(expectedOsBalancesDiff, osBalanceDiff)
 }
