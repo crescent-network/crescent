@@ -53,13 +53,13 @@ func (s *KeeperTestSuite) TestMintShare() {
 			"invalid desired amount",
 			types.NewMsgMintShare(minterAddr, 1, utils.ParseCoins("100_000000uatom")),
 			nil,
-			"pool has no uatom in its reserve: invalid request",
+			"pool doesn't have denom uatom: invalid request",
 		},
 		{
 			"invalid desired amount 2",
 			types.NewMsgMintShare(minterAddr, 1, utils.ParseCoins("100_000000ucre")),
 			nil,
-			"minted liquidity is zero: insufficient funds",
+			"added liquidity is zero: invalid request",
 		},
 	} {
 		s.Run(tc.name, func() {

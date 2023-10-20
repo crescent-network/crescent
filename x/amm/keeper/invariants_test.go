@@ -80,6 +80,47 @@ func (s *KeeperTestSuite) TestRewardsGrowthOutsideInvariant() {
 	s.Require().True(broken)
 }
 
+func (s *KeeperTestSuite) TestCanRemoveLiquidityInvariant() {
+	market, pool := s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("5"))
+
+	lpAddr := s.FundedAccount(1, enoughCoins)
+	s.MakeLastPrice(market.Id, lpAddr, utils.ParseDec("5"))
+	s.AddLiquidity(
+		lpAddr, pool.Id, utils.ParseDec("1"), utils.ParseDec("25"),
+		utils.ParseCoins("100_000000ucre,500_000000uusd"))
+
+	_, broken := keeper.CanRemoveLiquidityInvariant(s.keeper)(s.Ctx)
+	s.Require().False(broken)
+
+	ordererAddr := s.FundedAccount(2, enoughCoins)
+	for i := 0; i < 50; i++ {
+		s.PlaceMarketOrder(market.Id, ordererAddr, i%2 == 0, sdk.NewInt(5_000000))
+	}
+
+	_, broken = keeper.CanRemoveLiquidityInvariant(s.keeper)(s.Ctx)
+	s.Require().False(broken)
+
+	expectedBalances := sdk.Coins{}
+	s.keeper.IteratePositionsByPool(s.Ctx, pool.Id, func(position types.Position) (stop bool) {
+		coin0, coin1, err := s.keeper.PositionAssets(s.Ctx, position.Id)
+		s.Require().NoError(err)
+		expectedBalances = expectedBalances.Add(sdk.NewCoins(coin0, coin1)...)
+		return false
+	})
+	s.AssertEqual(utils.ParseCoins("99999999ucre,499999999uusd"), expectedBalances)
+	balances := s.GetAllBalances(pool.MustGetReserveAddress())
+	s.AssertEqual(utils.ParseCoins("100000000ucre,500001575uusd"), balances)
+
+	_, broken = keeper.CanRemoveLiquidityInvariant(s.keeper)(s.Ctx)
+	s.Require().False(broken)
+
+	s.Require().NoError(s.App.BankKeeper.SendCoins(
+		s.Ctx, pool.MustGetReserveAddress(), utils.TestAddress(100), utils.ParseCoins("10ucre")))
+
+	_, broken = keeper.CanRemoveLiquidityInvariant(s.keeper)(s.Ctx)
+	s.Require().True(broken)
+}
+
 func (s *KeeperTestSuite) TestCanCollectInvariant() {
 	market, pool := s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("0.5"))
 	marketState := s.App.ExchangeKeeper.MustGetMarketState(s.Ctx, market.Id)

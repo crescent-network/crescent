@@ -105,28 +105,8 @@ func (msg MsgAddLiquidity) ValidateBasic() error {
 	if msg.PoolId == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "pool id must not be 0")
 	}
-	if !msg.LowerPrice.IsPositive() {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "lower price must be positive: %s", msg.LowerPrice)
-	}
-	if !msg.UpperPrice.IsPositive() {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "upper price must be positive: %s", msg.UpperPrice)
-	}
-	if msg.LowerPrice.GTE(msg.UpperPrice) {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "lower price must be lower than upper price")
-	}
-	lowerTick, valid := exchangetypes.ValidateTickPrice(msg.LowerPrice)
-	if !valid {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid lower tick price: %s", msg.LowerPrice)
-	}
-	if lowerTick < MinTick {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "lower tick must not be lower than the minimum %d", MinTick)
-	}
-	upperTick, valid := exchangetypes.ValidateTickPrice(msg.UpperPrice)
-	if !valid {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid upper tick price: %s", msg.UpperPrice)
-	}
-	if upperTick > MaxTick {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "upper tick must not be higher than the maximum %d", MaxTick)
+	if err := ValidatePriceRange(msg.LowerPrice, msg.UpperPrice); err != nil {
+		return err
 	}
 	if err := msg.DesiredAmount.Validate(); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "invalid desired amount: %v", err)
@@ -247,7 +227,7 @@ func (msg MsgCreatePrivateFarmingPlan) ValidateBasic() error {
 	}
 	// Create a dummy plan with valid fields and utilize Validate() method
 	// for user-provided data.
-	farmingPoolAddr := RewardsPoolAddress // Chose random valid address
+	farmingPoolAddr := FarmingRewardsPoolAddress // Chose random valid address
 	dummyPlan := NewFarmingPlan(
 		1, msg.Description, farmingPoolAddr, sdk.MustAccAddressFromBech32(msg.TerminationAddress),
 		msg.RewardAllocations, msg.StartTime, msg.EndTime, true)

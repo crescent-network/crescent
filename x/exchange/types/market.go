@@ -154,13 +154,15 @@ func (marketState MarketState) Validate() error {
 
 func OrderPriceLimit(basePrice, maxOrderPriceRatio sdk.Dec) (minPrice, maxPrice sdk.Dec) {
 	// Manually round up the min tick.
-	minTick, valid := ValidateTickPrice(basePrice.Mul(utils.OneDec.Sub(maxOrderPriceRatio)))
+	minTick, valid := ValidateTickPrice(
+		sdk.MaxDec(MinPrice, basePrice.Mul(utils.OneDec.Sub(maxOrderPriceRatio))))
 	if !valid {
 		minTick++
 	}
 	minPrice = PriceAtTick(minTick)
 	// TickAtPrice automatically rounds down the tick.
 	maxPrice = PriceAtTick(
-		TickAtPrice(basePrice.Mul(utils.OneDec.Add(maxOrderPriceRatio))))
+		TickAtPrice(
+			sdk.MinDec(MaxPrice, basePrice.Mul(utils.OneDec.Add(maxOrderPriceRatio)))))
 	return
 }

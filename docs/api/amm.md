@@ -19,8 +19,8 @@ This document provides a high-level overview of what gRPC-gateway REST routes ar
 - [Pool](#Pool)
 - [AllPositions](#AllPositions)
 - [Position](#Position)
-- [AddLiquiditySimulation](#AddLiquiditySimulation)
-- [RemoveLiquiditySimulation](#RemoveLiquiditySimulation)
+- [SimulateAddLiquidity](#SimulateAddLiquidity)
+- [SimulateRemoveLiquidity](#SimulateRemoveLiquidity)
 - [CollectibleCoins](#CollectibleCoins)
 - [AllTickInfos](#AllTickInfos)
 - [TickInfo](#TickInfo)
@@ -245,7 +245,7 @@ Example Response
 }
 ```
 
-## AddLiquiditySimulation
+## SimulateAddLiquidity
 
 Example Request 
 
@@ -272,7 +272,7 @@ Example Response
 }
 ```
 
-## RemoveLiquiditySimulation
+## SimulateRemoveLiquidity
 
 Example Request 
 

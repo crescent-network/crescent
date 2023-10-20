@@ -127,7 +127,8 @@ func TestMsgAddLiquidity_ValidateBasic(t *testing.T) {
 			func(msg *types.MsgAddLiquidity) {
 				msg.LowerPrice = utils.ParseDec("0.000000000000000001")
 			},
-			"lower tick must not be lower than the minimum -1260000: invalid request",
+			"lower price must not be lower than the minimum: 0.000000000000000001 < " +
+				"0.000000000000010000: invalid request",
 		},
 		{
 			"invalid upper price",
@@ -148,7 +149,9 @@ func TestMsgAddLiquidity_ValidateBasic(t *testing.T) {
 			func(msg *types.MsgAddLiquidity) {
 				msg.UpperPrice = utils.ParseDec("100000000000000000000000000000000000000000")
 			},
-			"upper tick must not be higher than the maximum 2160000: invalid request",
+			"upper price must not be higher than the maximum: " +
+				"100000000000000000000000000000000000000000.000000000000000000 > " +
+				"1000000000000000000000000.000000000000000000: invalid request",
 		},
 		{
 			"invalid desired amount",

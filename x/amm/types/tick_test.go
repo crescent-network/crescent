@@ -8,10 +8,46 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/crescent-network/crescent/cremath"
 	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/amm/types"
 	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
 )
+
+func TestSqrtPriceAtTick(t *testing.T) {
+	for i, tc := range []struct {
+		// args
+		tick int32
+		// result
+		sqrtPrice cremath.BigDec
+	}{
+		{
+			0,
+			utils.ParseBigDec("1"),
+		},
+		{
+			1,
+			utils.ParseBigDec("1.000049998750062496094023416993798698"),
+		},
+		{
+			-1,
+			utils.ParseBigDec("0.999994999987499937499609372265604493"),
+		},
+		{
+			types.MinTick,
+			utils.ParseBigDec("0.0000001"),
+		},
+		{
+			types.MaxTick,
+			utils.ParseBigDec("1000000000000"),
+		},
+	} {
+		t.Run(fmt.Sprint(i), func(t *testing.T) {
+			sqrtPrice := types.SqrtPriceAtTick(tc.tick)
+			utils.AssertEqual(t, tc.sqrtPrice, sqrtPrice)
+		})
+	}
+}
 
 func TestAdjustTickToTickSpacing(t *testing.T) {
 	tickSpacing := uint32(10)

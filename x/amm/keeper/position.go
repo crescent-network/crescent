@@ -12,14 +12,9 @@ import (
 func (k Keeper) AddLiquidity(
 	ctx sdk.Context, ownerAddr, fromAddr sdk.AccAddress, poolId uint64,
 	lowerPrice, upperPrice sdk.Dec, desiredAmt sdk.Coins) (position types.Position, liquidity sdk.Int, amt sdk.Coins, err error) {
-	lowerTick, valid := exchangetypes.ValidateTickPrice(lowerPrice)
-	if !valid {
-		err = sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid lower tick")
-		return
-	}
-	upperTick, valid := exchangetypes.ValidateTickPrice(upperPrice)
-	if !valid {
-		err = sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid upper tick")
+	// We did this checks in the msg's ValidateBasic, but check it again for
+	// the cases when other modules(e.g. liquidamm) call AddLiquidity directly.
+	if err = types.ValidatePriceRange(lowerPrice, upperPrice); err != nil {
 		return
 	}
 
@@ -28,29 +23,38 @@ func (k Keeper) AddLiquidity(
 		err = sdkerrors.Wrap(sdkerrors.ErrNotFound, "pool not found")
 		return
 	}
+
+	lowerTick := exchangetypes.TickAtPrice(lowerPrice)
+	upperTick := exchangetypes.TickAtPrice(upperPrice)
+	if lowerTick%int32(pool.TickSpacing) != 0 {
+		err = sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidRequest, "lower tick %d must be multiple of tick spacing %d",
+			lowerTick, pool.TickSpacing)
+		return
+	}
+	if upperTick%int32(pool.TickSpacing) != 0 {
+		err = sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidRequest, "upper tick %d must be multiple of tick spacing %d",
+			upperTick, pool.TickSpacing)
+		return
+	}
+
 	for _, coin := range desiredAmt {
 		if coin.Denom != pool.Denom0 && coin.Denom != pool.Denom1 {
-			err = sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "pool has no %s in its reserve", coin.Denom)
+			err = sdkerrors.Wrapf(
+				sdkerrors.ErrInvalidRequest, "pool doesn't have denom %s", coin.Denom)
 			return
 		}
 	}
 	desiredAmt0, desiredAmt1 := desiredAmt.AmountOf(pool.Denom0), desiredAmt.AmountOf(pool.Denom1)
-	if lowerTick%int32(pool.TickSpacing) != 0 {
-		err = sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "lower tick must be multiple of tick spacing")
-		return
-	}
-	if upperTick%int32(pool.TickSpacing) != 0 {
-		err = sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "upper tick must be multiple of tick spacing")
-		return
-	}
 	poolState := k.MustGetPoolState(ctx, poolId)
 
-	sqrtPriceA := types.SqrtPriceAtTick(lowerTick)
-	sqrtPriceB := types.SqrtPriceAtTick(upperTick)
+	lowerSqrtPrice := types.SqrtPriceAtTick(lowerTick)
+	upperSqrtPrice := types.SqrtPriceAtTick(upperTick)
 	liquidity = types.LiquidityForAmounts(
-		utils.DecApproxSqrt(poolState.CurrentPrice), sqrtPriceA, sqrtPriceB, desiredAmt0, desiredAmt1)
+		poolState.CurrentSqrtPrice, lowerSqrtPrice, upperSqrtPrice, desiredAmt0, desiredAmt1)
 	if liquidity.IsZero() {
-		err = sdkerrors.Wrap(sdkerrors.ErrInsufficientFunds, "minted liquidity is zero") // TODO: use different error
+		err = sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "added liquidity is zero")
 		return
 	}
 
@@ -59,11 +63,12 @@ func (k Keeper) AddLiquidity(
 		ctx, pool, ownerAddr, lowerTick, upperTick, liquidity)
 
 	amt = sdk.NewCoins(sdk.NewCoin(pool.Denom0, amt0), sdk.NewCoin(pool.Denom1, amt1))
-	if amt.IsAllPositive() {
-		if err = k.bankKeeper.SendCoins(
-			ctx, fromAddr, pool.MustGetReserveAddress(), amt); err != nil {
-			return
-		}
+	if !amt.IsAllPositive() { // sanity check
+		panic("amt is not positive")
+	}
+	if err = k.bankKeeper.SendCoins(
+		ctx, fromAddr, pool.MustGetReserveAddress(), amt); err != nil {
+		return
 	}
 
 	if err = ctx.EventManager().EmitTypedEvent(&types.EventAddLiquidity{
@@ -82,6 +87,9 @@ func (k Keeper) AddLiquidity(
 
 func (k Keeper) RemoveLiquidity(
 	ctx sdk.Context, ownerAddr, toAddr sdk.AccAddress, positionId uint64, liquidity sdk.Int) (position types.Position, amt sdk.Coins, err error) {
+	if liquidity.IsNegative() { // sanity check
+		panic("liquidity is negative")
+	}
 	var found bool
 	position, found = k.GetPosition(ctx, positionId)
 	if !found {
@@ -89,11 +97,14 @@ func (k Keeper) RemoveLiquidity(
 		return
 	}
 	if ownerAddr.String() != position.Owner {
-		err = sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "position is not owned by the user")
+		err = sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "position is not owned by the address")
 		return
 	}
 	if position.Liquidity.LT(liquidity) {
-		err = sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "position liquidity is smaller than the liquidity specified")
+		err = sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidRequest,
+			"liquidity in position is smaller than liquidity specified: %s < %s",
+			position.Liquidity, liquidity)
 		return
 	}
 
@@ -110,12 +121,10 @@ func (k Keeper) RemoveLiquidity(
 	if poolState.TotalLiquidity.IsZero() { // the last liquidity removal from the pool
 		amt = reserveBalances
 	} else {
-		amt = reserveBalances.Min(
-			sdk.NewCoins(sdk.NewCoin(pool.Denom0, amt0), sdk.NewCoin(pool.Denom1, amt1)))
+		amt = sdk.NewCoins(sdk.NewCoin(pool.Denom0, amt0), sdk.NewCoin(pool.Denom1, amt1))
 	}
 	if amt.IsAllPositive() {
-		if err = k.bankKeeper.SendCoins(
-			ctx, reserveAddr, toAddr, amt); err != nil {
+		if err = k.bankKeeper.SendCoins(ctx, reserveAddr, toAddr, amt); err != nil {
 			return
 		}
 	}
@@ -126,19 +135,11 @@ func (k Keeper) RemoveLiquidity(
 		if err != nil {
 			return
 		}
-		if fee.Add(farmingRewards...).IsAllPositive() {
-			if err = k.Collect(ctx, ownerAddr, toAddr, position.Id, fee.Add(farmingRewards...)); err != nil {
+		if rewards := fee.Add(farmingRewards...); rewards.IsAllPositive() {
+			if err = k.Collect(ctx, ownerAddr, toAddr, position.Id, rewards); err != nil {
 				return
 			}
 		}
-	}
-	if err = ctx.EventManager().EmitTypedEvent(&types.EventRemoveLiquidity{
-		Owner:      ownerAddr.String(),
-		PositionId: positionId,
-		Liquidity:  liquidity,
-		Amount:     amt,
-	}); err != nil {
-		return
 	}
 	return
 }
@@ -150,11 +151,13 @@ func (k Keeper) Collect(
 		return sdkerrors.Wrap(sdkerrors.ErrNotFound, "position not found")
 	}
 	if ownerAddr.String() != position.Owner {
-		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "position is not owned by the user")
+		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "position is not owned by the address")
 	}
 	pool := k.MustGetPool(ctx, position.PoolId)
 
 	if position.Liquidity.IsPositive() {
+		// Burn zero liquidity to calculate OwedFee, OwedFarmingRewards and
+		// update LastFeeGrowthInside, LastFarmingRewardsInside.
 		var err error
 		position, _, err = k.RemoveLiquidity(ctx, ownerAddr, toAddr, positionId, utils.ZeroInt)
 		if err != nil {
@@ -164,8 +167,10 @@ func (k Keeper) Collect(
 	collectible := position.OwedFee.Add(position.OwedFarmingRewards...)
 	if !collectible.IsAllGTE(amt) {
 		return sdkerrors.Wrapf(
-			sdkerrors.ErrInsufficientFunds, "collectible %s is smaller than %s", collectible, amt)
+			sdkerrors.ErrInvalidRequest,
+			"cannot collect %s from collectible coins %s", amt, collectible)
 	}
+	// Collect fee from the pool's rewards pool first.
 	fee := amt.Min(position.OwedFee)
 	position.OwedFee = position.OwedFee.Sub(fee)
 	if fee.IsAllPositive() {
@@ -173,10 +178,11 @@ func (k Keeper) Collect(
 			return err
 		}
 	}
+	// Then collect farming rewards from the farming rewards pool.
 	farmingRewards := amt.Sub(fee)
 	position.OwedFarmingRewards = position.OwedFarmingRewards.Sub(farmingRewards)
 	if farmingRewards.IsAllPositive() {
-		if err := k.bankKeeper.SendCoins(ctx, types.RewardsPoolAddress, toAddr, farmingRewards); err != nil {
+		if err := k.bankKeeper.SendCoins(ctx, types.FarmingRewardsPoolAddress, toAddr, farmingRewards); err != nil {
 			return err
 		}
 	}
@@ -203,9 +209,12 @@ func (k Keeper) PositionAssets(ctx sdk.Context, positionId uint64) (coin0, coin1
 		coin1 = sdk.NewInt64Coin(pool.Denom1, 0)
 		return
 	}
+	// Call modifyPosition within a cached context to simulate RemoveLiquidity
+	// and calculate amount of reserve coins inside the position.
 	ctx, _ = ctx.CacheContext()
 	_, amt0, amt1 := k.modifyPosition(
-		ctx, pool, position.MustGetOwnerAddress(), position.LowerTick, position.UpperTick, position.Liquidity.Neg())
+		ctx, pool, position.MustGetOwnerAddress(),
+		position.LowerTick, position.UpperTick, position.Liquidity.Neg())
 	amt0, amt1 = amt0.Neg(), amt1.Neg()
 	coin0 = sdk.NewCoin(pool.Denom0, amt0)
 	coin1 = sdk.NewCoin(pool.Denom1, amt1)
@@ -217,9 +226,11 @@ func (k Keeper) CollectibleCoins(ctx sdk.Context, positionId uint64) (fee, farmi
 	if !found {
 		return nil, nil, sdkerrors.Wrap(sdkerrors.ErrNotFound, "position not found")
 	}
-	ctx, _ = ctx.CacheContext()
 	ownerAddr := position.MustGetOwnerAddress()
 	if position.Liquidity.IsPositive() {
+		// Call RemoveLiquidity within a cached context to calculate owed fee and
+		// owed farming rewards.
+		ctx, _ = ctx.CacheContext()
 		position, _, err = k.RemoveLiquidity(ctx, ownerAddr, ownerAddr, positionId, utils.ZeroInt)
 		if err != nil {
 			return nil, nil, err
@@ -235,6 +246,9 @@ func (k Keeper) modifyPosition(
 	var found bool
 	position, found = k.GetPositionByParams(ctx, ownerAddr, pool.Id, lowerTick, upperTick)
 	if !found {
+		if liquidityDelta.IsNegative() {
+			panic("liquidityDelta is negative")
+		}
 		positionId := k.GetNextPositionIdWithUpdate(ctx)
 		position = types.NewPosition(positionId, pool.Id, ownerAddr, lowerTick, upperTick)
 		k.SetPositionByParamsIndex(ctx, position)
@@ -255,13 +269,8 @@ func (k Keeper) modifyPosition(
 			ctx, pool.Id, upperTick, poolState.CurrentTick, liquidityDelta, poolState, true)
 	}
 
-	// TODO: optimize GetTickInfo
-	feeGrowthInside := k.feeGrowthInside(
-		ctx, pool.Id, lowerTick, upperTick, poolState.CurrentTick,
-		poolState.FeeGrowthGlobal)
-	farmingRewardsGrowthInside := k.farmingRewardsGrowthInside(
-		ctx, pool.Id, lowerTick, upperTick, poolState.CurrentTick,
-		poolState.FarmingRewardsGrowthGlobal)
+	feeGrowthInside, farmingRewardsGrowthInside := k.rewardsGrowthInside(
+		ctx, pool.Id, lowerTick, upperTick, poolState)
 
 	var owedFee, owedFarmingRewards sdk.Coins
 	if position.Liquidity.IsPositive() {
@@ -302,9 +311,8 @@ func (k Keeper) modifyPosition(
 		if poolState.CurrentTick < lowerTick {
 			amt0 = types.Amount0Delta(sqrtPriceA, sqrtPriceB, liquidityDelta)
 		} else if poolState.CurrentTick < upperTick {
-			currentSqrtPrice := utils.DecApproxSqrt(poolState.CurrentPrice)
-			amt0 = types.Amount0Delta(currentSqrtPrice, sqrtPriceB, liquidityDelta)
-			amt1 = types.Amount1Delta(sqrtPriceA, currentSqrtPrice, liquidityDelta)
+			amt0 = types.Amount0Delta(poolState.CurrentSqrtPrice, sqrtPriceB, liquidityDelta)
+			amt1 = types.Amount1Delta(sqrtPriceA, poolState.CurrentSqrtPrice, liquidityDelta)
 			poolState.CurrentLiquidity = poolState.CurrentLiquidity.Add(liquidityDelta)
 		} else {
 			amt1 = types.Amount1Delta(sqrtPriceA, sqrtPriceB, liquidityDelta)

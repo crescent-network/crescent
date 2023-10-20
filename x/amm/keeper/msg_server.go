@@ -52,6 +52,16 @@ func (k msgServer) RemoveLiquidity(goCtx context.Context, msg *types.MsgRemoveLi
 	if err != nil {
 		return nil, err
 	}
+	// Since RemoveLiquidity is also used inside Collect, emit event in the
+	// msg server.
+	if err = ctx.EventManager().EmitTypedEvent(&types.EventRemoveLiquidity{
+		Owner:      senderAddr.String(),
+		PositionId: msg.PositionId,
+		Liquidity:  msg.Liquidity,
+		Amount:     amt,
+	}); err != nil {
+		return nil, err
+	}
 	return &types.MsgRemoveLiquidityResponse{
 		Amount: amt,
 	}, nil

@@ -24,11 +24,11 @@ func (s *KeeperTestSuite) TestPoolParameterChangeProposal() {
 	// Failing cases
 	proposal = types.NewPoolParameterChangeProposal(
 		"Title", "Description", []types.PoolParameterChange{
-			types.NewPoolParameterChange(pool.Id, 5),
+			types.NewPoolParameterChange(pool.Id, 10),
 		})
 	s.Require().NoError(proposal.ValidateBasic())
 	// Same tick spacing
-	s.Require().EqualError(handler(s.Ctx, proposal), "tick spacing is not changed: 5: invalid request")
+	s.Require().EqualError(handler(s.Ctx, proposal), "tick spacing is not changed: 10: invalid request")
 }
 
 func (s *KeeperTestSuite) TestPublicFarmingPlanProposal() {

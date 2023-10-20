@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -113,8 +114,8 @@ func (s *KeeperTestSuite) TestQueryAllPools() {
 				pool := resp.Pools[0]
 				s.Require().EqualValues(1, pool.MarketId)
 				s.Require().EqualValues(2, pool.Id)
-				s.AssertEqual(utils.ParseCoin("153579685ucre"), pool.Balance0)
-				s.AssertEqual(utils.ParseCoin("257373896uusd"), pool.Balance1)
+				s.AssertEqual(utils.ParseCoin("153630723ucre"), pool.Balance0)
+				s.AssertEqual(utils.ParseCoin("257144306uusd"), pool.Balance1)
 			},
 		},
 		{
@@ -155,8 +156,8 @@ func (s *KeeperTestSuite) TestQueryPool() {
 			"",
 			func(resp *types.QueryPoolResponse) {
 				s.Require().EqualValues(1, resp.Pool.Id)
-				s.AssertEqual(utils.ParseCoin("71750979uatom"), resp.Pool.Balance0)
-				s.AssertEqual(utils.ParseCoin("1390716291uusd"), resp.Pool.Balance1)
+				s.AssertEqual(utils.ParseCoin("71757892uatom"), resp.Pool.Balance0)
+				s.AssertEqual(utils.ParseCoin("1390645841uusd"), resp.Pool.Balance1)
 				s.Require().Equal("cosmos1srphgsfqllr85ndknjme24txux8m0sz0hhpnnksn2339d3a788rsawjx77", resp.Pool.RewardsPool)
 				s.AssertEqual(sdk.NewInt(12470981864), resp.Pool.TotalLiquidity)
 			},
@@ -342,8 +343,8 @@ func (s *KeeperTestSuite) TestQueryPositionAssets() {
 			},
 			"",
 			func(resp *types.QueryPositionAssetsResponse) {
-				s.AssertEqual(utils.ParseCoin("133675209ucre"), resp.Coin0)
-				s.AssertEqual(utils.ParseCoin("257373895uusd"), resp.Coin1)
+				s.AssertEqual(utils.ParseCoin("133726249ucre"), resp.Coin0)
+				s.AssertEqual(utils.ParseCoin("257144184uusd"), resp.Coin1)
 			},
 		},
 		{
@@ -376,32 +377,33 @@ func (s *KeeperTestSuite) TestQueryPositionAssets() {
 	}
 }
 
-func (s *KeeperTestSuite) TestQueryAddLiquiditySimulation() {
+func (s *KeeperTestSuite) TestQuerySimulateAddLiquidity() {
 	s.SetupSampleScenario()
 
 	for _, tc := range []struct {
 		name        string
-		req         *types.QueryAddLiquiditySimulationRequest
+		req         *types.QuerySimulateAddLiquidityRequest
 		expectedErr string
-		postRun     func(resp *types.QueryAddLiquiditySimulationResponse)
+		postRun     func(resp *types.QuerySimulateAddLiquidityResponse)
 	}{
 		{
 			"happy case",
-			&types.QueryAddLiquiditySimulationRequest{
+			&types.QuerySimulateAddLiquidityRequest{
 				PoolId:        2,
 				LowerPrice:    "4.5",
 				UpperPrice:    "5.5",
 				DesiredAmount: "100000000ucre,500000000uusd",
 			},
 			"",
-			func(resp *types.QueryAddLiquiditySimulationResponse) {
-				s.Require().Equal(sdk.NewInt(2224212612), resp.Liquidity)
-				s.Require().Equal("100000000ucre,434003uusd", resp.Amount.String())
+			func(resp *types.QuerySimulateAddLiquidityResponse) {
+				fmt.Println(s.keeper.MustGetPoolState(s.Ctx, 2).CurrentSqrtPrice)
+				s.AssertEqual(sdk.NewInt(2223021101), resp.Liquidity)
+				s.AssertEqual(utils.ParseCoins("100000000ucre,192673uusd"), resp.Amount)
 			},
 		},
 		{
 			"pool not found",
-			&types.QueryAddLiquiditySimulationRequest{
+			&types.QuerySimulateAddLiquidityRequest{
 				PoolId:        0,
 				LowerPrice:    "4.5",
 				UpperPrice:    "5.5",
@@ -412,7 +414,7 @@ func (s *KeeperTestSuite) TestQueryAddLiquiditySimulation() {
 		},
 		{
 			"pool not found 2",
-			&types.QueryAddLiquiditySimulationRequest{
+			&types.QuerySimulateAddLiquidityRequest{
 				PoolId:        3,
 				LowerPrice:    "4.5",
 				UpperPrice:    "5.5",
@@ -423,7 +425,7 @@ func (s *KeeperTestSuite) TestQueryAddLiquiditySimulation() {
 		},
 		{
 			"invalid lower price",
-			&types.QueryAddLiquiditySimulationRequest{
+			&types.QuerySimulateAddLiquidityRequest{
 				PoolId:        2,
 				LowerPrice:    "4.5?",
 				UpperPrice:    "5.5",
@@ -434,7 +436,7 @@ func (s *KeeperTestSuite) TestQueryAddLiquiditySimulation() {
 		},
 		{
 			"invalid upper price",
-			&types.QueryAddLiquiditySimulationRequest{
+			&types.QuerySimulateAddLiquidityRequest{
 				PoolId:        2,
 				LowerPrice:    "4.5",
 				UpperPrice:    "5.5?",
@@ -445,7 +447,7 @@ func (s *KeeperTestSuite) TestQueryAddLiquiditySimulation() {
 		},
 		{
 			"invalid desired amount",
-			&types.QueryAddLiquiditySimulationRequest{
+			&types.QuerySimulateAddLiquidityRequest{
 				PoolId:        2,
 				LowerPrice:    "4.5",
 				UpperPrice:    "5.5",
@@ -457,7 +459,7 @@ func (s *KeeperTestSuite) TestQueryAddLiquiditySimulation() {
 	} {
 		s.Run(tc.name, func() {
 			cacheCtx, _ := s.Ctx.CacheContext()
-			resp, err := s.querier.AddLiquiditySimulation(sdk.WrapSDKContext(cacheCtx), tc.req)
+			resp, err := s.querier.SimulateAddLiquidity(sdk.WrapSDKContext(cacheCtx), tc.req)
 			if tc.expectedErr == "" {
 				s.Require().NoError(err)
 				tc.postRun(resp)
@@ -468,29 +470,29 @@ func (s *KeeperTestSuite) TestQueryAddLiquiditySimulation() {
 	}
 }
 
-func (s *KeeperTestSuite) TestQueryRemoveLiquiditySimulation() {
+func (s *KeeperTestSuite) TestQuerySimulateRemoveLiquidity() {
 	s.SetupSampleScenario()
 
 	for _, tc := range []struct {
 		name        string
-		req         *types.QueryRemoveLiquiditySimulationRequest
+		req         *types.QuerySimulateRemoveLiquidityRequest
 		expectedErr string
-		postRun     func(resp *types.QueryRemoveLiquiditySimulationResponse)
+		postRun     func(resp *types.QuerySimulateRemoveLiquidityResponse)
 	}{
 		{
 			"happy case",
-			&types.QueryRemoveLiquiditySimulationRequest{
+			&types.QuerySimulateRemoveLiquidityRequest{
 				PositionId: 1,
 				Liquidity:  "10000000",
 			},
 			"",
-			func(resp *types.QueryRemoveLiquiditySimulationResponse) {
-				s.Require().Equal("631128ucre,1215154uusd", resp.Amount.String())
+			func(resp *types.QuerySimulateRemoveLiquidityResponse) {
+				s.AssertEqual(utils.ParseCoins("631369ucre,1214070uusd"), resp.Amount)
 			},
 		},
 		{
 			"position not found",
-			&types.QueryRemoveLiquiditySimulationRequest{
+			&types.QuerySimulateRemoveLiquidityRequest{
 				PositionId: 0,
 				Liquidity:  "10000000",
 			},
@@ -499,7 +501,7 @@ func (s *KeeperTestSuite) TestQueryRemoveLiquiditySimulation() {
 		},
 		{
 			"position not found 2",
-			&types.QueryRemoveLiquiditySimulationRequest{
+			&types.QuerySimulateRemoveLiquidityRequest{
 				PositionId: 5,
 				Liquidity:  "10000000",
 			},
@@ -508,7 +510,7 @@ func (s *KeeperTestSuite) TestQueryRemoveLiquiditySimulation() {
 		},
 		{
 			"invalid liquidity",
-			&types.QueryRemoveLiquiditySimulationRequest{
+			&types.QuerySimulateRemoveLiquidityRequest{
 				PositionId: 2,
 				Liquidity:  "10000000?",
 			},
@@ -518,7 +520,7 @@ func (s *KeeperTestSuite) TestQueryRemoveLiquiditySimulation() {
 	} {
 		s.Run(tc.name, func() {
 			cacheCtx, _ := s.Ctx.CacheContext()
-			resp, err := s.querier.RemoveLiquiditySimulation(sdk.WrapSDKContext(cacheCtx), tc.req)
+			resp, err := s.querier.SimulateRemoveLiquidity(sdk.WrapSDKContext(cacheCtx), tc.req)
 			if tc.expectedErr == "" {
 				s.Require().NoError(err)
 				tc.postRun(resp)
@@ -545,7 +547,7 @@ func (s *KeeperTestSuite) TestQueryCollectibleCoins() {
 			},
 			"",
 			func(resp *types.QueryCollectibleCoinsResponse) {
-				s.AssertEqual(utils.ParseCoins("24181uatom,62703ucre,945127uusd"), resp.Fee)
+				s.AssertEqual(utils.ParseCoins("21650uatom,21649ucre,1170389uusd"), resp.Fee)
 				s.AssertEqual(utils.ParseCoins("8578uatom,8467ucre"), resp.FarmingRewards)
 			},
 		},
@@ -556,7 +558,7 @@ func (s *KeeperTestSuite) TestQueryCollectibleCoins() {
 			},
 			"",
 			func(resp *types.QueryCollectibleCoinsResponse) {
-				s.AssertEqual(utils.ParseCoins("62703ucre,366086uusd"), resp.Fee)
+				s.AssertEqual(utils.ParseCoins("21649ucre,566242uusd"), resp.Fee)
 				s.AssertEqual(utils.ParseCoins("8467ucre"), resp.FarmingRewards)
 			},
 		},
@@ -905,9 +907,14 @@ func (s *KeeperTestSuite) TestQueryFarmingPlan() {
 
 func (s *KeeperTestSuite) TestQueryOrderBookEdgecase() {
 	market, pool := s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("0.000000000002410188"))
+	market.OrderQuantityLimits.Min = sdk.NewInt(1)
+	market.OrderQuoteLimits.Min = sdk.NewInt(1)
+	s.App.ExchangeKeeper.SetMarket(s.Ctx, market)
 
 	lpAddr := s.FundedAccount(1, enoughCoins)
-	s.MakeLastPrice(market.Id, lpAddr, utils.ParseDec("0.0000000000024102"))
+	// Make last price.
+	s.PlaceLimitOrder(market.Id, lpAddr, true, utils.ParseDec("0.0000000000024102"), sdk.NewInt(100000000000000000), time.Hour)
+	s.PlaceLimitOrder(market.Id, lpAddr, false, utils.ParseDec("0.0000000000024102"), sdk.NewInt(100000000000000000), time.Hour)
 
 	s.AddLiquidityByLiquidity(
 		lpAddr, pool.Id, types.MinPrice, types.MaxPrice,
@@ -919,10 +926,10 @@ func (s *KeeperTestSuite) TestQueryOrderBookEdgecase() {
 	})
 	s.Require().NoError(err)
 	expected := []exchangetypes.OrderBookPriceLevel{
-		{P: utils.ParseDec("0.000000000002420000"), Q: sdk.NewInt(210247167454518)},
-		{P: utils.ParseDec("0.000000000002425000"), Q: sdk.NewInt(106646637502197)},
-		{P: utils.ParseDec("0.000000000002430000"), Q: sdk.NewInt(106317311667972)},
-		{P: utils.ParseDec("0.000000000002435000"), Q: sdk.NewInt(105989677315106)},
+		{P: utils.ParseDec("0.000000000002415000"), Q: sdk.NewInt(103269500340991)},
+		{P: utils.ParseDec("0.000000000002420000"), Q: sdk.NewInt(106977667069587)},
+		{P: utils.ParseDec("0.000000000002425000"), Q: sdk.NewInt(106646637524773)},
+		{P: utils.ParseDec("0.000000000002430000"), Q: sdk.NewInt(106317311684281)},
 	}
 	s.Require().GreaterOrEqual(len(resp.OrderBooks[0].Sells), len(expected))
 	for i, level := range expected {
@@ -930,10 +937,10 @@ func (s *KeeperTestSuite) TestQueryOrderBookEdgecase() {
 		s.AssertEqual(level.Q, resp.OrderBooks[0].Sells[i].Q)
 	}
 	expected = []exchangetypes.OrderBookPriceLevel{
-		{P: utils.ParseDec("0.000000000002410000"), Q: sdk.NewInt(4041069947696)},
-		{P: utils.ParseDec("0.000000000002405000"), Q: sdk.NewInt(107756725726365)},
-		{P: utils.ParseDec("0.000000000002400000"), Q: sdk.NewInt(108093523942782)},
-		{P: utils.ParseDec("0.000000000002395000"), Q: sdk.NewInt(108432080322133)},
+		{P: utils.ParseDec("0.000000000002410000"), Q: sdk.NewInt(4040912342627)},
+		{P: utils.ParseDec("0.000000000002405000"), Q: sdk.NewInt(107644886847379)},
+		{P: utils.ParseDec("0.000000000002400000"), Q: sdk.NewInt(107981102158327)},
+		{P: utils.ParseDec("0.000000000002395000"), Q: sdk.NewInt(108319071332206)},
 	}
 	s.Require().GreaterOrEqual(len(resp.OrderBooks[0].Buys), len(expected))
 	for i, level := range expected {
@@ -962,6 +969,9 @@ func (s *KeeperTestSuite) TestQueryOrderBookEdgecase2() {
 
 func (s *KeeperTestSuite) TestQueryOrderBookEdgecase3() {
 	market := s.CreateMarket("ucre", "uusd")
+	market.OrderQuantityLimits.Min = sdk.NewInt(1)
+	market.OrderQuoteLimits.Min = sdk.NewInt(1)
+	s.App.ExchangeKeeper.SetMarket(s.Ctx, market)
 
 	lpAddr := s.FundedAccount(1, enoughCoins)
 	s.MakeLastPrice(market.Id, lpAddr, utils.ParseDec("5"))
@@ -984,7 +994,7 @@ func (s *KeeperTestSuite) TestQueryOrderBookEdgecase3() {
 	ob := resp.OrderBooks[0]
 	s.Require().Empty(ob.Sells)
 	expected := []exchangetypes.OrderBookPriceLevel{
-		{P: utils.ParseDec("941"), Q: sdk.NewInt(1)},
+		{P: utils.ParseDec("939.5"), Q: sdk.NewInt(1)},
 		{P: utils.ParseDec("4.99"), Q: sdk.NewInt(3_000000)},
 		{P: utils.ParseDec("4.98"), Q: sdk.NewInt(2_000000)},
 		{P: utils.ParseDec("4.97"), Q: sdk.NewInt(1_000000)},
@@ -998,7 +1008,7 @@ func (s *KeeperTestSuite) TestQueryOrderBookEdgecase3() {
 	ob = resp.OrderBooks[1]
 	s.Require().Empty(ob.Sells)
 	expected = []exchangetypes.OrderBookPriceLevel{
-		{P: utils.ParseDec("941"), Q: sdk.NewInt(1)},
+		{P: utils.ParseDec("939.5"), Q: sdk.NewInt(1)},
 		{P: utils.ParseDec("4.9"), Q: sdk.NewInt(6_000000)},
 	}
 	s.Require().GreaterOrEqual(len(ob.Buys), len(expected))
@@ -1010,7 +1020,7 @@ func (s *KeeperTestSuite) TestQueryOrderBookEdgecase3() {
 	ob = resp.OrderBooks[2]
 	s.Require().Empty(ob.Sells)
 	expected = []exchangetypes.OrderBookPriceLevel{
-		{P: utils.ParseDec("941"), Q: sdk.NewInt(1)},
+		{P: utils.ParseDec("939"), Q: sdk.NewInt(1)},
 		{P: utils.ParseDec("4"), Q: sdk.NewInt(6_000000)},
 	}
 	s.Require().GreaterOrEqual(len(ob.Buys), len(expected))

@@ -127,12 +127,11 @@ func (k Keeper) TerminateFarmingPlan(ctx sdk.Context, plan types.FarmingPlan) er
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "plan is already terminated")
 	}
 	if plan.FarmingPoolAddress != plan.TerminationAddress {
-		farmingPoolAddr := sdk.MustAccAddressFromBech32(plan.FarmingPoolAddress)
+		farmingPoolAddr := plan.MustGetFarmingPoolAddress()
 		balances := k.bankKeeper.SpendableCoins(ctx, farmingPoolAddr)
 		if balances.IsAllPositive() {
 			if err := k.bankKeeper.SendCoins(
-				ctx, farmingPoolAddr,
-				sdk.MustAccAddressFromBech32(plan.TerminationAddress), balances); err != nil {
+				ctx, farmingPoolAddr, plan.MustGetTerminationAddress(), balances); err != nil {
 				return err
 			}
 		}
@@ -212,7 +211,7 @@ func (k Keeper) AllocateFarmingRewards(ctx sdk.Context) error {
 			continue
 		}
 		if err := k.bankKeeper.SendCoins(
-			ctx, farmingPoolAddr, types.RewardsPoolAddress, totalRewards); err != nil {
+			ctx, farmingPoolAddr, types.FarmingRewardsPoolAddress, totalRewards); err != nil {
 			return err
 		}
 		for poolId, rewards := range allocatedRewardsByFarmingPool[farmingPool] {

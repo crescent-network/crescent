@@ -9,6 +9,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/amm/types"
 )
 
@@ -85,6 +86,72 @@ func TestParams_Validate(t *testing.T) {
 			params := types.DefaultParams()
 			tc.malleate(&params)
 			err := params.Validate()
+			if tc.expectedErr == "" {
+				require.NoError(t, err)
+			} else {
+				require.EqualError(t, err, tc.expectedErr)
+			}
+		})
+	}
+}
+
+func TestValidatePriceRange(t *testing.T) {
+	for _, tc := range []struct {
+		name                   string
+		lowerPrice, upperPrice sdk.Dec
+		expectedErr            string
+	}{
+		{
+			"happy case",
+			utils.ParseDec("0.5"), utils.ParseDec("2"),
+			"",
+		},
+		{
+			"non-positive lower price",
+			utils.ParseDec("-0.1"), utils.ParseDec("2"),
+			"lower price must be positive: -0.100000000000000000: invalid request",
+		},
+		{
+			"lower price < min price",
+			sdk.NewDecWithPrec(1, sdk.Precision), utils.ParseDec("2"),
+			"lower price must not be lower than the minimum: 0.000000000000000001 < 0.000000000000010000: invalid request",
+		},
+		{
+			"non-positive upper price",
+			utils.ParseDec("0.5"), utils.ParseDec("-0.1"),
+			"upper price must be positive: -0.100000000000000000: invalid request",
+		},
+		{
+			"upper price > max price",
+			utils.ParseDec("0.5"), sdk.NewDecFromInt(sdk.NewIntWithDecimal(1, 40)),
+			"upper price must not be higher than the maximum: " +
+				"10000000000000000000000000000000000000000.000000000000000000 > " +
+				"1000000000000000000000000.000000000000000000: invalid request",
+		},
+		{
+			"invalid upper price",
+			utils.ParseDec("0.5"), utils.ParseDec("1.99999"),
+			"invalid upper tick price: 1.999990000000000000: invalid request",
+		},
+		{
+			"lower price >= upper price",
+			utils.ParseDec("0.5"), utils.ParseDec("0.5"),
+			"lower price must be lower than upper price: " +
+				"0.500000000000000000 >= 0.500000000000000000: invalid request",
+		},
+		{
+			"invalid lower price",
+			utils.ParseDec("0.499999"), utils.ParseDec("2"),
+			"invalid lower tick price: 0.499999000000000000: invalid request",
+		},
+		{
+			"invalid upper price",
+			utils.ParseDec("0.5"), utils.ParseDec("1.99999"),
+			"invalid upper tick price: 1.999990000000000000: invalid request",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := types.ValidatePriceRange(tc.lowerPrice, tc.upperPrice)
 			if tc.expectedErr == "" {
 				require.NoError(t, err)
 			} else {

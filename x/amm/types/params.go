@@ -5,6 +5,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
@@ -21,6 +22,16 @@ var (
 	MinPrice = exchangetypes.PriceAtTick(MinTick) // 0.000000000000010000
 	MaxPrice = exchangetypes.PriceAtTick(MaxTick) // 1000000000000000000000000
 )
+
+func init() {
+	// sanity checks
+	if !MinPrice.Equal(exchangetypes.MinPrice) {
+		panic(fmt.Sprintf("%s != %s", MinPrice, exchangetypes.MinPrice))
+	}
+	if !MaxPrice.Equal(exchangetypes.MaxPrice) {
+		panic(fmt.Sprintf("%s != %s", MaxPrice, exchangetypes.MaxPrice))
+	}
+}
 
 var (
 	KeyPoolCreationFee               = []byte("PoolCreationFee")
@@ -155,6 +166,43 @@ func validateMaxFarmingBlockTime(i interface{}) error {
 	}
 	if v <= 0 {
 		return fmt.Errorf("max farming block time must be positive: %v", v)
+	}
+	return nil
+}
+
+// ValidatePriceRange validates a price range of a position defined by
+// lowerPrice and upperPrice.
+func ValidatePriceRange(lowerPrice, upperPrice sdk.Dec) error {
+	if !lowerPrice.IsPositive() {
+		return sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidRequest, "lower price must be positive: %s", lowerPrice)
+	}
+	if lowerPrice.LT(MinPrice) {
+		return sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidRequest,
+			"lower price must not be lower than the minimum: %s < %s", lowerPrice, MinPrice)
+	}
+	if !upperPrice.IsPositive() {
+		return sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidRequest, "upper price must be positive: %s", upperPrice)
+	}
+	if upperPrice.GT(MaxPrice) {
+		return sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidRequest,
+			"upper price must not be higher than the maximum: %s > %s", upperPrice, MaxPrice)
+	}
+	if lowerPrice.GTE(upperPrice) {
+		return sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidRequest,
+			"lower price must be lower than upper price: %s >= %s", lowerPrice, upperPrice)
+	}
+	if _, valid := exchangetypes.ValidateTickPrice(lowerPrice); !valid {
+		return sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidRequest, "invalid lower tick price: %s", lowerPrice)
+	}
+	if _, valid := exchangetypes.ValidateTickPrice(upperPrice); !valid {
+		return sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidRequest, "invalid upper tick price: %s", upperPrice)
 	}
 	return nil
 }

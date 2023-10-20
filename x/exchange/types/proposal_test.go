@@ -138,16 +138,16 @@ func TestMarketParameterChange_Validate(t *testing.T) {
 		{
 			"invalid order quantity limits",
 			func(change *types.MarketParameterChange) {
-				change.OrderQuantityLimits = types.NewAmountLimits(sdk.NewInt(10000), sdk.NewInt(-10000))
+				change.OrderQuantityLimits = types.NewAmountLimits(sdk.NewInt(0), sdk.NewInt(10000))
 			},
-			"invalid order quantity limits: the maximum value must not be negative: -10000: invalid request",
+			"invalid order quantity limits: the minimum value must be positive: 0: invalid request",
 		},
 		{
 			"invalid order quote limits",
 			func(change *types.MarketParameterChange) {
-				change.OrderQuoteLimits = types.NewAmountLimits(sdk.NewInt(-10000), sdk.NewInt(10000))
+				change.OrderQuoteLimits = types.NewAmountLimits(sdk.NewInt(0), sdk.NewInt(10000))
 			},
-			"invalid order quote limits: the minimum value must not be negative: -10000: invalid request",
+			"invalid order quote limits: the minimum value must be positive: 0: invalid request",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

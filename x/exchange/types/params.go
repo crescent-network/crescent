@@ -218,11 +218,8 @@ func NewAmountLimits(min, max sdk.Int) AmountLimits {
 }
 
 func (limits AmountLimits) Validate() error {
-	if limits.Min.IsNegative() {
-		return fmt.Errorf("the minimum value must not be negative: %s", limits.Min)
-	}
-	if limits.Max.IsNegative() {
-		return fmt.Errorf("the maximum value must not be negative: %s", limits.Max)
+	if !limits.Min.IsPositive() {
+		return fmt.Errorf("the minimum value must be positive: %s", limits.Min)
 	}
 	if limits.Min.GT(limits.Max) {
 		return fmt.Errorf(

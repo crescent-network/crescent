@@ -32,12 +32,11 @@ service Query {
   rpc PositionAssets(QueryPositionAssetsRequest) returns (QueryPositionAssetsResponse) {
     option (google.api.http).get = "/crescent/amm/v1beta1/positions/{position_id}/assets";
   }
-  rpc AddLiquiditySimulation(QueryAddLiquiditySimulationRequest) returns (QueryAddLiquiditySimulationResponse) {
-    option (google.api.http).get = "/crescent/amm/v1beta1/simulation/add_liquidity";
+  rpc SimulateAddLiquidity(QuerySimulateAddLiquidityRequest) returns (QuerySimulateAddLiquidityResponse) {
+    option (google.api.http).get = "/crescent/amm/v1beta1/simulate_add_liquidity";
   }
-  rpc RemoveLiquiditySimulation(QueryRemoveLiquiditySimulationRequest)
-      returns (QueryRemoveLiquiditySimulationResponse) {
-    option (google.api.http).get = "/crescent/amm/v1beta1/simulation/remove_liquidity";
+  rpc SimulateRemoveLiquidity(QuerySimulateRemoveLiquidityRequest) returns (QuerySimulateRemoveLiquidityResponse) {
+    option (google.api.http).get = "/crescent/amm/v1beta1/simulate_remove_liquidity";
   }
   rpc CollectibleCoins(QueryCollectibleCoinsRequest) returns (QueryCollectibleCoinsResponse) {
     option (google.api.http).get = "/crescent/amm/v1beta1/collectible_coins";
@@ -108,26 +107,26 @@ message QueryPositionAssetsResponse {
   cosmos.base.v1beta1.Coin coin1 = 2 [(gogoproto.nullable) = false];
 }
 
-message QueryAddLiquiditySimulationRequest {
+message QuerySimulateAddLiquidityRequest {
   uint64 pool_id        = 1;
   string lower_price    = 2;
   string upper_price    = 3;
   string desired_amount = 4;
 }
 
-message QueryAddLiquiditySimulationResponse {
+message QuerySimulateAddLiquidityResponse {
   string liquidity = 1
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
   repeated cosmos.base.v1beta1.Coin amount = 2
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 }
 
-message QueryRemoveLiquiditySimulationRequest {
+message QuerySimulateRemoveLiquidityRequest {
   uint64 position_id = 1;
   string liquidity   = 2;
 }
 
-message QueryRemoveLiquiditySimulationResponse {
+message QuerySimulateRemoveLiquidityResponse {
   repeated cosmos.base.v1beta1.Coin amount = 1
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
 }
@@ -185,16 +184,16 @@ message QueryFarmingPlanResponse {
 }
 
 message PoolResponse {
-  uint64                   id              = 1;
-  uint64                   market_id       = 2;
-  cosmos.base.v1beta1.Coin balance0        = 3 [(gogoproto.nullable) = false];
-  cosmos.base.v1beta1.Coin balance1        = 4 [(gogoproto.nullable) = false];
-  string                   reserve_address = 5;
-  string                   rewards_pool    = 6;
-  uint32                   tick_spacing    = 7;
-  int32                    current_tick    = 8;
-  string                   current_price   = 9
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  uint64                   id                 = 1;
+  uint64                   market_id          = 2;
+  cosmos.base.v1beta1.Coin balance0           = 3 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin balance1           = 4 [(gogoproto.nullable) = false];
+  string                   reserve_address    = 5;
+  string                   rewards_pool       = 6;
+  uint32                   tick_spacing       = 7;
+  int32                    current_tick       = 8;
+  string                   current_sqrt_price = 9
+      [(gogoproto.customtype) = "github.com/crescent-network/crescent/cremath.BigDec", (gogoproto.nullable) = false];
   string current_liquidity = 10
       [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
   string total_liquidity = 11

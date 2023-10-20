@@ -31,8 +31,8 @@ func GetQueryCmd() *cobra.Command {
 		NewQueryAllPositionsCmd(),
 		NewQueryPositionCmd(),
 		NewQueryPositionAssetsCmd(),
-		NewQueryAddLiquiditySimulationCmd(),
-		NewQueryRemoveLiquiditySimulationCmd(),
+		NewQuerySimulateAddLiquidityCmd(),
+		NewQuerySimulateRemoveLiquidityCmd(),
 		NewQueryCollectibleCoinsCmd(),
 		NewQueryAllTickInfosCmd(),
 		NewQueryTickInfoCmd(),
@@ -287,7 +287,7 @@ $ %s query %s position-assets 1
 	return cmd
 }
 
-func NewQueryAddLiquiditySimulationCmd() *cobra.Command {
+func NewQuerySimulateAddLiquidityCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "add-liquidity-simulation [pool-id] [lower-price] [upper-price] [desired-amount]",
 		Args:  cobra.ExactArgs(4),
@@ -314,7 +314,7 @@ $ %s query %s add-liquidity-simulation 1 0.9 1.1 1000000ucre,1000000uusd
 			upperPrice := args[2]
 			desiredAmt := args[4]
 			queryClient := types.NewQueryClient(clientCtx)
-			res, err := queryClient.AddLiquiditySimulation(cmd.Context(), &types.QueryAddLiquiditySimulationRequest{
+			res, err := queryClient.SimulateAddLiquidity(cmd.Context(), &types.QuerySimulateAddLiquidityRequest{
 				PoolId:        poolId,
 				LowerPrice:    lowerPrice,
 				UpperPrice:    upperPrice,
@@ -330,7 +330,7 @@ $ %s query %s add-liquidity-simulation 1 0.9 1.1 1000000ucre,1000000uusd
 	return cmd
 }
 
-func NewQueryRemoveLiquiditySimulationCmd() *cobra.Command {
+func NewQuerySimulateRemoveLiquidityCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "remove-liquidity-simulation [position-id] [liquidity]",
 		Args:  cobra.ExactArgs(2),
@@ -355,7 +355,7 @@ $ %s query %s remove-liquidity-simulation 1 20000000
 			}
 			liquidity := args[1]
 			queryClient := types.NewQueryClient(clientCtx)
-			res, err := queryClient.RemoveLiquiditySimulation(cmd.Context(), &types.QueryRemoveLiquiditySimulationRequest{
+			res, err := queryClient.SimulateRemoveLiquidity(cmd.Context(), &types.QuerySimulateRemoveLiquidityRequest{
 				PositionId: positionId,
 				Liquidity:  liquidity,
 			})

@@ -65,6 +65,12 @@ func TestTickInfoKey(t *testing.T) {
 	prefix := types.GetTickInfosByPoolIteratorPrefix(1000000)
 	require.True(t, bytes.HasPrefix(key1, prefix))
 	require.True(t, bytes.HasPrefix(key2, prefix))
+	poolId, tick := types.ParseTickInfoKey(key1)
+	require.Equal(t, uint64(1000000), poolId)
+	require.Equal(t, int32(-50000), tick)
+	poolId, tick = types.ParseTickInfoKey(key2)
+	require.Equal(t, uint64(1000000), poolId)
+	require.Equal(t, int32(50000), tick)
 }
 
 func TestFarmingPlanKey(t *testing.T) {

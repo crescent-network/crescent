@@ -12,6 +12,7 @@ import (
 func RegisterInvariants(ir sdk.InvariantRegistry, k Keeper) {
 	ir.RegisterRoute(types.ModuleName, "rewards-growth-global", RewardsGrowthGlobalInvariant(k))
 	ir.RegisterRoute(types.ModuleName, "rewards-growth-outside", RewardsGrowthOutsideInvariant(k))
+	ir.RegisterRoute(types.ModuleName, "can-remove-liquidity", CanRemoveLiquidityInvariant(k))
 	ir.RegisterRoute(types.ModuleName, "can-collect", CanCollectInvariant(k))
 	ir.RegisterRoute(types.ModuleName, "pool-current-liquidity", PoolCurrentLiquidityInvariant(k))
 }
@@ -23,6 +24,10 @@ func AllInvariants(k Keeper) sdk.Invariant {
 			return
 		}
 		res, broken = RewardsGrowthOutsideInvariant(k)(ctx)
+		if broken {
+			return
+		}
+		res, broken = CanRemoveLiquidityInvariant(k)(ctx)
 		if broken {
 			return
 		}
@@ -67,7 +72,8 @@ func RewardsGrowthOutsideInvariant(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		msg := ""
 		cnt := 0
-		k.IterateAllPools(ctx, func(pool types.Pool) (stop bool) {
+		pools := k.GetAllPools(ctx)
+		for _, pool := range pools {
 			poolState := k.MustGetPoolState(ctx, pool.Id)
 			k.IterateTickInfosByPool(ctx, pool.Id, func(tick int32, tickInfo types.TickInfo) (stop bool) {
 				if _, hasNeg := poolState.FeeGrowthGlobal.SafeSub(tickInfo.FeeGrowthOutside); hasNeg {
@@ -84,14 +90,43 @@ func RewardsGrowthOutsideInvariant(k Keeper) sdk.Invariant {
 				}
 				return false
 			})
-			return false
-		})
+		}
 		broken := cnt != 0
 		return sdk.FormatInvariant(
 			types.ModuleName, "rewards growth outside",
 			fmt.Sprintf(
 				"found %d tick info(s) with wrong fee growth or farming rewards growth outside\n%s",
 				cnt, msg)), broken
+	}
+}
+
+func CanRemoveLiquidityInvariant(k Keeper) sdk.Invariant {
+	return func(ctx sdk.Context) (string, bool) {
+		msg := ""
+		cnt := 0
+		pools := k.GetAllPools(ctx)
+		for _, pool := range pools {
+			expectedBalances := sdk.Coins{}
+			k.IteratePositionsByPool(ctx, pool.Id, func(position types.Position) (stop bool) {
+				coin0, coin1, err := k.PositionAssets(ctx, position.Id)
+				if err != nil { // sanity check
+					panic(err)
+				}
+				expectedBalances = expectedBalances.Add(sdk.NewCoins(coin0, coin1)...)
+				return false
+			})
+			balances := k.bankKeeper.SpendableCoins(ctx, pool.MustGetReserveAddress())
+			if !balances.IsAllGTE(expectedBalances) {
+				msg += fmt.Sprintf(
+					"\tpool %d has %s in reserve which is smaller than expected %s\n",
+					pool.Id, balances, expectedBalances)
+				cnt++
+			}
+		}
+		broken := cnt != 0
+		return sdk.FormatInvariant(
+			types.ModuleName, "can remove liquidity",
+			fmt.Sprintf("found %d pool(s) with insufficient reserve balances\n%s", cnt, msg)), broken
 	}
 }
 

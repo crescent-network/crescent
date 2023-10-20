@@ -117,18 +117,18 @@ func TestPoolState_Validate(t *testing.T) {
 			"",
 		},
 		{
-			"invalid current price",
+			"invalid current sqrt price",
 			func(poolState *types.PoolState) {
-				poolState.CurrentPrice = utils.ParseDec("0")
+				poolState.CurrentSqrtPrice = utils.ParseBigDec("0")
 			},
-			"current price must be positive: 0.000000000000000000",
+			"current sqrt price must be positive: 0.000000000000000000000000000000000000",
 		},
 		{
-			"invalid current price 2",
+			"invalid current sqrt price 2",
 			func(poolState *types.PoolState) {
-				poolState.CurrentPrice = utils.ParseDec("-1.0")
+				poolState.CurrentSqrtPrice = utils.ParseBigDec("-1.0")
 			},
-			"current price must be positive: -1.000000000000000000",
+			"current sqrt price must be positive: -1.000000000000000000000000000000000000",
 		},
 		{
 			"invalid current liquidity",
@@ -167,16 +167,16 @@ func TestPoolState_Validate(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			pool := types.PoolState{
+			poolState := types.PoolState{
 				CurrentTick:                -10,
-				CurrentPrice:               utils.ParseDec("0.99991100001"),
+				CurrentSqrtPrice:           utils.ParseBigDec("0.99991100001"),
 				CurrentLiquidity:           sdk.NewInt(1000_000000),
 				TotalLiquidity:             sdk.NewInt(2000_000000),
 				FeeGrowthGlobal:            utils.ParseDecCoins("0.0001ucre,0.0001uusd"),
 				FarmingRewardsGrowthGlobal: utils.ParseDecCoins("0.0001uatom,0.0001stake"),
 			}
-			tc.malleate(&pool)
-			err := pool.Validate()
+			tc.malleate(&poolState)
+			err := poolState.Validate()
 			if tc.expectedErr == "" {
 				require.NoError(t, err)
 			} else {
@@ -184,4 +184,10 @@ func TestPoolState_Validate(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestPool_MustGetAddresses(t *testing.T) {
+	pool := types.NewPool(1, 2, "ucre", "uusd", 10)
+	require.Equal(t, pool.ReserveAddress, pool.MustGetReserveAddress().String())
+	require.Equal(t, pool.RewardsPool, pool.MustGetRewardsPoolAddress().String())
 }

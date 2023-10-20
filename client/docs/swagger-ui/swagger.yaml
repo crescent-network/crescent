@@ -12800,7 +12800,7 @@ paths:
                     current_tick:
                       type: integer
                       format: int32
-                    current_price:
+                    current_sqrt_price:
                       type: string
                     current_liquidity:
                       type: string
@@ -13014,7 +13014,7 @@ paths:
                   current_tick:
                     type: integer
                     format: int32
-                  current_price:
+                  current_sqrt_price:
                     type: string
                   current_liquidity:
                     type: string
@@ -13768,9 +13768,9 @@ paths:
           format: uint64
       tags:
         - Query
-  /crescent/amm/v1beta1/simulation/add_liquidity:
+  /crescent/amm/v1beta1/simulate_add_liquidity:
     get:
-      operationId: AddLiquiditySimulation
+      operationId: SimulateAddLiquidity
       responses:
         '200':
           description: A successful response.
@@ -13838,9 +13838,9 @@ paths:
           type: string
       tags:
         - Query
-  /crescent/amm/v1beta1/simulation/remove_liquidity:
+  /crescent/amm/v1beta1/simulate_remove_liquidity:
     get:
-      operationId: RemoveLiquiditySimulation
+      operationId: SimulateRemoveLiquidity
       responses:
         '200':
           description: A successful response.
@@ -21141,7 +21141,7 @@ definitions:
       current_tick:
         type: integer
         format: int32
-      current_price:
+      current_sqrt_price:
         type: string
       current_liquidity:
         type: string
@@ -21235,25 +21235,6 @@ definitions:
             NOTE: The amount field is an Dec which implements the custom method
             signatures required by gogoproto.
       owed_farming_rewards:
-        type: array
-        items:
-          type: object
-          properties:
-            denom:
-              type: string
-            amount:
-              type: string
-          description: |-
-            Coin defines a token with a denomination and an amount.
-
-            NOTE: The amount field is an Int which implements the custom method
-            signatures required by gogoproto.
-  crescent.amm.v1beta1.QueryAddLiquiditySimulationResponse:
-    type: object
-    properties:
-      liquidity:
-        type: string
-      amount:
         type: array
         items:
           type: object
@@ -21400,7 +21381,7 @@ definitions:
             current_tick:
               type: integer
               format: int32
-            current_price:
+            current_sqrt_price:
               type: string
             current_liquidity:
               type: string
@@ -21843,7 +21824,7 @@ definitions:
           current_tick:
             type: integer
             format: int32
-          current_price:
+          current_sqrt_price:
             type: string
           current_liquidity:
             type: string
@@ -22002,7 +21983,26 @@ definitions:
                 method
 
                 signatures required by gogoproto.
-  crescent.amm.v1beta1.QueryRemoveLiquiditySimulationResponse:
+  crescent.amm.v1beta1.QuerySimulateAddLiquidityResponse:
+    type: object
+    properties:
+      liquidity:
+        type: string
+      amount:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            Coin defines a token with a denomination and an amount.
+
+            NOTE: The amount field is an Int which implements the custom method
+            signatures required by gogoproto.
+  crescent.amm.v1beta1.QuerySimulateRemoveLiquidityResponse:
     type: object
     properties:
       amount:

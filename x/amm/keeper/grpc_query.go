@@ -179,7 +179,7 @@ func (k Querier) PositionAssets(c context.Context, req *types.QueryPositionAsset
 	return &types.QueryPositionAssetsResponse{Coin0: coin0, Coin1: coin1}, nil
 }
 
-func (k Querier) AddLiquiditySimulation(c context.Context, req *types.QueryAddLiquiditySimulationRequest) (*types.QueryAddLiquiditySimulationResponse, error) {
+func (k Querier) SimulateAddLiquidity(c context.Context, req *types.QuerySimulateAddLiquidityRequest) (*types.QuerySimulateAddLiquidityResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -216,13 +216,13 @@ func (k Querier) AddLiquiditySimulation(c context.Context, req *types.QueryAddLi
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
-	return &types.QueryAddLiquiditySimulationResponse{
+	return &types.QuerySimulateAddLiquidityResponse{
 		Liquidity: liquidity,
 		Amount:    amt,
 	}, nil
 }
 
-func (k Querier) RemoveLiquiditySimulation(c context.Context, req *types.QueryRemoveLiquiditySimulationRequest) (*types.QueryRemoveLiquiditySimulationResponse, error) {
+func (k Querier) SimulateRemoveLiquidity(c context.Context, req *types.QuerySimulateRemoveLiquidityRequest) (*types.QuerySimulateRemoveLiquidityResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -245,7 +245,7 @@ func (k Querier) RemoveLiquiditySimulation(c context.Context, req *types.QueryRe
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, err.Error())
 	}
-	return &types.QueryRemoveLiquiditySimulationResponse{
+	return &types.QuerySimulateRemoveLiquidityResponse{
 		Amount: amt,
 	}, nil
 }

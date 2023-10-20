@@ -169,17 +169,22 @@ func TestAmountLimits_Validate(t *testing.T) {
 		{
 			"negative min",
 			types.NewAmountLimits(sdk.NewInt(-10000), sdk.NewIntWithDecimal(1, 30)),
-			"the minimum value must not be negative: -10000",
+			"the minimum value must be positive: -10000",
 		},
 		{
-			"negative max",
-			types.NewAmountLimits(sdk.NewInt(10000), sdk.NewIntWithDecimal(-1, 30)),
-			"the maximum value must not be negative: -1000000000000000000000000000000",
+			"zero min",
+			types.NewAmountLimits(sdk.NewInt(0), sdk.NewIntWithDecimal(1, 30)),
+			"the minimum value must be positive: 0",
 		},
 		{
 			"min > max",
-			types.NewAmountLimits(sdk.NewInt(10000), sdk.NewInt(1000)),
-			"the minimum value is greater than the maximum value: 10000 > 1000",
+			types.NewAmountLimits(sdk.NewInt(10001), sdk.NewInt(10000)),
+			"the minimum value is greater than the maximum value: 10001 > 10000",
+		},
+		{
+			"min >= max",
+			types.NewAmountLimits(sdk.NewInt(10000), sdk.NewInt(10000)),
+			"",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

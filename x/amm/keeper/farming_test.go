@@ -223,7 +223,7 @@ func (s *KeeperTestSuite) TestFarming() {
 		pool.MarketId, ordererAddr, true, utils.ParseDec("6"), sdk.NewInt(120_000000), 0)
 
 	poolState := s.App.AMMKeeper.MustGetPoolState(s.Ctx, pool.Id)
-	fmt.Println(poolState.CurrentPrice)
+	fmt.Println(poolState.CurrentSqrtPrice)
 
 	s.NextBlock()
 
@@ -252,7 +252,7 @@ func (s *KeeperTestSuite) TestTerminatePrivateFarmingPlan() {
 	s.NextBlock()
 
 	balancesBefore := s.GetAllBalances(termAddr)
-	farmingPoolAddr := sdk.MustAccAddressFromBech32(farmingPlan.FarmingPoolAddress)
+	farmingPoolAddr := farmingPlan.MustGetFarmingPoolAddress()
 	remainingFarmingRewards := s.GetAllBalances(farmingPoolAddr)
 
 	msgServer := keeper.NewMsgServerImpl(s.keeper)
@@ -325,4 +325,52 @@ func (s *KeeperTestSuite) TestFarmingTooSmallLiquidity() {
 	s.NextBlock()
 	_, farmingRewards := s.CollectibleCoins(position.Id)
 	s.Require().Equal("1157407407407405uibc1", farmingRewards.String())
+}
+
+func (s *KeeperTestSuite) TestFarmingInsufficientFarmingRewards() {
+	_, pool1 := s.CreateMarketAndPool("ucre", "uusd", utils.ParseDec("5"))
+	_, pool2 := s.CreateMarketAndPool("uatom", "uusd", utils.ParseDec("10"))
+
+	lpAddr := s.FundedAccount(1, enoughCoins)
+	position1, _, _ := s.AddLiquidity(
+		lpAddr, pool1.Id, utils.ParseDec("4.5"), utils.ParseDec("5.5"),
+		utils.ParseCoins("100_000000ucre,500_000000uusd"))
+	position2, _, _ := s.AddLiquidity(
+		lpAddr, pool2.Id, utils.ParseDec("9.5"), utils.ParseDec("10.5"),
+		utils.ParseCoins("100_000000uatom,1000_000000uusd"))
+
+	creatorAddr := utils.TestAddress(2)
+	plan := s.CreatePrivateFarmingPlan(
+		creatorAddr, "Farming plan", creatorAddr,
+		[]types.FarmingRewardAllocation{
+			types.NewFarmingRewardAllocation(pool1.Id, utils.ParseCoins("20_000000ucre")),
+			types.NewFarmingRewardAllocation(pool2.Id, utils.ParseCoins("10_000000ucre")),
+		},
+		utils.ParseTime("2023-01-01T00:00:00Z"), utils.ParseTime("2024-01-01T00:00:00Z"),
+		nil, true)
+	s.FundAccount(plan.MustGetFarmingPoolAddress(), utils.ParseCoins("3000ucre"))
+
+	s.NextBlock()
+	_, farmingRewards := s.CollectibleCoins(position1.Id)
+	s.AssertEqual(utils.ParseCoins("1156ucre"), farmingRewards)
+	_, farmingRewards = s.CollectibleCoins(position2.Id)
+	s.AssertEqual(utils.ParseCoins("577ucre"), farmingRewards)
+	// There can be a bit more funds in the farming rewards pool than the sum of
+	// collectible farming rewards due to truncation.
+	s.AssertEqual(
+		utils.ParseCoins("1735ucre"), s.GetAllBalances(types.FarmingRewardsPoolAddress))
+
+	// The farming pool doesn't have enough funds to distribute rewards
+	// for this block, so the farming pool is entirely ignored from the
+	// reward allocation.
+	s.AssertEqual(utils.ParseCoins("1265ucre"), s.GetAllBalances(plan.MustGetFarmingPoolAddress()))
+	s.NextBlock()
+
+	// Check that the rewards haven't changed.
+	_, farmingRewards = s.CollectibleCoins(position1.Id)
+	s.AssertEqual(utils.ParseCoins("1156ucre"), farmingRewards)
+	_, farmingRewards = s.CollectibleCoins(position2.Id)
+	s.AssertEqual(utils.ParseCoins("577ucre"), farmingRewards)
+	s.AssertEqual(
+		utils.ParseCoins("1735ucre"), s.GetAllBalances(types.FarmingRewardsPoolAddress))
 }
