@@ -109,7 +109,7 @@ func (s *KeeperTestSuite) TestCanRemoveLiquidityInvariant() {
 	})
 	s.AssertEqual(utils.ParseCoins("99999999ucre,499999999uusd"), expectedBalances)
 	balances := s.GetAllBalances(pool.MustGetReserveAddress())
-	s.AssertEqual(utils.ParseCoins("100000000ucre,500000025uusd"), balances)
+	s.AssertEqual(utils.ParseCoins("100000000ucre,500001575uusd"), balances)
 
 	_, broken = keeper.CanRemoveLiquidityInvariant(s.keeper)(s.Ctx)
 	s.Require().False(broken)

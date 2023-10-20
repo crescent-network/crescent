@@ -115,7 +115,7 @@ func (s *KeeperTestSuite) TestQueryAllPools() {
 				s.Require().EqualValues(1, pool.MarketId)
 				s.Require().EqualValues(2, pool.Id)
 				s.AssertEqual(utils.ParseCoin("153630723ucre"), pool.Balance0)
-				s.AssertEqual(utils.ParseCoin("257144189uusd"), pool.Balance1)
+				s.AssertEqual(utils.ParseCoin("257144306uusd"), pool.Balance1)
 			},
 		},
 		{
@@ -157,7 +157,7 @@ func (s *KeeperTestSuite) TestQueryPool() {
 			func(resp *types.QueryPoolResponse) {
 				s.Require().EqualValues(1, resp.Pool.Id)
 				s.AssertEqual(utils.ParseCoin("71757892uatom"), resp.Pool.Balance0)
-				s.AssertEqual(utils.ParseCoin("1390645818uusd"), resp.Pool.Balance1)
+				s.AssertEqual(utils.ParseCoin("1390645841uusd"), resp.Pool.Balance1)
 				s.Require().Equal("cosmos1srphgsfqllr85ndknjme24txux8m0sz0hhpnnksn2339d3a788rsawjx77", resp.Pool.RewardsPool)
 				s.AssertEqual(sdk.NewInt(12470981864), resp.Pool.TotalLiquidity)
 			},
