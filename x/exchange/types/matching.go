@@ -62,13 +62,16 @@ func (ms *MatchState) Fill(isBuy bool, qty sdk.Int, price sdk.Dec, feeRate sdk.D
 }
 
 func (ms *MatchState) Result() MatchResult {
-	received := ms.received.TruncateInt()
+	paid := ms.paid.Ceil().TruncateInt()
+	feePaid := ms.feePaid.Ceil().TruncateInt()
+	feeReceived := ms.paid.Add(ms.feeReceived).Ceil().TruncateInt().Sub(paid)
+	received := ms.received.Add(ms.feePaid).TruncateInt().Sub(feePaid)
 	return MatchResult{
 		ExecutedQuantity: ms.executedQty,
-		Paid:             ms.paid.Ceil().TruncateInt(),
+		Paid:             paid,
 		Received:         received,
-		FeePaid:          utils.MinInt(received, ms.feePaid.Ceil().TruncateInt()), // XXX
-		FeeReceived:      ms.feeReceived.TruncateInt(),
+		FeePaid:          feePaid,
+		FeeReceived:      feeReceived,
 	}
 }
 

@@ -1,8 +1,6 @@
 package types
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
@@ -53,14 +51,12 @@ func (ledger *Ledger) Receive(addr sdk.AccAddress, amt ...sdk.Coin) {
 func (ledger *Ledger) FeedMatchResult(isBuy bool, res MatchResult) {
 	if isBuy {
 		ledger.quoteDelta = ledger.quoteDelta.Add(res.Paid)
-		ledger.baseDelta = ledger.baseDelta.Sub(res.Received)
 		if res.FeePaid.IsPositive() {
 			ledger.baseFeeDelta = ledger.baseFeeDelta.Add(res.FeePaid)
 		} else if res.FeeReceived.IsPositive() {
 			ledger.quoteFeeDelta = ledger.quoteFeeDelta.Sub(res.FeeReceived)
 		}
 	} else {
-		ledger.baseDelta = ledger.baseDelta.Add(res.Paid)
 		ledger.quoteDelta = ledger.quoteDelta.Sub(res.Received)
 		if res.FeePaid.IsPositive() {
 			ledger.quoteFeeDelta = ledger.quoteFeeDelta.Add(res.FeePaid)
@@ -103,11 +99,6 @@ func (ledger *Ledger) Transact(
 		return
 	}
 	if err = bankKeeper.InputOutputCoins(ctx, receiveInputs, receiveOutputs); err != nil {
-		return
-	}
-	if !ledger.baseDelta.Equal(ledger.baseFeeDelta) {
-		err = fmt.Errorf("baseDelta must be same as baseFeeDelta: %s != %s",
-			ledger.baseDelta, ledger.baseFeeDelta)
 		return
 	}
 	fees := sdk.NewCoins(
