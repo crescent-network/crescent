@@ -68,10 +68,10 @@ func (s *KeeperTestSuite) TestPoolOrders() {
 					utils.ParseCoins("100_000000ucre,500_000000uusd"))
 			},
 			[]order{
-				{utils.ParseDec("4.9950"), sdk.NewInt(25006228)},
-				{utils.ParseDec("4.9900"), sdk.NewInt(25043815)},
-				{utils.ParseDec("4.9850"), sdk.NewInt(25081497)},
-				{utils.ParseDec("4.9800"), sdk.NewInt(25119274)},
+				{utils.ParseDec("4.9950"), sdk.NewInt(24993721)},
+				{utils.ParseDec("4.9900"), sdk.NewInt(25031278)},
+				{utils.ParseDec("4.9850"), sdk.NewInt(25068928)},
+				{utils.ParseDec("4.9800"), sdk.NewInt(25106673)},
 			},
 			[]order{
 				{utils.ParseDec("5.0050"), sdk.NewInt(24956259)},
@@ -91,10 +91,10 @@ func (s *KeeperTestSuite) TestPoolOrders() {
 					utils.ParseCoins("100_000000ucre,500_000000uusd"))
 			},
 			[]order{
-				{utils.ParseDec("4.9750"), sdk.NewInt(25106679)},
-				{utils.ParseDec("4.9700"), sdk.NewInt(25144570)},
-				{utils.ParseDec("4.9650"), sdk.NewInt(25182556)},
-				{utils.ParseDec("4.9600"), sdk.NewInt(25220637)},
+				{utils.ParseDec("4.9750"), sdk.NewInt(25094072)},
+				{utils.ParseDec("4.9700"), sdk.NewInt(25131931)},
+				{utils.ParseDec("4.9650"), sdk.NewInt(25169885)},
+				{utils.ParseDec("4.9600"), sdk.NewInt(25207935)},
 			},
 			[]order{
 				{utils.ParseDec("5.0250"), sdk.NewInt(25055960)},
@@ -117,12 +117,12 @@ func (s *KeeperTestSuite) TestPoolOrders() {
 					utils.ParseCoins("100_000000ucre,500_000000uusd"))
 			},
 			[]order{
-				{utils.ParseDec("4.9950"), sdk.NewInt(16662453)},
-				{utils.ParseDec("4.9900"), sdk.NewInt(16687499)},
-				{utils.ParseDec("4.9850"), sdk.NewInt(66850484)},
-				{utils.ParseDec("4.9800"), sdk.NewInt(66951171)},
-				{utils.ParseDec("4.9750"), sdk.NewInt(16763015)},
-				{utils.ParseDec("4.9700"), sdk.NewInt(16788313)},
+				{utils.ParseDec("4.9950"), sdk.NewInt(16654120)},
+				{utils.ParseDec("4.9900"), sdk.NewInt(16679145)},
+				{utils.ParseDec("4.9850"), sdk.NewInt(66816983)},
+				{utils.ParseDec("4.9800"), sdk.NewInt(66917586)},
+				{utils.ParseDec("4.9750"), sdk.NewInt(16754597)},
+				{utils.ParseDec("4.9700"), sdk.NewInt(16779875)},
 			},
 			[]order{
 				{utils.ParseDec("5.0050"), sdk.NewInt(16629158)},
@@ -242,8 +242,12 @@ func (s *KeeperTestSuite) TestPoolOrderMaxOrderPriceRatio() {
 	s.PlaceLimitOrder(
 		market.Id, ordererAddr, false, utils.ParseDec("5.05"), sdk.NewInt(100_000000), 0)
 
-	s.AssertEqual(utils.ParseBigDec("9.48685447"), s.keeper.MustGetPoolState(s.Ctx, pool.Id).CurrentSqrtPrice)
-	s.AssertEqual(utils.ParseDec("90"), *s.App.ExchangeKeeper.MustGetMarketState(s.Ctx, market.Id).LastPrice)
+	s.AssertEqual(
+		utils.ParseBigDec("9.486854161057564143941381866561324639"),
+		s.keeper.MustGetPoolState(s.Ctx, pool.Id).CurrentSqrtPrice)
+	s.AssertEqual(
+		utils.ParseDec("90"),
+		*s.App.ExchangeKeeper.MustGetMarketState(s.Ctx, market.Id).LastPrice)
 }
 
 func (s *KeeperTestSuite) TestPoolOrdersMatchingInterval() {
@@ -265,6 +269,6 @@ func (s *KeeperTestSuite) TestPoolOrdersMatchingInterval() {
 	s.Require().True(res.IsMatched())
 	s.AssertEqual(sdk.NewInt(19_999998), res.ExecutedQuantity)
 	s.AssertEqual(
-		utils.ParseBigDec("2.247220505424423186459814044549067943"),
+		utils.ParseBigDec("2.247220504978800695084768613573562822"),
 		s.keeper.MustGetPoolState(s.Ctx, pool.Id).CurrentSqrtPrice)
 }

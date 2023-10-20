@@ -30,7 +30,7 @@ func NextOrderTick(
 			return 0, false
 		}
 		// 2. Check min order quote
-		// L*(sqrt(P_c) - sqrt(P_o))>= q
+		// L*(sqrt(P_c) - sqrt(P_o)) >= q
 		// -> sqrt(P_o) <= (L*sqrt(P_c) - q) / L
 		orderSqrtPrice2 := currentSqrtPrice.Mul(liquidityBigDec).SubMut(minOrderQuoteBigDec).
 			QuoTruncateMut(liquidityBigDec)
