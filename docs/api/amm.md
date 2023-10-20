@@ -251,7 +251,7 @@ Example Request
 
 <!-- markdown-link-check-disable -->
 ```bash
-http://localhost:1317/crescent/amm/v1beta1/simulation/add_liquidity?pool_id=1&lower_price=9&upper_price=11&desired_amount=100uatom,100uusd
+http://localhost:1317/crescent/amm/v1beta1/simulate_add_liquidity?pool_id=1&lower_price=9&upper_price=11&desired_amount=100uatom,100uusd
 ```
 
 Example Response
@@ -278,7 +278,7 @@ Example Request
 
 <!-- markdown-link-check-disable -->
 ```bash
-http://localhost:1317/crescent/amm/v1beta1/simulation/remove_liquidity?position_id=1&liquidity=10000
+http://localhost:1317/crescent/amm/v1beta1/simulate_remove_liquidity?position_id=1&liquidity=10000
 ```
 
 Example Response

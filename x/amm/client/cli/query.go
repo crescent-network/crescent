@@ -289,14 +289,14 @@ $ %s query %s position-assets 1
 
 func NewQuerySimulateAddLiquidityCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add-liquidity-simulation [pool-id] [lower-price] [upper-price] [desired-amount]",
+		Use:   "simulate-add-liquidity [pool-id] [lower-price] [upper-price] [desired-amount]",
 		Args:  cobra.ExactArgs(4),
 		Short: "Simulate liquidity addition",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Simulate liquidity addition.
 
 Example:
-$ %s query %s add-liquidity-simulation 1 0.9 1.1 1000000ucre,1000000uusd
+$ %s query %s simulate-add-liquidity 1 0.9 1.1 1000000ucre,1000000uusd
 `,
 				version.AppName, types.ModuleName,
 			),
@@ -332,14 +332,14 @@ $ %s query %s add-liquidity-simulation 1 0.9 1.1 1000000ucre,1000000uusd
 
 func NewQuerySimulateRemoveLiquidityCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "remove-liquidity-simulation [position-id] [liquidity]",
+		Use:   "simulate-remove-liquidity [position-id] [liquidity]",
 		Args:  cobra.ExactArgs(2),
 		Short: "Simulate liquidity removal",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Simulate liquidity removal.
 
 Example:
-$ %s query %s remove-liquidity-simulation 1 20000000
+$ %s query %s simulate-remove-liquidity 1 20000000
 `,
 				version.AppName, types.ModuleName,
 			),

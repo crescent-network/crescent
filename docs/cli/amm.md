@@ -331,13 +331,13 @@ Query expected result for add-liquidity
 Usage
 
 ```bash
-add-liquidity-simulation [pool-id] [lower-price] [upper-price] [desired-amount]
+simulate-add-liquidity [pool-id] [lower-price] [upper-price] [desired-amount]
 ```
 
 Example
 
 ```bash
-crescentd q amm add-liquidity-simulation 1 9 11 10000000uatom,10000000uusd -o json | jq
+crescentd q amm simulate-add-liquidity 1 9 11 10000000uatom,10000000uusd -o json | jq
 ```
 
 ## SimulateRemoveLiquidity
@@ -347,13 +347,13 @@ Query expected result for remove-liquidity
 Usage
 
 ```bash
-remove-liquidity-simulation [position-id] [liquidity]
+simulate-remove-liquidity [position-id] [liquidity]
 ```
 
 Example
 
 ```bash
-crescentd q amm remove-liquidity-simulation 1 10000 -o json | jq
+crescentd q amm simulate-remove-liquidity 1 10000 -o json | jq
 ```
 
 ## CollectibleCoins
