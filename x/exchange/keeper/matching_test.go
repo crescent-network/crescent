@@ -26,17 +26,18 @@ func (s *KeeperTestSuite) TestOrderSourceMatching() {
 	s.AssertEqual(sdk.NewInt(5_000000), res.ExecutedQuantity)
 	s.AssertEqual(utils.ParseCoin("5_000000ucre"), res.Paid)
 	s.AssertEqual(utils.ParseCoin("503_485000uusd"), res.Received)
+	s.AssertEqual(utils.ParseDec("101"), *s.App.ExchangeKeeper.MustGetMarketState(s.Ctx, market.Id).LastPrice)
 }
 
 func (s *KeeperTestSuite) TestOrderSourceMatchingAsMaker() {
 	// Order book looks like:
 	//                 | 2.7200 |
 	//                 | 2.7100 |
-	// (os) ########## | 2.6080 |
+	// (os) ########## | 2.6080 | --> last price
 	// (os)     ###### | 2.6060 |
 	// (os)         ## | 2.5040 |
 	//                 | 2.4020 |  market order
-	//                 | 2.4010 | --> last price
+	//                 | 2.4010 |
 	//                 | 2.4000 |
 	os := types.NewMockOrderSource(
 		"mockOrderSource",
@@ -57,7 +58,8 @@ func (s *KeeperTestSuite) TestOrderSourceMatchingAsMaker() {
 
 	ordererAddr := s.FundedAccount(2, enoughCoins)
 	_, res := s.PlaceMarketOrder(market.Id, ordererAddr, true, sdk.NewInt(10_000001))
-	// check last prices
+
+	s.AssertEqual(utils.ParseDec("2.6080"), *s.App.ExchangeKeeper.MustGetMarketState(s.Ctx, market.Id).LastPrice)
 
 	s.AssertEqual(sdk.NewInt(10_000001), res.ExecutedQuantity)
 	s.AssertEqual(utils.ParseCoin("25_860003uusd"), res.Paid)
@@ -110,6 +112,58 @@ func (s *KeeperTestSuite) TestMatchingByMaxPriceLimit() {
 	s.AssertEqual(utils.ParseCoin("0ucre"), res.Received)
 	expectedFee := sdk.Coins{}
 	expectedOsBalancDiff := sdk.Coins{}
+
+	s.AssertEqual(utils.ParseDec("2.1010"), *s.App.ExchangeKeeper.MustGetMarketState(s.Ctx, market.Id).LastPrice)
+
+	feeAmountAfterMatching := s.GetAllBalances(feeCollector)
+	feeAmount := feeAmountAfterMatching.Sub(feeAmountBeforeMatching)
+	s.AssertEqual(expectedFee, feeAmount)
+
+	osBalanceAfterMatching := s.GetAllBalances(os.Address)
+	osBalanceDiff, _ := osBalanceAfterMatching.SafeSub(osBalanceBeforeMatching)
+	s.AssertEqual(expectedOsBalancDiff, osBalanceDiff)
+
+	_, _, _, err := s.App.ExchangeKeeper.PlaceLimitOrder(s.Ctx, market.Id, ordererAddr, true, utils.ParseDec("2.5040"), sdk.NewInt(2_000001), time.Hour)
+	s.Require().EqualError(err, "price is higher than the limit 2.311100000000000000: order price out of range")
+}
+
+func (s *KeeperTestSuite) TestMatchingViaMaxPriceLimit() {
+	// Order book looks like:
+	//                 | 2.7200 |
+	//                 | 2.7100 |
+	// (os) ########## | 2.7080 |
+	// (os)     ###### | 2.6010 | --> last price
+	// (os)         ## | 2.5040 |
+	//                 | 2.4020 |  market order
+	//                 | 2.4010 |
+	//                 | 2.1000 |
+	os := types.NewMockOrderSource(
+		"mockOrderSource",
+		types.NewMockOrderSourceOrder(false, utils.ParseDec("2.708"), sdk.NewInt(10_000000)),
+		types.NewMockOrderSourceOrder(false, utils.ParseDec("2.601"), sdk.NewInt(6_000000)),
+		types.NewMockOrderSourceOrder(false, utils.ParseDec("2.504"), sdk.NewInt(2_000000)))
+	s.FundAccount(os.Address, enoughCoins)
+	s.App.ExchangeKeeper = *s.App.ExchangeKeeper.SetOrderSources(os)
+	s.keeper = s.App.ExchangeKeeper
+
+	market := s.CreateMarket("ucre", "uusd")
+	mmAddr := s.FundedAccount(1, enoughCoins)
+	s.MakeLastPrice(market.Id, mmAddr, utils.ParseDec("2.401"))
+
+	feeCollector := market.MustGetFeeCollectorAddress()
+	feeAmountBeforeMatching := s.GetAllBalances(feeCollector)
+	osBalanceBeforeMatching := s.GetAllBalances(os.Address)
+
+	ordererAddr := s.FundedAccount(2, enoughCoins)
+	_, res := s.PlaceMarketOrder(market.Id, ordererAddr, true, sdk.NewInt(10_000001))
+	s.AssertEqual(sdk.NewInt(8_000000), res.ExecutedQuantity)
+	s.AssertEqual(utils.ParseCoin("20_614000uusd"), res.Paid)
+	s.AssertEqual(utils.ParseCoin("7_976000ucre"), res.Received)
+	expectedFee := sdk.Coins{utils.ParseCoin("12000ucre")}
+	expectedOsBalancDiff := sdk.Coins{sdk.Coin{Denom: "ucre", Amount: sdk.NewInt(-7988000)},
+		utils.ParseCoin("20_614000uusd")}
+
+	s.AssertEqual(utils.ParseDec("2.6010"), *s.App.ExchangeKeeper.MustGetMarketState(s.Ctx, market.Id).LastPrice)
 
 	feeAmountAfterMatching := s.GetAllBalances(feeCollector)
 	feeAmount := feeAmountAfterMatching.Sub(feeAmountBeforeMatching)
