@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"math/rand"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -76,12 +77,31 @@ func (s *KeeperTestSuite) TestPoolOrdersMatching_FindEdgecase() {
 			for k := 0; k < 10; k++ { // Execute 10 random market orders per block
 				isBuy := r.Float64() < 0.5
 				qty := randInt(r, sdk.NewInt(10000), sdk.NewInt(5_000000))
+
 				s.PlaceMarketOrder(market.Id, ordererAddr, isBuy, qty)
 			}
 			_, broken := keeper.CanRemoveLiquidityInvariant(s.keeper)(s.Ctx)
 			s.Require().False(broken)
 
 			s.NextBlock()
+
+			for k := 0; k < 10; k++ { // Execute 10 random market orders per block
+				isBuy := r.Float64() < 0.5
+				qty := randInt(r, sdk.NewInt(10000), sdk.NewInt(5_000000))
+				marketState := s.App.ExchangeKeeper.MustGetMarketState(s.Ctx, market.Id)
+				lastPrice := *marketState.LastPrice
+				price := lastPrice
+				if isBuy {
+					price = lastPrice.Mul(utils.OneDec.Add(randDec(r, utils.ParseDec("0.001"), utils.ParseDec("0.09"))))
+				} else {
+					price = lastPrice.Mul(utils.OneDec.Sub(randDec(r, utils.ParseDec("0.001"), utils.ParseDec("0.09"))))
+				}
+				price = exchangetypes.RoundPrice(price)
+				s.PlaceBatchLimitOrder(market.Id, ordererAddr, isBuy, price, qty, time.Hour)
+			}
+
+			s.Ctx = s.Ctx.WithEventManager(sdk.NewEventManager())
+			s.Require().NoError(s.App.ExchangeKeeper.RunBatchMatching(s.Ctx, market))
 		} // End of 300 random market orders
 	} // End of 5 different random seeds
 }
