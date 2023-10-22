@@ -65,7 +65,7 @@ func (ms *MatchState) Result() MatchResult {
 	paid := ms.paid.Ceil().TruncateInt()
 	feePaid := ms.feePaid.Ceil().TruncateInt()
 	feeReceived := ms.paid.Add(ms.feeReceived).Ceil().TruncateInt().Sub(paid)
-	received := ms.received.Add(ms.feePaid).TruncateInt().Sub(feePaid)
+	received := utils.MaxInt(utils.ZeroInt, ms.received.Add(ms.feePaid).TruncateInt().Sub(feePaid))
 	return MatchResult{
 		ExecutedQuantity: ms.executedQty,
 		Paid:             paid,
