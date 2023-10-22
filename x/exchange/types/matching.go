@@ -173,8 +173,8 @@ func (ctx *MatchingContext) FillOrders(orders []*MemOrder, qty sdk.Int, price sd
 	remainingQty := qty
 	for _, order := range orders {
 		executableQty := order.ExecutableQuantity()
-		if executableQty.IsZero() { // sanity check
-			panic("executable quantity is zero")
+		if executableQty.IsZero() {
+			continue
 		}
 		executedQty := executableQty.Mul(qty).Quo(totalExecutableQty)
 		if executedQty.IsPositive() {
