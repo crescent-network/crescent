@@ -11,20 +11,22 @@ import (
 )
 
 type MatchState struct {
-	executedQty sdk.Int
-	paid        sdk.Dec
-	received    sdk.Dec
-	feePaid     sdk.Dec
-	feeReceived sdk.Dec
+	executedQty      sdk.Int
+	remainingDeposit *sdk.Dec
+	paid             sdk.Dec
+	received         sdk.Dec
+	feePaid          sdk.Dec
+	feeReceived      sdk.Dec
 }
 
-func NewMatchState() MatchState {
+func NewMatchState(remainingDeposit *sdk.Dec) MatchState {
 	return MatchState{
-		executedQty: utils.ZeroInt,
-		paid:        utils.ZeroDec,
-		received:    utils.ZeroDec,
-		feePaid:     utils.ZeroDec,
-		feeReceived: utils.ZeroDec,
+		executedQty:      utils.ZeroInt,
+		remainingDeposit: remainingDeposit,
+		paid:             utils.ZeroDec,
+		received:         utils.ZeroDec,
+		feePaid:          utils.ZeroDec,
+		feeReceived:      utils.ZeroDec,
 	}
 }
 
@@ -55,6 +57,9 @@ func (ms *MatchState) Fill(isBuy bool, qty sdk.Int, price sdk.Dec, feeRate sdk.D
 		feeReceived = utils.ZeroDec
 	}
 	ms.paid = ms.paid.Add(paid)
+	if ms.remainingDeposit != nil {
+		*ms.remainingDeposit = ms.remainingDeposit.Sub(paid)
+	}
 	ms.received = ms.received.Add(received)
 	ms.feePaid = ms.feePaid.Add(feePaid)
 	ms.feeReceived = ms.feeReceived.Add(feeReceived)
@@ -242,7 +247,7 @@ func (ctx *MatchingContext) ExecuteOrder(
 	if isBuy != !obs.IsBuy {
 		panic(fmt.Sprintf("%v != %v", isBuy, !obs.IsBuy))
 	}
-	matchState := NewMatchState()
+	matchState := NewMatchState(nil) // do not track remainingDeposit
 	totalExecutedQuote := utils.ZeroDec
 	for _, level := range obs.Levels {
 		// Check limits

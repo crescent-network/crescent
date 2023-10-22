@@ -45,6 +45,7 @@ type MemOrder struct {
 }
 
 func NewUserMemOrder(order Order) *MemOrder {
+	remainingDeposit := order.RemainingDeposit.ToDec()
 	return &MemOrder{
 		Type:             UserMemOrder,
 		Order:            &order,
@@ -54,12 +55,13 @@ func NewUserMemOrder(order Order) *MemOrder {
 		Quantity:         order.Quantity,
 		OpenQuantity:     order.OpenQuantity,
 		RemainingDeposit: order.RemainingDeposit,
-		MatchState:       NewMatchState(),
+		MatchState:       NewMatchState(&remainingDeposit),
 	}
 }
 
 func NewOrderSourceMemOrder(
 	ordererAddr sdk.AccAddress, isBuy bool, price sdk.Dec, qty, openQty, remainingDeposit sdk.Int, source OrderSource) *MemOrder {
+	remainingDepositDec := remainingDeposit.ToDec()
 	return &MemOrder{
 		Type:             OrderSourceMemOrder,
 		OrdererAddress:   ordererAddr,
@@ -69,7 +71,7 @@ func NewOrderSourceMemOrder(
 		Quantity:         qty,
 		OpenQuantity:     openQty,
 		RemainingDeposit: remainingDeposit,
-		MatchState:       NewMatchState(),
+		MatchState:       NewMatchState(&remainingDepositDec),
 	}
 }
 
@@ -88,9 +90,9 @@ func (order *MemOrder) ExecutableQuantity() sdk.Int {
 	if order.IsBuy {
 		return utils.MinInt(
 			executableQty,
-			order.RemainingDeposit.ToDec().QuoTruncate(order.Price).TruncateInt())
+			order.remainingDeposit.QuoTruncate(order.Price).TruncateInt())
 	}
-	return utils.MinInt(executableQty, order.RemainingDeposit)
+	return utils.MinInt(executableQty, order.remainingDeposit.TruncateInt())
 }
 
 func (order *MemOrder) HasPriorityOver(other *MemOrder) bool {
