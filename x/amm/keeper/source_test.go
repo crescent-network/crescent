@@ -87,10 +87,13 @@ func (s *KeeperTestSuite) TestPoolOrdersMatching_FindEdgecase() {
 
 			for k := 0; k < 10; k++ { // Execute 10 random market orders per block
 				isBuy := r.Float64() < 0.5
-				qty := randInt(r, sdk.NewInt(10000), sdk.NewInt(5_000000))
+
 				marketState := s.App.ExchangeKeeper.MustGetMarketState(s.Ctx, market.Id)
 				lastPrice := *marketState.LastPrice
 				price := lastPrice
+				lower := sdk.MaxInt(sdk.NewInt(10000), sdk.NewInt(15000).ToDec().Quo(lastPrice).TruncateInt())
+				qty := randInt(r, lower, sdk.NewInt(5_000000))
+
 				if isBuy {
 					price = lastPrice.Mul(utils.OneDec.Add(randDec(r, utils.ParseDec("0.001"), utils.ParseDec("0.09"))))
 				} else {

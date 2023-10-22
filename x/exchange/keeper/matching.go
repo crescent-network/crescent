@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	utils "github.com/crescent-network/crescent/v5/types"
@@ -106,6 +108,16 @@ func (k Keeper) finalizeMatching(
 			}
 			ordersBySource[sourceName] = append(results, memOrder)
 		}
+		defer func() {
+			if r := recover(); r != nil {
+				order := *memOrder.Order
+				fmt.Println("res: ", res)
+				fmt.Println("order: ", order)
+				fmt.Println("order open qty, executed qty, sub: ", order.OpenQuantity, res.ExecutedQuantity, order.OpenQuantity.Sub(res.ExecutedQuantity))
+				fmt.Println("order.RemainingDeposit, res.Paid, sub: ", order.RemainingDeposit, res.Paid, order.RemainingDeposit.Sub(res.Paid))
+				panic(r)
+			}
+		}()
 
 		if memOrder.Type == types.UserMemOrder {
 			order := *memOrder.Order

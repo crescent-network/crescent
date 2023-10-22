@@ -11,20 +11,22 @@ import (
 )
 
 type MatchState struct {
-	executedQty sdk.Int
-	paid        sdk.Dec
-	received    sdk.Dec
-	feePaid     sdk.Dec
-	feeReceived sdk.Dec
+	executedQty      sdk.Int
+	remainingDeposit *sdk.Dec
+	paid             sdk.Dec
+	received         sdk.Dec
+	feePaid          sdk.Dec
+	feeReceived      sdk.Dec
 }
 
-func NewMatchState() MatchState {
+func NewMatchState(remainingDeposit *sdk.Dec) MatchState {
 	return MatchState{
-		executedQty: utils.ZeroInt,
-		paid:        utils.ZeroDec,
-		received:    utils.ZeroDec,
-		feePaid:     utils.ZeroDec,
-		feeReceived: utils.ZeroDec,
+		executedQty:      utils.ZeroInt,
+		remainingDeposit: remainingDeposit,
+		paid:             utils.ZeroDec,
+		received:         utils.ZeroDec,
+		feePaid:          utils.ZeroDec,
+		feeReceived:      utils.ZeroDec,
 	}
 }
 
@@ -55,6 +57,9 @@ func (ms *MatchState) Fill(isBuy bool, qty sdk.Int, price sdk.Dec, feeRate sdk.D
 		feeReceived = utils.ZeroDec
 	}
 	ms.paid = ms.paid.Add(paid)
+	if ms.remainingDeposit != nil {
+		*ms.remainingDeposit = ms.remainingDeposit.Sub(paid)
+	}
 	ms.received = ms.received.Add(received)
 	ms.feePaid = ms.feePaid.Add(feePaid)
 	ms.feeReceived = ms.feeReceived.Add(feeReceived)
@@ -65,10 +70,8 @@ func (ms *MatchState) Result() MatchResult {
 	paid := ms.paid.Ceil().TruncateInt()
 	feePaid := ms.feePaid.Ceil().TruncateInt()
 	feeReceived := ms.paid.Add(ms.feeReceived).Ceil().TruncateInt().Sub(paid)
-	received := ms.received.Add(ms.feePaid).TruncateInt().Sub(feePaid)
-	if received.IsNegative() {
-		received = ms.received.Add(ms.feePaid).Ceil().TruncateInt().Sub(feePaid)
-	}
+	received := utils.MaxInt(utils.ZeroInt, ms.received.Add(ms.feePaid).TruncateInt().Sub(feePaid))
+
 	return MatchResult{
 		ExecutedQuantity: ms.executedQty,
 		Paid:             paid,
@@ -245,7 +248,7 @@ func (ctx *MatchingContext) ExecuteOrder(
 	if isBuy != !obs.IsBuy {
 		panic(fmt.Sprintf("%v != %v", isBuy, !obs.IsBuy))
 	}
-	matchState := NewMatchState()
+	matchState := NewMatchState(nil) // do not track remainingDeposit
 	totalExecutedQuote := utils.ZeroDec
 	for _, level := range obs.Levels {
 		// Check limits
