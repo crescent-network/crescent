@@ -72,7 +72,8 @@ func (d MsgFilterDecorator) ValidateMsgs(ctx sdk.Context, msgs []sdk.Msg) error 
 		// tracking mixed batch msg with regular msg
 		case *exchangetypes.MsgPlaceBatchLimitOrder,
 			*exchangetypes.MsgPlaceMMBatchLimitOrder,
-			*exchangetypes.MsgCancelOrder:
+			*exchangetypes.MsgCancelOrder,
+			*exchangetypes.MsgCancelAllOrders:
 			numMsg--
 			numBatchMsg++
 
