@@ -145,11 +145,14 @@ func SimulateMsgPlaceLimitOrder(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		simAccount, msg, found := findMsgPlaceLimitOrderParams(r, accs, bk, k, ctx)
+		simAccount, marketId, isBuy, price, qty, lifespan, found := findMsgPlaceLimitOrderParams(
+			r, accs, bk, k, ctx)
 		if !found {
 			return simtypes.NoOpMsg(
 				types.ModuleName, types.TypeMsgPlaceLimitOrder, "unable to place limit order"), nil, nil
 		}
+		msg := types.NewMsgPlaceLimitOrder(
+			simAccount.Address, marketId, isBuy, price, qty, lifespan)
 		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             app,
@@ -174,11 +177,14 @@ func SimulateMsgPlaceMMLimitOrder(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		simAccount, msg, found := findMsgPlaceMMLimitOrderParams(r, accs, bk, k, ctx)
+		simAccount, marketId, isBuy, price, qty, lifespan, found := findMsgPlaceLimitOrderParams(
+			r, accs, bk, k, ctx)
 		if !found {
 			return simtypes.NoOpMsg(
 				types.ModuleName, types.TypeMsgPlaceMMLimitOrder, "unable to place mm limit order"), nil, nil
 		}
+		msg := types.NewMsgPlaceMMLimitOrder(
+			simAccount.Address, marketId, isBuy, price, qty, lifespan)
 		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             app,
@@ -342,7 +348,8 @@ func findMsgCreateMarketParams(r *rand.Rand, accs []simtypes.Account,
 
 func findMsgPlaceLimitOrderParams(
 	r *rand.Rand, accs []simtypes.Account,
-	bk types.BankKeeper, k keeper.Keeper, ctx sdk.Context) (acc simtypes.Account, msg *types.MsgPlaceLimitOrder, found bool) {
+	bk types.BankKeeper, k keeper.Keeper, ctx sdk.Context) (
+	acc simtypes.Account, marketId uint64, isBuy bool, price sdk.Dec, qty sdk.Int, lifespan time.Duration, found bool) {
 	accs = utils.ShuffleSimAccounts(r, accs)
 	var markets []types.Market
 	k.IterateAllMarkets(ctx, func(market types.Market) (stop bool) {
@@ -352,12 +359,11 @@ func findMsgPlaceLimitOrderParams(
 	r.Shuffle(len(markets), func(i, j int) {
 		markets[i], markets[j] = markets[j], markets[i]
 	})
-	lifespan := time.Duration(1+r.Intn(8)) * time.Hour
+	lifespan = time.Duration(1+r.Intn(8)) * time.Hour
 	for _, acc = range accs {
 		spendable := bk.SpendableCoins(ctx, acc.Address)
 		for _, market := range markets {
 			marketState := k.MustGetMarketState(ctx, market.Id)
-			var price sdk.Dec
 			if marketState.LastPrice != nil {
 				price = types.PriceAtTick(
 					types.TickAtPrice(*marketState.LastPrice) + int32(r.Intn(1000)) - 500)
@@ -365,88 +371,24 @@ func findMsgPlaceLimitOrderParams(
 				price = utils.RandomDec(r, utils.ParseDec("0.1"), utils.ParseDec("10"))
 				price = types.PriceAtTick(types.TickAtPrice(price))
 			}
+			minQty := utils.MaxInt(
+				market.OrderQuantityLimits.Min,
+				market.OrderQuoteLimits.Min.ToDec().QuoRoundUp(price).Ceil().TruncateInt())
+			maxQty := minQty.MulRaw(10)
 			if r.Float64() <= 0.5 { // 50% chance to sell
-				if balance := spendable.AmountOf(market.BaseDenom); balance.GT(sdk.NewInt(100_000000)) {
-					qty := utils.RandomInt(
-						r, utils.MaxInt(
-							market.OrderQuantityLimits.Min,
-							market.OrderQuoteLimits.Min.ToDec().QuoRoundUp(price).Ceil().TruncateInt()),
-						sdk.NewInt(100_000000))
-					msg = types.NewMsgPlaceLimitOrder(
-						acc.Address, market.Id, false, price, qty, lifespan)
-					return acc, msg, true
+				if balance := spendable.AmountOf(market.BaseDenom); balance.GT(maxQty) {
+					qty = utils.RandomInt(r, minQty, maxQty)
+					return acc, market.Id, false, price, qty, lifespan, true
 				}
 			}
-			if balance := spendable.AmountOf(market.QuoteDenom); balance.GT(price.MulInt64(100_000000).TruncateInt()) {
-				qty := utils.RandomInt(
-					r, utils.MaxInt(
-						market.OrderQuantityLimits.Min,
-						market.OrderQuoteLimits.Min.ToDec().QuoRoundUp(price).Ceil().TruncateInt()),
-					sdk.NewInt(100_000000))
-				msg = types.NewMsgPlaceLimitOrder(
-					acc.Address, market.Id, true, price, qty, lifespan)
-				return acc, msg, true
+			if balance := spendable.AmountOf(market.QuoteDenom); balance.GT(
+				price.MulInt(maxQty).Ceil().TruncateInt()) {
+				qty = utils.RandomInt(r, minQty, maxQty)
+				return acc, market.Id, true, price, qty, lifespan, true
 			}
 		}
 	}
-	return acc, msg, false
-}
-
-func findMsgPlaceMMLimitOrderParams(
-	r *rand.Rand, accs []simtypes.Account,
-	bk types.BankKeeper, k keeper.Keeper, ctx sdk.Context) (acc simtypes.Account, msg *types.MsgPlaceMMLimitOrder, found bool) {
-	accs = utils.ShuffleSimAccounts(r, accs)
-	var markets []types.Market
-	k.IterateAllMarkets(ctx, func(market types.Market) (stop bool) {
-		markets = append(markets, market)
-		return false
-	})
-	r.Shuffle(len(markets), func(i, j int) {
-		markets[i], markets[j] = markets[j], markets[i]
-	})
-	lifespan := time.Duration(1+r.Intn(8)) * time.Hour
-	maxNumMMOrders := k.GetMaxNumMMOrders(ctx)
-	for _, acc = range accs {
-		spendable := bk.SpendableCoins(ctx, acc.Address)
-		for _, market := range markets {
-			numMMOrders, _ := k.GetNumMMOrders(ctx, acc.Address, market.Id)
-			if numMMOrders >= maxNumMMOrders {
-				continue
-			}
-			marketState := k.MustGetMarketState(ctx, market.Id)
-			var price sdk.Dec
-			if marketState.LastPrice != nil {
-				price = types.PriceAtTick(
-					types.TickAtPrice(*marketState.LastPrice) + int32(r.Intn(1000)) - 500)
-			} else {
-				price = utils.RandomDec(r, utils.ParseDec("0.1"), utils.ParseDec("10"))
-				price = types.PriceAtTick(types.TickAtPrice(price))
-			}
-			if r.Float64() <= 0.5 { // 50% chance to sell
-				if balance := spendable.AmountOf(market.BaseDenom); balance.GT(sdk.NewInt(100_000000)) {
-					qty := utils.RandomInt(
-						r, utils.MaxInt(
-							market.OrderQuantityLimits.Min,
-							market.OrderQuoteLimits.Min.ToDec().QuoRoundUp(price).Ceil().TruncateInt()),
-						sdk.NewInt(100_000000))
-					msg = types.NewMsgPlaceMMLimitOrder(
-						acc.Address, market.Id, false, price, qty, lifespan)
-					return acc, msg, true
-				}
-			}
-			if balance := spendable.AmountOf(market.QuoteDenom); balance.GT(price.MulInt64(100_000000).TruncateInt()) {
-				qty := utils.RandomInt(
-					r, utils.MaxInt(
-						market.OrderQuantityLimits.Min,
-						market.OrderQuoteLimits.Min.ToDec().QuoRoundUp(price).Ceil().TruncateInt()),
-					sdk.NewInt(100_000000))
-				msg = types.NewMsgPlaceMMLimitOrder(
-					acc.Address, market.Id, true, price, qty, lifespan)
-				return acc, msg, true
-			}
-		}
-	}
-	return acc, msg, false
+	return
 }
 
 func findMsgPlaceMarketOrderParams(
@@ -465,29 +407,34 @@ func findMsgPlaceMarketOrderParams(
 	r.Shuffle(len(markets), func(i, j int) {
 		markets[i], markets[j] = markets[j], markets[i]
 	})
+	maxOrderPriceRatio := k.GetMaxOrderPriceRatio(ctx)
 	for _, acc = range accs {
 		spendable := bk.SpendableCoins(ctx, acc.Address)
 		for _, market := range markets {
+			marketState := k.MustGetMarketState(ctx, market.Id)
+			if marketState.LastPrice == nil {
+				continue
+			}
+			minPrice, maxPrice := types.OrderPriceLimit(*marketState.LastPrice, maxOrderPriceRatio)
+			minQty := utils.MaxInt(
+				market.OrderQuantityLimits.Min,
+				market.OrderQuoteLimits.Min.ToDec().QuoRoundUp(minPrice).Ceil().TruncateInt())
+			maxQty := minQty.MulRaw(10)
+
 			if r.Float64() <= 0.5 { // 50% chance to sell
-				if balance := spendable.AmountOf(market.BaseDenom); balance.GT(sdk.NewInt(1_000000)) {
-					qty := utils.RandomInt(
-						r, market.OrderQuantityLimits.Min, sdk.NewInt(1_000000))
+				if balance := spendable.AmountOf(market.BaseDenom); balance.GT(maxQty) {
+					qty := utils.RandomInt(r, minQty, maxQty)
 					msg = types.NewMsgPlaceMarketOrder(
 						acc.Address, market.Id, false, qty)
 					return acc, msg, true
 				}
 			}
-			marketState := k.MustGetMarketState(ctx, market.Id)
-			if marketState.LastPrice == nil {
-				continue
+			if balance := spendable.AmountOf(market.QuoteDenom); balance.GT(
+				maxPrice.MulInt(maxQty).Ceil().TruncateInt()) {
+				qty := utils.RandomInt(r, minQty, maxQty)
+				msg = types.NewMsgPlaceMarketOrder(acc.Address, market.Id, true, qty)
+				return acc, msg, true
 			}
-			qty := utils.RandomInt(r, market.OrderQuantityLimits.Min, sdk.NewInt(1_000000))
-			cacheCtx, _ := ctx.CacheContext()
-			if _, _, err := k.PlaceMarketOrder(cacheCtx, market.Id, acc.Address, true, qty); err != nil {
-				continue
-			}
-			msg = types.NewMsgPlaceMarketOrder(acc.Address, market.Id, true, qty)
-			return acc, msg, true
 		}
 	}
 	return acc, msg, false
