@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -202,8 +201,8 @@ func (s *KeeperTestSuite) TestFarming() {
 	position2, liquidity2, _ := s.AddLiquidity(
 		lpAddr2, pool.Id, utils.ParseDec("4.8"), utils.ParseDec("5.2"),
 		utils.ParseCoins("100_000000ucre,500_000000uusd"))
-	fmt.Println(liquidity1)
-	fmt.Println(liquidity2)
+	s.AssertEqual(sdk.NewInt(2118033988), liquidity1)
+	s.AssertEqual(sdk.NewInt(11067395518), liquidity2)
 
 	s.FundAccount(utils.TestAddress(0), utils.ParseCoins("1uatom")) // make initial supply
 	s.CreatePrivateFarmingPlan(
@@ -223,7 +222,7 @@ func (s *KeeperTestSuite) TestFarming() {
 		pool.MarketId, ordererAddr, true, utils.ParseDec("6"), sdk.NewInt(120_000000), 0)
 
 	poolState := s.App.AMMKeeper.MustGetPoolState(s.Ctx, pool.Id)
-	fmt.Println(poolState.CurrentSqrtPrice)
+	s.AssertEqual(utils.ParseBigDec("2.293909542877076874991071931530367072"), poolState.CurrentSqrtPrice)
 
 	s.NextBlock()
 

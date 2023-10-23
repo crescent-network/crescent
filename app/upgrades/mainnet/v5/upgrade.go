@@ -2,7 +2,6 @@ package v5
 
 import (
 	"errors"
-	"strings"
 	"time"
 
 	"golang.org/x/exp/maps"
@@ -10,7 +9,6 @@ import (
 
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -326,8 +324,7 @@ func UpgradeHandler(
 					}
 					if _, _, _, err := ammKeeper.AddLiquidity(
 						ctx, addr, addr, newPoolId, lowerPrice, upperPrice, req.WithdrawnCoins); err != nil {
-						if errors.Is(err, sdkerrors.ErrInsufficientFunds) &&
-							strings.Contains(err.Error(), "minted liquidity is zero") {
+						if errors.Is(err, ammtypes.ErrAddZeroLiquidity) {
 							// It is the case the withdrawn coins contains only one
 							// denom, which happens because the withdrawal from the
 							// old pool truncated the withdrawn coins.

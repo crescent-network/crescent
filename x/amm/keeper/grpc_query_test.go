@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -396,7 +395,6 @@ func (s *KeeperTestSuite) TestQuerySimulateAddLiquidity() {
 			},
 			"",
 			func(resp *types.QuerySimulateAddLiquidityResponse) {
-				fmt.Println(s.keeper.MustGetPoolState(s.Ctx, 2).CurrentSqrtPrice)
 				s.AssertEqual(sdk.NewInt(2223021101), resp.Liquidity)
 				s.AssertEqual(utils.ParseCoins("100000000ucre,192673uusd"), resp.Amount)
 			},

@@ -54,7 +54,7 @@ func (k Keeper) AddLiquidity(
 	liquidity = types.LiquidityForAmounts(
 		poolState.CurrentSqrtPrice, lowerSqrtPrice, upperSqrtPrice, desiredAmt0, desiredAmt1)
 	if liquidity.IsZero() {
-		err = sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "added liquidity is zero")
+		err = types.ErrAddZeroLiquidity
 		return
 	}
 
