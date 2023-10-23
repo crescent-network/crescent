@@ -50,7 +50,7 @@ func (s *KeeperTestSuite) TestAddLiquidity() {
 	_, _, _, err = s.keeper.AddLiquidity(
 		s.Ctx, lpAddr, lpAddr, pool.Id, utils.ParseDec("0.8"), utils.ParseDec("0.9"),
 		utils.ParseCoins("1_000000ucre"))
-	s.Require().EqualError(err, "added liquidity is zero: invalid request")
+	s.Require().ErrorIs(err, types.ErrAddZeroLiquidity)
 
 	// Happy case
 	position, liquidity, amt := s.AddLiquidity(
@@ -220,7 +220,8 @@ func (s *KeeperTestSuite) TestReinitializePosition() {
 
 	s.RemoveLiquidity(ownerAddr, position.Id, liquidity)
 	position, _ = s.keeper.GetPosition(s.Ctx, position.Id)
-	// fmt.Println(position.Liquidity)
+
+	s.AssertEqual(sdk.NewInt(0), position.Liquidity)
 	s.AddLiquidity(
 		ownerAddr, pool.Id, lowerPrice, upperPrice, desiredAmt)
 }
