@@ -34,12 +34,11 @@ type MemOrder struct {
 	Order  *Order      // nil for OrderSourceMemOrder
 	Source OrderSource // nil for UserMemOrder
 
-	OrdererAddress   sdk.AccAddress
-	IsBuy            bool
-	Price            sdk.Dec
-	Quantity         sdk.Int
-	OpenQuantity     sdk.Int
-	RemainingDeposit sdk.Int
+	OrdererAddress sdk.AccAddress
+	IsBuy          bool
+	Price          sdk.Dec
+	Quantity       sdk.Int
+	OpenQuantity   sdk.Int
 
 	MatchState
 }
@@ -47,15 +46,14 @@ type MemOrder struct {
 func NewUserMemOrder(order Order) *MemOrder {
 	remainingDeposit := order.RemainingDeposit.ToDec()
 	return &MemOrder{
-		Type:             UserMemOrder,
-		Order:            &order,
-		OrdererAddress:   order.MustGetOrdererAddress(),
-		IsBuy:            order.IsBuy,
-		Price:            order.Price,
-		Quantity:         order.Quantity,
-		OpenQuantity:     order.OpenQuantity,
-		RemainingDeposit: order.RemainingDeposit,
-		MatchState:       NewMatchState(&remainingDeposit),
+		Type:           UserMemOrder,
+		Order:          &order,
+		OrdererAddress: order.MustGetOrdererAddress(),
+		IsBuy:          order.IsBuy,
+		Price:          order.Price,
+		Quantity:       order.Quantity,
+		OpenQuantity:   order.OpenQuantity,
+		MatchState:     NewMatchState(&remainingDeposit),
 	}
 }
 
@@ -63,15 +61,14 @@ func NewOrderSourceMemOrder(
 	ordererAddr sdk.AccAddress, isBuy bool, price sdk.Dec, qty, openQty, remainingDeposit sdk.Int, source OrderSource) *MemOrder {
 	remainingDepositDec := remainingDeposit.ToDec()
 	return &MemOrder{
-		Type:             OrderSourceMemOrder,
-		OrdererAddress:   ordererAddr,
-		Source:           source,
-		IsBuy:            isBuy,
-		Price:            price,
-		Quantity:         qty,
-		OpenQuantity:     openQty,
-		RemainingDeposit: remainingDeposit,
-		MatchState:       NewMatchState(&remainingDepositDec),
+		Type:           OrderSourceMemOrder,
+		OrdererAddress: ordererAddr,
+		Source:         source,
+		IsBuy:          isBuy,
+		Price:          price,
+		Quantity:       qty,
+		OpenQuantity:   openQty,
+		MatchState:     NewMatchState(&remainingDepositDec),
 	}
 }
 
