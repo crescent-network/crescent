@@ -349,6 +349,9 @@ func (msg MsgSwapExactAmountIn) ValidateBasic() error {
 	if err := msg.MinOutput.Validate(); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "invalid min output: %v", err)
 	}
+	if !msg.MinOutput.IsPositive() {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "min output must be positive: %s", msg.MinOutput)
+	}
 	return nil
 }
 

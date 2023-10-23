@@ -466,7 +466,7 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 			func(msg *types.MsgSwapExactAmountIn) {
 				msg.MinOutput = utils.ParseCoin("0uusd")
 			},
-			"",
+			"min output must be positive: 0uusd: invalid coins",
 		},
 		{
 			"negative min output",
