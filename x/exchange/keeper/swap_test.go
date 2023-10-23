@@ -126,15 +126,80 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn_MaxOrderPriceRatio() {
 	s.Require().EqualError(err, "in market 1; paid 30000000ucre < input 50000000ucre: not enough liquidity in the market")
 }
 
-func (s *KeeperTestSuite) TestSwapExactAmountIn_MinOrderQuantity() {
+func (s *KeeperTestSuite) TestSwapExactAmountIn_BadOrderAmount() {
 	mmAddr := s.FundedAccount(1, enoughCoins)
 	market := s.CreateMarket("ucre", "uusd")
-	s.MakeLastPrice(market.Id, mmAddr, utils.ParseDec("5"))
-
-	s.createLiquidity2(market.Id, mmAddr, utils.ParseDec("5"), utils.ParseDec("0.1"), sdk.NewInt(1_000000))
+	market.OrderQuantityLimits = types.NewAmountLimits(sdk.NewInt(10000), sdk.NewInt(1000_000000))
+	market.OrderQuoteLimits = types.NewAmountLimits(sdk.NewInt(1000), sdk.NewInt(100_000000))
+	s.keeper.SetMarket(s.Ctx, market)
 
 	ordererAddr := s.FundedAccount(2, enoughCoins)
+
+	ctx := s.Ctx
+
+	s.Ctx, _ = ctx.CacheContext()
+	s.MakeLastPrice(market.Id, mmAddr, utils.ParseDec("5"))
+	s.createLiquidity2(
+		market.Id, mmAddr, utils.ParseDec("5"), utils.ParseDec("0.1"), sdk.NewInt(1_000000))
+
+	// qty < minQty (buy)
 	_, _, err := s.keeper.SwapExactAmountIn(
-		s.Ctx, ordererAddr, []uint64{market.Id}, utils.ParseCoin("500ucre"), utils.ParseCoin("1uusd"), false)
-	s.Require().EqualError(err, "quantity is less than the minimum order quantity allowed: 500 < 10000: bad order amount")
+		s.Ctx, ordererAddr, []uint64{market.Id},
+		utils.ParseCoin("44999uusd"), utils.ParseCoin("1ucre"), false)
+	s.Require().EqualError(
+		err, "quantity is less than the minimum order quantity allowed: 9999 < 10000: bad order amount")
+
+	// qty < minQty (sell)
+	_, _, err = s.keeper.SwapExactAmountIn(
+		s.Ctx, ordererAddr, []uint64{market.Id},
+		utils.ParseCoin("9999ucre"), utils.ParseCoin("1uusd"), false)
+	s.Require().EqualError(
+		err, "quantity is less than the minimum order quantity allowed: 9999 < 10000: bad order amount")
+
+	// qty > maxQty (sell)
+	_, _, err = s.keeper.SwapExactAmountIn(
+		s.Ctx, ordererAddr, []uint64{market.Id},
+		utils.ParseCoin("1000_000001ucre"), utils.ParseCoin("1uusd"), false)
+	s.Require().EqualError(
+		err, "quantity is greater than the maximum order quantity allowed: 1000000001 > 1000000000: bad order amount")
+
+	// quote < minQuote (sell)
+	_, _, err = s.keeper.SwapExactAmountIn(
+		s.Ctx, ordererAddr, []uint64{market.Id},
+		utils.ParseCoin("1000_000001ucre"), utils.ParseCoin("1uusd"), false)
+	s.Require().EqualError(
+		err, "quantity is greater than the maximum order quantity allowed: 1000000001 > 1000000000: bad order amount")
+
+	// quote > maxQuote (buy)
+	_, _, err = s.keeper.SwapExactAmountIn(
+		s.Ctx, ordererAddr, []uint64{market.Id},
+		utils.ParseCoin("100_000001uusd"), utils.ParseCoin("1ucre"), false)
+	s.Require().EqualError(
+		err, "quote is greater than the maximum order quote allowed: 100000001 > 100000000: bad order amount")
+
+	s.Ctx, _ = ctx.CacheContext()
+	s.MakeLastPrice(market.Id, mmAddr, utils.ParseDec("0.05"))
+	s.createLiquidity2(
+		market.Id, mmAddr, utils.ParseDec("0.05"), utils.ParseDec("0.1"), sdk.NewInt(1_000000))
+
+	// qty > maxQty (buy)
+	_, _, err = s.keeper.SwapExactAmountIn(
+		s.Ctx, ordererAddr, []uint64{market.Id},
+		utils.ParseCoin("55_000001uusd"), utils.ParseCoin("1ucre"), false)
+	s.Require().EqualError(
+		err, "quantity is greater than the maximum order quantity allowed: 1000000018 > 1000000000: bad order amount")
+
+	// quote < minQuote (buy)
+	_, _, err = s.keeper.SwapExactAmountIn(
+		s.Ctx, ordererAddr, []uint64{market.Id},
+		utils.ParseCoin("999uusd"), utils.ParseCoin("1ucre"), false)
+	s.Require().EqualError(
+		err, "quote is less than the minimum order quote allowed: 999 < 1000: bad order amount")
+
+	// quote > maxQuote (sell)
+	_, _, err = s.keeper.SwapExactAmountIn(
+		s.Ctx, ordererAddr, []uint64{market.Id},
+		utils.ParseCoin("1000_000001ucre"), utils.ParseCoin("1uusd"), false)
+	s.Require().EqualError(
+		err, "quantity is greater than the maximum order quantity allowed: 1000000001 > 1000000000: bad order amount")
 }

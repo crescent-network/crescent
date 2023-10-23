@@ -46,14 +46,38 @@ func (k Keeper) SwapExactAmountIn(
 		)
 		switch currentIn.Denom {
 		case market.BaseDenom:
-			if err := market.CheckOrderQuantityLimits(currentIn.Amount); err != nil {
+			if err := market.CheckMinOrderQuantity(currentIn.Amount); err != nil {
+				return output, nil, err
+			}
+			if err := market.CheckMaxOrderQuantity(currentIn.Amount); err != nil {
+				return output, nil, err
+			}
+			if err := market.CheckMinOrderQuote(
+				maxPrice.MulInt(currentIn.Amount).TruncateInt()); err != nil {
+				return output, nil, err
+			}
+			if err := market.CheckMaxOrderQuote(
+				minPrice.MulInt(currentIn.Amount).TruncateInt()); err != nil {
 				return output, nil, err
 			}
 			isBuy = false
 			qtyLimit = &currentIn.Amount
 			priceLimit = minPrice
 		case market.QuoteDenom:
-			// Cannot check order quote limit here.
+			if err := market.CheckMinOrderQuantity(
+				currentIn.Amount.ToDec().QuoTruncate(minPrice).TruncateInt()); err != nil {
+				return output, nil, err
+			}
+			if err := market.CheckMaxOrderQuantity(
+				currentIn.Amount.ToDec().QuoTruncate(maxPrice).TruncateInt()); err != nil {
+				return output, nil, err
+			}
+			if err := market.CheckMinOrderQuote(currentIn.Amount); err != nil {
+				return output, nil, err
+			}
+			if err := market.CheckMaxOrderQuote(currentIn.Amount); err != nil {
+				return output, nil, err
+			}
 			isBuy = true
 			quoteLimit = &currentIn.Amount
 			priceLimit = maxPrice

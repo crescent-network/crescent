@@ -134,10 +134,16 @@ func (k Keeper) placeLimitOrder(
 		err = sdkerrors.Wrap(sdkerrors.ErrNotFound, "market not found")
 		return
 	}
-	if err := market.CheckOrderQuantityLimits(qty); err != nil {
+	if err := market.CheckMinOrderQuantity(qty); err != nil {
 		return 0, order, res, err
 	}
-	if err := market.CheckOrderQuoteLimits(price, qty); err != nil {
+	if err := market.CheckMaxOrderQuantity(qty); err != nil {
+		return 0, order, res, err
+	}
+	if err := market.CheckMinOrderQuote(price.MulInt(qty).TruncateInt()); err != nil {
+		return 0, order, res, err
+	}
+	if err := market.CheckMaxOrderQuote(price.MulInt(qty).Ceil().TruncateInt()); err != nil {
 		return 0, order, res, err
 	}
 
@@ -217,7 +223,10 @@ func (k Keeper) PlaceMarketOrder(
 		err = sdkerrors.Wrap(sdkerrors.ErrNotFound, "market not found")
 		return
 	}
-	if err := market.CheckOrderQuantityLimits(qty); err != nil {
+	if err := market.CheckMinOrderQuantity(qty); err != nil {
+		return 0, res, err
+	}
+	if err := market.CheckMaxOrderQuantity(qty); err != nil {
 		return 0, res, err
 	}
 	marketState := k.MustGetMarketState(ctx, market.Id)
@@ -227,6 +236,12 @@ func (k Keeper) PlaceMarketOrder(
 	}
 	maxPriceRatio := k.GetMaxOrderPriceRatio(ctx)
 	minPrice, maxPrice := types.OrderPriceLimit(*marketState.LastPrice, maxPriceRatio)
+	if err := market.CheckMinOrderQuote(maxPrice.MulInt(qty).TruncateInt()); err != nil {
+		return 0, res, err
+	}
+	if err := market.CheckMaxOrderQuote(minPrice.MulInt(qty).Ceil().TruncateInt()); err != nil {
+		return 0, res, err
+	}
 
 	orderId = k.GetNextOrderIdWithUpdate(ctx)
 	var (
