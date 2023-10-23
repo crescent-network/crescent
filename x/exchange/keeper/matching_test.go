@@ -175,9 +175,9 @@ func (s *KeeperTestSuite) TestMatchingViaMaxPriceLimit() {
 
 func (s *KeeperTestSuite) TestOrderSourceMatchingAsMakerNearMaxPrice() {
 	// Order book looks like:
-	// (os)     ###### | 10^24          |
+	// (os)     ###### | 10^24          |  --> new last price
 	// (os)         ## | 10^24-10^20    |
-	//                 | 10^24-2*10^20  | market order --> last price
+	//                 | 10^24-2*10^20  | market order --> prev last price
 
 	firstPrice := types.MaxPrice.Sub(sdk.NewDecFromInt(sdk.NewIntWithDecimal(1, 20)))
 	secondPrice := types.MaxPrice
@@ -190,6 +190,8 @@ func (s *KeeperTestSuite) TestOrderSourceMatchingAsMakerNearMaxPrice() {
 	s.keeper = s.App.ExchangeKeeper
 
 	market := s.CreateMarket("ucre", "uusd")
+	market.OrderQuoteLimits.Max = sdk.NewIntWithDecimal(1, 60)
+	s.keeper.SetMarket(s.Ctx, market)
 	mmAddr := s.FundedAccount(1, enoughCoins)
 	lastPrice := types.MaxPrice.Sub(sdk.NewDecFromInt(sdk.NewIntWithDecimal(1, 20))).Sub(sdk.NewDecFromInt(sdk.NewIntWithDecimal(1, 20)))
 	s.MakeLastPrice(market.Id, mmAddr, lastPrice)
@@ -200,6 +202,8 @@ func (s *KeeperTestSuite) TestOrderSourceMatchingAsMakerNearMaxPrice() {
 
 	ordererAddr := s.FundedAccount(2, enoughCoins)
 	_, res := s.PlaceMarketOrder(market.Id, ordererAddr, true, sdk.NewInt(5_000000_000001))
+
+	s.AssertEqual(types.MaxPrice, *s.App.ExchangeKeeper.MustGetMarketState(s.Ctx, market.Id).LastPrice)
 
 	s.AssertEqual(sdk.NewInt(5_000000_000001), res.ExecutedQuantity)
 	firstPaid := sdk.NewInt(2_000000_000000).ToDec().Mul(firstPrice).Ceil().TruncateInt()
@@ -220,5 +224,101 @@ func (s *KeeperTestSuite) TestOrderSourceMatchingAsMakerNearMaxPrice() {
 }
 
 func (s *KeeperTestSuite) TestOrderSourceMatchingAsMakerNearMinPrice() {
+	// Order book looks like:
+	//  market order #####.1    | 10^-14+2*10^-17  |                --> prev. last price
+	//                          | 10^-14+10^-17    |  ## (os)
+	//                          | 10^-14           |  ###### (os)   --> new last price
 
+	firstPrice := types.MinPrice.Add(sdk.NewDecWithPrec(1, 17))
+	secondPrice := types.MinPrice
+
+	os := types.NewMockOrderSource(
+		"mockOrderSource",
+		types.NewMockOrderSourceOrder(true, secondPrice, sdk.NewInt(6000_00000_00000_00000)),
+		types.NewMockOrderSourceOrder(true, firstPrice, sdk.NewInt(2000_00000_00000_00000)))
+	s.FundAccount(os.Address, enoughCoins)
+	s.App.ExchangeKeeper = *s.App.ExchangeKeeper.SetOrderSources(os)
+	s.keeper = s.App.ExchangeKeeper
+
+	market := s.CreateMarket("ucre", "uusd")
+	mmAddr := s.FundedAccount(1, enoughCoins)
+	lastPrice := types.MinPrice.Add(sdk.NewDecWithPrec(1, 17)).Add(sdk.NewDecWithPrec(1, 17))
+
+	// make last TestOrderSourceMatchingAsMakerNearMinPrice
+	s.PlaceLimitOrder(market.Id, mmAddr, true, lastPrice, sdk.NewInt(1000_00000_00000_00000), time.Hour)
+	s.PlaceLimitOrder(market.Id, mmAddr, false, lastPrice, sdk.NewInt(1000_00000_00000_00000), time.Hour)
+
+	feeCollector := market.MustGetFeeCollectorAddress()
+	feeAmountBeforeMatching := s.GetAllBalances(feeCollector)
+	osBalanceBeforeMatching := s.GetAllBalances(os.Address)
+
+	ordererAddr := s.FundedAccount(2, enoughCoins)
+	_, res := s.PlaceMarketOrder(market.Id, ordererAddr, false, sdk.NewInt(5000_00000_00000_00001))
+
+	s.AssertEqual(types.MinPrice, *s.App.ExchangeKeeper.MustGetMarketState(s.Ctx, market.Id).LastPrice)
+
+	s.AssertEqual(sdk.NewInt(5000_00000_00000_00001), res.ExecutedQuantity)
+	s.AssertEqual(utils.ParseCoin("5000_00000_00000_00001ucre"), res.Paid)
+	s.AssertEqual(utils.ParseCoin("49869uusd"), res.Received)
+
+	feeAmountAfterMatching := s.GetAllBalances(feeCollector)
+	feeAmount := feeAmountAfterMatching.Sub(feeAmountBeforeMatching)
+	s.AssertEqual(utils.ParseCoins("76uusd"), feeAmount)
+
+	osBalanceAfterMatching := s.GetAllBalances(os.Address)
+	osBalanceDiff, _ := osBalanceAfterMatching.SafeSub(osBalanceBeforeMatching)
+	expectedOsBalancesDiff := sdk.Coins{
+		sdk.Coin{Denom: "ucre", Amount: sdk.NewInt(5000_00000_00000_00001)},
+		sdk.Coin{Denom: "uusd", Amount: sdk.NewInt(-49945)}}
+	s.AssertEqual(expectedOsBalancesDiff, osBalanceDiff)
+}
+
+func (s *KeeperTestSuite) TestOrderSourceMatchingAsMakerNearMaxPriceWithMaxQty() {
+	// Order book looks like:
+	// (os) ########## | 10^24          |  --> new last price
+	// (os)  ######### | 10^24-10^20    |
+	//                 | 10^24-2*10^20  | market order --> prev last price
+
+	firstPrice := types.MaxPrice.Sub(sdk.NewDecFromInt(sdk.NewIntWithDecimal(1, 20)))
+	secondPrice := types.MaxPrice
+	os := types.NewMockOrderSource(
+		"mockOrderSource",
+		types.NewMockOrderSourceOrder(false, secondPrice, sdk.NewIntWithDecimal(1, 30)),
+		types.NewMockOrderSourceOrder(false, firstPrice, sdk.NewIntWithDecimal(1, 29).Mul(sdk.NewInt(9))))
+	s.FundAccount(os.Address, enoughCoins)
+	s.App.ExchangeKeeper = *s.App.ExchangeKeeper.SetOrderSources(os)
+	s.keeper = s.App.ExchangeKeeper
+
+	market := s.CreateMarket("ucre", "uusd")
+	market.OrderQuoteLimits.Max = sdk.NewIntWithDecimal(1, 60)
+	s.keeper.SetMarket(s.Ctx, market)
+	mmAddr := s.FundedAccount(1, enoughCoins)
+	lastPrice := types.MaxPrice.Sub(sdk.NewDecFromInt(sdk.NewIntWithDecimal(1, 20))).Sub(sdk.NewDecFromInt(sdk.NewIntWithDecimal(1, 20)))
+	s.MakeLastPrice(market.Id, mmAddr, lastPrice)
+
+	feeCollector := market.MustGetFeeCollectorAddress()
+	feeAmountBeforeMatching := s.GetAllBalances(feeCollector)
+	osBalanceBeforeMatching := s.GetAllBalances(os.Address)
+
+	ordererAddr := s.FundedAccount(2, enoughCoins)
+	_, res := s.PlaceMarketOrder(market.Id, ordererAddr, true, sdk.NewIntWithDecimal(1, 30))
+
+	s.AssertEqual(types.MaxPrice, *s.App.ExchangeKeeper.MustGetMarketState(s.Ctx, market.Id).LastPrice)
+
+	s.AssertEqual(sdk.NewIntWithDecimal(1, 30), res.ExecutedQuantity)
+	firstPaid := sdk.NewIntWithDecimal(1, 29).Mul(sdk.NewInt(9)).ToDec().Mul(firstPrice).Ceil().TruncateInt()
+	secondPaid := sdk.NewIntWithDecimal(1, 29).ToDec().Mul(secondPrice).Ceil().TruncateInt()
+	s.AssertEqual(firstPaid.Add(secondPaid), res.Paid.Amount)
+	s.AssertEqual(sdk.NewIntWithDecimal(1, 30).Sub(sdk.NewIntWithDecimal(1, 27).Mul(sdk.NewInt(3))), res.Received.Amount)
+
+	feeAmountAfterMatching := s.GetAllBalances(feeCollector)
+	feeAmount := feeAmountAfterMatching.Sub(feeAmountBeforeMatching)
+	s.AssertEqual(sdk.NewIntWithDecimal(1, 26).Mul(sdk.NewInt(15)), feeAmount.AmountOf("ucre"))
+
+	osBalanceAfterMatching := s.GetAllBalances(os.Address)
+	osBalanceDiff, _ := osBalanceAfterMatching.SafeSub(osBalanceBeforeMatching)
+	expectedOsBalancesDiff := sdk.Coins{
+		sdk.Coin{Denom: "ucre", Amount: sdk.NewIntWithDecimal(1, 30).Sub(sdk.NewIntWithDecimal(1, 26).Mul(sdk.NewInt(15))).Neg()},
+		sdk.Coin{Denom: "uusd", Amount: firstPaid.Add(secondPaid)}}
+	s.AssertEqual(expectedOsBalancesDiff, osBalanceDiff)
 }
