@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	utils "github.com/crescent-network/crescent/v5/types"
@@ -111,6 +113,10 @@ func (k Keeper) finalizeMatching(
 			order := *memOrder.Order
 			order.OpenQuantity = order.OpenQuantity.Sub(res.ExecutedQuantity)
 			order.RemainingDeposit = order.RemainingDeposit.Sub(res.Paid)
+			if order.RemainingDeposit.IsNegative() {
+				panic(fmt.Sprintf(
+					"order remaining deposit becomes negative: %s", order.RemainingDeposit))
+			}
 			if err := ctx.EventManager().EmitTypedEvent(&types.EventOrderFilled{
 				OrderId:          order.Id,
 				Quantity:         order.Quantity,

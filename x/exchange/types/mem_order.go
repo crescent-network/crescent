@@ -85,11 +85,19 @@ func (order *MemOrder) String() string {
 func (order *MemOrder) ExecutableQuantity() sdk.Int {
 	executableQty := order.OpenQuantity.Sub(order.executedQty)
 	if order.IsBuy {
-		return utils.MinInt(
+		res := utils.MinInt(
 			executableQty,
 			order.remainingDeposit.QuoTruncate(order.Price).TruncateInt())
+		if res.IsNegative() {
+			panic(fmt.Sprintf("executable quantity is negative: %s", res))
+		}
+		return res
 	}
-	return utils.MinInt(executableQty, order.remainingDeposit.TruncateInt())
+	res := utils.MinInt(executableQty, order.remainingDeposit.TruncateInt())
+	if res.IsNegative() {
+		panic(fmt.Sprintf("executable quantity is negative: %s", res))
+	}
+	return res
 }
 
 func (order *MemOrder) HasPriorityOver(other *MemOrder) bool {
