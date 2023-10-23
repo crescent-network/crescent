@@ -322,3 +322,270 @@ func (s *KeeperTestSuite) TestOrderSourceMatchingAsMakerNearMaxPriceWithMaxQty()
 		sdk.Coin{Denom: "uusd", Amount: firstPaid.Add(secondPaid)}}
 	s.AssertEqual(expectedOsBalancesDiff, osBalanceDiff)
 }
+
+func (s *KeeperTestSuite) TestOrderSourceMatchingAsTakerAndMaker() {
+	// Order book looks like:
+	//                 | 2.7200 |
+	//                 | 2.7100 |
+	// (os) ########## | 2.6080 |
+	// (os)     ###### | 2.6060 |     limit order  --> new last price: taker
+	//                 | 2.5050 |--> prev. last price
+	// (os)         ## | 2.5040 |
+	//                 | 2.4010 |
+	//                 | 2.4000 |
+
+	market := s.CreateMarket("ucre", "uusd")
+	mmAddr := s.FundedAccount(1, enoughCoins)
+	s.MakeLastPrice(market.Id, mmAddr, utils.ParseDec("2.505"))
+
+	feeCollector := market.MustGetFeeCollectorAddress()
+	feeAmountBeforeMatching := s.GetAllBalances(feeCollector)
+
+	ordererAddr := s.FundedAccount(2, enoughCoins)
+	_, order, res := s.PlaceLimitOrder(
+		market.Id, ordererAddr, true, utils.ParseDec("2.6060"), sdk.NewInt(7_999999), time.Hour)
+	s.AssertEqual(utils.ParseDec("2.5050"), *s.App.ExchangeKeeper.MustGetMarketState(s.Ctx, market.Id).LastPrice)
+
+	s.AssertEqual(sdk.ZeroInt(), res.ExecutedQuantity)
+	s.AssertEqual(utils.ParseCoin("0uusd"), res.Paid)
+	s.AssertEqual(utils.ParseCoin("0ucre"), res.Received)
+
+	s.NextBlock()
+
+	order, found := s.keeper.GetOrder(s.Ctx, order.Id)
+	s.Require().True(found)
+
+	os := types.NewMockOrderSource(
+		"mockOrderSource",
+		types.NewMockOrderSourceOrder(false, utils.ParseDec("2.608"), sdk.NewInt(10_000000)),
+		types.NewMockOrderSourceOrder(false, utils.ParseDec("2.606"), sdk.NewInt(6_000000)),
+		types.NewMockOrderSourceOrder(false, utils.ParseDec("2.504"), sdk.NewInt(2_000000)))
+	s.FundAccount(os.Address, enoughCoins)
+	s.App.ExchangeKeeper = *s.App.ExchangeKeeper.SetOrderSources(os)
+	s.keeper = s.App.ExchangeKeeper
+
+	osBalanceBeforeMatching := s.GetAllBalances(os.Address)
+
+	s.Ctx = s.Ctx.WithEventManager(sdk.NewEventManager())
+	s.Require().NoError(s.keeper.RunBatchMatching(s.Ctx, market))
+
+	ev := s.getEventOrderFilled(order.Id)
+
+	s.AssertEqual(sdk.NewInt(7_999999), ev.ExecutedQuantity)
+	s.AssertEqual(utils.ParseCoin("20_645998uusd"), ev.Paid)
+	s.AssertEqual(utils.ParseCoin("7_975999ucre"), ev.Received)
+
+	order, found = s.keeper.GetOrder(s.Ctx, order.Id)
+	s.Require().False(found)
+
+	ev_os := s.getEventOrderSourceOrdersFilled("mockOrderSource")
+	s.AssertEqual(sdk.NewInt(7_999999), ev_os.ExecutedQuantity)
+	s.AssertEqual(utils.ParseCoin("20_645998uusd"), ev_os.Received)
+	s.AssertEqual(utils.ParseCoin("7_991000ucre"), ev_os.Paid)
+
+	s.AssertEqual(utils.ParseDec("2.6060"), *s.App.ExchangeKeeper.MustGetMarketState(s.Ctx, market.Id).LastPrice)
+
+	feeAmountAfterMatching := s.GetAllBalances(feeCollector)
+	feeAmount := feeAmountAfterMatching.Sub(feeAmountBeforeMatching)
+	s.AssertEqual(utils.ParseCoins("15001ucre"), feeAmount)
+
+	osBalanceAfterMatching := s.GetAllBalances(os.Address)
+	osBalanceDiff, _ := osBalanceAfterMatching.SafeSub(osBalanceBeforeMatching)
+	expectedOsBalancesDiff := sdk.Coins{
+		sdk.Coin{Denom: "ucre", Amount: sdk.NewInt(-7991000)},
+		utils.ParseCoin("20_645998uusd")}
+	s.AssertEqual(expectedOsBalancesDiff, osBalanceDiff)
+}
+
+func (s *KeeperTestSuite) TestOrderSourceMatchingAsTakerAndMakerWithPriority() {
+	// Order book looks like:
+	//                                    | 2.7200 |
+	//                                    | 2.7100 |
+	//                    (os) ########## | 2.6080 |
+	// limit order ###  + (os)     ###### | 2.6060 |     limit order  --> new last price: taker
+	//                                    | 2.5050 |   --> prev. last price
+	//                    (os)         ## | 2.5040 |
+	//                                    | 2.4010 |
+	//                                    | 2.4000 |
+
+	market := s.CreateMarket("ucre", "uusd")
+	mmAddr := s.FundedAccount(1, enoughCoins)
+	s.MakeLastPrice(market.Id, mmAddr, utils.ParseDec("2.505"))
+
+	feeCollector := market.MustGetFeeCollectorAddress()
+	feeAmountBeforeMatching := s.GetAllBalances(feeCollector)
+
+	ordererAddr := s.FundedAccount(2, enoughCoins)
+	_, order, res := s.PlaceLimitOrder(
+		market.Id, ordererAddr, true, utils.ParseDec("2.6060"), sdk.NewInt(7_999999), time.Hour)
+	s.AssertEqual(utils.ParseDec("2.5050"), *s.App.ExchangeKeeper.MustGetMarketState(s.Ctx, market.Id).LastPrice)
+
+	s.AssertEqual(sdk.ZeroInt(), res.ExecutedQuantity)
+	s.AssertEqual(utils.ParseCoin("0uusd"), res.Paid)
+	s.AssertEqual(utils.ParseCoin("0ucre"), res.Received)
+
+	s.NextBlock()
+
+	order, found := s.keeper.GetOrder(s.Ctx, order.Id)
+	s.Require().True(found)
+
+	ordererAddr2 := s.FundedAccount(3, enoughCoins)
+	order2 := s.PlaceBatchLimitOrder(
+		market.Id, ordererAddr2, false, utils.ParseDec("2.6060"), sdk.NewInt(3_000000), time.Hour)
+	order2, found = s.keeper.GetOrder(s.Ctx, order2.Id)
+	s.Require().True(found)
+
+	os := types.NewMockOrderSource(
+		"mockOrderSource",
+		types.NewMockOrderSourceOrder(false, utils.ParseDec("2.608"), sdk.NewInt(10_000000)),
+		types.NewMockOrderSourceOrder(false, utils.ParseDec("2.606"), sdk.NewInt(6_000000)),
+		types.NewMockOrderSourceOrder(false, utils.ParseDec("2.504"), sdk.NewInt(2_000000)))
+	s.FundAccount(os.Address, enoughCoins)
+	s.App.ExchangeKeeper = *s.App.ExchangeKeeper.SetOrderSources(os)
+	s.keeper = s.App.ExchangeKeeper
+
+	osBalanceBeforeMatching := s.GetAllBalances(os.Address)
+
+	s.Ctx = s.Ctx.WithEventManager(sdk.NewEventManager())
+	s.Require().NoError(s.keeper.RunBatchMatching(s.Ctx, market))
+
+	ev := s.getEventOrderFilled(order.Id)
+
+	s.AssertEqual(sdk.NewInt(7_999999), ev.ExecutedQuantity)
+	s.AssertEqual(utils.ParseCoin("20_645998uusd"), ev.Paid)
+	s.AssertEqual(utils.ParseCoin("7_975999ucre"), ev.Received)
+
+	ev2 := s.getEventOrderFilled(order2.Id)
+	s.Require().Nil(ev2)
+
+	order, found = s.keeper.GetOrder(s.Ctx, order.Id)
+	s.Require().False(found)
+
+	order2, found = s.keeper.GetOrder(s.Ctx, order2.Id)
+	s.Require().True(found)
+	s.AssertEqual(sdk.NewInt(3_000000), order2.OpenQuantity)
+	s.AssertEqual(sdk.NewInt(3_000000), order2.RemainingDeposit)
+
+	ev_os := s.getEventOrderSourceOrdersFilled("mockOrderSource")
+	s.AssertEqual(sdk.NewInt(7_999999), ev_os.ExecutedQuantity)
+	s.AssertEqual(utils.ParseCoin("20_645998uusd"), ev_os.Received)
+	s.AssertEqual(utils.ParseCoin("7_991000ucre"), ev_os.Paid)
+
+	s.AssertEqual(utils.ParseDec("2.6060"), *s.App.ExchangeKeeper.MustGetMarketState(s.Ctx, market.Id).LastPrice)
+
+	feeAmountAfterMatching := s.GetAllBalances(feeCollector)
+	feeAmount := feeAmountAfterMatching.Sub(feeAmountBeforeMatching)
+	s.AssertEqual(utils.ParseCoins("15001ucre"), feeAmount)
+
+	osBalanceAfterMatching := s.GetAllBalances(os.Address)
+	osBalanceDiff, _ := osBalanceAfterMatching.SafeSub(osBalanceBeforeMatching)
+	expectedOsBalancesDiff := sdk.Coins{
+		sdk.Coin{Denom: "ucre", Amount: sdk.NewInt(-7991000)},
+		utils.ParseCoin("20_645998uusd")}
+	s.AssertEqual(expectedOsBalancesDiff, osBalanceDiff)
+}
+
+func (s *KeeperTestSuite) TestOrderSourceMatchingAsTakerAndMakerWithSamePriority() {
+	// Order book looks like:
+	//                                      | 2.7200 |
+	//                                      | 2.7100 |
+	//                      (os) ########## | 2.6080 |
+	// limit order ### + limit order ###### | 2.6060 |     limit order  --> new last price: taker
+	//                                      | 2.5050 |   --> prev. last price
+	//                      (os)         ## | 2.5040 |
+	//                                      | 2.4010 |
+	//                                      | 2.4000 |
+
+	market := s.CreateMarket("ucre", "uusd")
+	mmAddr := s.FundedAccount(1, enoughCoins)
+	s.MakeLastPrice(market.Id, mmAddr, utils.ParseDec("2.505"))
+
+	feeCollector := market.MustGetFeeCollectorAddress()
+	feeAmountBeforeMatching := s.GetAllBalances(feeCollector)
+
+	ordererAddr := s.FundedAccount(2, enoughCoins)
+	_, order, res := s.PlaceLimitOrder(
+		market.Id, ordererAddr, true, utils.ParseDec("2.6060"), sdk.NewInt(7_999999), time.Hour)
+	s.AssertEqual(utils.ParseDec("2.5050"), *s.App.ExchangeKeeper.MustGetMarketState(s.Ctx, market.Id).LastPrice)
+
+	s.AssertEqual(sdk.ZeroInt(), res.ExecutedQuantity)
+	s.AssertEqual(utils.ParseCoin("0uusd"), res.Paid)
+	s.AssertEqual(utils.ParseCoin("0ucre"), res.Received)
+
+	s.NextBlock()
+
+	order, found := s.keeper.GetOrder(s.Ctx, order.Id)
+	s.Require().True(found)
+
+	ordererAddr2 := s.FundedAccount(3, enoughCoins)
+	order2 := s.PlaceBatchLimitOrder(
+		market.Id, ordererAddr2, false, utils.ParseDec("2.6060"), sdk.NewInt(3_000000), time.Hour)
+	order2, found = s.keeper.GetOrder(s.Ctx, order2.Id)
+	s.Require().True(found)
+
+	ordererAddr3 := s.FundedAccount(4, enoughCoins)
+	order3 := s.PlaceBatchLimitOrder(
+		market.Id, ordererAddr3, false, utils.ParseDec("2.6060"), sdk.NewInt(6_000000), time.Hour)
+	order3, found = s.keeper.GetOrder(s.Ctx, order3.Id)
+	s.Require().True(found)
+
+	os := types.NewMockOrderSource(
+		"mockOrderSource",
+		types.NewMockOrderSourceOrder(false, utils.ParseDec("2.608"), sdk.NewInt(10_000000)),
+		types.NewMockOrderSourceOrder(false, utils.ParseDec("2.504"), sdk.NewInt(2_000000)))
+	s.FundAccount(os.Address, enoughCoins)
+	s.App.ExchangeKeeper = *s.App.ExchangeKeeper.SetOrderSources(os)
+	s.keeper = s.App.ExchangeKeeper
+
+	osBalanceBeforeMatching := s.GetAllBalances(os.Address)
+
+	s.Ctx = s.Ctx.WithEventManager(sdk.NewEventManager())
+	s.Require().NoError(s.keeper.RunBatchMatching(s.Ctx, market))
+
+	ev := s.getEventOrderFilled(order.Id)
+
+	s.AssertEqual(sdk.NewInt(7_999999), ev.ExecutedQuantity)
+	s.AssertEqual(utils.ParseCoin("20_645998uusd"), ev.Paid)
+	s.AssertEqual(utils.ParseCoin("7_975999ucre"), ev.Received)
+
+	ev2 := s.getEventOrderFilled(order2.Id)
+	s.AssertEqual(sdk.NewInt(1_999999), ev2.ExecutedQuantity)
+	s.AssertEqual(utils.ParseCoin("5_204179uusd"), ev2.Received)
+	s.AssertEqual(utils.ParseCoin("1_999999ucre"), ev2.Paid)
+
+	ev3 := s.getEventOrderFilled(order3.Id)
+	s.AssertEqual(sdk.NewInt(4_000000), ev3.ExecutedQuantity)
+	s.AssertEqual(utils.ParseCoin("10_408364uusd"), ev3.Received)
+	s.AssertEqual(utils.ParseCoin("4_000000ucre"), ev3.Paid)
+
+	order, found = s.keeper.GetOrder(s.Ctx, order.Id)
+	s.Require().False(found)
+
+	order2, found = s.keeper.GetOrder(s.Ctx, order2.Id)
+	s.Require().True(found)
+	s.AssertEqual(sdk.NewInt(1_000001), order2.OpenQuantity)
+	s.AssertEqual(sdk.NewInt(1_000001), order2.RemainingDeposit)
+
+	order3, found = s.keeper.GetOrder(s.Ctx, order3.Id)
+	s.Require().True(found)
+	s.AssertEqual(sdk.NewInt(2_000000), order3.OpenQuantity)
+	s.AssertEqual(sdk.NewInt(2_000000), order3.RemainingDeposit)
+
+	ev_os := s.getEventOrderSourceOrdersFilled("mockOrderSource")
+	s.AssertEqual(sdk.NewInt(2_000000), ev_os.ExecutedQuantity)
+	s.AssertEqual(utils.ParseCoin("5_010001uusd"), ev_os.Received)
+	s.AssertEqual(utils.ParseCoin("2_000000ucre"), ev_os.Paid)
+
+	s.AssertEqual(utils.ParseDec("2.6060"), *s.App.ExchangeKeeper.MustGetMarketState(s.Ctx, market.Id).LastPrice)
+
+	feeAmountAfterMatching := s.GetAllBalances(feeCollector)
+	feeAmount := feeAmountAfterMatching.Sub(feeAmountBeforeMatching)
+	s.AssertEqual(utils.ParseCoins("24000ucre,23454uusd"), feeAmount)
+
+	osBalanceAfterMatching := s.GetAllBalances(os.Address)
+	osBalanceDiff, _ := osBalanceAfterMatching.SafeSub(osBalanceBeforeMatching)
+	expectedOsBalancesDiff := sdk.Coins{
+		sdk.Coin{Denom: "ucre", Amount: sdk.NewInt(-2000000)},
+		utils.ParseCoin("5_010001uusd")}
+	s.AssertEqual(expectedOsBalancesDiff, osBalanceDiff)
+}
