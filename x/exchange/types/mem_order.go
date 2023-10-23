@@ -282,15 +282,3 @@ func TotalExecutableQuantity(orders []*MemOrder) sdk.Int {
 	}
 	return qty
 }
-
-func TotalExecutableQuantityPrint(orders []*MemOrder) sdk.Int {
-	qty := utils.ZeroInt
-	fmt.Println("orders: ", orders)
-	fmt.Println("qty: ", qty)
-	for _, order := range orders {
-		qty = qty.Add(order.ExecutableQuantity())
-		fmt.Println("qty: ", qty)
-	}
-	fmt.Println("qty: ", qty)
-	return qty
-}
