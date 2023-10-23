@@ -59,7 +59,7 @@ func (s *KeeperTestSuite) TestMintShare() {
 			"invalid desired amount 2",
 			types.NewMsgMintShare(minterAddr, 1, utils.ParseCoins("100_000000ucre")),
 			nil,
-			"added liquidity is zero: invalid request",
+			"added liquidity is zero",
 		},
 	} {
 		s.Run(tc.name, func() {
