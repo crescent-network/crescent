@@ -54,30 +54,12 @@ func (p *PublicPositionCreateProposal) ValidateBasic() error {
 	if err := gov.ValidateAbstract(p); err != nil {
 		return err
 	}
-	if !p.LowerPrice.IsPositive() {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "lower price must be positive: %s", p.LowerPrice)
+	if err := ammtypes.ValidatePriceRange(p.LowerPrice, p.UpperPrice); err != nil {
+		return err
 	}
-	if !p.UpperPrice.IsPositive() {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "upper price must be positive: %s", p.UpperPrice)
-	}
-	if p.LowerPrice.GTE(p.UpperPrice) {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "lower price must be lower than upper price")
-	}
-	lowerTick, valid := exchangetypes.ValidateTickPrice(p.LowerPrice)
-	if !valid {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid lower tick price: %s", p.LowerPrice)
-	}
-	if lowerTick < ammtypes.MinTick {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "lower tick must not be lower than the minimum %d", ammtypes.MinTick)
-	}
-	upperTick, valid := exchangetypes.ValidateTickPrice(p.UpperPrice)
-	if !valid {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid upper tick price: %s", p.UpperPrice)
-	}
-	if upperTick > ammtypes.MaxTick {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "upper tick must not be higher than the maximum %d", ammtypes.MaxTick)
-	}
-	publicPosition := NewPublicPosition(1, p.PoolId, lowerTick, upperTick, p.FeeRate)
+	publicPosition := NewPublicPosition(
+		1, p.PoolId,
+		exchangetypes.TickAtPrice(p.LowerPrice), exchangetypes.TickAtPrice(p.UpperPrice), p.FeeRate)
 	if err := publicPosition.Validate(); err != nil {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
@@ -87,12 +69,12 @@ func (p *PublicPositionCreateProposal) ValidateBasic() error {
 func (p PublicPositionCreateProposal) String() string {
 	var b strings.Builder
 	b.WriteString(fmt.Sprintf(`Public Position Create Proposal:
-  Title:              %s
-  Description:        %s
-  Pool Id:            %d
-  Lower Price:        %s
-  Upper Price:        %s
-  Fee Rate:           %s
+  Title:       %s
+  Description: %s
+  Pool Id:     %d
+  Lower Price: %s
+  Upper Price: %s
+  Fee Rate:    %s
 `, p.Title, p.Description, p.PoolId, p.LowerPrice, p.UpperPrice, p.FeeRate))
 	return b.String()
 }
@@ -142,6 +124,13 @@ func (p PublicPositionParameterChangeProposal) String() string {
 `, change.PublicPositionId, change.FeeRate))
 	}
 	return b.String()
+}
+
+func NewPublicPositionParameterChange(publicPositionId uint64, feeRate sdk.Dec) PublicPositionParameterChange {
+	return PublicPositionParameterChange{
+		PublicPositionId: publicPositionId,
+		FeeRate:          feeRate,
+	}
 }
 
 func (change PublicPositionParameterChange) Validate() error {

@@ -19,6 +19,18 @@ func (k Keeper) CreatePublicPosition(
 
 	lowerTick := exchangetypes.TickAtPrice(lowerPrice)
 	upperTick := exchangetypes.TickAtPrice(upperPrice)
+	if lowerTick%int32(pool.TickSpacing) != 0 {
+		err = sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidRequest, "lower tick %d must be multiple of tick spacing %d",
+			lowerTick, pool.TickSpacing)
+		return
+	}
+	if upperTick%int32(pool.TickSpacing) != 0 {
+		err = sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidRequest, "upper tick %d must be multiple of tick spacing %d",
+			upperTick, pool.TickSpacing)
+		return
+	}
 
 	if found := k.LookupPublicPositionByParams(ctx, poolId, lowerTick, upperTick); found {
 		return publicPosition, types.ErrPublicPositionExists

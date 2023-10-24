@@ -12,7 +12,7 @@ import (
 	"github.com/crescent-network/crescent/v5/x/exchange/types"
 )
 
-func ExampleMarketParameterChange_String() {
+func ExampleMarketParameterChangeProposal_String() {
 	p := types.NewMarketParameterChangeProposal(
 		"Title", "Description", []types.MarketParameterChange{
 			types.NewMarketParameterChange(
