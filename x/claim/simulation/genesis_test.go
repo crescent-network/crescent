@@ -56,9 +56,9 @@ func TestRandomizedGenState(t *testing.T) {
 	require.Len(t, genState.ClaimRecords, 3)
 	require.Equal(t, uint64(2), genState.ClaimRecords[0].AirdropId)
 	require.Equal(t, "cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", genState.ClaimRecords[0].Recipient)
-	require.Equal(t, "778274stake", genState.ClaimRecords[0].InitialClaimableCoins.String())
-	require.Equal(t, "500946stake", genState.ClaimRecords[0].ClaimableCoins.String())
-	require.Equal(t, []types.ConditionType{types.ConditionTypeLiquidStake, types.ConditionTypeVote}, genState.ClaimRecords[0].ClaimedConditions)
+	require.Equal(t, "774912stake", genState.ClaimRecords[0].InitialClaimableCoins.String())
+	require.Equal(t, "624895stake", genState.ClaimRecords[0].ClaimableCoins.String())
+	require.Equal(t, []types.ConditionType{types.ConditionTypeSwap, types.ConditionTypeVote}, genState.ClaimRecords[0].ClaimedConditions)
 }
 
 // TestRandomizedGenState tests abnormal scenarios of applying RandomizedGenState.

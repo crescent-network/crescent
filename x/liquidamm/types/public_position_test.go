@@ -93,14 +93,14 @@ func TestPublicPosition_Validate(t *testing.T) {
 			func(publicPosition *types.PublicPosition) {
 				publicPosition.FeeRate = sdk.NewDec(-1)
 			},
-			"fee rate must not be negative: -1.000000000000000000",
+			"fee rate must be in range [0, 1]: -1.000000000000000000",
 		},
 		{
 			"too high fee rate",
 			func(publicPosition *types.PublicPosition) {
 				publicPosition.FeeRate = sdk.NewDec(2)
 			},
-			"fee rate must not be greater than 1: 2.000000000000000000",
+			"fee rate must be in range [0, 1]: 2.000000000000000000",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

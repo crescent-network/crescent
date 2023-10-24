@@ -55,7 +55,7 @@ func GenClaimRecords(r *rand.Rand, accs []simtypes.Account, airdrops []types.Air
 		airdrop := airdrops[r.Intn(len(airdrops))]
 		claimedConditions := make([]types.ConditionType, len(airdrop.Conditions))
 		copy(claimedConditions, airdrop.Conditions)
-		rand.Shuffle(len(claimedConditions), func(i, j int) {
+		r.Shuffle(len(claimedConditions), func(i, j int) {
 			claimedConditions[i], claimedConditions[j] = claimedConditions[j], claimedConditions[i]
 		})
 		numClaimedConditions := r.Intn(len(claimedConditions) + 1)
