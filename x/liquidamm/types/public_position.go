@@ -59,6 +59,10 @@ func (publicPosition PublicPosition) Validate() error {
 	return nil
 }
 
+func (publicPosition PublicPosition) MustGetBidReserveAddress() sdk.AccAddress {
+	return sdk.MustAccAddressFromBech32(publicPosition.BidReserveAddress)
+}
+
 // ShareDenom returns a unique public position share denom.
 func ShareDenom(publicPositionId uint64) string {
 	return fmt.Sprintf("%s%d", ShareDenomPrefix, publicPositionId)

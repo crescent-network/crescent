@@ -490,6 +490,17 @@ func (s *KeeperTestSuite) TestQueryExchangeRate() {
 			nil,
 		},
 		{
+			"zero share supply",
+			&types.QueryExchangeRateRequest{
+				PublicPositionId: 2,
+			},
+			"",
+			func(resp *types.QueryExchangeRateResponse) {
+				s.AssertEqual(sdk.ZeroDec(), resp.MintRate)
+				s.AssertEqual(sdk.ZeroDec(), resp.BurnRate)
+			},
+		},
+		{
 			"happy case",
 			&types.QueryExchangeRateRequest{
 				PublicPositionId: 1,

@@ -76,6 +76,10 @@ func (k Keeper) MintShare(
 	shareSupply := k.bankKeeper.GetSupply(ctx, shareDenom).Amount
 	mintedShareAmt := types.CalculateMintedShareAmount(
 		liquidity, position.Liquidity.Sub(liquidity), shareSupply)
+	if mintedShareAmt.IsZero() {
+		err = sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "minted share amount is zero")
+		return
+	}
 	mintedShare = sdk.NewCoin(shareDenom, mintedShareAmt)
 	if err = k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(mintedShare)); err != nil {
 		return
@@ -122,6 +126,10 @@ func (k Keeper) BurnShare(
 	}
 	removedLiquidity = types.CalculateRemovedLiquidity(
 		share.Amount, shareSupply, position.Liquidity, prevWinningBidShareAmt)
+	if removedLiquidity.IsZero() {
+		err = sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "removed liquidity is zero")
+		return
+	}
 
 	if err = k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(share)); err != nil {
 		return
