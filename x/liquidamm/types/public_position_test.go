@@ -117,6 +117,52 @@ func TestPublicPosition_Validate(t *testing.T) {
 	}
 }
 
+func TestCalculateMintRate(t *testing.T) {
+	for _, tc := range []struct {
+		name           string
+		shareSupply    sdk.Int
+		totalLiquidity sdk.Int
+		expected       sdk.Dec
+	}{
+		{
+			name:           "initial minting",
+			shareSupply:    sdk.ZeroInt(),
+			totalLiquidity: sdk.ZeroInt(),
+			expected:       utils.ParseDec("1.0"),
+		},
+		{
+			name:           "normal",
+			shareSupply:    sdk.NewInt(1_000_000_000),
+			totalLiquidity: sdk.NewInt(1_000_000_000),
+			expected:       utils.ParseDec("1.0"),
+		},
+		{
+			name:           "big numbers",
+			shareSupply:    sdk.NewInt(1_000_000_000_000_000_000),
+			totalLiquidity: sdk.NewInt(1_000),
+			expected:       utils.ParseDec("1000000000000000.0"),
+		},
+		{
+			name:           "small numbers",
+			shareSupply:    sdk.NewInt(1_000),
+			totalLiquidity: sdk.NewInt(1_000_000_000_000_000_000),
+			expected:       utils.ParseDec("0.000000000000001"),
+		},
+		{
+			name:           "very small shareSupply",
+			shareSupply:    sdk.NewInt(1),
+			totalLiquidity: utils.ParseInt("1_000000_000000_000000_000000_000000"),
+			expected:       utils.ParseDec("0.0"),
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			mintingAmt := types.CalculateMintRate(
+				tc.totalLiquidity, tc.shareSupply)
+			require.Equal(t, tc.expected, mintingAmt)
+		})
+	}
+}
+
 func TestCalculateMintedShareAmount(t *testing.T) {
 	for _, tc := range []struct {
 		name           string
@@ -145,6 +191,13 @@ func TestCalculateMintedShareAmount(t *testing.T) {
 			totalLiquidity: sdk.NewInt(1_100_000_000),
 			addedLiquidity: sdk.NewInt(100_000_000),
 			expected:       sdk.NewInt(90_909_090),
+		},
+		{
+			name:           "very small shareSupply",
+			shareSupply:    sdk.NewInt(1),
+			totalLiquidity: utils.ParseInt("1_000000_000000_000000_000000_000000"),
+			addedLiquidity: sdk.NewInt(100_000_000),
+			expected:       sdk.NewInt(0), // TODO: error handling
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -209,6 +262,58 @@ func TestCalculateRemovedLiquidity(t *testing.T) {
 			removedLiquidity := types.CalculateRemovedLiquidity(
 				tc.burnedShare, tc.shareSupply, tc.totalLiquidity, tc.prevWinningBidShareAmt)
 			require.Equal(t, tc.expectedAmt, removedLiquidity)
+		})
+	}
+}
+
+func TestCalculateBurnRate(t *testing.T) {
+	for _, tc := range []struct {
+		name                   string
+		shareSupply            sdk.Int
+		totalLiquidity         sdk.Int
+		prevWinningBidShareAmt sdk.Int
+		expected               sdk.Dec
+	}{
+		{
+			name:                   "same share and liquidity: no previous winning bid",
+			shareSupply:            sdk.NewInt(100_000_000),
+			totalLiquidity:         sdk.NewInt(100_000_000),
+			prevWinningBidShareAmt: sdk.ZeroInt(),
+			expected:               utils.ParseDec("1.0"),
+		},
+		{
+			name:                   "small share: no previous winning bid",
+			shareSupply:            sdk.NewInt(1),
+			totalLiquidity:         sdk.NewInt(100_000_000),
+			prevWinningBidShareAmt: sdk.ZeroInt(),
+			expected:               utils.ParseDec("100000000.0"),
+		},
+		{
+			name:                   "large share: no previous winning bid",
+			shareSupply:            sdk.NewInt(100_000_000),
+			totalLiquidity:         sdk.NewInt(1),
+			prevWinningBidShareAmt: sdk.ZeroInt(),
+			expected:               utils.ParseDec("0.00000001"),
+		},
+		{
+			name:                   "zero value: no previous winning bid",
+			shareSupply:            sdk.NewInt(0),
+			totalLiquidity:         sdk.NewInt(0),
+			prevWinningBidShareAmt: sdk.ZeroInt(),
+			expected:               utils.ZeroDec,
+		},
+		{
+			name:                   "small share: previous winning bid",
+			shareSupply:            sdk.NewInt(1),
+			totalLiquidity:         sdk.NewInt(100_000_000),
+			prevWinningBidShareAmt: sdk.NewInt(1),
+			expected:               utils.ParseDec("50000000.0"),
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			removedLiquidity := types.CalculateBurnRate(
+				tc.shareSupply, tc.totalLiquidity, tc.prevWinningBidShareAmt)
+			require.Equal(t, tc.expected, removedLiquidity)
 		})
 	}
 }

@@ -110,6 +110,13 @@ func TestMsgBurnShare(t *testing.T) {
 			"public position id must not be 0: invalid request",
 		},
 		{
+			"invalid share: negative coin amount",
+			func(msg *types.MsgBurnShare) {
+				msg.Share = sdk.Coin{Denom: "sb1", Amount: sdk.NewInt(-1000000)}
+			},
+			"invalid share: negative coin amount: -1000000: invalid request",
+		},
+		{
 			"invalid share",
 			func(msg *types.MsgBurnShare) {
 				msg.Share = utils.ParseCoin("0sb1")
@@ -174,6 +181,13 @@ func TestMsgPlaceBid(t *testing.T) {
 				msg.RewardsAuctionId = 0
 			},
 			"rewards auction id must not be 0: invalid request",
+		},
+		{
+			"invalid share: negative coin amount",
+			func(msg *types.MsgPlaceBid) {
+				msg.Share = sdk.Coin{Denom: "sb1", Amount: sdk.NewInt(-1000000)}
+			},
+			"invalid share: negative coin amount: -1000000: invalid request",
 		},
 		{
 			"invalid share",

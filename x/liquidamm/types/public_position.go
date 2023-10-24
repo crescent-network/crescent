@@ -82,6 +82,9 @@ func ParseShareDenom(denom string) (publicPositionId uint64, err error) {
 }
 
 func CalculateMintRate(totalLiquidity, shareSupply sdk.Int) sdk.Dec {
+	if shareSupply.IsZero() { // initial minting
+		return utils.OneDec
+	}
 	return shareSupply.ToDec().QuoTruncate(totalLiquidity.ToDec())
 }
 
@@ -95,7 +98,11 @@ func CalculateMintedShareAmount(addedLiquidity, totalLiquidity, shareSupply sdk.
 }
 
 func CalculateBurnRate(shareSupply, totalLiquidity, prevWinningBidShareAmt sdk.Int) sdk.Dec {
-	return totalLiquidity.ToDec().QuoTruncate(shareSupply.Add(prevWinningBidShareAmt).ToDec())
+	denominator := shareSupply.Add(prevWinningBidShareAmt)
+	if denominator.IsZero() { // no more share
+		return utils.ZeroDec
+	}
+	return totalLiquidity.ToDec().QuoTruncate(denominator.ToDec())
 }
 
 // CalculateRemovedLiquidity calculates liquidity amount to be removed when
