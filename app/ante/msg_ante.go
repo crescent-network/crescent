@@ -69,20 +69,19 @@ func (d MsgFilterDecorator) ValidateMsgs(ctx sdk.Context, msgs []sdk.Msg) error 
 				}
 			}
 
-		// tracking mixed batch msg with regular msg
-		case *exchangetypes.MsgPlaceBatchLimitOrder,
-			*exchangetypes.MsgPlaceMMBatchLimitOrder,
-			*exchangetypes.MsgCancelOrder,
-			*exchangetypes.MsgCancelAllOrders:
-			numMsg--
-			numBatchMsg++
-
 		// block double nested MsgExec
 		case *authz.MsgExec:
 			if nested {
 				return fmt.Errorf("double nested %s is not allowed", sdk.MsgTypeURL(msg))
 			}
 		default:
+			// tracking mixed batch msg with regular msg
+			if IsMidBlockMsg(msg) {
+				numMsg--
+				numBatchMsg++
+				return nil
+			}
+
 			// block deprecated module's msgs
 			if legacyMsg, ok := msg.(legacytx.LegacyMsg); ok {
 				switch legacyMsg.Route() {
@@ -141,4 +140,24 @@ func CalcMinInitialDeposit(minDeposit sdk.Coins, minInitialDepositFraction sdk.D
 		minInitialDeposit = minInitialDeposit.Add(sdk.NewCoin(coin.Denom, minInitialCoins))
 	}
 	return
+}
+
+func IsMidBlockTx(tx sdk.Tx) bool {
+	for _, msg := range tx.GetMsgs() {
+		if !IsMidBlockMsg(msg) {
+			return false
+		}
+	}
+	return true
+}
+
+func IsMidBlockMsg(msg sdk.Msg) bool {
+	switch msg.(type) {
+	case *exchangetypes.MsgPlaceBatchLimitOrder,
+		*exchangetypes.MsgPlaceMMBatchLimitOrder,
+		*exchangetypes.MsgCancelOrder,
+		*exchangetypes.MsgCancelAllOrders:
+		return true
+	}
+	return false
 }

@@ -4,7 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	exchangetypes "github.com/crescent-network/crescent/v5/x/exchange/types"
+	"github.com/crescent-network/crescent/v5/app/ante"
 )
 
 func (app *App) MidBlocker(ctx sdk.Context, req abci.RequestMidBlock) abci.ResponseMidBlock {
@@ -41,24 +41,11 @@ func SplitMidBlockTxs(txs [][]byte, txDecoder sdk.TxDecoder) (midBlockTxs, norma
 			normalTxs = append(normalTxs, rawTx)
 			continue
 		}
-		if IsMidBlockTx(tx) {
+		if ante.IsMidBlockTx(tx) {
 			midBlockTxs = append(midBlockTxs, rawTx)
 		} else {
 			normalTxs = append(normalTxs, rawTx)
 		}
 	}
 	return midBlockTxs, normalTxs
-}
-
-func IsMidBlockTx(tx sdk.Tx) bool {
-	for _, msg := range tx.GetMsgs() {
-		switch msg.(type) {
-		case *exchangetypes.MsgPlaceBatchLimitOrder,
-			*exchangetypes.MsgPlaceMMBatchLimitOrder,
-			*exchangetypes.MsgCancelOrder:
-		default:
-			return false
-		}
-	}
-	return true
 }
