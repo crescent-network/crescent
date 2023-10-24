@@ -4,79 +4,93 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	utils "github.com/crescent-network/crescent/v5/types"
-	"github.com/crescent-network/crescent/v5/x/liquidamm/keeper"
 	"github.com/crescent-network/crescent/v5/x/liquidamm/types"
 )
 
 func (s *KeeperTestSuite) TestPlaceBid() {
 	publicPosition := s.CreateSamplePublicPosition()
 
-	minterAddr1 := utils.TestAddress(1)
-	s.MintShare(minterAddr1, publicPosition.Id, utils.ParseCoins("100_000000ucre,500_000000uusd"), true)
+	minterAddr := utils.TestAddress(1)
+	s.MintShare(
+		minterAddr, publicPosition.Id, utils.ParseCoins("100_000000ucre,500_000000uusd"), true)
 	s.NextBlock()
-
-	s.AdvanceRewardsAuctions()
-
-	auction, found := s.keeper.GetLastRewardsAuction(s.Ctx, publicPosition.Id)
-	s.Require().True(found)
+	s.AdvanceRewardsAuctions() // Starts a rewards auction
 
 	bidderAddr1 := utils.TestAddress(2)
-	s.MintShare(bidderAddr1, publicPosition.Id, utils.ParseCoins("100_000000ucre,500_000000uusd"), true)
-	s.PlaceBid(bidderAddr1, publicPosition.Id, auction.Id, utils.ParseCoin("100000sb1"))
-	s.NextBlock()
+	s.MintShare(
+		bidderAddr1, publicPosition.Id, utils.ParseCoins("100_000000ucre,500_000000uusd"), true)
 
+	ctx := s.Ctx
+
+	// public position not found
+	s.Ctx, _ = ctx.CacheContext()
+	_, err := s.keeper.PlaceBid(
+		s.Ctx, bidderAddr1, 3, 1, utils.ParseCoin("1000000sb2"))
+	s.Require().EqualError(err, "public position not found: not found")
+
+	// share denom mismatch
+	s.Ctx, _ = ctx.CacheContext()
+	_, err = s.keeper.PlaceBid(
+		s.Ctx, bidderAddr1, publicPosition.Id, 1, utils.ParseCoin("1000000sb2"))
+	s.Require().EqualError(err, "share denom != sb1: invalid request")
+
+	// rewards auction not found
+	s.Ctx, _ = ctx.CacheContext()
+	_, err = s.keeper.PlaceBid(
+		s.Ctx, bidderAddr1, publicPosition.Id, 3, utils.ParseCoin("1000000sb1"))
+	s.Require().EqualError(err, "rewards auction not found: not found")
+
+	// Skip the current rewards auction(auction id 1).
+	s.Ctx = ctx
 	s.AdvanceRewardsAuctions()
+	ctx = s.Ctx
 
-	auction, _ = s.keeper.GetLastRewardsAuction(s.Ctx, publicPosition.Id)
+	auction, found := s.keeper.GetRewardsAuction(s.Ctx, publicPosition.Id, 1)
+	s.Require().True(found)
+	s.Require().Equal(types.AuctionStatusSkipped, auction.Status)
 
-	s.PlaceBid(bidderAddr1, publicPosition.Id, auction.Id, utils.ParseCoin("100000sb1"))
+	// invalid auction status
+	s.Ctx, _ = ctx.CacheContext()
+	_, err = s.keeper.PlaceBid(
+		s.Ctx, bidderAddr1, publicPosition.Id, 1, utils.ParseCoin("1000000sb1"))
+	s.Require().EqualError(
+		err, "invalid rewards auction status: AUCTION_STATUS_SKIPPED: invalid request")
+
+	// successfully bids.
+	s.Ctx = ctx
+	s.PlaceBid(bidderAddr1, publicPosition.Id, 2, utils.ParseCoin("1000000sb1"))
+	auction, found = s.keeper.GetLastRewardsAuction(s.Ctx, publicPosition.Id)
+	s.Require().True(found)
+	s.Require().NotNil(auction.WinningBid)
+	s.Require().Equal(bidderAddr1.String(), auction.WinningBid.Bidder)
+	s.AssertEqual(utils.ParseCoin("1000000sb1"), auction.WinningBid.Share)
+	s.AssertEqual(
+		utils.ParseCoins("1000000sb1"), s.GetAllBalances(publicPosition.MustGetBidReserveAddress()))
+	ctx = s.Ctx
 
 	bidderAddr2 := utils.TestAddress(3)
-	s.MintShare(bidderAddr2, publicPosition.Id, utils.ParseCoins("100_000000ucre,500_000000uusd"), true)
-	s.PlaceBid(bidderAddr2, publicPosition.Id, auction.Id, utils.ParseCoin("200000sb1"))
-	s.NextBlock()
+	s.MintShare(
+		bidderAddr2, publicPosition.Id, utils.ParseCoins("100_000000ucre,500_000000uusd"), true)
 
-	// Previous winning bid is automatically refunded.
-	s.Require().Len(s.keeper.GetAllBids(s.Ctx), 1)
+	// bidding amount <= winning bid amount
+	s.Ctx, _ = ctx.CacheContext()
+	_, err = s.keeper.PlaceBid(
+		s.Ctx, bidderAddr2, publicPosition.Id, 2, utils.ParseCoin("1000000sb1"))
+	s.Require().EqualError(
+		err, "share amount must be greater than winning bid's share 1000000: insufficient bid amount")
 
-	bidderAddr3 := utils.TestAddress(4)
-	s.MintShare(bidderAddr3, publicPosition.Id, utils.ParseCoins("1000_000000ucre,5000_000000uusd"), true)
+	// successfully replaces the winning bid.
+	s.Ctx = ctx
+	s.PlaceBid(bidderAddr2, publicPosition.Id, 2, utils.ParseCoin("2000000sb1"))
+	ctx = s.Ctx
 
-	for _, tc := range []struct {
-		name        string
-		msg         *types.MsgPlaceBid
-		expectedErr string
-	}{
-		{
-			"happy case",
-			types.NewMsgPlaceBid(
-				bidderAddr3, publicPosition.Id, auction.Id, utils.ParseCoin("300000sb1")),
-			"",
-		},
-		{
-			"smaller than winning bid",
-			types.NewMsgPlaceBid(
-				bidderAddr3, publicPosition.Id, auction.Id, utils.ParseCoin("150000sb1")),
-			"share amount must be greater than winning bid's share 200000: insufficient bid amount",
-		},
-		{
-			"finished auction",
-			types.NewMsgPlaceBid(
-				bidderAddr3, publicPosition.Id, auction.Id-1, utils.ParseCoin("300000sb1")),
-			"rewards auction is not started: invalid request",
-		},
-	} {
-		s.Run(tc.name, func() {
-			s.Require().NoError(tc.msg.ValidateBasic())
-			cacheCtx, _ := s.Ctx.CacheContext()
-			_, err := keeper.NewMsgServerImpl(s.keeper).PlaceBid(sdk.WrapSDKContext(cacheCtx), tc.msg)
-			if tc.expectedErr == "" {
-				s.Require().NoError(err)
-			} else {
-				s.Require().EqualError(err, tc.expectedErr)
-			}
-		})
-	}
+	auction, found = s.keeper.GetLastRewardsAuction(s.Ctx, publicPosition.Id)
+	s.Require().True(found)
+	s.Require().NotNil(auction.WinningBid)
+	s.Require().Equal(bidderAddr2.String(), auction.WinningBid.Bidder)
+	s.AssertEqual(utils.ParseCoin("2000000sb1"), auction.WinningBid.Share)
+	s.AssertEqual(
+		utils.ParseCoins("2000000sb1"), s.GetAllBalances(publicPosition.MustGetBidReserveAddress()))
 }
 
 func (s *KeeperTestSuite) TestRewardsAuction() {

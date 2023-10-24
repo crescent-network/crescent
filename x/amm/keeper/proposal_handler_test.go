@@ -22,6 +22,7 @@ func (s *KeeperTestSuite) TestPoolParameterChangeProposal() {
 	s.Require().EqualValues(10, pool.TickSpacing)
 
 	// Failing cases
+
 	proposal = types.NewPoolParameterChangeProposal(
 		"Title", "Description", []types.PoolParameterChange{
 			types.NewPoolParameterChange(pool.Id, 10),
@@ -29,6 +30,15 @@ func (s *KeeperTestSuite) TestPoolParameterChangeProposal() {
 	s.Require().NoError(proposal.ValidateBasic())
 	// Same tick spacing
 	s.Require().EqualError(handler(s.Ctx, proposal), "tick spacing is not changed: 10: invalid request")
+
+	proposal = types.NewPoolParameterChangeProposal(
+		"Title", "Description", []types.PoolParameterChange{
+			types.NewPoolParameterChange(pool.Id, 50),
+		})
+	s.Require().NoError(proposal.ValidateBasic())
+	// Tick spacing is not a divisor of the previous tick spacing
+	s.Require().EqualError(
+		handler(s.Ctx, proposal), "tick spacing must be a divisor of previous tick spacing 10: invalid request")
 }
 
 func (s *KeeperTestSuite) TestPublicFarmingPlanProposal() {

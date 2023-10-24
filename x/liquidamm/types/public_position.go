@@ -53,13 +53,14 @@ func (publicPosition PublicPosition) Validate() error {
 	if _, err := sdk.AccAddressFromBech32(publicPosition.BidReserveAddress); err != nil {
 		return fmt.Errorf("invalid bid reserve address %w", err)
 	}
-	if publicPosition.FeeRate.IsNegative() {
-		return fmt.Errorf("fee rate must not be negative: %s", publicPosition.FeeRate)
-	}
-	if publicPosition.FeeRate.GT(utils.OneDec) {
-		return fmt.Errorf("fee rate must not be greater than 1: %s", publicPosition.FeeRate)
+	if publicPosition.FeeRate.GT(utils.OneDec) || publicPosition.FeeRate.IsNegative() {
+		return fmt.Errorf("fee rate must be in range [0, 1]: %s", publicPosition.FeeRate)
 	}
 	return nil
+}
+
+func (publicPosition PublicPosition) MustGetBidReserveAddress() sdk.AccAddress {
+	return sdk.MustAccAddressFromBech32(publicPosition.BidReserveAddress)
 }
 
 // ShareDenom returns a unique public position share denom.

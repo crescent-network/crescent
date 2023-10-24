@@ -19,6 +19,18 @@ func (k Keeper) CreatePublicPosition(
 
 	lowerTick := exchangetypes.TickAtPrice(lowerPrice)
 	upperTick := exchangetypes.TickAtPrice(upperPrice)
+	if lowerTick%int32(pool.TickSpacing) != 0 {
+		err = sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidRequest, "lower tick %d must be multiple of tick spacing %d",
+			lowerTick, pool.TickSpacing)
+		return
+	}
+	if upperTick%int32(pool.TickSpacing) != 0 {
+		err = sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidRequest, "upper tick %d must be multiple of tick spacing %d",
+			upperTick, pool.TickSpacing)
+		return
+	}
 
 	if found := k.LookupPublicPositionByParams(ctx, poolId, lowerTick, upperTick); found {
 		return publicPosition, types.ErrPublicPositionExists
@@ -64,6 +76,10 @@ func (k Keeper) MintShare(
 	shareSupply := k.bankKeeper.GetSupply(ctx, shareDenom).Amount
 	mintedShareAmt := types.CalculateMintedShareAmount(
 		liquidity, position.Liquidity.Sub(liquidity), shareSupply)
+	if mintedShareAmt.IsZero() {
+		err = sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "minted share amount is zero")
+		return
+	}
 	mintedShare = sdk.NewCoin(shareDenom, mintedShareAmt)
 	if err = k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(mintedShare)); err != nil {
 		return
@@ -110,6 +126,10 @@ func (k Keeper) BurnShare(
 	}
 	removedLiquidity = types.CalculateRemovedLiquidity(
 		share.Amount, shareSupply, position.Liquidity, prevWinningBidShareAmt)
+	if removedLiquidity.IsZero() {
+		err = sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "removed liquidity is zero")
+		return
+	}
 
 	if err = k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(share)); err != nil {
 		return

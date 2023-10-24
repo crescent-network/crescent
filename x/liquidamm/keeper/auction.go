@@ -25,7 +25,8 @@ func (k Keeper) PlaceBid(
 		return bid, sdkerrors.Wrap(sdkerrors.ErrNotFound, "rewards auction not found")
 	}
 	if auction.Status != types.AuctionStatusStarted {
-		return bid, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "rewards auction is not started")
+		return bid, sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidRequest, "invalid rewards auction status: %s", auction.Status)
 	}
 
 	if auction.WinningBid != nil {
