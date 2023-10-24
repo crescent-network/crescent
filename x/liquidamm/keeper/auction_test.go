@@ -82,7 +82,6 @@ func (s *KeeperTestSuite) TestPlaceBid() {
 	// successfully replaces the winning bid.
 	s.Ctx = ctx
 	s.PlaceBid(bidderAddr2, publicPosition.Id, 2, utils.ParseCoin("2000000sb1"))
-	ctx = s.Ctx
 
 	auction, found = s.keeper.GetLastRewardsAuction(s.Ctx, publicPosition.Id)
 	s.Require().True(found)
