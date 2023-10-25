@@ -61,7 +61,7 @@ func WeightedOperations(
 		),
 		simulation.NewWeightedOperation(
 			weightMsgBurnShare,
-			SimulateMsgBurnShare(ak, bk),
+			SimulateMsgBurnShare(ak, bk, k),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgPlaceBid,
@@ -100,11 +100,11 @@ func SimulateMsgMintShare(ak types.AccountKeeper, bk types.BankKeeper, ammKeeper
 }
 
 // SimulateMsgBurnShare generates a MsgBurnShare with random values
-func SimulateMsgBurnShare(ak types.AccountKeeper, bk types.BankKeeper) simtypes.Operation {
+func SimulateMsgBurnShare(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		simAccount, msg, found := findMsgBurnShareParams(r, accs, bk, ctx)
+		simAccount, msg, found := findMsgBurnShareParams(r, accs, bk, k, ctx)
 		if !found {
 			return simtypes.NoOpMsg(
 				types.ModuleName, types.TypeMsgBurnShare, "unable to burn share"), nil, nil
@@ -201,7 +201,7 @@ func findMsgMintShareParams(
 
 func findMsgBurnShareParams(
 	r *rand.Rand, accs []simtypes.Account,
-	bk types.BankKeeper, ctx sdk.Context) (acc simtypes.Account, msg *types.MsgBurnShare, found bool) {
+	bk types.BankKeeper, k keeper.Keeper, ctx sdk.Context) (acc simtypes.Account, msg *types.MsgBurnShare, found bool) {
 	accs = utils.ShuffleSimAccounts(r, accs)
 	for _, acc = range accs {
 		spendable := bk.SpendableCoins(ctx, acc.Address)
@@ -211,10 +211,30 @@ func findMsgBurnShareParams(
 			if err != nil { // not a public position share denom
 				continue
 			}
-			// [1, coin.Amount]
+			publicPosition, found := k.GetPublicPosition(ctx, publicPositionId)
+			if !found { // sanity check
+				panic("public position not found")
+			}
+			ammPosition := k.MustGetAMMPosition(ctx, publicPosition)
+			// [min(10000, coin.Amount), coin.Amount]
 			share := sdk.NewCoin(
 				coin.Denom, utils.RandomInt(
-					r, utils.OneInt, coin.Amount.Add(utils.OneInt)))
+					r,
+					utils.MinInt(sdk.NewInt(10000), coin.Amount),
+					coin.Amount.Add(utils.OneInt)))
+			shareSupply := bk.GetSupply(ctx, share.Denom).Amount
+			var prevWinningBidShareAmt sdk.Int
+			auction, found := k.GetPreviousRewardsAuction(ctx, publicPosition)
+			if found && auction.WinningBid != nil {
+				prevWinningBidShareAmt = auction.WinningBid.Share.Amount
+			} else {
+				prevWinningBidShareAmt = utils.ZeroInt
+			}
+			if removedLiquidity := types.CalculateRemovedLiquidity(
+				share.Amount, shareSupply,
+				ammPosition.Liquidity, prevWinningBidShareAmt); removedLiquidity.IsZero() {
+				continue
+			}
 			msg = types.NewMsgBurnShare(acc.Address, publicPositionId, share)
 			return acc, msg, true
 		}
