@@ -226,6 +226,14 @@ func TestCalculateRemovedLiquidity(t *testing.T) {
 			expectedAmt:            sdk.NewInt(100_000_000),
 		},
 		{
+			name:                   "burn all: with previous winning bid",
+			shareSupply:            sdk.NewInt(100_000_000),
+			totalLiquidity:         sdk.NewInt(110_000_000),
+			burnedShare:            sdk.NewInt(100_000_000),
+			prevWinningBidShareAmt: sdk.NewInt(10_000_000),
+			expectedAmt:            sdk.NewInt(110_000_000),
+		},
+		{
 			name:                   "burning small amount #1: no previous winning bid",
 			shareSupply:            sdk.NewInt(100_000_000),
 			totalLiquidity:         sdk.NewInt(100_000_000),

@@ -113,6 +113,9 @@ func CalculateRemovedLiquidity(
 	if burnedShareAmt.Equal(shareSupply) { // last one to burn
 		return totalLiquidity
 	}
+	if shareSupply.Add(prevWinningBidShareAmt).IsZero() {
+		return sdk.ZeroInt()
+	}
 	return totalLiquidity.Mul(burnedShareAmt).Quo(shareSupply.Add(prevWinningBidShareAmt))
 }
 
