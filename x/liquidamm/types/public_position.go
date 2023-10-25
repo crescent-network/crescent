@@ -99,7 +99,7 @@ func CalculateMintedShareAmount(addedLiquidity, totalLiquidity, shareSupply sdk.
 
 func CalculateBurnRate(shareSupply, totalLiquidity, prevWinningBidShareAmt sdk.Int) sdk.Dec {
 	if shareSupply.Add(prevWinningBidShareAmt).IsZero() { // no more share
-		return utils.OneDec
+		return utils.ZeroDec
 	}
 	return totalLiquidity.ToDec().QuoTruncate(shareSupply.Add(prevWinningBidShareAmt).ToDec())
 }
@@ -111,6 +111,9 @@ func CalculateRemovedLiquidity(
 	burnedShareAmt, shareSupply, totalLiquidity, prevWinningBidShareAmt sdk.Int) sdk.Int {
 	if burnedShareAmt.Equal(shareSupply) { // last one to burn
 		return totalLiquidity
+	}
+	if shareSupply.Add(prevWinningBidShareAmt).IsZero() {
+		return sdk.ZeroInt()
 	}
 	return totalLiquidity.Mul(burnedShareAmt).Quo(shareSupply.Add(prevWinningBidShareAmt))
 }

@@ -273,6 +273,58 @@ func (s *KeeperTestSuite) TestOrderSourceMatchingAsMakerNearMinPrice() {
 	s.AssertEqual(expectedOsBalancesDiff, osBalanceDiff)
 }
 
+func (s *KeeperTestSuite) TestOrderSourceMatchingAsMakerNearMinPriceWithMinQty() {
+	// Order book looks like:
+	//  market order #####.1    | 10^-14+2*10^-17  |                --> prev. last price
+	//                          | 10^-14+10^-17    |  # (os)
+	//                          | 10^-14           |  ###### (os)   --> new last price
+
+	firstPrice := types.MinPrice.Add(sdk.NewDecWithPrec(1, 17))
+	secondPrice := types.MinPrice
+
+	os := types.NewMockOrderSource(
+		"mockOrderSource",
+		types.NewMockOrderSourceOrder(true, secondPrice, sdk.NewInt(60000)),
+		types.NewMockOrderSourceOrder(true, firstPrice, sdk.NewInt(10000)))
+	s.FundAccount(os.Address, enoughCoins)
+	s.App.ExchangeKeeper = *s.App.ExchangeKeeper.SetOrderSources(os)
+	s.keeper = s.App.ExchangeKeeper
+
+	market := s.CreateMarket("ucre", "uusd")
+	mmAddr := s.FundedAccount(1, enoughCoins)
+	lastPrice := types.MinPrice.Add(sdk.NewDecWithPrec(1, 17)).Add(sdk.NewDecWithPrec(1, 17))
+
+	// make last TestOrderSourceMatchingAsMakerNearMinPrice
+	s.PlaceLimitOrder(market.Id, mmAddr, true, lastPrice, sdk.NewInt(1000_00000_00000_00000), time.Hour)
+	s.PlaceLimitOrder(market.Id, mmAddr, false, lastPrice, sdk.NewInt(1000_00000_00000_00000), time.Hour)
+
+	feeCollector := market.MustGetFeeCollectorAddress()
+	feeAmountBeforeMatching := s.GetAllBalances(feeCollector)
+	osBalanceBeforeMatching := s.GetAllBalances(os.Address)
+
+	ordererAddr := s.FundedAccount(2, enoughCoins)
+	_, _, err := s.App.ExchangeKeeper.PlaceMarketOrder(s.Ctx, market.Id, ordererAddr, false, sdk.NewInt(50001))
+	s.Require().EqualError(err, "quote is less than the minimum order quote allowed: 0 < 10000: bad order amount")
+
+	_, res := s.PlaceMarketOrder(market.Id, ordererAddr, false, utils.ParseInt("10_00000_00000_00000_00000"))
+	s.AssertEqual(types.MinPrice, *s.App.ExchangeKeeper.MustGetMarketState(s.Ctx, market.Id).LastPrice)
+
+	s.AssertEqual(sdk.NewInt(70000), res.ExecutedQuantity)
+	s.AssertEqual(utils.ParseCoin("70000ucre"), res.Paid)
+	s.AssertEqual(utils.ParseCoin("0uusd"), res.Received)
+
+	feeAmountAfterMatching := s.GetAllBalances(feeCollector)
+	feeAmount := feeAmountAfterMatching.Sub(feeAmountBeforeMatching)
+	s.AssertEqual(utils.ParseCoins("1uusd"), feeAmount)
+
+	osBalanceAfterMatching := s.GetAllBalances(os.Address)
+	osBalanceDiff, _ := osBalanceAfterMatching.SafeSub(osBalanceBeforeMatching)
+	expectedOsBalancesDiff := sdk.Coins{
+		sdk.Coin{Denom: "ucre", Amount: sdk.NewInt(70000)},
+		sdk.Coin{Denom: "uusd", Amount: sdk.NewInt(-1)}}
+	s.AssertEqual(expectedOsBalancesDiff, osBalanceDiff)
+}
+
 func (s *KeeperTestSuite) TestOrderSourceMatchingAsMakerNearMaxPriceWithMaxQty() {
 	// Order book looks like:
 	// (os) ########## | 10^24          |  --> new last price

@@ -117,6 +117,9 @@ func (k Keeper) BurnShare(
 	position = k.MustGetAMMPosition(ctx, publicPosition)
 
 	shareSupply := k.bankKeeper.GetSupply(ctx, share.Denom).Amount
+	if share.Amount.GT(shareSupply) { // sanity check
+		panic("share.Amount is larger than shareSupply")
+	}
 	var prevWinningBidShareAmt sdk.Int
 	auction, found := k.GetPreviousRewardsAuction(ctx, publicPosition)
 	if found && auction.WinningBid != nil {
