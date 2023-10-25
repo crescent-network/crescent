@@ -14,17 +14,6 @@ func SqrtPriceAtTick(tick int32) cremath.BigDec {
 	return cremath.NewBigDecFromDec(exchangetypes.PriceAtTick(tick)).SqrtMut()
 }
 
-// AdjustTickToTickSpacing returns rounded tick based on tickSpacing.
-func AdjustTickToTickSpacing(tick int32, tickSpacing uint32, roundUp bool) int32 {
-	ts := int32(tickSpacing)
-	if roundUp {
-		q, _ := utils.DivMod(tick+ts-1, ts)
-		return q * ts
-	}
-	q, _ := utils.DivMod(tick, ts)
-	return q * ts
-}
-
 func AdjustPriceToTickSpacing(price sdk.Dec, tickSpacing uint32, roundUp bool) int32 {
 	ts := int32(tickSpacing)
 	tick, valid := exchangetypes.ValidateTickPrice(price)

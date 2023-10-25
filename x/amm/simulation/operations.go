@@ -24,7 +24,7 @@ const (
 	OpWeightMsgRemoveLiquidity = "op_weight_msg_remove_liquidity"
 	OpWeightMsgCollect         = "op_weight_msg_collect"
 
-	DefaultWeightMsgCreatePool      = 5
+	DefaultWeightMsgCreatePool      = 50
 	DefaultWeightMsgAddLiquidity    = 70
 	DefaultWeightMsgRemoveLiquidity = 50
 	DefaultWeightMsgCollect         = 50
@@ -199,27 +199,30 @@ func SimulateMsgCollect(
 func findMsgCreatePoolParams(r *rand.Rand, accs []simtypes.Account,
 	bk types.BankKeeper, ek types.ExchangeKeeper, k keeper.Keeper, ctx sdk.Context) (acc simtypes.Account, msg *types.MsgCreatePool, found bool) {
 	var markets []exchangetypes.Market
+	accs = utils.ShuffleSimAccounts(r, accs)
 	ek.IterateAllMarkets(ctx, func(market exchangetypes.Market) (stop bool) {
 		markets = append(markets, market)
 		return false
 	})
-	utils.Shuffle(r, markets)
-	for _, market := range markets {
-		if found := k.LookupPoolByMarket(ctx, market.Id); !found {
-			acc, _ = simtypes.RandomAcc(r, accs)
-			spendable := bk.SpendableCoins(ctx, acc.Address)
-			if !spendable.IsAllGTE(k.GetPoolCreationFee(ctx)) {
-				continue
+	poolCreationFee := k.GetPoolCreationFee(ctx)
+	for _, acc = range accs {
+		utils.Shuffle(r, markets)
+		for _, market := range markets {
+			if found := k.LookupPoolByMarket(ctx, market.Id); !found {
+				spendable := bk.SpendableCoins(ctx, acc.Address)
+				if !spendable.IsAllGTE(poolCreationFee) {
+					continue
+				}
+				marketState := ek.MustGetMarketState(ctx, market.Id)
+				var price sdk.Dec
+				if marketState.LastPrice != nil {
+					price = *marketState.LastPrice
+				} else {
+					price = utils.RandomDec(r, utils.ParseDec("0.1"), utils.ParseDec("10"))
+				}
+				msg = types.NewMsgCreatePool(acc.Address, market.Id, price)
+				return acc, msg, true
 			}
-			marketState := ek.MustGetMarketState(ctx, market.Id)
-			var price sdk.Dec
-			if marketState.LastPrice != nil {
-				price = *marketState.LastPrice
-			} else {
-				price = utils.RandomDec(r, utils.ParseDec("0.1"), utils.ParseDec("10"))
-			}
-			msg = types.NewMsgCreatePool(acc.Address, market.Id, price)
-			return acc, msg, true
 		}
 	}
 	return acc, msg, false

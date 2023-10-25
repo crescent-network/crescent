@@ -68,7 +68,7 @@ func (s *SimTestSuite) TestSimulateMsgCreateMarket() {
 
 	s.Require().Equal(types.TypeMsgCreateMarket, msg.Type())
 	s.Require().Equal(types.ModuleName, msg.Route())
-	s.Require().Equal("cosmos1u45vv4pl5zchwgvd3pt9qamrflf7ykv52kn5u3", msg.Sender)
+	s.Require().Equal("cosmos1tp4es44j4vv8m59za3z0tm64dkmlnm8wg2frhc", msg.Sender)
 	s.Require().Equal("stake", msg.BaseDenom)
 	s.Require().Equal("denom2", msg.QuoteDenom)
 }

@@ -2,6 +2,7 @@ package simulation
 
 import (
 	"math/rand"
+	"strings"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -14,6 +15,7 @@ import (
 	utils "github.com/crescent-network/crescent/v5/types"
 	"github.com/crescent-network/crescent/v5/x/exchange/keeper"
 	"github.com/crescent-network/crescent/v5/x/exchange/types"
+	liquidammtypes "github.com/crescent-network/crescent/v5/x/liquidamm/types"
 )
 
 // Simulation operation weights constants.
@@ -26,7 +28,7 @@ const (
 	OpWeightMsgCancelAllOrders   = "op_weight_msg_cancel_all_orders"
 	OpWeightMsgSwapExactAmountIn = "op_weight_msg_swap_exact_amount_in"
 
-	DefaultWeightMsgCreateMarket      = 10
+	DefaultWeightMsgCreateMarket      = 50
 	DefaultWeightMsgPlaceLimitOrder   = 90
 	DefaultWeightMsgPlaceMMLimitOrder = 50
 	DefaultWeightMsgPlaceMarketOrder  = 90
@@ -322,24 +324,29 @@ func findMsgCreateMarketParams(r *rand.Rand, accs []simtypes.Account,
 	bk types.BankKeeper, k keeper.Keeper, ctx sdk.Context) (acc simtypes.Account, msg *types.MsgCreateMarket, found bool) {
 	var allDenoms []string
 	bk.IterateTotalSupply(ctx, func(coin sdk.Coin) bool {
+		// skip sb tokens
+		if strings.HasPrefix(coin.Denom, liquidammtypes.ShareDenomPrefix) {
+			return false
+		}
 		allDenoms = append(allDenoms, coin.Denom)
 		return false
 	})
-	r.Shuffle(len(allDenoms), func(i, j int) {
-		allDenoms[i], allDenoms[j] = allDenoms[j], allDenoms[i]
-	})
+	utils.Shuffle(r, allDenoms)
 	for _, denomA := range allDenoms {
 		for _, denomB := range allDenoms {
-			if denomA != denomB {
-				if _, found := k.GetMarketIdByDenoms(ctx, denomA, denomB); !found {
-					acc, _ = simtypes.RandomAcc(r, accs)
-					spendable := bk.SpendableCoins(ctx, acc.Address)
-					if !spendable.IsAllGTE(k.GetMarketCreationFee(ctx)) {
-						continue
-					}
-					msg = types.NewMsgCreateMarket(acc.Address, denomA, denomB)
-					return acc, msg, true
+			if denomA == denomB {
+				continue
+			}
+			if _, found := k.GetMarketIdByDenoms(ctx, denomA, denomB); found {
+				continue
+			}
+			for _, acc = range accs {
+				spendable := bk.SpendableCoins(ctx, acc.Address)
+				if !spendable.IsAllGTE(k.GetMarketCreationFee(ctx)) {
+					continue
 				}
+				msg = types.NewMsgCreateMarket(acc.Address, denomA, denomB)
+				return acc, msg, true
 			}
 		}
 	}

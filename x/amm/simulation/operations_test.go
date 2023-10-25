@@ -81,9 +81,9 @@ func (s *SimTestSuite) TestSimulateMsgCreatePool() {
 
 	s.Require().Equal(types.TypeMsgCreatePool, msg.Type())
 	s.Require().Equal(types.ModuleName, msg.Route())
-	s.Require().Equal("cosmos1dj7jl7a84qaj7566qaa4uxj7d28vvr304204ha", msg.Sender)
-	s.Require().EqualValues(5, msg.MarketId)
-	s.AssertEqual(utils.ParseDec("6.585228379443441869"), msg.Price)
+	s.Require().Equal("cosmos1r6vgn9cwpvja7448fg0fgglj63rcs6y84p8egu", msg.Sender)
+	s.Require().Equal(uint64(7), msg.MarketId)
+	s.AssertEqual(utils.ParseDec("3.898025803302780947"), msg.Price)
 }
 
 func (s *SimTestSuite) TestSimulateMsgAddLiquidity() {

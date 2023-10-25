@@ -60,10 +60,10 @@ func (s *KeeperTestSuite) TestSimulation() {
 						lowerPrice = utils.RandomDec(r, currentPrice, maxPrice.Mul(utils.ParseDec("0.8")))
 						upperPrice = utils.RandomDec(r, lowerPrice.Mul(utils.ParseDec("1.001")), maxPrice)
 					}
-					lowerPrice = exchangetypes.PriceAtTick(types.AdjustTickToTickSpacing(
-						exchangetypes.TickAtPrice(lowerPrice), pool.TickSpacing, false))
-					upperPrice = exchangetypes.PriceAtTick(types.AdjustTickToTickSpacing(
-						exchangetypes.TickAtPrice(upperPrice), pool.TickSpacing, true))
+					lowerPrice = exchangetypes.PriceAtTick(
+						types.AdjustPriceToTickSpacing(lowerPrice, pool.TickSpacing, false))
+					upperPrice = exchangetypes.PriceAtTick(
+						types.AdjustPriceToTickSpacing(upperPrice, pool.TickSpacing, true))
 					desiredLiquidity := utils.RandomInt(
 						r, sdk.NewInt(100000), sdk.NewInt(10000000000))
 					s.AddLiquidityByLiquidity(

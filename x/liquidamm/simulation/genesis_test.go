@@ -40,7 +40,7 @@ func TestRandomizedGenState(t *testing.T) {
 	var genState types.GenesisState
 	simState.Cdc.MustUnmarshalJSON(simState.GenState[types.ModuleName], &genState)
 
-	expNextAuctionHour := 18 * time.Hour // 75600000000000
+	expNextAuctionHour := 2 * time.Hour // 75600000000000
 
 	require.Equal(t, expNextAuctionHour, genState.Params.RewardsAuctionDuration)
 }

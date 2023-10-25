@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/types/simulation"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
 	"github.com/crescent-network/crescent/v5/x/liquidamm/types"
 )
@@ -21,7 +21,7 @@ const (
 
 // GenRewardsAuctionDuration returns randomized rewards auction duration.
 func GenRewardsAuctionDuration(r *rand.Rand) time.Duration {
-	return time.Duration(simulation.RandIntBetween(r, 1, 24)) * time.Hour
+	return time.Duration(simtypes.RandIntBetween(r, 1, 8)) * time.Hour
 }
 
 // RandomizedGenState generates a random GenesisState.

@@ -102,6 +102,7 @@ type AppModule struct {
 	keeper        keeper.Keeper
 	accountKeeper types.AccountKeeper
 	bankKeeper    types.BankKeeper
+	ammKeeper     types.AMMKeeper
 }
 
 // NewAppModule creates a new AppModule object.
@@ -110,12 +111,14 @@ func NewAppModule(
 	keeper keeper.Keeper,
 	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
+	ammKeeper types.AMMKeeper,
 ) AppModule {
 	return AppModule{
 		AppModuleBasic: NewAppModuleBasic(cdc),
 		keeper:         keeper,
 		accountKeeper:  accountKeeper,
 		bankKeeper:     bankKeeper,
+		ammKeeper:      ammKeeper,
 	}
 }
 
@@ -145,7 +148,9 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 }
 
 // RegisterInvariants registers the module's invariants.
-func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
+func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
+	keeper.RegisterInvariants(ir, am.keeper)
+}
 
 // InitGenesis performs the module's genesis initialization It returns
 // no validator updates.
@@ -188,7 +193,7 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 // ProposalContents returns all the liquidamm content functions used to
 // simulate governance proposals.
 func (am AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalContent {
-	return nil
+	return simulation.ProposalContents(am.ammKeeper, am.keeper)
 }
 
 // RandomizedParams creates randomized liquidamm param changes for the simulator.
@@ -204,6 +209,6 @@ func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 // WeightedOperations returns the all the liquidamm module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	return simulation.WeightedOperations(
-		simState.AppParams, simState.Cdc, am.accountKeeper, am.bankKeeper, am.keeper,
-	)
+		simState.AppParams, simState.Cdc,
+		am.accountKeeper, am.bankKeeper, am.ammKeeper, am.keeper)
 }
